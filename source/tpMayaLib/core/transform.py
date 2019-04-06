@@ -11,6 +11,7 @@ import tpMayaLib as maya
 from tpPyUtils import name, mathlib
 from tpMayaLib.core import exceptions, attribute, node, name as name_utils
 
+
 TRANSFORM_SIDES = {
     'end': {
         'short': [('_L', '_R'), ('_l', '_r')],
