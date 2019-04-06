@@ -1,10 +1,11 @@
 #! /usr/bin/env python
+# # -*- coding: utf-8 -*-
 
 """
 MetaNode class implementation for Maya
 """
 
-# NOTE: cmds.addAttr gives some problem with string formatting when unpack attributes from keywords attributes
+# NOTE: maya.cmds.addAttr gives some problem with string formatting when unpack attributes from keywords attributes
 # So we do not use unicode laterals
 from __future__ import print_function, division, absolute_import
 
@@ -15,16 +16,11 @@ import types
 import traceback
 from functools import wraps
 
-import maya.cmds as cmds
-import maya.OpenMaya as OpenMaya
-
-import tpRigToolkit as tp
-from tpRigToolkit.maya.lib.meta import metautils
-from tpRigToolkit.maya.lib import exceptions, helpers
-from tpRigToolkit.maya.lib import name as name_utils
-from tpRigToolkit.maya.lib import attribute as attr_utils
-from tpRigToolkit.maya.managers import metadatamanager
-from tpRigToolkit.core.tools.nameit import nameit
+import tpMayaLib as maya
+from tpMayaLib.meta import metautils
+from tpMayaLib.core import exceptions, helpers, name as name_utils, attribute as attr_utils
+from tpMayaLib.managers import metadatamanager
+# from tpRigToolkit.core.tools.nameit import nameit
 
 
 def node_lock_manager(fn):
@@ -36,18 +32,18 @@ def node_lock_manager(fn):
         try:
             locked = False
             meta_node = args[0]
-            tp.logger.debug('NodeLockManager > fn : {0} : MetaNode / self: {1}'.format(fn.__name__, meta_node.meta_node))
+            maya.logger.debug('NodeLockManager > fn : {0} : MetaNode / self: {1}'.format(fn.__name__, meta_node.meta_node))
             if meta_node.meta_node and meta_node._lockState:
                 locked = True
-                tp.logger.debug('NodeLockManager > fn : {0} : node being unlocked'.format(fn.__name))
-                cmds.lockNode(meta_node.meta_node, lock=False)
+                maya.logger.debug('NodeLockManager > fn : {0} : node being unlocked'.format(fn.__name))
+                maya.cmds.lockNode(meta_node.meta_node, lock=False)
             res = fn(*args, **kwargs)
         except StandardError as e:
             err = e
         finally:
             if locked:
-                tp.logger.debug('NodeLockManager > fn : {0} : node being relocked'.format(fn.__name__))
-                cmds.lockNode(meta_node.meta_node, lock=True)
+                maya.logger.debug('NodeLockManager > fn : {0} : node being relocked'.format(fn.__name__))
+                maya.cmds.lockNode(meta_node.meta_node, lock=True)
             if err:
                 traceback = sys.exc_info()[2]       # Get full traceback
                 raise StandardError(StandardError(err), traceback)
@@ -90,38 +86,38 @@ class MetaNode(object):
 
                 # If the meta node is in the cache we do not create a new one
                 cache_instance = metadatamanager.MetaDataManager.get_metanode_from_cache(meta_node=meta_node)
-                tp.logger.debug('Cache instance: {0}'.format(cache_instance))
+                maya.logger.debug('Cache instance: {0}'.format(cache_instance))
                 if cache_instance:
                     MetaNode.cached = True
                     return cache_instance
 
             # If the given node is already a MetaNode we return it
             if issubclass(type(meta_node), MetaNode):
-                tp.logger.debug('The passed node is already an instantiated MetaNode!!')
+                maya.logger.debug('The passed node is already an instantiated MetaNode!!')
                 cls.cached = True
                 return meta_node
 
             meta_class = cls.is_meta_node(node=meta_node, check_instance=False, return_meta_class=True)
 
         if meta_class:
-            tp.logger.debug('MetaClass derived from MayaNode Attr : {0}'.format(meta_class))
+            maya.logger.debug('MetaClass derived from MayaNode Attr : {0}'.format(meta_class))
             if meta_class in metadatamanager.METANODE_CLASSES_REGISTER:
                 registered_meta_class = metadatamanager.METANODE_CLASSES_REGISTER[meta_class]
                 try:
-                    tp.logger.debug('### Instantiating existing MetaClass : {0} >> {1} ###'.format(meta_class, registered_meta_class))
+                    maya.logger.debug('### Instantiating existing MetaClass : {0} >> {1} ###'.format(meta_class, registered_meta_class))
                     return super(cls.__class__, cls).__new__(registered_meta_class, *args, **kwargs)
                 except Exception:
-                    tp.logger.debug('Failed to initialize MetaClass : {0}'.format(registered_meta_class))
+                    maya.logger.debug('Failed to initialize MetaClass : {0}'.format(registered_meta_class))
                     pass
             else:
                 raise StandardError('Node has an unregistered MetaClass attr set: "{}"'.format(meta_class))
         else:
-            tp.logger.debug('MetaClass "{}" not found, given or registered!'.format(meta_class))
+            maya.logger.debug('MetaClass "{}" not found, given or registered!'.format(meta_class))
             return super(cls.__class__, cls).__new__(cls)
 
     def __init__(self, node=None, name=None, name_args=None, name_kwargs=None, node_type='network', *args, **kwargs):
 
-        tp.logger.debug('Meta => __init__ => main args :: node={0}, name={1}, node_type={2}'.format(node, name, node_type))
+        maya.logger.debug('Meta => __init__ => main args :: node={0}, name={1}, node_type={2}'.format(node, name, node_type))
 
         auto_rename = kwargs.get('auto_rename', True)
         if name_args is None:
@@ -136,11 +132,11 @@ class MetaNode(object):
                     name = nameit.NameIt.solve(name, *name_args, **name_kwargs)
 
         created_state = True
-        if node is not None and cmds.objExists(node):
-            tp.logger.debug('|MayaMetaNode| >> Node {} already exists in scene!'.format(node))
+        if node is not None and maya.cmds.objExists(node):
+            maya.logger.debug('|MayaMetaNode| >> Node {} already exists in scene!'.format(node))
             created_state = False
-        elif name is not None and cmds.objExists(name):
-            tp.logger.debug('|MayaMetaNode| >> Node {} already exists in scene!'.format(name))
+        elif name is not None and maya.cmds.objExists(name):
+            maya.logger.debug('|MayaMetaNode| >> Node {} already exists in scene!'.format(name))
             created_state = False
 
         component_mode = False
@@ -152,7 +148,7 @@ class MetaNode(object):
                 node = node.split('.')[0]
 
         if node and MetaNode.cached:
-            tp.logger.debug('Meta Cache => Aborting __init__ on pre-cached MetaNode object!')
+            maya.logger.debug('Meta Cache => Aborting __init__ on pre-cached MetaNode object!')
             return
 
         # Data that will be passed to the Maya node and it is stored on the Python object
@@ -167,7 +163,7 @@ class MetaNode(object):
         object.__setattr__(self, '_componentMode', component_mode)
         object.__setattr__(self, '_component', component)
         object.__setattr__(self, '_justCreatedState', created_state)
-        object.__setattr__(self, 'logger', kwargs.pop('logger', tp.logger))
+        object.__setattr__(self, 'logger', kwargs.pop('logger', maya.logger))
 
         if not node:
             if not name:
@@ -175,7 +171,7 @@ class MetaNode(object):
             if not node_type == 'network' and node_type not in metadatamanager.METANODE_TYPES_REGISTER:
                 raise IOError('node_type : "{0}" : is not valid!'.format(node_type))
 
-            node = cmds.createNode(node_type, name=name)
+            node = maya.cmds.createNode(node_type, name=name)
 
             self.meta_node = node
             self.meta_node_id = name
@@ -187,18 +183,18 @@ class MetaNode(object):
             if helpers.get_maya_version() <= 2016:
                 self.add_attribute('UUID', value='')
 
-            tp.logger.debug('New MetaData node {0} created!'.format(name))
+            maya.logger.debug('New MetaData node {0} created!'.format(name))
             self.register_metanode_to_cache(self)
 
-            cmds.setAttr('{0}.{1}'.format(self.meta_node, 'meta_class'), edit=True, lock=True)
+            maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, 'meta_class'), edit=True, lock=True)
         else:
             self.meta_node = node
 
             if self.is_meta_node(node=node):
-                tp.logger.debug('MetaNode passed in : {0}'.format(node))
+                maya.logger.debug('MetaNode passed in : {0}'.format(node))
                 self.register_metanode_to_cache(self)
             else:
-                tp.logger.debug('Standard Maya Node being managed')
+                maya.logger.debug('Standard Maya Node being managed')
 
         self.lockState = False
         self.__bind_data__(*args, **kwargs)
@@ -208,7 +204,7 @@ class MetaNode(object):
         #     self.__fill_attr_cache__(auto_fill)
 
         if self.cached:
-            tp.logger.debug('>> Using Cache: {}'.format(self._last_dag_path))
+            maya.logger.debug('>> Using Cache: {}'.format(self._last_dag_path))
             return
 
         for a in '_justCreatedState', '_componentMode', '_component', 'logger':
@@ -223,7 +219,7 @@ class MetaNode(object):
             data = object.__getattribute__(self, attr)
             object_attr = True
         except Exception:
-            tp.logger.debug('{} attr not yet seen - function call probably generated by Maya directly'.format(attr))
+            maya.logger.debug('{} attr not yet seen - function call probably generated by Maya directly'.format(attr))
     #
         if data:
             if type(data) == types.MethodType:
@@ -234,22 +230,22 @@ class MetaNode(object):
                 return data
     #
             meta_node = object.__getattribute__(self, 'meta_node')
-            if not meta_node or not cmds.objExists(meta_node):
+            if not meta_node or not maya.cmds.objExists(meta_node):
                 return data
             else:
                 try:
-                    attr_type = cmds.getAttr('{0}.{1}'.format(meta_node, attr), type=True)
+                    attr_type = maya.cmds.getAttr('{0}.{1}'.format(meta_node, attr), type=True)
                     if attr_type == 'message':
                         return self.__get_message_attr__(attr)
 
-                    attr_val = cmds.getAttr('{0}.{1}'.format(meta_node, attr), silent=True)
+                    attr_val = maya.cmds.getAttr('{0}.{1}'.format(meta_node, attr), silent=True)
                     if attr_type == 'string':
                         try:
                             attr_val = deserialize_json_attr(attr_val)
                             if type(attr_val) == dict:
                                 return attr_val
                         except Exception:
-                            # tp.logger.debug('string is not JSON deserializable')
+                            # maya.logger.debug('string is not JSON deserializable')
                             pass
                         return attr_val
                     elif attr_type == 'double3' or attr_type == 'float3':
@@ -275,33 +271,33 @@ class MetaNode(object):
         pass
 
     def __get_message_attr__(self, attr):
-        msg_links = cmds.listConnections('{0}.{1}'.format(self.meta_node, attr), destination=True, source=True, sh=True)
+        msg_links = maya.cmds.listConnections('{0}.{1}'.format(self.meta_node, attr), destination=True, source=True, sh=True)
         if msg_links:
-            msg_links = cmds.ls(msg_links, l=True)
-            if not cmds.attributeQuery(attr, node=self.meta_node, m=True):
+            msg_links = maya.cmds.ls(msg_links, l=True)
+            if not maya.cmds.attributeQuery(attr, node=self.meta_node, m=True):
                 if self.is_meta_node(node=msg_links[0]):
                     return MetaNode(msg_links[0])
             for i, link in enumerate(msg_links):
                 if self.is_meta_node(link) or self._forceAsMeta:
-                    msg_links[i] = tp.logger.Meta(link)
-                    tp.logger.debug('{}: Connect data is a MetaClass object, returning the class'.format(link))
+                    msg_links[i] = maya.logger.Meta(link)
+                    maya.logger.debug('{}: Connect data is a MetaClass object, returning the class'.format(link))
             return msg_links
         else:
-            tp.logger.debug('Nothing connected to msgLink {0}.{1}'.format(self.meta_node, attr))
+            maya.logger.debug('Nothing connected to msgLink {0}.{1}'.format(self.meta_node, attr))
             return []
 
     def __set_enum_attr__(self, attr, value):
         if attribute_data_type(value) in ['string', 'unicode']:
-            tp.logger.debug('Set Enum attribute by string : {0}'.format(value))
-            enums = cmds.attributeQuery(attr, node=self.meta_node, listEnum=True)[0].split(':')
+            maya.logger.debug('Set Enum attribute by string : {0}'.format(value))
+            enums = maya.cmds.attributeQuery(attr, node=self.meta_node, listEnum=True)[0].split(':')
             try:
                 value = enums.index(value)
             except Exception:
                 exc_msg = 'Invalid enum string passed in: strig is not in enum keys'
-                tp.logger.debug(exc_msg)
+                maya.logger.debug(exc_msg)
                 raise ValueError(exc_msg)
-        tp.logger.debug('Set Enum attribute by index: {0}'.format(value))
-        cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), value)
+        maya.logger.debug('Set Enum attribute by index: {0}'.format(value))
+        maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), value)
 
     def __set_message_attr__(self, attr, value, force=True, ignore_overload=False):
         """
@@ -311,15 +307,15 @@ class MetaNode(object):
 
         try:
             if ignore_overload:
-                if not cmds.attributeQuery(attr, node=self.meta_node, multi=True):
+                if not maya.cmds.attributeQuery(attr, node=self.meta_node, multi=True):
                     if attribute_data_type(value) == 'complex':
                         exc_msg = 'You cannot connect multiple nodes to a single message plug via __setattr__'
-                        tp.logger.debug(exc_msg)
+                        maya.logger.debug(exc_msg)
                         raise ValueError(exc_msg)
-                    tp.logger.debug('Set Single message attribute connection: {0}'.format(value))
+                    maya.logger.debug('Set Single message attribute connection: {0}'.format(value))
                     self.connect_child(value, attr, clean_current=True, force=force)
                 else:
-                    tp.logger.debug('Set Multi-Message attribute connection: {0}'.format(value))
+                    maya.logger.debug('Set Multi-Message attribute connection: {0}'.format(value))
                     self.connect_children(value, attr, clean_current=True, force=force)
             else:
                 if value:
@@ -353,41 +349,41 @@ class MetaNode(object):
                     value_type = attribute_data_type(value)
                     if attr_type == 'string':
                         if value_type == 'string' or value_type == 'unicode':
-                            cmds.setAttr(attr_string, value, type='string')
-                            tp.logger.debug('setAttr: {0} : type : "string" to value : {1}'.format(attr, value))
+                            maya.cmds.setAttr(attr_string, value, type='string')
+                            maya.logger.debug('setAttr: {0} : type : "string" to value : {1}'.format(attr, value))
                         elif value_type == 'complex':
-                            tp.logger.debug('setAttr : {0} : type : "complex_string" to value : {1}'.format(attr, serialize_json_attr(value)[0]))
-                            cmds.setAttr(attr_string, serialize_json_attr(value)[0], type='string')
+                            maya.logger.debug('setAttr : {0} : type : "complex_string" to value : {1}'.format(attr, serialize_json_attr(value)[0]))
+                            maya.cmds.setAttr(attr_string, serialize_json_attr(value)[0], type='string')
                     elif attr_type in ['double3', 'float3'] and value_type == 'complex':
                         try:
-                            cmds.setAttr(attr_string, value[0], value[1], value[2])
+                            maya.cmds.setAttr(attr_string, value[0], value[1], value[2])
                         except ValueError as e:
                             raise ValueError(e)
                     elif attr_type == 'doubleArray':
-                        cmds.setAttr(attr_string, value, type='doubleArray')
+                        maya.cmds.setAttr(attr_string, value, type='doubleArray')
                     elif attr_type == 'matrix':
-                        cmds.setAttr(attr_string, value, type='matrix')
+                        maya.cmds.setAttr(attr_string, value, type='matrix')
                     else:
                         try:
-                            cmds.setAttr(attr_string, value)
+                            maya.cmds.setAttr(attr_string, value)
                         except StandardError as e:
-                            tp.logger.debug('Failed to setAttr {0} - might be connected'.format(attr_string))
+                            maya.logger.debug('Failed to setAttr {0} - might be connected'.format(attr_string))
                             raise StandardError(e)
 
-                    tp.logger.debug('setAttr : {0} : type : {1} to value : {2}'.format(attr, attr_type, value))
+                    maya.logger.debug('setAttr : {0} : type : {1} to value : {2}'.format(attr, attr_type, value))
                 if locked:
                     self.attr_set_locked(attr, True)
             else:
-                tp.logger.debug('attr : {0} does not exist on MayaNode > class attr only'.format(attr))
+                maya.logger.debug('attr : {0} does not exist on MayaNode > class attr only'.format(attr))
 
     @node_lock_manager
     def __delattr__(self, attr):
         try:
-            tp.logger.debug('Atribute delete : {0}, {1}'.format(self, attr))
+            maya.logger.debug('Atribute delete : {0}, {1}'.format(self, attr))
             object.__delattr__(self, attr)
             if self.has_attr(attr):
-                cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), lock=False)
-                cmds.deleteAttr('{0}.{1}'.format(self.meta_node, attr))
+                maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), lock=False)
+                maya.cmds.deleteAttr('{0}.{1}'.format(self.meta_node, attr))
         except StandardError as e:
             raise StandardError(e)
 
@@ -400,7 +396,7 @@ class MetaNode(object):
         except Exception:
             try:
                 metadatamanager.METANODES_CACHE.pop(object.__getattribute__(self, '_lastUUID'))
-                tp.logger.debug('Dead MetaNode {0} removed from cache ...'.format(object.__getattribute__(self, '_lastDagPath')))
+                maya.logger.debug('Dead MetaNode {0} removed from cache ...'.format(object.__getattribute__(self, '_lastDagPath')))
             except Exception:
                 pass
             try:
@@ -412,7 +408,7 @@ class MetaNode(object):
         if not self._MObjectHandle.isValid():
             try:
                 metadatamanager.METANODES_CACHE.pop(object.__getattribute__(self, '_lastUUID'))
-                tp.logger.debug('Dead MetaNode "{0}" removed from cache...'.format(object.__getattribute__(self, '_lastDagPath')))
+                maya.logger.debug('Dead MetaNode "{0}" removed from cache...'.format(object.__getattribute__(self, '_lastDagPath')))
             except Exception:
                 pass
             return False
@@ -438,13 +434,13 @@ class MetaNode(object):
         if level == 'messageOnly':
             attrs = self.list_attrs_of_type(attr_type='message')
         else:
-            attrs = cmds.listAttr(self.meta_node)
+            attrs = maya.cmds.listAttr(self.meta_node)
 
         for attr in attrs:
             try:
                 object.__setattr__(self, attr, None)
             except Exception:
-                tp.logger.debug('Unable to bind attr : {0} to initial Python object!'.format(attr))
+                maya.logger.debug('Unable to bind attr : {0} to initial Python object!'.format(attr))
 
     def __verify__(self, *args, **kwargs):
         """
@@ -467,26 +463,26 @@ class MetaNode(object):
     @lockState.setter
     def lockState(self, state):
         try:
-            cmds.lockNode(self.meta_node, lock=state)
+            maya.cmds.lockNode(self.meta_node, lock=state)
             self._lockState = state
         except Exception:
-            tp.logger.debug('Cannot set the nodeState for : {0}'.format(self.meta_node))
+            maya.logger.debug('Cannot set the nodeState for : {0}'.format(self.meta_node))
 
     @property
     def meta_node_id(self):
         if not self.has_attr('meta_node_id'):
             return self.meta_node.split('|')[-1].split(':')[-1]
         else:
-            return cmds.getAttr('{0}.{1}'.format(self.meta_node, 'meta_node_id'))
+            return maya.cmds.getAttr('{0}.{1}'.format(self.meta_node, 'meta_node_id'))
 
     @meta_node_id.setter
     @node_lock_manager
     def meta_node_id(self, value):
         if not self.has_attr('meta_node_id'):
-            cmds.addAttr(self.meta_node, longName='meta_node_id', dt='string')
-        cmds.setAttr('{0}.{1}'.format(self.meta_node, 'meta_node_id'), edit=True, lock=False)
-        cmds.setAttr('{0}.{1}'.format(self.meta_node, 'meta_node_id'), value, type='string')
-        cmds.setAttr('{0}.{1}'.format(self.meta_node, 'meta_node_id'), edit=True, lock=True)
+            maya.cmds.addAttr(self.meta_node, longName='meta_node_id', dt='string')
+        maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, 'meta_node_id'), edit=True, lock=False)
+        maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, 'meta_node_id'), value, type='string')
+        maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, 'meta_node_id'), edit=True, lock=True)
 
     @property
     def meta_node_mobj(self):
@@ -499,7 +495,7 @@ class MetaNode(object):
         if mobj_handle:
             try:
                 if not mobj_handle.isValid():
-                    tp.logger.info('MetaNode : MObject is no longer valid - {0} - object may have been deleted or the scene reloaded?'.format(object.__getattribute__(self, 'meta_node_id')))
+                    maya.logger.info('MetaNode : MObject is no longer valid - {0} - object may have been deleted or the scene reloaded?'.format(object.__getattribute__(self, 'meta_node_id')))
                     return
                 # If we have a DagNode, we return the full path
                 return object.__getattribute__(self, '_MObject')
@@ -515,7 +511,7 @@ class MetaNode(object):
 
         mobj_handle = object.__getattribute__(self, '_MObjectHandle')
 
-        # tp.logger.debug('Getting Maya Node MObject Handle: {}'.format(mobj_handle))
+        # maya.logger.debug('Getting Maya Node MObject Handle: {}'.format(mobj_handle))
 
         if mobj_handle:
             try:
@@ -525,19 +521,19 @@ class MetaNode(object):
 
                 mobj = object.__getattribute__(self, '_MObject')
 
-                # tp.logger.debug('Getting Maya Node: \n\tMObject=>{} \n\tMObjectHandle=>{}'.format(mobj, mobj_handle))
-                if OpenMaya.MObject.hasFn(mobj, OpenMaya.MFn.kDagNode):
-                    dag_path = OpenMaya.MDagPath()
-                    OpenMaya.MDagPath.getAPathTo(mobj, dag_path)
-                    # tp.logger.debug(' --- Maya Node DAG --- \n\tPath: {}'.format(dag_path.fullPathName()))
+                # maya.logger.debug('Getting Maya Node: \n\tMObject=>{} \n\tMObjectHandle=>{}'.format(mobj, mobj_handle))
+                if maya.OpenMaya.MObject.hasFn(mobj, maya.OpenMaya.MFn.kDagNode):
+                    dag_path = maya.OpenMaya.MDagPath()
+                    maya.OpenMaya.MDagPath.getAPathTo(mobj, dag_path)
+                    # maya.logger.debug(' --- Maya Node DAG --- \n\tPath: {}'.format(dag_path.fullPathName()))
                     _result = dag_path.fullPathName()
                 else:
-                    dep_node_func = OpenMaya.MFnDependencyNode(mobj)
-                    # tp.logger.debug(' --- Maya Node DG --- \n\tName: {}'.format(dep_node_func.name()))
+                    dep_node_func = maya.OpenMaya.MFnDependencyNode(mobj)
+                    # maya.logger.debug(' --- Maya Node DG --- \n\tName: {}'.format(dep_node_func.name()))
                     _result = dep_node_func.name()
 
                 # Cache the DAG path on the object as a backup for error reporting
-                # tp.logger.debug('Updating _lastDagPath of {} to: \n\tLast DAG path: {}'.format(mobj, _result))
+                # maya.logger.debug('Updating _lastDagPath of {} to: \n\tLast DAG path: {}'.format(mobj, _result))
                 object.__setattr__(self, '_lastDagPath', _result)
                 return _result
             except StandardError as e:
@@ -547,12 +543,12 @@ class MetaNode(object):
     def meta_node(self, node):
         if node:
             try:
-                mobj = OpenMaya.MObject()
-                sel = OpenMaya.MSelectionList()
+                mobj = maya.OpenMaya.MObject()
+                sel = maya.OpenMaya.MSelectionList()
                 sel.add(node)
                 sel.getDependNode(0, mobj)
 
-                tp.logger.debug('Updating Meta Node: \n\tMObject=>{} \n\tMObjectHandle=>{} \n\tMFnDependencyNode=>{}'.format(mobj, OpenMaya.MObjectHandle(mobj), OpenMaya.MFnDependencyNode(mobj)))
+                maya.logger.debug('Updating Meta Node: \n\tMObject=>{} \n\tMObjectHandle=>{} \n\tMFnDependencyNode=>{}'.format(mobj, OpenMaya.MObjectHandle(mobj), OpenMaya.MFnDependencyNode(mobj)))
 
                 object.__setattr__(self, '_MObject', mobj)
                 object.__setattr__(self, '_MObjectHandle', OpenMaya.MObjectHandle(mobj))
@@ -560,7 +556,7 @@ class MetaNode(object):
             except StandardError as e:
                 raise StandardError(e)
         else:
-            tp.logger.debug('Setting meta node to None ...')
+            maya.logger.debug('Setting meta node to None ...')
 
     @property
     def short_name(self):
@@ -594,14 +590,14 @@ class MetaNode(object):
 
         if type(meta_node) == MetaNode or issubclass(type(meta_node), MetaNode):
             if helpers.get_maya_version() >= 2016:
-                return cmds.ls(meta_node.meta_node, uuid=True)[0]
+                return maya.cmds.ls(meta_node.meta_node, uuid=True)[0]
             else:
                 return metadatamanager.MetaDataManager.generate_uuid(meta_node=meta_node)
         else:
             if helpers.get_maya_version() >= 2016:
-                return cmds.ls(meta_node, uuid=True)[0]
+                return maya.cmds.ls(meta_node, uuid=True)[0]
             else:
-                return cmds.getAttr('{0}.UUID'.format(meta_node))
+                return maya.cmds.getAttr('{0}.UUID'.format(meta_node))
 
     @staticmethod
     def get_valid_metanode_types():
@@ -611,7 +607,7 @@ class MetaNode(object):
         :return: bool, True if the given meta node is valid or False otherwise
         """
 
-        return cmds.allNodeTypes()
+        return maya.cmds.allNodeTypes()
 
     @staticmethod
     def is_meta_node(node, meta_types=[], check_instance=True, return_meta_class=False):
@@ -648,11 +644,11 @@ class MetaNode(object):
                         return meta_class
                     return True
             else:
-                tp.logger.debug('IsMetaNode >> Invalid MetaClass attr : {0}'.format(meta_class))
+                maya.logger.debug('IsMetaNode >> Invalid MetaClass attr : {0}'.format(meta_class))
                 return False
         else:
             if meta_class_instance:
-                tp.logger.debug('IsMetaNode= True : node is a wrapped Native Node MetaClass instance')
+                maya.logger.debug('IsMetaNode= True : node is a wrapped Native Node MetaClass instance')
                 if return_meta_class:
                     return meta_class_instance.meta_class
                 return True
@@ -681,12 +677,12 @@ class MetaNode(object):
                 if mode == 'full':
                     if metadatamanager.METANODE_CLASSES_REGISTER[inst] in \
                             metadatamanager.METANODE_CLASSES_INHERITANCE_MAP[meta_class]['full']:
-                        tp.logger.debug('MetaNode {0} is subclass >> {1}'.format(meta_class, inst))
+                        maya.logger.debug('MetaNode {0} is subclass >> {1}'.format(meta_class, inst))
                         return True
                 else:
                     if issubclass(metadatamanager.METANODE_CLASSES_REGISTER[meta_class],
                                   metadatamanager.METANODE_CLASSES_REGISTER[inst]):
-                        tp.logger.debug('MetaNode {0} is subclass >> {1}'.format(meta_class, inst))
+                        maya.logger.debug('MetaNode {0} is subclass >> {1}'.format(meta_class, inst))
                         return True
 
         return False
@@ -708,7 +704,7 @@ class MetaNode(object):
         if not hasattr(meta_class_grps, '__iter__'):
             meta_class_grps = [meta_class_grps]
         for grp in meta_class_grps:
-            tp.logger.debug('metaGroup testing: {0}'.format(node))
+            maya.logger.debug('metaGroup testing: {0}'.format(node))
             try:
                 # TODO: Finish
                 pass
@@ -731,7 +727,7 @@ class MetaNode(object):
         Hide wrapped node
         """
 
-        cmds.hide(self.meta_node)
+        maya.cmds.hide(self.meta_node)
 
     def is_valid(self):
         """
@@ -741,7 +737,7 @@ class MetaNode(object):
         try:
             if not self.is_valid_mobject():
                 return False
-            if self.has_attr('meta_class') and not cmds.listRelatives(self.meta_node):
+            if self.has_attr('meta_class') and not maya.cmds.listRelatives(self.meta_node):
                 return False
         except Exception:
             # raise exceptions.InvalidMetaNodeException(meta_node=self.meta_node)
@@ -762,8 +758,8 @@ class MetaNode(object):
             mobj_handle = object.__getattribute__(self, '_MObjectHandle')
             return mobj_handle.isValid()
         except Exception as e:
-            tp.logger.info('_MObjectHandle not setup yet!')
-            tp.logger.debug(str(e))
+            maya.logger.info('_MObjectHandle not setup yet!')
+            maya.logger.debug(str(e))
 
     def add_attribute(self, attr, value=None, attr_type=None, hidden=False, **kwargs):
         """
@@ -776,7 +772,7 @@ class MetaNode(object):
         :return: bool, True if the attribute was added successfully or False otherwise
         """
 
-        tp.logger.debug('|Adding Attribute| >> node: {0} | attr: {1} | attrType: {2}'.format(self.meta_node, attr, attr_type))
+        maya.logger.debug('|Adding Attribute| >> node: {0} | attr: {1} | attrType: {2}'.format(self.meta_node, attr, attr_type))
 
         added = False
 
@@ -811,22 +807,22 @@ class MetaNode(object):
 
         # ===================================================================  IF ATTR EXISTS, EDIT ATTR
         if self.has_attr(attr):
-            tp.logger.debug('"{0}" : Attr already exists on the node'.format(attr))
+            maya.logger.debug('"{0}" : Attr already exists on the node'.format(attr))
             try:
                 if kwargs:
                     if add_kwargs_to_edit:
-                        cmds.addAttr('{0}.{1}'.format(self.meta_Node, attr), edit=True, **add_kwargs_to_edit)
-                        tp.logger.debug('addAttr Edit flags run : {0} = {1}'.format(attr, add_kwargs_to_edit))
+                        maya.cmds.addAttr('{0}.{1}'.format(self.meta_Node, attr), edit=True, **add_kwargs_to_edit)
+                        maya.logger.debug('addAttr Edit flags run : {0} = {1}'.format(attr, add_kwargs_to_edit))
                     if set_kwargs_to_edit:
                         try:
                             if not self.is_referenced():
-                                cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), **set_kwargs_to_edit)
-                                tp.logger.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
+                                maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), **set_kwargs_to_edit)
+                                maya.logger.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
                         except Exception:
-                            tp.logger.debug('MetaNode is referenced and the setEditFlags are therefore invalid (lock, keyable, channelBox)')
+                            maya.logger.debug('MetaNode is referenced and the setEditFlags are therefore invalid (lock, keyable, channelBox)')
             except Exception:
                 if self.is_referenced():
-                    tp.logger.debug('{0} : Trying to modify an attr on a reference node'.format(attr))
+                    maya.logger.debug('{0} : Trying to modify an attr on a reference node'.format(attr))
             return
 
         # ===================================================================  IF ATTR NOT EXISTS, CREATE ATTR
@@ -835,8 +831,8 @@ class MetaNode(object):
                 if not attr_type:
                     attr_type = attribute_data_type(value)
                 DataTypeKwargs[attr_type].update(add_kwargs_to_edit)
-                tp.logger.debug('addAttr : {0} : value_type : {1} > data_type keywords: {2}'.format(attr, attr_type, DataTypeKwargs[attr_type]))
-                cmds.addAttr(self.meta_node, **DataTypeKwargs[str(attr_type)])
+                maya.logger.debug('addAttr : {0} : value_type : {1} > data_type keywords: {2}'.format(attr, attr_type, DataTypeKwargs[attr_type]))
+                maya.cmds.addAttr(self.meta_node, **DataTypeKwargs[str(attr_type)])
 
                 if attr_type == 'double3' or attr_type == 'float3':
                     if attr_type == 'double3':
@@ -846,16 +842,16 @@ class MetaNode(object):
                     attr_list = []
                     for i, axis in enumerate(['X', 'Y', 'Z']):
                         attr_list.append('{0}{1}'.format(attr, axis))
-                        cmds.addAttr(self.meta_node, longName=attr_list[i], at=sub_type, parent=attr, **kwargs)
+                        maya.cmds.addAttr(self.meta_node, longName=attr_list[i], at=sub_type, parent=attr, **kwargs)
                         object.__setattr__(self, attr_list[i], None)
                     if attr_type in keyable and not hidden:
                         for at in attr_list:
-                            cmds.setAttr('{0}.{1}'.format(self.meta_node, at), edit=True, keyable=True)
+                            maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, at), edit=True, keyable=True)
                 elif attr_type == 'doubleArray':
-                    cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), [], type='doubleArray')
+                    maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), [], type='doubleArray')
                 else:
                     if attr_type in keyable and not hidden:
-                        cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), edit=True, keyable=True)
+                        maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), edit=True, keyable=True)
                 if value:
                     self.__setattr__(attr, value, force=False)
                 else:
@@ -863,12 +859,12 @@ class MetaNode(object):
 
                 # Allow add_attribute to set any secondary kwargs via the setAttr call
                 if set_kwargs_to_edit:
-                    cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), **set_kwargs_to_edit)
-                    tp.logger.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
+                    maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), **set_kwargs_to_edit)
+                    maya.logger.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
 
                 added = True
             except StandardError:
-                tp.logger.error(traceback.format_exc())
+                maya.logger.error(traceback.format_exc())
 
         return added
 
@@ -881,7 +877,7 @@ class MetaNode(object):
 
         if self.has_attr(attr):
             try:
-                cmds.deleteAttr(self.meta_node, at=attr)
+                maya.cmds.deleteAttr(self.meta_node, at=attr)
             except StandardError as e:
                 raise StandardError('Failed to delete given attributes : {0} : {1}'.format(attr, e))
 
@@ -893,7 +889,7 @@ class MetaNode(object):
         :param new_attr_name: str
         """
 
-        cmds.renameAttr('{0}.{1}'.format(self.meta_node, attr), new_attr_name)
+        maya.cmds.renameAttr('{0}.{1}'.format(self.meta_node, attr), new_attr_name)
 
     def do_store(self, *args, **kwargs):
         """
@@ -936,16 +932,16 @@ class MetaNode(object):
                 if not result:
                     # Must rewrap the mobj, if you don't it kills the existing mNode and corrupts its cache entry
                     # 2011 bails because it lacks the api call anyway, 2012 and up work with this
-                    mobj = OpenMaya.MObject()
-                    sel_list = OpenMaya.MSelectionList()
+                    mobj = maya.OpenMaya.MObject()
+                    sel_list = maya.OpenMaya.MSelectionList()
                     sel_list.add(self._MObject)
                     sel_list.getDependNode(0, mobj)
                     result = self._MFnDependencyNode.findAlias(attr, mobj)
                 return result
             except Exception as e:
                 for arg in e.args:
-                    tp.logger.error(arg)
-                return cmds.objExists('{0}.{1}'.format(self.meta_node, attr))
+                    maya.logger.error(arg)
+                return maya.cmds.objExists('{0}.{1}'.format(self.meta_node, attr))
 
     def attr_type(self, attr):
         """
@@ -954,7 +950,7 @@ class MetaNode(object):
         :return: variant
         """
 
-        return cmds.getAttr('{0}.{1}'.format(self.meta_node, attr), type=True)
+        return maya.cmds.getAttr('{0}.{1}'.format(self.meta_node, attr), type=True)
 
     def list_attrs_of_type(self, attr_type='message'):
         """
@@ -988,11 +984,11 @@ class MetaNode(object):
         if hasattr(attr, '__iter__'):
             locked = False
             for a in attr:
-                if cmds.getAttr('{0}.{1}'.format(self.meta_node, attr), l=True):
+                if maya.cmds.getAttr('{0}.{1}'.format(self.meta_node, attr), l=True):
                     locked = True
                     break
             return locked
-        return cmds.getAttr('{0}.{1}'.format(self.meta_node, attr), l=True)
+        return maya.cmds.getAttr('{0}.{1}'.format(self.meta_node, attr), l=True)
 
     def attr_set_locked(self, attr, state):
         """
@@ -1007,9 +1003,9 @@ class MetaNode(object):
                 attr = [attr]
             if not self.is_referenced():
                 for a in attr:
-                    cmds.setAttr('{0}.{1}'.format(self.meta_node, a), l=state)
+                    maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, a), l=state)
         except StandardError as e:
-            tp.logger.debug(str(e))
+            maya.logger.debug(str(e))
 
     @node_lock_manager
     def convert_meta_class_to_type(node_to_convert, new_meta_class):
@@ -1026,12 +1022,12 @@ class MetaNode(object):
             try:
                 metadatamanager.MetaDataManager.remove_metanodes_from_cache(node_to_convert)
                 if not node_to_convert.has_attr('meta_class'):
-                    tp.logger.debug('Converting StandardWrapped Maya Node to a fully fledge MetaNode instance')
+                    maya.logger.debug('Converting StandardWrapped Maya Node to a fully fledge MetaNode instance')
                     metadatamanager.MetaDataManager.convert_node_to_metanode(node_to_convert.meta_node, new_meta_class)
                 else:
                     node_to_convert.meta_class = new_meta_class
             except StandardError as e:
-                tp.logger.debug('Failed to convert self to new MetaClass type: {}'.format(new_meta_class))
+                maya.logger.debug('Failed to convert self to new MetaClass type: {}'.format(new_meta_class))
                 raise StandardError(StandardError(e), sys.exc_info()[2])
         else:
             raise StandardError('Given class it not in the MetaClass Registry: {}'.format(new_meta_class))
@@ -1042,7 +1038,7 @@ class MetaNode(object):
         :return: bool
         """
 
-        return cmds.referenceQuery(self.meta_node, inr=True)
+        return maya.cmds.referenceQuery(self.meta_node, inr=True)
 
     def short_name(self):
         """
@@ -1058,14 +1054,14 @@ class MetaNode(object):
         :return: str
         """
 
-        return cmds.nodeType(self.meta_node)
+        return maya.cmds.nodeType(self.meta_node)
 
     def select(self, *args, **kwargs):
         """
         Selects Maya node in viewport
         """
 
-        cmds.select(self.meta_node, *args, **kwargs)
+        maya.cmds.select(self.meta_node, *args, **kwargs)
 
     @node_lock_manager
     def rename(self, name, rename_child_links=False, auto_rename=True, *args, **kwargs):
@@ -1083,9 +1079,9 @@ class MetaNode(object):
                 name = nameit.NameIt.solve(name, *args, **kwargs)
 
         current_name = self.short_name
-        cmds.rename(self.meta_node, name)
+        maya.cmds.rename(self.meta_node, name)
         if rename_child_links:
-            plugs = cmds.listConnections(self.meta_node, s=True, d=True, p=True)
+            plugs = maya.cmds.listConnections(self.meta_node, s=True, d=True, p=True)
             for plug in plugs:
                 split = plug.split('.')
                 attr = split[-1].split('[')[0]
@@ -1094,9 +1090,9 @@ class MetaNode(object):
                     try:
                         child = MetaNode(child)
                         child.rename_attr(attr, name)
-                        tp.logger.debug('Renamed Child attribute to match new MetaNode name: {}.{}'.format(child.meta_node, attr))
+                        maya.logger.debug('Renamed Child attribute to match new MetaNode name: {}.{}'.format(child.meta_node, attr))
                     except Exception:
-                        tp.logger.warning('Failed to rename attribute: {} on node: {}'.format(attr, child.meta_node))
+                        maya.logger.warning('Failed to rename attribute: {} on node: {}'.format(attr, child.meta_node))
 
     def delete(self):
         """
@@ -1105,12 +1101,12 @@ class MetaNode(object):
         unless they are wired. To prevent this, set self.lockState=True in your classes __init__ function
         """
 
-        if cmds.lockNode(self.meta_node, query=True):
-            cmds.lockNode(self.meta_node, lock=False)
+        if maya.cmds.lockNode(self.meta_node, query=True):
+            maya.cmds.lockNode(self.meta_node, lock=False)
 
         metadatamanager.MetaDataManager.remove_metanodes_from_cache([self])
 
-        cmds.delete(self.meta_node)
+        maya.cmds.delete(self.meta_node)
         del(self)
 
     @staticmethod
@@ -1126,20 +1122,20 @@ class MetaNode(object):
 
             # If the given node is already a MetaNode we return the MetaClass of the MetaNode
             if issubclass(type(node), MetaNode):
-                tp.logger.debug('get_meta_class_from_node was given an already instantiated MNode')
+                maya.logger.debug('get_meta_class_from_node was given an already instantiated MNode')
                 return node.meta_class
 
         try:
-            meta_class = cmds.getAttr('{0}.{1}'.format(node, 'meta_class'))
+            meta_class = maya.cmds.getAttr('{0}.{1}'.format(node, 'meta_class'))
             if meta_class in metadatamanager.METANODE_CLASSES_REGISTER:
                 return meta_class
             else:
-                meta_class = cmds.getAttr('{0}.{1}'.format(node, 'meta_class_group'))
+                meta_class = maya.cmds.getAttr('{0}.{1}'.format(node, 'meta_class_group'))
                 if meta_class in metadatamanager.METANODE_CLASSES_REGISTER:
                     return meta_class
         except Exception:
-            if 'Meta{0}'.format(cmds.nodeType(node)) in metadatamanager.METANODE_CLASSES_REGISTER.keys():
-                return 'Meta{0}'.format(cmds.nodeType(node))
+            if 'Meta{0}'.format(maya.cmds.nodeType(node)) in metadatamanager.METANODE_CLASSES_REGISTER.keys():
+                return 'Meta{0}'.format(maya.cmds.nodeType(node))
 
     @staticmethod
     def get_meta_from_cache(meta_node):
@@ -1148,44 +1144,44 @@ class MetaNode(object):
         :param meta_node: str, name of the node from DAG
         """
 
-        tp.logger.debug('Getting Meta From Cache ...')
+        maya.logger.debug('Getting Meta From Cache ...')
 
         try:
             uuid = MetaNode.get_metanode_uuid(meta_node=meta_node)
-            tp.logger.debug('MetaNode {} - UUID => {}'.format(meta_node, uuid))
-            tp.logger.debug('MetaNode UUID Cache => {}'.format(metadatamanager))
+            maya.logger.debug('MetaNode {} - UUID => {}'.format(meta_node, uuid))
+            maya.logger.debug('MetaNode UUID Cache => {}'.format(metadatamanager))
 
             if uuid in metadatamanager.METANODES_CACHE.keys():
                 try:
                     if MetaNode.check_metanode_validity(metadatamanager.METANODES_CACHE[uuid]):
-                        tp.logger.debug('CACHE: Cached MetaNode {} has a valid MObject'.format(metadatamanager.METANODES_CACHE[uuid]))
+                        maya.logger.debug('CACHE: Cached MetaNode {} has a valid MObject'.format(metadatamanager.METANODES_CACHE[uuid]))
                         if not metadatamanager.METANODES_CACHE[uuid]._MObject == get_mobject(meta_node):
-                            tp.logger.debug('CACHE: {} : UUID is already registered but to a different node: {}'.format(uuid, meta_node))
+                            maya.logger.debug('CACHE: {} : UUID is already registered but to a different node: {}'.format(uuid, meta_node))
                             return
 
-                        tp.logger.debug('CACHE : {} : Returning MetaNode from UUID cache! => {}'.format(meta_node, uuid))
+                        maya.logger.debug('CACHE : {} : Returning MetaNode from UUID cache! => {}'.format(meta_node, uuid))
                         return metadatamanager.METANODES_CACHE[uuid]
                     else:
-                        tp.logger.debug('{} being removed from the cache due to invalid MObject'.format(meta_node))
+                        maya.logger.debug('{} being removed from the cache due to invalid MObject'.format(meta_node))
                         metadatamanager.MetaDataManager.clean_metanodes_cache()
                 except StandardError as e:
-                    tp.logger.debug('CACHE: insepction fail!')
-                    tp.logger.debug(str(e))
+                    maya.logger.debug('CACHE: insepction fail!')
+                    maya.logger.debug(str(e))
         except Exception:
             if meta_node in metadatamanager.METANODES_CACHE.keys():
                 try:
                     if MetaNode.check_metanode_validity(metadatamanager.METANODES_CACHE[meta_node]):
                         if not metadatamanager.METANODES_CACHE[uuid]._MObject == get_mobject(meta_node):
-                            tp.logger.debug('CACHE: {} : UUID is already registered but to a different node: {}'.format(uuid, meta_node))
+                            maya.logger.debug('CACHE: {} : UUID is already registered but to a different node: {}'.format(uuid, meta_node))
                             return
-                        tp.logger.debug('CACHE: {0} : Returning MetaNode from nameBased cache!'.format(meta_node))
+                        maya.logger.debug('CACHE: {0} : Returning MetaNode from nameBased cache!'.format(meta_node))
                         return metadatamanager.METANODES_CACHE[meta_node]
                     else:
-                        tp.logger.debug('{} being removed from the cache due to invalid MObject'.format(meta_node))
+                        maya.logger.debug('{} being removed from the cache due to invalid MObject'.format(meta_node))
                         metadatamanager.MetaDataManager.clean_metanodes_cache()
                 except Exception as e:
-                    tp.logger.debug('CACHE: inspection fail!')
-                    tp.logger.debug(str(e))
+                    maya.logger.debug('CACHE: inspection fail!')
+                    maya.logger.debug(str(e))
 
     @node_lock_manager
     def disconnect_current_attr_plugs(self, attr):
@@ -1201,10 +1197,10 @@ class MetaNode(object):
                 current_connects = [current_connects]
             for cnt in current_connects:
                 try:
-                    tp.logger.debug('Disconnecting {0}.{1} >> from: {2}'.format(self.meta_node, attr, cnt))
+                    maya.logger.debug('Disconnecting {0}.{1} >> from: {2}'.format(self.meta_node, attr, cnt))
                     self.disconnect_child(cnt, attr=attr, delete_source_plug=True, delete_dst_plug=False)
                 except Exception:
-                    tp.logger.warning('Failed to disconnect current message link')
+                    maya.logger.warning('Failed to disconnect current message link')
 
     def get_next_array_index(self, node, attr):
         """
@@ -1214,12 +1210,12 @@ class MetaNode(object):
         :return: int
         """
 
-        index = cmds.getAttr('{0}.{1}'.format(node, attr), multiIndices=True)
+        index = maya.cmds.getAttr('{0}.{1}'.format(node, attr), multiIndices=True)
         if not index:
             return 0
         else:
             for i in index:
-                if not cmds.listConnections('%s.%s[%i]' % (node, attr, i)):
+                if not maya.cmds.listConnections('%s.%s[%i]' % (node, attr, i)):
                     return i
             return index[-1] + 1
 
@@ -1233,21 +1229,21 @@ class MetaNode(object):
         :return: bool, If the attribute is a multi or not
         """
 
-        if not cmds.attributeQuery(attr, node=node, exists=True):
-            tp.logger.debug('{} : message attribute does not exists!'.format(attr))
+        if not maya.cmds.attributeQuery(attr, node=node, exists=True):
+            maya.logger.debug('{} : message attribute does not exists!'.format(attr))
             return
 
-        if cmds.attributeQuery(attr, node=node, multi=True):
-            tp.logger.debug('{} : message attribute is already multi - aborting uplift'.format(attr))
+        if maya.cmds.attributeQuery(attr, node=node, multi=True):
+            maya.logger.debug('{} : message attribute is already multi - aborting uplift'.format(attr))
             return True
 
-        connections = cmds.listConnections('{0}.{1}'.format(node, attr), source=True, destination=False, plugs=True)
+        connections = maya.cmds.listConnections('{0}.{1}'.format(node, attr), source=True, destination=False, plugs=True)
         if connections:
-            tp.logger.debug('{} : attribute is already connected - uplift to multi-message'.format(attr))
-            cmds.deleteAttr('{0}.{1}'.format(node, attr))
-            cmds.addAttr(node, longName=attr, at='message', m=True, im=True)
+            maya.logger.debug('{} : attribute is already connected - uplift to multi-message'.format(attr))
+            maya.cmds.deleteAttr('{0}.{1}'.format(node, attr))
+            maya.cmds.addAttr(node, longName=attr, at='message', m=True, im=True)
             for cnt in connections:
-                cmds.connectAttr(cnt, '%s.%s[%i]' % (node, attr, self.get_next_array_index(node, attr)))
+                maya.cmds.connectAttr(cnt, '%s.%s[%i]' % (node, attr, self.get_next_array_index(node, attr)))
 
             return True
 
@@ -1264,16 +1260,16 @@ class MetaNode(object):
             node = node.meta_node
 
         if attr:
-            connections = cmds.ls(cmds.listConnections('{0}.{1}'.format(self.meta_node, attr), source=False, destination=True, plugs=True), l=True)
+            connections = maya.cmds.ls(maya.cmds.listConnections('{0}.{1}'.format(self.meta_node, attr), source=False, destination=True, plugs=True), l=True)
         else:
-            connections = cmds.ls(cmds.listConnections(self.meta_node, source=False, destination=True, plugs=True), l=True)
+            connections = maya.cmds.ls(maya.cmds.listConnections(self.meta_node, source=False, destination=True, plugs=True), l=True)
         if connections:
             for cnt in connections:
                 if source_attr:
-                    if '{0}.{1}'.format(cmds.ls(node, l=True)[0], source_attr) in cnt:
+                    if '{0}.{1}'.format(maya.cmds.ls(node, l=True)[0], source_attr) in cnt:
                         return True
                 else:
-                    if '{0}.'.format(cmds.ls(node, l=True))[0] in cnt:
+                    if '{0}.'.format(maya.cmds.ls(node, l=True))[0] in cnt:
                         return True
 
         return False
@@ -1317,8 +1313,8 @@ class MetaNode(object):
                 else:
                     node.add_attribute(source_attr, attr_type='messageSimple')
                     node = node.meta_node
-            elif not cmds.objExists('{0}.{1}'.format(node, source_attr)):
-                cmds.addAttr(node, longName=source_attr, at='message', m=False)
+            elif not maya.cmds.objExists('{0}.{1}'.format(node, source_attr)):
+                maya.cmds.addAttr(node, longName=source_attr, at='message', m=False)
 
             # uplift to multi-message index managed if needed
             if allow_multi:
@@ -1326,15 +1322,15 @@ class MetaNode(object):
 
             if not self.is_child_node(node, attr, source_attr):
                 try:
-                    tp.logger.debug('Connecting child via multi-message')
-                    cmds.connectAttr('{0}.{1}'.format(self.meta_node, attr), '%s.%s[%i]' % (node, source_attr, self.get_next_array_index(node, source_attr)), f=force)
+                    maya.logger.debug('Connecting child via multi-message')
+                    maya.cmds.connectAttr('{0}.{1}'.format(self.meta_node, attr), '%s.%s[%i]' % (node, source_attr, self.get_next_array_index(node, source_attr)), f=force)
                 except Exception:
-                    tp.logger.debug('Connecting child vai single-message')
-                    cmds.connectAttr('{0}.{1}'.format(self.meta_node, attr), '{0}.{1}'.format(node, source_attr), f=force)
+                    maya.logger.debug('Connecting child vai single-message')
+                    maya.cmds.connectAttr('{0}.{1}'.format(self.meta_node, attr), '{0}.{1}'.format(node, source_attr), f=force)
             else:
                 raise StandardError('{} is already connected to MetaNode'.format(node))
         except StandardError as e:
-            tp.logger.warning(e)
+            maya.logger.warning(e)
 
     @node_lock_manager
     def connect_children(self, nodes, attr, source_attr=None, clean_current=False, force=True, allow_incest=True, source_simple=False, **kwargs):
@@ -1374,35 +1370,35 @@ class MetaNode(object):
                 else:
                     node.add_attribute(source_attr, attr_type='message')
                     node = node.meta_node
-            elif not cmds.objExists('{0}.{1}'.format(node, source_attr)):
+            elif not maya.cmds.objExists('{0}.{1}'.format(node, source_attr)):
                 if allow_incest:
                     MetaNode(node).add_attribute(source_attr, attr_type='message')
                 else:
-                    cmds.addAttr(node, longName=source_attr, at='message', m=True, im=False)
+                    maya.cmds.addAttr(node, longName=source_attr, at='message', m=True, im=False)
 
             try:
                 if not self.is_child_node(node=node, attr=attr, source_attr=source_attr):
                     try:
                         if is_meta or allow_incest:
                             if is_meta:
-                                tp.logger.debug('Connecting MeatNode nodes via indices: {0}.{1} >> {2}.{3}'.format(self.meta_node, attr, node, source_attr))
+                                maya.logger.debug('Connecting MeatNode nodes via indices: {0}.{1} >> {2}.{3}'.format(self.meta_node, attr, node, source_attr))
                             elif allow_incest:
-                                tp.logger.debug('Connecting Standard Maya nodes via indices: {0}.{1} >> {2}.{3}'.format(self.meta_node, attr, node, source_attr))
+                                maya.logger.debug('Connecting Standard Maya nodes via indices: {0}.{1} >> {2}.{3}'.format(self.meta_node, attr, node, source_attr))
                             if not source_simple:
-                                cmds.connectAttr('%s.%s[%i]' % (self.meta_node, attr, self.get_next_array_index(self.meta_node, attr)), '%s.%s[%i]' % (node, source_attr, self.get_next_array_index(node, source_attr)), f=force)
+                                maya.cmds.connectAttr('%s.%s[%i]' % (self.meta_node, attr, self.get_next_array_index(self.meta_node, attr)), '%s.%s[%i]' % (node, source_attr, self.get_next_array_index(node, source_attr)), f=force)
                             else:
-                                cmds.connectAttr('%s.%s[%i]' % (self.meta_node, attr, self.get_next_array_index(self.meta_node, attr)), '%s.%s' % (node, source_attr), f=force)
+                                maya.cmds.connectAttr('%s.%s[%i]' % (self.meta_node, attr, self.get_next_array_index(self.meta_node, attr)), '%s.%s' % (node, source_attr), f=force)
                         else:
-                            tp.logger.debug('Connecting {0}.{1} >> {2}.{3}'.format(self.meta_node, attr, node, source_attr))
-                            cmds.connectAttr('{0}.{1}'.format(node, source_attr), f=force)
+                            maya.logger.debug('Connecting {0}.{1} >> {2}.{3}'.format(self.meta_node, attr, node, source_attr))
+                            maya.cmds.connectAttr('{0}.{1}'.format(node, source_attr), f=force)
                     except Exception:
                         # If the add was originally a messageSimple, then this exception is a
                         # back-up for the previous behaviour
-                        cmds.connectAttr('{0}.{1}'.format(self.meta_node, attr), '{0}.{1}'.format(node, source_attr), f=force)
+                        maya.cmds.connectAttr('{0}.{1}'.format(self.meta_node, attr), '{0}.{1}'.format(node, source_attr), f=force)
                 else:
                     raise StandardError('"{0}" is already connected to MetaNode "{1}"'.format(node, self.meta_node))
             except StandardError as e:
-                tp.logger.warning(e)
+                maya.logger.warning(e)
 
     @node_lock_manager
     def disconnect_child(self, node, attr=None, delete_source_plug=True, delete_dst_plug=True):
@@ -1432,51 +1428,51 @@ class MetaNode(object):
             source_plug_meta = node
             node = node.meta_node
 
-        connections = cmds.listConnections(node, source=True, destination=False, plugs=True, connections=True)
+        connections = maya.cmds.listConnections(node, source=True, destination=False, plugs=True, connections=True)
         if not connections:
             raise StandardError('{0} is not connected to the MetaNode {1}'.format(node, self.meta_node))
 
         for source_plug, dst_plug in zip(connections[0::2], connections[1::2]):
-            tp.logger.debug('Attribute Connection Inspected: {0} << {1}'.format(source_plug, dst_plug))
+            maya.logger.debug('Attribute Connection Inspected: {0} << {1}'.format(source_plug, dst_plug))
             if (attr and search_connection == dst_plug.split('[')[0]) or (not attr and search_connection in dst_plug):
-                tp.logger.debug('Disconnecting {0} >> {1} as {2} found in destination plug'.format(dst_plug, source_plug, search_connection))
-                cmds.disconnectAttr(dst_plug, source_plug)
+                maya.logger.debug('Disconnecting {0} >> {1} as {2} found in destination plug'.format(dst_plug, source_plug, search_connection))
+                maya.cmds.disconnectAttr(dst_plug, source_plug)
                 return_data.append((dst_plug, source_plug))
 
         if delete_source_plug:
             try:
                 allow_delete = True
                 attr = source_plug.split('[')[0]    # split any multi-indexing from the plug ie node.attr[0]
-                if cmds.listConnections(attr):
+                if maya.cmds.listConnections(attr):
                     allow_delete = False
-                    tp.logger.debug('SourceAttr connections remaining: {0}'.format(','.join(cmds.listConnections(attr))))
+                    maya.logger.debug('SourceAttr connections remaining: {0}'.format(','.join(maya.cmds.listConnections(attr))))
                 if allow_delete:
-                    tp.logger.debug('Deleting SourcePlug Attr {}'.format(attr))
+                    maya.logger.debug('Deleting SourcePlug Attr {}'.format(attr))
                     if source_plug_meta:
                         delattr(source_plug_meta, attr.split('.')[-1])
                     else:
-                        cmds.deleteAttr(attr)
+                        maya.cmds.deleteAttr(attr)
                 else:
-                    tp.logger.debug('Deleting SourcePlug Attr aborted as node still has connections!')
+                    maya.logger.debug('Deleting SourcePlug Attr aborted as node still has connections!')
             except StandardError as e:
-                tp.logger.warning('Failed to remove MetaNode Connection Attribute')
-                tp.logger.debug(e)
+                maya.logger.warning('Failed to remove MetaNode Connection Attribute')
+                maya.logger.debug(e)
 
         if delete_dst_plug:
             try:
                 allow_delete = True
                 attr = source_plug.split('[')[0]  # split any multi-indexing from the plug ie node.attr[0]
-                if cmds.listConnections(attr):
+                if maya.cmds.listConnections(attr):
                     allow_delete = False
-                    tp.logger.debug('DstPlug connections remaining: {0}'.format(','.join(cmds.listConnections(attr))))
+                    maya.logger.debug('DstPlug connections remaining: {0}'.format(','.join(maya.cmds.listConnections(attr))))
                 if allow_delete:
-                    tp.logger.debug('Deleting DstPug Attr {}'.format(attr))
+                    maya.logger.debug('Deleting DstPug Attr {}'.format(attr))
                     delattr(source_plug_meta, attr.split('.')[-1])
                 else:
-                    tp.logger.debug('Deleting SourcePlug Attr aborted as node still has connections!')
+                    maya.logger.debug('Deleting SourcePlug Attr aborted as node still has connections!')
             except StandardError as e:
-                tp.logger.warning('Failed to remove MetaNode Connection Attribute')
-                tp.logger.debug(e)
+                maya.logger.warning('Failed to remove MetaNode Connection Attribute')
+                maya.logger.debug(e)
 
         return return_data
 
@@ -1638,7 +1634,7 @@ class MetaNode(object):
         :return: list<str>
         """
 
-        return cmds.ls(['{}.{}'.format(self.meta_node, component_type)], flatten=flatten)
+        return maya.cmds.ls(['{}.{}'.format(self.meta_node, component_type)], flatten=flatten)
 
 # ==============================================================================================================
 
@@ -1649,8 +1645,8 @@ def get_mobject(meta_node):
     Base method to get the MObject from node
     """
 
-    mobj = OpenMaya.MObject()
-    sel = OpenMaya.MSelectionList()
+    mobj = maya.OpenMaya.MObject()
+    sel = maya.OpenMaya.MSelectionList()
     sel.add(meta_node)
     sel.getDependNode(0, mobj)
     return mobj
@@ -1668,7 +1664,7 @@ def attribute_data_type(value):
     valid_types = ['string', 'unicode', 'bool', 'int', 'float', 'complex', 'complex', 'complex']
     for py_type, valid_type in zip(python_types, valid_types):
         if issubclass(type(value), py_type):
-            tp.logger.debug('Value {0} is a "{1}" attribute'.format(py_type, valid_type))
+            maya.logger.debug('Value {0} is a "{1}" attribute'.format(py_type, valid_type))
             return valid_type
 
 
@@ -1724,7 +1720,7 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
         if meta_class not in meta_classes_register:
             raise ValueError('Given class it not in the MetaClass Registry: {}'.format(meta_class))
         t2 = time.clock()
-        tp.logger.debug('Initial meta_class ... %0.6f' % (t2 - t1))
+        maya.logger.debug('Initial meta_class ... %0.6f' % (t2 - t1))
 
     # Check if given node is a valid node
     node_arg = type(node)
@@ -1748,9 +1744,9 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
         node.meta_node
         meta_node = node
         _node = node.meta_node
-        tp.logger.debug('Node {} is already a MetaNode instance'.format(node))
+        maya.logger.debug('Node {} is already a MetaNode instance'.format(node))
     except Exception:
-        tp.logger.debug('Node {} is not a MetaNode instance yet'.format(node))
+        maya.logger.debug('Node {} is not a MetaNode instance yet'.format(node))
         try:
             _node = name_utils.get_long_name(obj=node)
         except Exception as e:
@@ -1762,13 +1758,13 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
             raise ValueError('{} is not valid node. Validated to {}'.format(node, _node))
 
     _node_short = name_utils.get_short_name(obj=_node)
-    tp.logger.debug('Checking: {0} | MetaClass: {1}'.format(_node, meta_class))
+    maya.logger.debug('Checking: {0} | MetaClass: {1}'.format(_node, meta_class))
     new_meta_class = meta_classes_register.get(meta_class)
 
     # Check if we need to force Maya type
     if maya_type is not None and len(maya_type):
         t1 = time.clock()
-        tp.logger.debug('Checking Maya Type ...')
+        maya.logger.debug('Checking Maya Type ...')
         if type(maya_type) not in [tuple, list]:
             maya_types_list = [maya_type]
         else:
@@ -1776,33 +1772,33 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
         str_type = metautils.MetaAttributeValidator.get_maya_type(_node)
         if str_type not in maya_types_list:
             if none_valid:
-                tp.logger.warning('"{}" maya_type: "{}" not in "{}"'.format(_node_short, str_type, maya_types_list))
+                maya.logger.warning('"{}" maya_type: "{}" not in "{}"'.format(_node_short, str_type, maya_types_list))
                 return False
             raise StandardError('"{}" maya_type: "{}" not in "{}"'.format(_node_short, str_type, maya_types_list))
         t2 = time.clock()
-        tp.logger.debug('maya_type not None time ... % 0.6f' % (t2 - t1))
+        maya.logger.debug('maya_type not None time ... % 0.6f' % (t2 - t1))
 
     node_meta_class = metautils.MetaAttributeUtils.get(_node_short, 'meta_class')
 
     newUUID = False
     uuid = False
     try:
-        newUUID = cmds.ls(_node_short, uuid=True)[0]
+        newUUID = maya.cmds.ls(_node_short, uuid=True)[0]
     except Exception:
         pass
 
     if newUUID:
-        tp.logger.debug('>2016 UUID: {}'.format(uuid))
+        maya.logger.debug('>2016 UUID: {}'.format(uuid))
         uuid = newUUID
         try:
             metautils.MetaAttributeUtils.delete(_node_short, 'UUID')
-            tp.logger.debug('Clearing UUID attr ...')
+            maya.logger.debug('Clearing UUID attr ...')
         except Exception:
             pass
     else:
         uuid = metautils.MetaAttributeUtils.get(_node_short, 'UUID')
 
-    tp.logger.debug('Cache Keys || UUID: {0} | MetaClass: {1}'.format(uuid, node_meta_class))
+    maya.logger.debug('Cache Keys || UUID: {0} | MetaClass: {1}'.format(uuid, node_meta_class))
     was_cached = False
 
     current_metaclases_keys = metadatamanager.METANODES_CACHE.keys()
@@ -1817,30 +1813,30 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
         cache_key = unicode_node
         cached = metadatamanager.METANODES_CACHE.get(unicode_node)
 
-    tp.logger.debug('Cached Key: {}'.format(cache_key))
+    maya.logger.debug('Cached Key: {}'.format(cache_key))
 
     if cached is not None:
-        tp.logger.debug('Given Node is already cached!')
+        maya.logger.debug('Given Node is already cached!')
         cached_meta_class = metautils.MetaAttributeUtils.get(_node, 'meta_class') or False
         cached_type = type(cached)
-        tp.logger.debug('Cached MetaNode: {}'.format(cached.meta_node))
-        tp.logger.debug('Cached MetaClass: {}'.format(cached_meta_class))
-        tp.logger.debug('Cached Type: {}'.format(cached_type))
+        maya.logger.debug('Cached MetaNode: {}'.format(cached.meta_node))
+        maya.logger.debug('Cached MetaClass: {}'.format(cached_meta_class))
+        maya.logger.debug('Cached Type: {}'.format(cached_type))
         change = False
         redo = False
 
         if _node != cached.meta_node:
-            tp.logger.debug('MetaNodes do not match! Need new UUID ...')
-            tp.logger.debug('Clearing current UUID ...')
+            maya.logger.debug('MetaNodes do not match! Need new UUID ...')
+            maya.logger.debug('Clearing current UUID ...')
             try:
                 metautils.MetaAttributeUtils.set(_node_short, 'UUID', '')
             except Exception:
                 pass
             redo = True
         elif cached_type == new_meta_class:
-            tp.logger.debug('Cached Type ({0}) match with new given MetaClass ({1})'.format(cached_type, new_meta_class))
+            maya.logger.debug('Cached Type ({0}) match with new given MetaClass ({1})'.format(cached_type, new_meta_class))
             if update_class and not cached_meta_class:
-                tp.logger.debug('Trying to update given node with UUID and meta_class attributes')
+                maya.logger.debug('Trying to update given node with UUID and meta_class attributes')
                 try:
                     metautils.MetaAttributeUtils.add(_node_short, 'meta_class', 'string')
                 except Exception:
@@ -1854,22 +1850,22 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
         elif cached_meta_class:
             if meta_class is not None:
                 if cached_type != new_meta_class:
-                    tp.logger.debug('Cached Type does not match ({})'.format(new_meta_class))
+                    maya.logger.debug('Cached Type does not match ({})'.format(new_meta_class))
                     change = True
                 elif cached_meta_class != meta_class:
-                    tp.logger.debug('Cached Type ({0}) does not match with new given MetaClass ({1})'.format(cached_meta_class, meta_class))
+                    maya.logger.debug('Cached Type ({0}) does not match with new given MetaClass ({1})'.format(cached_meta_class, meta_class))
                     change = True
         elif new_meta_class:
-            tp.logger.debug('No cached MetaClass or type')
+            maya.logger.debug('No cached MetaClass or type')
             try:
                 if issubclass(type(cached), new_meta_class):
-                    tp.logger.debug('Subclass match')
+                    maya.logger.debug('Subclass match')
                     change = False
                     if update_class:
-                        tp.logger.debug('SubClass match not good enough')
+                        maya.logger.debug('SubClass match not good enough')
                         change = True
             except Exception as e:
-                tp.logger.warning('Cached subclass check failed | {}'.format(e))
+                maya.logger.warning('Cached subclass check failed | {}'.format(e))
                 change = True
 
         if change:
@@ -1877,9 +1873,9 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
                 if issubclass(cached_type, new_meta_class) and not update_class:
                     change = False
             except Exception as e:
-                tp.logger.warning('Cached Type: {}'.format(cached_type))
-                tp.logger.warning('New Meta Class: {}'.format(new_meta_class))
-                tp.logger.warning('Change cached subclass check failed | {}'.format(e))
+                maya.logger.warning('Cached Type: {}'.format(cached_type))
+                maya.logger.warning('New Meta Class: {}'.format(new_meta_class))
+                maya.logger.warning('Change cached subclass check failed | {}'.format(e))
 
         if not change and not redo:
             return cached
@@ -1887,20 +1883,20 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
             if not update_class:
                 return False
 
-            tp.logger.debug('Cleaning current MetaNode Data from {}'.format(node))
+            maya.logger.debug('Cleaning current MetaNode Data from {}'.format(node))
             was_cached = True
             if cached_meta_class:
-                tp.logger.debug('Clearing current node MetaClass ...')
+                maya.logger.debug('Clearing current node MetaClass ...')
                 metautils.MetaAttributeUtils.delete(_node_short, 'meta_class')
             if uuid:
-                tp.logger.debug('Clearing current node UUID ...')
+                maya.logger.debug('Clearing current node UUID ...')
                 metautils.MetaAttributeUtils.delete(_node_short, 'UUID')
-            tp.logger.debug('Removing MetaNode UUID from MetaNodes register!')
+            maya.logger.debug('Removing MetaNode UUID from MetaNodes register!')
             metadatamanager.METANODES_CACHE.pop(cache_key)
 
     if meta_class:
         if update_class or was_cached:
-            tp.logger.debug('Updating current MetaClass ({0}) to new MetaClass ({1})'.format(node_meta_class, new_meta_class.__name__))
+            maya.logger.debug('Updating current MetaClass ({0}) to new MetaClass ({1})'.format(node_meta_class, new_meta_class.__name__))
             try:
                 metautils.MetaAttributeUtils.add(_node_short, 'meta_class', 'string')
             except Exception:
@@ -1921,7 +1917,7 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
             if node_meta_class not in meta_classes_register:
                 raise ValueError('Stored MetaClass not found in MetaClass registry. MetaClass: {}'.format(node_meta_class))
             new_meta_class = meta_classes_register.get(node_meta_class)
-            tp.logger.debug('MetaClass registered: {0} | {1}'.format(_node_short, node_meta_class))
+            maya.logger.debug('MetaClass registered: {0} | {1}'.format(_node_short, node_meta_class))
             meta_node = new_meta_class(_node_short)
         else:
             if default_meta_type:
@@ -1946,7 +1942,7 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
                 except Exception as e:
                     raise Exception('MetaNode initialization failed | {}'.format(e))
 
-    tp.logger.debug('Returning {}'.format(meta_node))
+    maya.logger.debug('Returning {}'.format(meta_node))
     return meta_node
 
 def validate_obj_list_arg(list_arg=None, meta_class=None, none_valid=False, default_meta_type=None, maya_type=None, update_class=False):

@@ -1,17 +1,24 @@
-import maya.cmds as cmds
+#! /usr/bin/env python
+# # -*- coding: utf-8 -*-
 
-from tpRigToolkit.maya.lib.meta import metanode, metautils
-from tpRigToolkit.maya.lib import transform as transform_lib
-from tpRigToolkit.maya.lib import shape as shape_lib
+"""
+MetaNode class implementation for Maya
+"""
+
+from __future__ import print_function, division, absolute_import
+
+import tpMayaLib as maya
+from tpMayaLib.meta import metanode, metautils
+from tpMayaLib.core import transform as transform_lib, shape as shape_lib
 
 
 class MetaObject(metanode.MetaNode, object):
     def __init__(self, node=None, name='object', name_args=None, name_kwargs=None, *args, **kwargs):
         if kwargs and kwargs.get('node_type') == 'joint':
             if node is None:
-                cmds.select(clear=True)
+                maya.cmds.select(clear=True)
                 # TODO: This breaks the auto nomenclature system :( CHANGE
-                node = cmds.joint(name=name)
+                node = maya.cmds.joint(name=name)
 
         # By default, if not node_type is given, we create a transform node
         if kwargs.get('node_type') is None:
