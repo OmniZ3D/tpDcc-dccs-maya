@@ -16,6 +16,7 @@ from collections import OrderedDict
 # Do not remove Maya imports
 import maya.cmds as cmds
 import maya.mel as mel
+import maya.utils as utils
 import maya.OpenMaya as OpenMaya
 import maya.OpenMayaUI as OpenMayaUI
 import maya.OpenMayaAnim as OpenMayaAnim

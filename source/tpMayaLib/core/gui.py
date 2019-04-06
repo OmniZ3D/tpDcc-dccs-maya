@@ -1,26 +1,29 @@
+#! /usr/bin/env python
+# # -*- coding: utf-8 -*-
+
+"""
+Module that contains functions and classes related to Maya UI
+"""
+
+from __future__ import print_function, division, absolute_import
+
 import functools
 import traceback
 import contextlib
 from collections import OrderedDict
 
-from Qt.QtCore import *
 from Qt.QtWidgets import *
 try:
     from shiboken2 import wrapInstance
 except ImportError:
     from shiboken import wrapInstance
 
-import maya.cmds as cmds
-import maya.mel as mel
-import maya.utils as utils
-import maya.OpenMayaUI as OpenMayaUI
-
-import tpRigToolkit as tp
+import tpMayaLib as maya
 from tpPyUtils import qtutils
 
 # ===================================================================================
 
-_DPI_SCALE = 1.0 if not hasattr(cmds, "mayaDpiSetting") else cmds.mayaDpiSetting(query=True, realScaleValue=True)
+_DPI_SCALE = 1.0 if not hasattr(maya.cmds, "mayaDpiSetting") else maya.cmds.mayaDpiSetting(query=True, realScaleValue=True)
 current_progress_bar = None
 
 # ===================================================================================
@@ -31,28 +34,28 @@ class ManageNodeEditors(object):
         self.node_editors = get_node_editors()
         self._additive_state_dict = dict()
         for editor in self.node_editors:
-            current_value = cmds.nodeEditor(editor, query=True, ann=True)
+            current_value = maya.cmds.nodeEditor(editor, query=True, ann=True)
             self._additive_state_dict[editor] = current_value
 
     def turn_off_add_new_nodes(self):
         for editor in self.node_editors:
-            cmds.nodeEditor(editor, e=True, ann=False)
+            maya.cmds.nodeEditor(editor, e=True, ann=False)
 
     def restore_add_new_nodes(self):
         for editor in self.node_editors:
-            cmds.nodeEditor(editor, e=True, ann=self._additive_state_dict[editor])
+            maya.cmds.nodeEditor(editor, e=True, ann=self._additive_state_dict[editor])
 
 
 def maya_undo(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         try:
-            cmds.undoInfo(openChunk=True)
+            maya.cmds.undoInfo(openChunk=True)
             return fn(*args, **kwargs)
         finally:
-            cmds.undoInfo(closeChunk=True)
+            maya.cmds.undoInfo(closeChunk=True)
 
-    return lambda *args, **kwargs: utils.executeDeferred(wrapper, *args, **kwargs)
+    return lambda *args, **kwargs: maya.utils.executeDeferred(wrapper, *args, **kwargs)
 
 @contextlib.contextmanager
 def maya_no_undo():
@@ -61,10 +64,10 @@ def maya_no_undo():
     """
 
     try:
-        cmds.undoInfo(stateWithoutFlush=False)
+        maya.cmds.undoInfo(stateWithoutFlush=False)
         yield
     finally:
-        cmds.undoInfo(stateWithoutFlush=True)
+        maya.cmds.undoInfo(stateWithoutFlush=True)
 
 
 def get_maya_api_version():
@@ -73,7 +76,7 @@ def get_maya_api_version():
     :return: int
     """
 
-    return int(cmds.about(api=True))
+    return int(maya.cmds.about(api=True))
 
 
 def get_maya_window():
@@ -82,7 +85,7 @@ def get_maya_window():
     :return: Maya Window
     """
 
-    ptr = OpenMayaUI.MQtUtil.mainWindow()
+    ptr = maya.OpenMayaUI.MQtUtil.mainWindow()
     if ptr is not None:
         return wrapInstance(long(ptr), QWidget)
 
@@ -94,7 +97,7 @@ def get_main_shelf():
     Returns the Maya main shelf
     """
 
-    return mel.eval('$tempVar = $gShelfTopLevel')
+    return maya.mel.eval('$tempVar = $gShelfTopLevel')
 
 
 def get_main_window():
@@ -102,7 +105,7 @@ def get_main_window():
     Returns Maya main window through MEL
     """
 
-    return mel.eval("$tempVar = $gMainWindow")
+    return maya.mel.eval("$tempVar = $gMainWindow")
 
 
 def viewport_message(text):
@@ -111,7 +114,7 @@ def viewport_message(text):
     :param text: str, text to show in Maya viewport
     """
 
-    cmds.inViewMessage(amg='<hl>{}</hl>'.format(text), pos='midCenter', fade=True)
+    maya.cmds.inViewMessage(amg='<hl>{}</hl>'.format(text), pos='midCenter', fade=True)
 
 
 def force_stack_trace_on():
@@ -120,13 +123,13 @@ def force_stack_trace_on():
     """
 
     try:
-        mel.eval('stackTrace -state on')
-        cmds.optionVar(intValue=('stackTraceIsOn', True))
-        what_is = mel.eval('whatIs "$gLastFocusedCommandReporter"')
+        maya.mel.eval('stackTrace -state on')
+        maya.cmds.optionVar(intValue=('stackTraceIsOn', True))
+        what_is = maya.mel.eval('whatIs "$gLastFocusedCommandReporter"')
         if what_is != 'Unknown':
-            last_focused_command_reporter = mel.eval('$tmp = $gLastFocusedCommandReporter')
+            last_focused_command_reporter = maya.mel.eval('$tmp = $gLastFocusedCommandReporter')
             if last_focused_command_reporter and last_focused_command_reporter != '':
-                mel.eval('synchronizeScriptEditorOption 1 $stackTraceMenuItemSuffix')
+                maya.mel.eval('synchronizeScriptEditorOption 1 $stackTraceMenuItemSuffix')
     except RuntimeError:
         pass
 
@@ -138,7 +141,7 @@ def pass_message_to_main_thread(message_handler, *args):
     :param message_handler: variant, str || function, string containing Python code or callable function
     """
 
-    utils.executeInMainThreadWithResult(message_handler, *args)
+    maya.utils.executeInMainThreadWithResult(message_handler, *args)
 
 
 def dpi_scale(value):
@@ -151,8 +154,8 @@ def get_plugin_shapes():
     :return: dict, plugin shapes by their menu label and script name
     """
 
-    filters = cmds.pluginDisplayFilter(query=True, listFilters=True)
-    labels = [cmds.pluginDisplayFilter(f, query=True, label=True) for f in filters]
+    filters = maya.cmds.pluginDisplayFilter(query=True, listFilters=True)
+    labels = [maya.cmds.pluginDisplayFilter(f, query=True, label=True) for f in filters]
     return OrderedDict(zip(labels, filters))
 
 
@@ -161,8 +164,8 @@ def get_active_editor():
     Returns the active editor panel of Maya
     """
 
-    cmds.currentTime(cmds.currentTime(query=True))
-    panel = cmds.playblast(activeEditor=True)
+    maya.cmds.currentTime(maya.cmds.currentTime(query=True))
+    panel = maya.cmds.playblast(activeEditor=True)
     return panel.split('|')[-1]
 
 
@@ -172,7 +175,7 @@ def get_current_frame():
     :return: int
     """
 
-    return cmds.currentTime(query=True)
+    return maya.cmds.currentTime(query=True)
 
 
 def get_time_slider_range(highlighted=True, within_highlighted=True, highlighted_only=False):
@@ -187,19 +190,19 @@ def get_time_slider_range(highlighted=True, within_highlighted=True, highlighted
     """
 
     if highlighted is True:
-        playback_slider = mel.eval("global string $gPlayBackSlider; " "$gPlayBackSlider = $gPlayBackSlider;")
-        if cmds.timeControl(playback_slider, query=True, rangeVisible=True):
-            highlighted_range = cmds.timeControl(playback_slider, query=True, rangeArray=True)
+        playback_slider = maya.mel.eval("global string $gPlayBackSlider; " "$gPlayBackSlider = $gPlayBackSlider;")
+        if maya.cmds.timeControl(playback_slider, query=True, rangeVisible=True):
+            highlighted_range = maya.cmds.timeControl(playback_slider, query=True, rangeArray=True)
             if within_highlighted:
                 highlighted_range[-1] -= 1
             return highlighted_range
 
     if not highlighted_only:
-        return [cmds.playbackOptions(query=True, minTime=True), cmds.playbackOptions(query=True, maxTime=True)]
+        return [maya.cmds.playbackOptions(query=True, minTime=True), maya.cmds.playbackOptions(query=True, maxTime=True)]
 
 
 def get_is_standalone():
-    return not hasattr(cmds, 'about') or cmds.about(batch=True)
+    return not hasattr(maya.cmds, 'about') or maya.cmds.about(batch=True)
 
 
 def get_active_panel():
@@ -208,7 +211,7 @@ def get_active_panel():
     :return: str, name of the model panel or raises an error if no active modelPanel iis found
     """
 
-    panel = cmds.getPanel(withFocus=True)
+    panel = maya.cmds.getPanel(withFocus=True)
     if not panel or 'modelPanel' not in panel:
         raise RuntimeError('No active model panel found!')
 
@@ -228,15 +231,15 @@ def get_available_screen_size():
 
 
 def get_top_maya_shelf():
-    return mel.eval("global string $gShelfTopLevel; $temp = $gShelfTopLevel;")
+    return maya.mel.eval("global string $gShelfTopLevel; $temp = $gShelfTopLevel;")
 
 
 def get_all_shelves():
-    return cmds.tabLayout(get_top_maya_shelf(), query=True, ca=True)
+    return maya.cmds.tabLayout(get_top_maya_shelf(), query=True, ca=True)
 
 
 def get_current_shelf():
-    return cmds.tabLayout(get_top_maya_shelf(), query=True, st=True)
+    return maya.cmds.tabLayout(get_top_maya_shelf(), query=True, st=True)
 
 
 def shelf_exists(shelf_name):
@@ -246,7 +249,7 @@ def shelf_exists(shelf_name):
     :return: bool
     """
 
-    return cmds.shelfLayout(shelf_name, exists=True)
+    return maya.cmds.shelfLayout(shelf_name, exists=True)
 
 
 def delete_shelf(shelf_name):
@@ -256,7 +259,7 @@ def delete_shelf(shelf_name):
     """
 
     if shelf_exists(shelf_name=shelf_name):
-        cmds.deleteUI(shelf_name)
+        maya.cmds.deleteUI(shelf_name)
 
 
 def create_shelf(name, parent_layout='ShelfLayout'):
@@ -267,7 +270,7 @@ def create_shelf(name, parent_layout='ShelfLayout'):
     :return: str
     """
 
-    return cmds.shelfLayout(name, parent=parent_layout)
+    return maya.cmds.shelfLayout(name, parent=parent_layout)
 
 
 @contextlib.contextmanager
@@ -283,25 +286,25 @@ def create_independent_panel(width, height, off_screen=False):
 
     screen_width, screen_height = get_available_screen_size()
     top_left = [int((screen_height-height)*0.5), int((screen_width-width)*0.5)]
-    window = cmds.window(width=width, height=height, topLeftCorner=top_left, menuBarVisible=False, titleBar=False, visible=not off_screen)
-    cmds.paneLayout()
-    panel = cmds.modelPanel(menuBarVisible=False, label='CapturePanel')
+    window = maya.cmds.window(width=width, height=height, topLeftCorner=top_left, menuBarVisible=False, titleBar=False, visible=not off_screen)
+    maya.cmds.paneLayout()
+    panel = maya.cmds.modelPanel(menuBarVisible=False, label='CapturePanel')
     # Hide icons under panel menus
-    bar_layout = cmds.modelPanel(panel, query=True, barLayout=True)
-    cmds.frameLayout(bar_layout, edit=True, collapse=True)
+    bar_layout = maya.cmds.modelPanel(panel, query=True, barLayout=True)
+    maya.cmds.frameLayout(bar_layout, edit=True, collapse=True)
     if not off_screen:
-        cmds.showWindow(window)
+        maya.cmds.showWindow(window)
 
     # Set the modelEditor of the modelPanel as the active view, so it takes the playback focus
-    editor = cmds.modelPanel(panel, query=True, modelEditor=True)
-    cmds.modelEditor(editor, edit=True, activeView=True)
-    cmds.refresh(force=True)
+    editor = maya.cmds.modelPanel(panel, query=True, modelEditor=True)
+    maya.cmds.modelEditor(editor, edit=True, activeView=True)
+    maya.cmds.refresh(force=True)
 
     try:
         yield panel
     finally:
-        cmds.deleteUI(panel, panel=True)
-        cmds.deleteUI(window)
+        maya.cmds.deleteUI(panel, panel=True)
+        maya.cmds.deleteUI(window)
 
 
 @contextlib.contextmanager
@@ -310,12 +313,12 @@ def disable_inview_messages():
     Disable in-view help messages during the context
     """
 
-    original = cmds.optionVar(query='inViewMessageEnable')
-    cmds.optionVar(iv=('inViewMessageEnable', 0))
+    original = maya.cmds.optionVar(query='inViewMessageEnable')
+    maya.cmds.optionVar(iv=('inViewMessageEnable', 0))
     try:
         yield
     finally:
-        cmds.optionVar(iv=('inViewMessageEnable', original))
+        maya.cmds.optionVar(iv=('inViewMessageEnable', original))
 
 
 @contextlib.contextmanager
@@ -328,15 +331,15 @@ def maintain_camera_on_panel(panel, camera):
 
     state = dict()
     if not get_is_standalone():
-        cmds.lookThru(panel, camera)
+        maya.cmds.lookThru(panel, camera)
     else:
-        state = dict((camera, cmds.getAttr(camera + '.rnd')) for camera in cmds.ls(type='camera'))
-        cmds.setAttr(camera + '.rnd', True)
+        state = dict((camera, maya.cmds.getAttr(camera + '.rnd')) for camera in maya.cmds.ls(type='camera'))
+        maya.cmds.setAttr(camera + '.rnd', True)
     try:
         yield
     finally:
         for camera, renderable in state.items():
-            cmds.setAttr(camera + '.rnd', renderable)
+            maya.cmds.setAttr(camera + '.rnd', renderable)
 
 
 @contextlib.contextmanager
@@ -345,11 +348,11 @@ def reset_time():
     The time is reset once the context is finished
     """
 
-    current_time = cmds.currentTime(query=True)
+    current_time = maya.cmds.currentTime(query=True)
     try:
         yield
     finally:
-        cmds.currentTime(current_time)
+        maya.cmds.currentTime(current_time)
 
 
 @contextlib.contextmanager
@@ -359,9 +362,9 @@ def isolated_nodes(nodes, panel):
     """
 
     if nodes is not None:
-        cmds.isolateSelect(panel, state=True)
+        maya.cmds.isolateSelect(panel, state=True)
         for obj in nodes:
-            cmds.isolateSelect(panel, addDagObject=obj)
+            maya.cmds.isolateSelect(panel, addDagObject=obj)
     yield
 
 
@@ -372,11 +375,11 @@ def to_qt_object(maya_name, qobj=None):
 
     if not qobj:
         qobj = QWidget
-    ptr = OpenMayaUI.MQtUtil.findControl(maya_name)
+    ptr = maya.OpenMayaUI.MQtUtil.findControl(maya_name)
     if ptr is None:
-        ptr = OpenMayaUI.MQtUtil.findLayout(maya_name)
+        ptr = maya.OpenMayaUI.MQtUtil.findLayout(maya_name)
     if ptr is None:
-        ptr = OpenMayaUI.MQtUtil.findMenuItem(maya_name)
+        ptr = maya.OpenMayaUI.MQtUtil.findMenuItem(maya_name)
     if ptr is not None:
         return qtutils.wrapinstance(long(ptr), qobj)
     return None
@@ -387,7 +390,7 @@ def to_maya_object(qt_object):
     Returns a QtObject as Maya object
     """
 
-    return OpenMayaUI.MQtUtil.fullName(qtutils.unwrapinstance(qt_object))
+    return maya.OpenMayaUI.MQtUtil.fullName(qtutils.unwrapinstance(qt_object))
 
 
 def get_parent_widget(widget):
@@ -397,7 +400,7 @@ def get_parent_widget(widget):
     :return: QWidget
     """
 
-    ptr = OpenMayaUI.MQtUtil.getParent(qtutils.unwrapinstance(widget))
+    ptr = maya.OpenMayaUI.MQtUtil.getParent(qtutils.unwrapinstance(widget))
     return qtutils.wrapinstance(long(ptr))
 
 
@@ -408,12 +411,12 @@ def get_ui_gvars():
     """
 
     gvars = list()
-    for g in [x for x in sorted(mel.eval('env')) if x.find('$g') > -1]:
+    for g in [x for x in sorted(maya.mel.eval('env')) if x.find('$g') > -1]:
         try:
-            var_type = mel.eval('whatIs "{0}"'.format(g))
+            var_type = maya.mel.eval('whatIs "{0}"'.format(g))
             if not var_type == 'string variable':
                 raise TypeError
-            tmp = mel.eval('string $temp = {0};'.format(g))
+            tmp = maya.mel.eval('string $temp = {0};'.format(g))
             if tmp is None:
                 raise TypeError
             target_widget = to_qt_object(maya_name=tmp)
@@ -440,12 +443,12 @@ def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right'
     dock_name = '{}Dock'.format(ui_name)
     dock_name = dock_name.replace(' ', '_').replace('-', '_')
     path = 'MayaWindow|{}'.format(dock_name)
-    if cmds.dockControl(path, exists=True):
-        cmds.deleteUI(dock_name, control=True)
+    if maya.cmds.dockControl(path, exists=True):
+        maya.cmds.deleteUI(dock_name, control=True)
         if hasattr(window, '_has_exit_prompt'):
             window._has_exit_prompt = False
         window.close()
-    mel.eval('updateRendererUI;')
+    maya.mel.eval('updateRendererUI;')
 
     try:
         dock = DockWrapper()
@@ -457,8 +460,8 @@ def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right'
         dock.create()
         window.show()
     except Exception:
-        tp.logger.warning('{} window failed to load. Maya may need to finish loading'.format(ui_name))
-        tp.logger.error(traceback.format_exc())
+        maya.logger.warning('{} window failed to load. Maya may need to finish loading'.format(ui_name))
+        maya.logger.error(traceback.format_exc())
 
 
 def get_progress_bar():
@@ -467,7 +470,7 @@ def get_progress_bar():
     :return: str
     """
 
-    main_progress_bar = mel.eval('$tmp = $gMainProgressBar')
+    main_progress_bar = maya.mel.eval('$tmp = $gMainProgressBar')
     return main_progress_bar
 
 
@@ -477,8 +480,8 @@ def get_node_editors():
     """
 
     found = list()
-    for panel in cmds.getPanel(type='scriptedPanel'):
-        if cmds.scriptedPanel(panel, query=True, type=True) == 'nodeEditorPanel':
+    for panel in maya.cmds.getPanel(type='scriptedPanel'):
+        if maya.cmds.scriptedPanel(panel, query=True, type=True) == 'nodeEditorPanel':
             node_editor = panel + 'NodeEditorEd'
             found.append(node_editor)
 
@@ -498,12 +501,10 @@ class DockWrapper(object):
     def create(self):
         floating = False
 
-        if tp.Dcc.get_name() == tp.Dccs.Maya:
-            import maya.cmds as cmds
-            if self._exists():
-                cmds.dockControl(self._dock_name, visible=True)
-            else:
-                cmds.dockControl(self._dock_name, aa=self._allowed_areas, a=self._dock_area, content=self._name, label=self._label, fl=floating, visible=True, fcc=self._floating_changed)
+        if self._exists():
+            maya.cmds.dockControl(self._dock_name, visible=True)
+        else:
+            maya.cmds.dockControl(self._dock_name, aa=self._allowed_areas, a=self._dock_area, content=self._name, label=self._label, fl=floating, visible=True, fcc=self._floating_changed)
 
     def set_name(self, name):
         self._name = name
@@ -524,72 +525,68 @@ class DockWrapper(object):
     # region Private Functions
     def _floating_changed(self):
         if self._settings:
-            if tp.Dcc.get_name() == tp.Dccs.Maya:
-                import maya.cmds as cmds
-                floating = cmds.dockControl(self._dock_name, floating=True, query=True)
-                self._settings.set('floating', floating)
+            floating = maya.cmds.dockControl(self._dock_name, floating=True, query=True)
+            self._settings.set('floating', floating)
 
     def _exists(self):
-        if tp.Dcc.get_name() == tp.Dccs.Maya:
-            import maya.cmds as cmds
-            return cmds.dockControl(self._dock_name, exists=True)
+        return maya.cmds.dockControl(self._dock_name, exists=True)
     # endregion
 
 def add_maya_widget(layout, layout_parent, maya_fn, *args, **kwargs):
-    if not cmds.window('tempAttrWidgetWin', exists=True):
-        cmds.window('tempAttrWidgetWin')
+    if not maya.cmds.window('tempAttrWidgetWin', exists=True):
+        maya.cmds.window('tempAttrWidgetWin')
 
-    cmds.columnLayout(adjustableColumn=True)
+    maya.cmds.columnLayout(adjustableColumn=True)
     try:
         maya_ui = maya_fn(*args, **kwargs)
         qtobj = to_qt_object(maya_ui)
         qtobj.setParent(layout_parent)
         layout.addWidget(qtobj)
     finally:
-        if cmds.window('tempAttrWidgetWin', exists=True):
-            cmds.deleteUI('tempAttrWidgetWin')
+        if maya.cmds.window('tempAttrWidgetWin', exists=True):
+            maya.cmds.deleteUI('tempAttrWidgetWin')
 
     return qtobj, maya_ui
 
 
 def add_attribute_widget(layout, layout_parent, lbl, attr=None, attr_type='cbx', size=[10, 60, 40, 80], attr_changed_fn=None):
 
-    if attr and not cmds.objExists(attr):
+    if attr and not maya.cmds.objExists(attr):
         return False
 
-    if not cmds.window('tempAttrWidgetWin', exists=True):
-        cmds.window('tempAttrWidgetWin')
+    if not maya.cmds.window('tempAttrWidgetWin', exists=True):
+        maya.cmds.window('tempAttrWidgetWin')
 
-    cmds.columnLayout(adjustableColumn=True)
+    maya.cmds.columnLayout(adjustableColumn=True)
 
     try:
         if attr_type == 'cbx':
-            ui_item = cmds.checkBox(label=lbl, v=False, rs=False, w=60)
-            cmds.checkBox(ui_item, changeCommand=lambda attr: attr_changed_fn(attr), edit=True)
-            cmds.connectControl(ui_item, attr)
+            ui_item = maya.cmds.checkBox(label=lbl, v=False, rs=False, w=60)
+            maya.cmds.checkBox(ui_item, changeCommand=lambda attr: attr_changed_fn(attr), edit=True)
+            maya.cmds.connectControl(ui_item, attr)
 
         if attr_type == 'color':
-            ui_item = cmds.attrColorSliderGrp(label=lbl, attribute=attr, cl4=['left', 'left', 'left', 'left'], cw4=[10, 15, 50, 80])
+            ui_item = maya.cmds.attrColorSliderGrp(label=lbl, attribute=attr, cl4=['left', 'left', 'left', 'left'], cw4=[10, 15, 50, 80])
 
         if attr_type == 'floatSlider':
-            ui_item = cmds.attrFieldSliderGrp(label=lbl, attribute=attr,
+            ui_item = maya.cmds.attrFieldSliderGrp(label=lbl, attribute=attr,
                                               cl4=['left', 'left', 'left', 'left'], cw4=size, pre=2)
-            cmds.attrFieldSliderGrp(ui_item, changeCommand=lambda *args: attr_changed_fn(attr), edit=True)
+            maya.cmds.attrFieldSliderGrp(ui_item, changeCommand=lambda *args: attr_changed_fn(attr), edit=True)
 
         if attr_type == 'floatSliderMesh':
-            ui_item = cmds.attrFieldSliderGrp(label=lbl, attribute=attr,
+            ui_item = maya.cmds.attrFieldSliderGrp(label=lbl, attribute=attr,
                                               cl3=["left", "left", "left"], cw3=size, pre=2)
-            cmds.attrFieldSliderGrp(ui_item, changeCommand=lambda *args: attr_changed_fn(attr), edit=True)
+            maya.cmds.attrFieldSliderGrp(ui_item, changeCommand=lambda *args: attr_changed_fn(attr), edit=True)
 
         if attr_type == 'float2Col':
-            ui_item = cmds.attrFieldSliderGrp(label=lbl, attribute=attr, cl2=["left", "left"], cw2=size, pre=2)
-            cmds.attrFieldSliderGrp(ui_item, changeCommand=lambda *args: attr_changed_fn(attr), edit=True)
+            ui_item = maya.cmds.attrFieldSliderGrp(label=lbl, attribute=attr, cl2=["left", "left"], cw2=size, pre=2)
+            maya.cmds.attrFieldSliderGrp(ui_item, changeCommand=lambda *args: attr_changed_fn(attr), edit=True)
 
         qtobj = to_qt_object(ui_item)
         qtobj.setParent(layout_parent)
         layout.addWidget(qtobj)
     finally:
-        if cmds.window('tempAttrWidgetWin', exists=True):
-            cmds.deleteUI('tempAttrWidgetWin')
+        if maya.cmds.window('tempAttrWidgetWin', exists=True):
+            maya.cmds.deleteUI('tempAttrWidgetWin')
 
     return qtobj

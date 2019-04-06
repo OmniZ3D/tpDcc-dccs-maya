@@ -1,16 +1,20 @@
+#! /usr/bin/env python
+# # -*- coding: utf-8 -*-
+
+"""
+Module that contains Maya utility functions and classes
+"""
+
+from __future__ import print_function, division, absolute_import
+
 import os
 import sys
 import stat
 import shutil
 
-import maya.cmds as cmds
-import maya.mel as mel
-import maya.OpenMaya as OpenMaya
-
-import tpRigToolkit as tp
-import tpRigToolkit.maya as maya
 from tpPyUtils import python
-from tpRigToolkit.maya.lib import time, gui
+import tpMayaLib as maya
+from tpMayaLib.core import time, gui
 
 
 class SelectionMasks(object):
@@ -53,13 +57,14 @@ class SelectionMasks(object):
     NurbsSurfaceFace = 72
     SubdivisionMeshUVs = 73
 
+
 def get_up_axis():
     """
     Returns up axis of the Maya scene
     :return: str, ('y' or 'z')
     """
 
-    return cmds.upAxis(axis=True, query=True)
+    return maya.cmds.upAxis(axis=True, query=True)
 
 
 def create_group(name, parent=None):
@@ -75,14 +80,14 @@ def create_group(name, parent=None):
 
     name = python.force_list(name)
     for n in name:
-        if not cmds.objExists(n):
-            n = cmds.group(name=n, empty=True)
-        if parent and cmds.objExists(parent):
-            actual_parent = cmds.listRelatives(n, p=True)
+        if not maya.cmds.objExists(n):
+            n = maya.cmds.group(name=n, empty=True)
+        if parent and maya.cmds.objExists(parent):
+            actual_parent = maya.cmds.listRelatives(n, p=True)
             if actual_parent:
                 actual_parent = actual_parent[0]
             if parent != actual_parent:
-                cmds.parent(n, parent)
+                maya.cmds.parent(n, parent)
 
 
 def get_selection_iterator():
@@ -91,11 +96,11 @@ def get_selection_iterator():
     :return: iterator
     """
 
-    selection = OpenMaya.MSelectionList()
-    OpenMaya.MGlobal.getActiveSelectionList(selection)
-    selection_iter = OpenMaya.MItSelectionList(selection)
+    selection = maya.OpenMaya.MSelectionList()
+    maya.OpenMaya.MGlobal.getActiveSelectionList(selection)
+    selection_iter = maya.OpenMaya.MItSelectionList(selection)
     while not selection_iter.isDone():
-        obj = OpenMaya.MObject()
+        obj = maya.OpenMaya.MObject()
         selection_iter.getDependNode(obj)
         yield obj
         selection_iter.next()
@@ -107,7 +112,7 @@ def selection_to_list():
     :return: list(variant)
     """
 
-    selected_objs = (cmds.ls(sl=True, flatten=True))
+    selected_objs = (maya.cmds.ls(sl=True, flatten=True))
     return selected_objs
 
 
@@ -121,7 +126,7 @@ def get_objects_of_mtype_iterator(object_type):
     if not isinstance(object_type, (tuple, list)):
         object_type = [object_type]
     for obj_type in object_type:
-        obj_iter = OpenMaya.MItDependencyNodes(obj_type)
+        obj_iter = maya.OpenMaya.MItDependencyNodes(obj_type)
         while not obj_iter.isDone():
             yield obj_iter.thisNode()
             obj_iter.next()
@@ -134,7 +139,7 @@ def get_current_time_unit():
     :return:  str, name of the current fps
     """
 
-    return cmds.currentUnit(query=True, time=True)
+    return maya.cmds.currentUnit(query=True, time=True)
 
 
 def create_mtime(value, unit=None):
@@ -149,7 +154,7 @@ def create_mtime(value, unit=None):
 
     if unit is None:
         unit = get_current_time_unit()
-    return OpenMaya.MTime(value, time.fps_to_mtime[unit])
+    return maya.OpenMaya.MTime(value, time.fps_to_mtime[unit])
 
 
 def get_mfn_apy_type_map():
@@ -161,8 +166,8 @@ def get_mfn_apy_type_map():
     """
 
     out = dict()
-    for name in dir(OpenMaya.MFn):
-        value = getattr(OpenMaya.MFn, name)
+    for name in dir(maya.OpenMaya.MFn):
+        value = getattr(maya.OpenMaya.MFn, name)
         if name.startswith('k'):
             out.setdefault(value, []).append(name)
 
@@ -175,7 +180,7 @@ def get_maya_version():
     @returns: int, Version of Maya
     """
 
-    return int(cmds.about(version=True))
+    return int(maya.cmds.about(version=True))
 
 
 def get_maya_api_version():
@@ -184,7 +189,7 @@ def get_maya_api_version():
     @returns: int, Version of Maya
     """
 
-    return int(cmds.about(api=True))
+    return int(maya.cmds.about(api=True))
 
 
 def get_global_variable(var_name):
@@ -193,7 +198,7 @@ def get_global_variable(var_name):
     @param var_name: str, name of the MEL global variable
     """
 
-    return mel.eval("$tempVar = {0}".format(var_name))
+    return maya.mel.eval("$tempVar = {0}".format(var_name))
 
 
 def get_maya_python_interpreter_path():
@@ -214,9 +219,9 @@ def error(message, prefix=''):
 
     if len(message) > 160:
         print(message)
-        cmds.error(prefix + ' | ' + 'Check Maya Console for more information!')
+        maya.cmds.error(prefix + ' | ' + 'Check Maya Console for more information!')
         return False
-    cmds.error(prefix + ' | {0}'.format(message))
+    maya.cmds.error(prefix + ' | {0}'.format(message))
     return False
 
 
@@ -229,9 +234,9 @@ def warning(message, prefix=''):
 
     if len(message) > 160:
         print(message)
-        cmds.warning(prefix + ' | ' + 'Check Maya Console for more information!')
+        maya.cmds.warning(prefix + ' | ' + 'Check Maya Console for more information!')
         return True
-    cmds.warning(prefix + ' | {0}'.format(message))
+    maya.cmds.warning(prefix + ' | {0}'.format(message))
     return True
 
 
@@ -265,13 +270,13 @@ def add_button_to_current_shelf(enable=True,
 
     if check_if_already_exists:
         curr_shelf = gui.get_current_shelf()
-        shelf_buttons = cmds.shelfLayout(curr_shelf, ca=True, query=True)
+        shelf_buttons = maya.cmds.shelfLayout(curr_shelf, ca=True, query=True)
         for shelf_btn in shelf_buttons:
-            if cmds.control(shelf_btn, query=True, docTag=True):
-                doc_tag = cmds.control(shelf_btn, query=True, docTag=True)
+            if maya.cmds.control(shelf_btn, query=True, docTag=True):
+                doc_tag = maya.cmds.control(shelf_btn, query=True, docTag=True)
                 if doc_tag == name:
                     return
-    cmds.shelfButton(parent=gui.get_current_shelf(), enable=True, width=34, height=34, manage=True, visible=True, annotation=annotation, label=label, image1=image1, style=style, command=command)
+    maya.cmds.shelfButton(parent=gui.get_current_shelf(), enable=True, width=34, height=34, manage=True, visible=True, annotation=annotation, label=label, image1=image1, style=style, command=command)
 
 
 def set_tool(name):
@@ -286,7 +291,7 @@ def set_tool(name):
         'scale' : "$gSacle"
     }
     tool_context = get_global_variable(context_lookup[name])
-    cmds.setToolTo(tool_context)
+    maya.cmds.setToolTo(tool_context)
 
 
 def in_view_log(color='', *args):
@@ -304,7 +309,7 @@ def in_view_log(color='', *args):
     if color != '':
         text = "<span style=\"color:{0};\">{1}</span>".format(color, text)
 
-    cmds.inViewMessage(amg=text, pos='topCenter', fade=True, fst=1000, dk=True)
+    maya.cmds.inViewMessage(amg=text, pos='topCenter', fade=True, fst=1000, dk=True)
 
 
 def display_info(info_msg):
@@ -314,7 +319,7 @@ def display_info(info_msg):
     """
 
     info_msg = info_msg.replace('\n', '\ntp:\t\t')
-    OpenMaya.MGlobal.displayInfo('tp:\t\t' + info_msg)
+    maya.OpenMaya.MGlobal.displayInfo('tp:\t\t' + info_msg)
     maya.logger.debug('\n{}'.format(info_msg))
 
 
@@ -325,7 +330,7 @@ def display_warning(warning_msg):
     """
 
     warning_msg = warning_msg.replace('\n', '\ntp:\t\t')
-    OpenMaya.MGlobal.displayWarning('tp:\t\t' + warning_msg)
+    maya.OpenMaya.MGlobal.displayWarning('tp:\t\t' + warning_msg)
     maya.logger.warning('\n{}'.format(warning_msg))
 
 
@@ -336,7 +341,7 @@ def display_error(error_msg):
     """
 
     error_msg = error_msg.replace('\n', '\ntp:\t\t')
-    OpenMaya.MGlobal.displayError('tp:\t\t' + error_msg)
+    maya.OpenMaya.MGlobal.displayError('tp:\t\t' + error_msg)
     maya.logger.error('\n{}'.format(error_msg))
 
 
@@ -394,7 +399,7 @@ def clean_student_line(filename):
                     continue
             f.write(line)
             if step_count > step:
-                tp.logger.debug('Updating File: {}% ...'.format(100/(len(lines)/step_count)))
+                maya.logger.debug('Updating File: {}% ...'.format(100/(len(lines)/step_count)))
                 step += step
 
     if changed:
@@ -412,11 +417,11 @@ def load_plugin(plugin_name):
     :param plugin_name: str, name or path of the plugin to load
     """
 
-    if not cmds.pluginInfo(plugin_name, query=True, loaded=True):
+    if not maya.cmds.pluginInfo(plugin_name, query=True, loaded=True):
         try:
-            cmds.loadPlugin(plugin_name)
+            maya.cmds.loadPlugin(plugin_name)
         except Exception as e:
-            tp.logger.error('Impossible to load plugin: {}'.format(plugin_name))
+            maya.logger.error('Impossible to load plugin: {}'.format(plugin_name))
             return False
 
     return True

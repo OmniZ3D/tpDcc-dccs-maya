@@ -1,10 +1,11 @@
 #! /usr/bin/env python
+# # -*- coding: utf-8 -*-
 
 """
 Module that contains functions and classes related to shapes
 """
 
-from __future__ import print_function, division, absolute_import, unicode_literals
+from __future__ import print_function, division, absolute_import
 
 
 import tpMayaLib as maya
