@@ -1,3 +1,12 @@
+#!#! /usr/bin/env python
+# # -*- coding: utf-8 -*-
+
+"""
+Module that contains collections of decorators related with Maya
+"""
+
+from __future__ import print_function, division, absolute_import
+
 import sys
 import traceback
 from functools import wraps

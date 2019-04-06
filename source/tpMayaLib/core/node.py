@@ -1,8 +1,11 @@
 #! /usr/bin/env python
+# # -*- coding: utf-8 -*-
 
 """
 Module that contains functions and classes related to nodes
 """
+
+from __future__ import print_function, division, absolute_import
 
 import re
 import uuid
