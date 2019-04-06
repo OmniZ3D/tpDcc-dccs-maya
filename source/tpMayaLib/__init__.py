@@ -1,5 +1,11 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 # # -*- coding: utf-8 -*-
+
+"""
+Initialization module for tpMayaLib
+"""
+
+from __future__ import print_function, division, absolute_import
 
 import os
 import types
@@ -7,7 +13,9 @@ import pkgutil
 import importlib
 from collections import OrderedDict
 
+# Do not remove Maya imports
 import maya.cmds as cmds
+import maya.mel as mel
 import maya.OpenMaya as OpenMaya
 import maya.OpenMayaUI as OpenMayaUI
 import maya.OpenMayaAnim as OpenMayaAnim

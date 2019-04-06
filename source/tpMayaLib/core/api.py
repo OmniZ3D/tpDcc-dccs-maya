@@ -1,3 +1,12 @@
+#! /usr/bin/env python
+# # -*- coding: utf-8 -*-
+
+"""
+Module that contains functions and classes related with Maya API
+"""
+
+from __future__ import print_function, division, absolute_import
+
 import tpMayaLib as maya
 
 
