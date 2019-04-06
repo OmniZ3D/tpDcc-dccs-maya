@@ -7,7 +7,6 @@ This module include data class for blendshapes
 
 from __future__ import print_function, division, absolute_import
 
-
 import tpMayaLib as maya
 from tpMayaLib.core import exceptions
 
