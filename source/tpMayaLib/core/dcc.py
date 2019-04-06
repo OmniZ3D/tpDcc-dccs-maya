@@ -11,18 +11,19 @@ from Qt.QtCore import *
 
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
+import tpDccLib
 import tpMayaLib as maya
 from tpPyUtils import osplatform
-# from tpRigToolkit.core import abstractdcc
-# from tpRigToolkit.core.gui import window
+from tpDccLib.abstract import dcc as abstract_dcc, progressbar
+from tpQtLib.widgets import window
 from tpMayaLib.core import gui, helpers, directory, scene
 
 
-class MayaDcc(abstractdcc.AbstractDCC, object):
+class MayaDcc(abstract_dcc.AbstractDCC, object):
 
     @staticmethod
     def get_name():
-        return tpRigToolkit.Dccs.Maya
+        return tpDccLib.Dccs.Maya
 
     @staticmethod
     def get_main_window():
@@ -66,7 +67,7 @@ class MayaDcc(abstractdcc.AbstractDCC, object):
         return directory.get_file(caption=caption, filters=filters)
 
 
-class MayaProgessBar(abstractdcc.AbstractProgressBar, object):
+class MayaProgessBar(progressbar.AbstractProgressBar, object):
     """
     Util class to manipulate Maya progress bar
     """
@@ -74,12 +75,12 @@ class MayaProgessBar(abstractdcc.AbstractProgressBar, object):
     def __init__(self, title='', count=None, begin=True):
         super(MayaProgessBar, self).__init__(title=title, count=count, begin=begin)
 
-        if cmds.about(batch=True):
+        if maya.cmds.about(batch=True):
             self.title = title
             self.count = count
             msg = '{} count: {}'.format(title, count)
             self.status_string = ''
-            tpRigToolkit.logger.debug(msg)
+            maya.logger.debug(msg)
             return
         else:
             self.progress_ui = gui.get_progress_bar()
@@ -87,18 +88,18 @@ class MayaProgessBar(abstractdcc.AbstractProgressBar, object):
                 self.__class__.inc_value = 0
                 self.end()
             if not title:
-                title = cmds.progressBar(self.progress_ui, query=True, status=True)
+                title = maya.cmds.progressBar(self.progress_ui, query=True, status=True)
             if not count:
-                count = cmds.progressBar(self.progress_ui, query=True, maxValue=True)
+                count = maya.cmds.progressBar(self.progress_ui, query=True, maxValue=True)
 
-            cmds.progressBar(self.progress_ui, edit=True, beginProgress=begin, isInterruptable=True, status=title, maxValue=count)
+            maya.cmds.progressBar(self.progress_ui, edit=True, beginProgress=begin, isInterruptable=True, status=title, maxValue=count)
 
     # region Public Functions
     def set_count(self, count_number):
-        cmds.progressBar(self.progress_ui, edit=True, maxValue=int(count_number))
+        maya.cmds.progressBar(self.progress_ui, edit=True, maxValue=int(count_number))
 
     def get_count(self):
-        return cmds.progressBar(self.progress_ui, query=True, maxValue=True)
+        return maya.cmds.progressBar(self.progress_ui, query=True, maxValue=True)
 
     def inc(self, inc=1):
         """
@@ -106,23 +107,23 @@ class MayaProgessBar(abstractdcc.AbstractProgressBar, object):
         :param inc: int, increment value
         """
 
-        if cmds.about(batch=True):
+        if maya.cmds.about(batch=True):
             return
 
         super(MayaProgessBar, self).inc(inc)
 
-        cmds.progressBar(self.progress_ui, edit=True, step=inc)
+        maya.cmds.progressBar(self.progress_ui, edit=True, step=inc)
 
     def step(self):
         """
         Increments current progress value by one
         """
 
-        if cmds.about(batch=True):
+        if maya.cmds.about(batch=True):
             return
 
         self.__class__.inc_value += 1
-        cmds.progressBar(self.progress_ui, edit=True, step=1)
+        maya.cmds.progressBar(self.progress_ui, edit=True, step=1)
 
     def status(self, status_str):
         """
@@ -130,34 +131,34 @@ class MayaProgessBar(abstractdcc.AbstractProgressBar, object):
         :param status_str: str
         """
 
-        if cmds.about(batch=True):
+        if maya.cmds.about(batch=True):
             self.status_string = status_str
             return
 
-        cmds.progressBar(self.progress_ui, edit=True, status=status_str)
+        maya.cmds.progressBar(self.progress_ui, edit=True, status=status_str)
 
     def end(self):
         """
         Ends progress bar
         """
 
-        if cmds.about(batch=True):
+        if maya.cmds.about(batch=True):
             return
 
-        if cmds.progressBar(self.progress_ui, query=True, isCancelled=True):
-            cmds.progressBar(self.progress_ui, edit=True, beginProgress=True)
+        if maya.cmds.progressBar(self.progress_ui, query=True, isCancelled=True):
+            maya.cmds.progressBar(self.progress_ui, edit=True, beginProgress=True)
 
-        cmds.progressBar(self.progress_ui, edit=True, ep=True)
+        maya.cmds.progressBar(self.progress_ui, edit=True, ep=True)
 
     def break_signaled(self):
         """
         Breaks the progress bar loop so that it stop and disappears
         """
 
-        if cmds.about(batch=True):
+        if maya.cmds.about(batch=True):
             return False
 
-        break_progress = cmds.progressBar(self.progress_ui, query=True, isCancelled=True)
+        break_progress = maya.cmds.progressBar(self.progress_ui, query=True, isCancelled=True)
         if break_progress:
             self.end()
             if osplatform.get_env_var('RIGTASK_RUN') == 'True':
@@ -182,23 +183,23 @@ class MayaDockedWindow(MayaQWidgetDockableMixin, window.MainWindow):
     def ui(self):
         if self._dock:
             ui_name = str(self.objectName())
-            if cmds.about(version=True) >= 2017:
+            if maya.cmds.about(version=True) >= 2017:
                 workspace_name = '{}WorkspaceControl'.format(ui_name)
                 workspace_name = workspace_name.replace(' ', '_')
                 workspace_name = workspace_name.replace('-', '_')
-                if cmds.workspaceControl(workspace_name, exists=True):
-                    cmds.deleteUI(workspace_name)
+                if maya.cmds.workspaceControl(workspace_name, exists=True):
+                    maya.cmds.deleteUI(workspace_name)
             else:
                 dock_name = '{}DockControl'.format(ui_name)
                 dock_name = dock_name.replace(' ', '_')
                 dock_name = dock_name.replace('-', '_')
                 # dock_name = 'MayaWindow|%s' % dock_name       # TODO: Check if we need this
-                if cmds.dockControl(dock_name, exists=True):
-                    cmds.deleteUI(dock_name, control=True)
+                if maya.cmds.dockControl(dock_name, exists=True):
+                    maya.cmds.deleteUI(dock_name, control=True)
 
             self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         super(MayaDockedWindow, self).ui()
 
 
-tpRigToolkit.Dcc = MayaDcc
+tpDccLib.Dcc = MayaDcc

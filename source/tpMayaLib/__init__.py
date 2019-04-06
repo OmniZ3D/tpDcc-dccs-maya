@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Initialization module for tpMayaLib
@@ -65,14 +65,18 @@ class tpMayaLib(object):
     reload_modules = list()
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls, do_reload=False):
+
+        import tpMayaLib
 
         # By default, we use new Maya API
         use_new_api(True)
 
         cls.create_logger()
-        cls.import_modules(os.path.join(tpMayaLib.__path__[0], 'core'), only_packages=True, order=['tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.core'])
-        cls.reload_all()
+        cls.import_modules(tpMayaLib.__path__[0], only_packages=True, order=['tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.core'])
+
+        if do_reload:
+            cls.reload_all()
 
     @staticmethod
     def create_logger():
@@ -245,5 +249,5 @@ def is_new_api():
 # =================================================================================
 
 
-def init():
-    tpMayaLib.initialize()
+def init(do_reload=False):
+    tpMayaLib.initialize(do_reload=do_reload)
