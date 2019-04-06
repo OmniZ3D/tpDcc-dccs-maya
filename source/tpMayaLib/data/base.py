@@ -1,15 +1,13 @@
 import traceback
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
-
-import maya.cmds as cmds
+from tpQtLib.Qt.QtCore import *
+from tpQtLib.QtWidgets import *
 
 import tpRigToolkit as tp
 from tpPyUtils import path, osplatform, mathlib, version, qtutils
-from tpRigToolkit.core.gui import splitters, button
-from tpRigToolkit.core.data import base
-from tpRigToolkit.maya.lib import constants, node, geometry, scene, helpers
+from tpQtLib.widgets import splitters, button
+from tpMayaLib.core import constants, node, geometry, scene, helpers
+# from tpRigToolkit.core.data import base
 
 
 class DataTypes(base.DataTypes, object):

@@ -1,8 +1,8 @@
 import maya.cmds as cmds
 import maya.OpenMayaUI as OpenMayaUI
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+from tpQtLib.Qt.QtCore import *
+from tpQtLib.Qt.QtWidgets import *
 
 import tpRigToolkit.maya as maya
 from tpRigToolkit.maya.lib import gui

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Module that contains functions and classes related to Maya UI
@@ -12,7 +12,7 @@ import traceback
 import contextlib
 from collections import OrderedDict
 
-from Qt.QtWidgets import *
+from tpQtLib.Qt.QtWidgets import *
 try:
     from shiboken2 import wrapInstance
 except ImportError:
@@ -85,7 +85,8 @@ def get_maya_window():
     :return: Maya Window
     """
 
-    ptr = maya.OpenMayaUI.MQtUtil.mainWindow()
+    import maya.OpenMayaUI as OpenMayaUI
+    ptr = OpenMayaUI.MQtUtil.mainWindow()
     if ptr is not None:
         return wrapInstance(long(ptr), QWidget)
 

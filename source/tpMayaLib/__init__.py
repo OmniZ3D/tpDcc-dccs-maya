@@ -131,7 +131,7 @@ class tpMayaLib(object):
                 return mod
             return None
         except (ImportError, AttributeError) as e:
-            tpMayaLib.logger.debug('FAILED IMPORT: {} -> {}'.format(package_name, str(e)))
+            tpMayaLib.logger.error('FAILED IMPORT: {} -> {}'.format(package_name, str(e)))
             pass
 
     @classmethod

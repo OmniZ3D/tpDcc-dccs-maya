@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Manager to control current scene meta data values and nodes

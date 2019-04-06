@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Module that contains functions and classes related with attributes
@@ -12,7 +12,7 @@ import string
 import traceback
 import contextlib
 
-from Qt.QtWidgets import *
+from tpQtLib.Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpPyUtils import path

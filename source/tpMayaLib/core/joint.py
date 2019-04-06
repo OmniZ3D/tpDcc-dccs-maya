@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Module that contains functions and classes related with joints

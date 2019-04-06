@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Module that contains functions and classes related with attributes
@@ -7,7 +7,7 @@ Module that contains functions and classes related with attributes
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtCore import *
+from tpQtLib.Qt.QtCore import *
 
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
@@ -15,7 +15,7 @@ import tpDccLib
 import tpMayaLib as maya
 from tpPyUtils import osplatform
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
-from tpQtLib.widgets import window
+from tpQtLib.core import window
 from tpMayaLib.core import gui, helpers, directory, scene
 
 

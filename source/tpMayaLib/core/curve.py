@@ -1,10 +1,11 @@
-#! /usr/bin/env python
+# #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
 Utility methods related to Maya Curves
 """
 
-from __future__ import print_function, division, absolute_import, unicode_literals
+from __future__ import print_function, division, absolute_import
 
 import tpMayaLib as maya
 from tpMayaLib.core import exceptions, transform, name as name_utils
