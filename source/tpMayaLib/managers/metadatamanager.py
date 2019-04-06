@@ -1,19 +1,18 @@
 #! /usr/bin/env python
-
-from __future__ import print_function, division, absolute_import
+# # -*- coding: utf-8 -*-
 
 """
 Manager to control current scene meta data values and nodes
 """
+
+from __future__ import print_function, division, absolute_import
 
 import inspect
 
 from Qt.QtCore import *
 from Qt.QtWidgets import *
 
-import maya.cmds as cmds
-
-import tpRigToolkit as tp
+import tpMayaLib as maya
 from tpPyUtils import name as name_utils
 from tpPyUtils import python, decorators
 from tpRigToolkit.core.gui import window, models, views
@@ -82,7 +81,7 @@ class MetaDataManager(window.MainWindow, object):
         :return: str
         """
 
-        tp.logger.debug('Generating a new UUID')
+        maya.logger.debug('Generating a new UUID')
 
         valid_uuid = False
         generated_uuid = None
@@ -94,9 +93,9 @@ class MetaDataManager(window.MainWindow, object):
                 valid_uuid = True
             else:
                 if not meta_node == METANODES_CACHE[uuid]:
-                    tp.logger.debug('METANODES_CACHE: {0} : UUID is registered to a different node : modifying UUID: {1}'.format( uuid, meta_node.meta_node))
+                    maya.logger.debug('METANODES_CACHE: {0} : UUID is registered to a different node : modifying UUID: {1}'.format( uuid, meta_node.meta_node))
                 else:
-                    tp.logger.debug('METANODES_CACHE : UUID {0} is already registered in METANODES_CACHE'.format(uuid))
+                    maya.logger.debug('METANODES_CACHE : UUID {0} is already registered in METANODES_CACHE'.format(uuid))
 
         return generated_uuid
 
@@ -107,14 +106,14 @@ class MetaDataManager(window.MainWindow, object):
         :param meta_node: dcclib.Meta
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         global METANODES_CACHE
 
         uuid = metanode.MetaNode.get_metanode_uuid(meta_node=meta_node)
 
         if METANODES_CACHE or uuid not in METANODES_CACHE.keys():
-            tp.logger.debug('CACHE: Adding to MetaNode UUID Cache: {0} > {1}'.format(meta_node.meta_node, uuid))
+            maya.logger.debug('CACHE: Adding to MetaNode UUID Cache: {0} > {1}'.format(meta_node.meta_node, uuid))
             METANODES_CACHE[uuid] = meta_node
 
         meta_node._lastUUID = uuid
@@ -126,16 +125,16 @@ class MetaDataManager(window.MainWindow, object):
         MObjectHandles
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         for k, v in METANODES_CACHE.items():
             try:
                 if not metanode.MetaNode.check_metanode_validity(v):
                     METANODES_CACHE.pop(k)
-                    tp.logger.debug('CACHE : {} being removed from the META NODE CACHE due to invalid MObject'.format(k))
+                    maya.logger.debug('CACHE : {} being removed from the META NODE CACHE due to invalid MObject'.format(k))
             except Exception as e:
-                tp.logger.debug('CACHE : Clean cache failed!')
-                tp.logger.debug(str(e))
+                maya.logger.debug('CACHE : Clean cache failed!')
+                maya.logger.debug(str(e))
 
     @staticmethod
     def get_metanode_from_cache(meta_node):
@@ -144,14 +143,14 @@ class MetaDataManager(window.MainWindow, object):
         :param meta_node: str, name of the node from DAG
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         return metanode.MetaNode.get_meta_from_cache(meta_node=meta_node)
 
     @staticmethod
     def register_meta_classes():
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         global METANODE_CLASSES_REGISTER
         METANODE_CLASSES_REGISTER = dict()
@@ -165,7 +164,7 @@ class MetaDataManager(window.MainWindow, object):
         METANODE_CLASSES_INHERITANCE_MAP[meta_data_name]['short'] = meta_data_name
 
         for meta_class in python.itersubclasses(metanode.MetaNode):
-            tp.logger.debug('Registering: {}'.format(meta_class))
+            maya.logger.debug('Registering: {}'.format(meta_class))
             METANODE_CLASSES_REGISTER[meta_class.__name__] = meta_class
             METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__] = dict()
             METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__]['full'] = list(inspect.getmro(meta_class))
@@ -174,7 +173,7 @@ class MetaDataManager(window.MainWindow, object):
     @staticmethod
     def register_meta_types(node_types=None):
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         if node_types is None:
             node_types = list()
@@ -205,12 +204,12 @@ class MetaDataManager(window.MainWindow, object):
 
             for node_type in base_types:
                 if node_type not in METANODE_TYPES_REGISTER and node_type in valid_dcc_metanode_types:
-                    tp.logger.debug('MetaNode type: {0} : added to METANODE_TYPES_REGISTER'.format(node_type))
+                    maya.logger.debug('MetaNode type: {0} : added to METANODE_TYPES_REGISTER'.format(node_type))
                     METANODE_TYPES_REGISTER.append(node_type)
                 else:
-                    tp.logger.debug('MetaNode TYPE: {0} is an invalid Maya Meta type'.format(node_type))
+                    maya.logger.debug('MetaNode TYPE: {0} is an invalid Maya Meta type'.format(node_type))
         except Exception as e:
-            tp.logger.warning('Fail when register MetaNode types: {0}'.format(str(e)))
+            maya.logger.warning('Fail when register MetaNode types: {0}'.format(str(e)))
 
     @staticmethod
     def register_meta_nodes():
@@ -267,10 +266,10 @@ class MetaDataManager(window.MainWindow, object):
             if v and v in meta_nodes:
                 try:
                     METANODES_CACHE.pop(k)
-                    tp.logger.debug('METANODES CACHE: {0} being removed from the MetaNodes Cache >> {1}'.format(
+                    maya.logger.debug('METANODES CACHE: {0} being removed from the MetaNodes Cache >> {1}'.format(
                         name_utils.strip_name(k), name_utils.strip_name(v.meta_node)))
                 except Exception as e:
-                    tp.logger.debug('METANODES CACHE: Failed to remove {0} from cache >> {1}'.format(k, v.meta_node))
+                    maya.logger.debug('METANODES CACHE: Failed to remove {0} from cache >> {1}'.format(k, v.meta_node))
 
     @staticmethod
     def reset_metanodes_cache():
@@ -329,12 +328,12 @@ class MetaDataManager(window.MainWindow, object):
         are or not already instantiated or bound to Meta system
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         if not type(nodes) == list:
             nodes = [nodes]
         for n in nodes:
-            tp.logger.debug('Converting node {0} >> to {1} MetaNode'.format(name_utils.strip_name(n), meta_class))
+            maya.logger.debug('Converting node {0} >> to {1} MetaNode'.format(name_utils.strip_name(n), meta_class))
             meta_node = metanode.MetaNode(n)
             meta_node.add_attribute('meta_class',value=MetaDataManager.meta_types_to_registry_key(meta_class)[0])
             meta_node.add_attribute('meta_node_id', value=name_utils.strip_name(n))
@@ -361,7 +360,7 @@ class MetaDataManager(window.MainWindow, object):
         :return:
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         meta_nodes = list()
 
@@ -372,7 +371,7 @@ class MetaDataManager(window.MainWindow, object):
 
         nodes = list()
         for t in meta_node_types:
-            nodes_of_type = cmds.ls(sl=True, type=t)
+            nodes_of_type = maya.cmds.ls(sl=True, type=t)
             nodes.extend(nodes_of_type)
 
         for node in nodes:
