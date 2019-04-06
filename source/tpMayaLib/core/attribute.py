@@ -2,7 +2,7 @@
 # # -*- coding: utf-8 -*-
 
 """
-Module that contains functions and classes related to attributes
+Module that contains functions and classes related with attributes
 """
 
 from __future__ import print_function, division, absolute_import
@@ -475,7 +475,7 @@ class AttributeValidator(object):
         :return: bool
         """
 
-        from tpRigToolkit.maya.lib import transform as transform_utils
+        from tpMayaLib.core import transform as transform_utils
 
         fn_name = 'is_transform'
 
