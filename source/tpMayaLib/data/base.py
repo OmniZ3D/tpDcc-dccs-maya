@@ -1,7 +1,7 @@
 import traceback
 
 from tpQtLib.Qt.QtCore import *
-from tpQtLib.QtWidgets import *
+from tpQtLib.Qt.QtWidgets import *
 
 import tpRigToolkit as tp
 from tpPyUtils import path, osplatform, mathlib, version, qtutils

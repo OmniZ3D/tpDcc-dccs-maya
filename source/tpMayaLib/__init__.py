@@ -11,6 +11,7 @@ import os
 import types
 import pkgutil
 import importlib
+import traceback
 from collections import OrderedDict
 
 # Do not remove Maya imports
@@ -85,7 +86,7 @@ class tpMayaLib(object):
         """
 
         global logger
-        logger = logger_utils.Logger(name='tpMayaLib', level=logger_utils.LoggerLevel.WARNING)
+        logger = logger_utils.Logger(name='tpMayaLib', level=logger_utils.LoggerLevel.WARNING).logger
         logger.debug('Initializing tpMayaLib logger ...')
         return logger
 
@@ -131,7 +132,7 @@ class tpMayaLib(object):
                 return mod
             return None
         except (ImportError, AttributeError) as e:
-            tpMayaLib.logger.error('FAILED IMPORT: {} -> {}'.format(package_name, str(e)))
+            tpMayaLib.logger.error('FAILED IMPORT: {} -> {}'.format(package_name, str(traceback.format_exc())))
             pass
 
     @classmethod
