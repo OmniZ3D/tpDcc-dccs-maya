@@ -11,12 +11,11 @@ import json
 from collections import OrderedDict
 from functools import partial
 
-from Qt.QtWidgets import *
-from Qt.QtCore import *
+from tpQtLib.Qt.QtCore import *
+from tpQtLib.Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpPyUtils import qtutils
-# from tpRigToolkit.core.resources import resource
 from tpMayaLib.core import gui
 
 

@@ -9,13 +9,14 @@ from __future__ import print_function, division, absolute_import
 
 import inspect
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+from tpQtLib.Qt.QtCore import *
+from tpQtLib.Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpPyUtils import name as name_utils
 from tpPyUtils import python, decorators
-from tpRigToolkit.core.gui import window, models, views
+from tpQtLib.core import window
+from tpQtLib.widgets import models, views
 
 # ===================================================================================================================
 METANODES_CACHE = dict()

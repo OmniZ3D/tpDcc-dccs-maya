@@ -1,21 +1,20 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
 This module defines class for Max viewport widgets
 """
 
-from __future__ import print_function, division, absolute_import, unicode_literals
+from __future__ import print_function, division, absolute_import
 
 
-# region Imports
 import os
 import tempfile
 
-from Qt.QtWidgets import *
+from tpQtLib.Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpMayaLib.core import gui
-# endregion
 
 
 class MayaViewport(QWidget):

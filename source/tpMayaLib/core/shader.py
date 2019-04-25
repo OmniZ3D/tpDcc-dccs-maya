@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that contains functions and classes related with playblasts
+Module that contains functions and classes related with shaders
 """
 
 
@@ -11,8 +11,8 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-from Qt.QtWidgets import *
-from Qt.QtGui import *
+from tpQtLib.Qt.QtWidgets import *
+from tpQtLib.Qt.QtGui import *
 try:
     from shiboken import wrapInstance
 except ImportError:

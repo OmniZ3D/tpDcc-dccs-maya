@@ -5,12 +5,12 @@ This module include base class for mesh data object
 """
 
 # region Imports
-import maya.cmds as cmds
-
-import tpRigToolkit as tp
-import tpRigToolkit.maya as maya
-from tpRigToolkit.maya.data import base
-from tpRigToolkit.maya.lib import mesh, exceptions
+# import maya.cmds as cmds
+#
+# import tpRigToolkit as tp
+# import tpRigToolkit.maya as maya
+# from tpRigToolkit.maya.data import base
+# from tpRigToolkit.maya.lib import mesh, exceptions
 # endregion
 
 

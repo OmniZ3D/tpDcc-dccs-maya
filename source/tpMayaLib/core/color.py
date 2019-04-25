@@ -7,7 +7,7 @@ Module that contains functions and classes related with colors
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtGui import *
+from tpQtLib.Qt.QtGui import *
 
 from tpPyUtils import color as color_utils
 

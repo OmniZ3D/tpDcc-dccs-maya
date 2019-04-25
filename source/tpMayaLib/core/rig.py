@@ -1,9 +1,14 @@
-import maya.cmds as cmds
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import tpRigToolkit as tp
+"""
+Module that contains rig utils functions for Maya
+"""
+
+import tpMayaLib as maya
 from tpPyUtils import python
-from tpRigToolkit.maya.lib.meta import metanode
-from tpRigToolkit.maya.lib import constraint as cns_utils, attribute as attr_utils
+from tpMayaLib.meta import metanode
+from tpMayaLib.core import constraint as cns_utils, attribute as attr_utils
 
 
 class RigSwitch(object):
@@ -18,14 +23,14 @@ class RigSwitch(object):
         """
 
         self._switch_joint = switch_joint
-        if not cmds.objExists('{}.switch'.format(switch_joint)):
-            tp.logger.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
+        if not maya.cmds.objExists('{}.switch'.format(switch_joint)):
+            maya.logger.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
 
         self._groups = dict()
 
         weight_count = self.get_weight_count()
         if not weight_count:
-            tp.logger.warning('{} has no weights!'.format(weight_count))
+            maya.logger.warning('{} has no weights!'.format(weight_count))
 
         for i in range(weight_count):
             self._groups[i] = None
@@ -35,7 +40,7 @@ class RigSwitch(object):
 
     # region Public Functions
     def create(self):
-        if self._control_name and cmds.objExists(self._control_name):
+        if self._control_name and maya.cmds.objExists(self._control_name):
             weight_count = self.get_weight_count()
             var = attr_utils.NumericAttribute(self._attribute_name)
             var.set_min_value(0)
@@ -46,11 +51,11 @@ class RigSwitch(object):
             var.set_keyable(True)
             var.create(self._control_name)
             attr_name = var.get_name()
-            cmds.connectAttr(attr_name, '{}.switch'.format(self._switch_joint))
-        elif not self._control_name or not cmds.objExists(self._control_name):
+            maya.cmds.connectAttr(attr_name, '{}.switch'.format(self._switch_joint))
+        elif not self._control_name or not maya.cmds.objExists(self._control_name):
             attr_name = '{}.switch'.format(self._switch_joint)
         else:
-            tp.logger.error('Impossible to create RigSwitch Attribute ...')
+            maya.logger.error('Impossible to create RigSwitch Attribute ...')
             return
 
         for key in self._groups.keys():
@@ -85,13 +90,13 @@ class RigSwitch(object):
         """
 
         groups = python.force_list(groups)
-        if not self._switch_joint or not cmds.objExists(self._switch_joint):
-            tp.logger.warning('Swtich joint {} does not exists!'.format(self._switch_joint))
+        if not self._switch_joint or not maya.cmds.objExists(self._switch_joint):
+            maya.logger.warning('Swtich joint {} does not exists!'.format(self._switch_joint))
             return
 
         weight_count = self.get_weight_count()
         if weight_count < (index+1):
-            tp.logger.warning('Adding groups to index {} is undefined. {}.switch does not have that many inputs'.format(index, self._switch_joint))
+            maya.logger.warning('Adding groups to index {} is undefined. {}.switch does not have that many inputs'.format(index, self._switch_joint))
 
         self._groups[index] = groups
 
@@ -120,10 +125,10 @@ def get_all_rig_modules():
     :return: list<str>
     """
 
-    modules = cmds.ls(type='network')
+    modules = maya.cmds.ls(type='network')
     found = list()
     for module in modules:
-        attrs = cmds.listAttr(module)
+        attrs = maya.cmds.listAttr(module)
         if 'parent' in attrs:
             found.append(module)
 
@@ -137,12 +142,12 @@ def get_character_module(character_name):
     :return: str
     """
 
-    modules = cmds.ls(type='network')
+    modules = maya.cmds.ls(type='network')
     for module in modules:
-        attrs = cmds.listAttr(module)
+        attrs = maya.cmds.listAttr(module)
         if 'meta_class' in attrs and 'meta_node_id' in attrs:
-            meta_class = cmds.getAttr('{}.meta_class'.format(module))
-            module_name = cmds.getAttr('{}.meta_node_id'.format(module))
+            meta_class = maya.cmds.getAttr('{}.meta_class'.format(module))
+            module_name = maya.cmds.getAttr('{}.meta_node_id'.format(module))
             if meta_class == 'RigCharacter' and module_name == character_name:
                 return metanode.validate_obj_arg(module, 'RigCharacter')
 
@@ -163,7 +168,7 @@ def parent_shape_in_place(transform, shape_source, keep_source=True, replace_sha
     shape_source = python.force_list(shape_source)
 
     for shape in shape_source:
-        cmds.parent(shape, transform, add=True, shape=True)
+        maya.cmds.parent(shape, transform, add=True, shape=True)
 
 
 def is_center(side, patterns=None):
