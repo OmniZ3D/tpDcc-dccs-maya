@@ -11,8 +11,8 @@ import copy
 
 import tpMayaLib as maya
 from tpPyUtils import decorators
+from tpPyUtils.externals import euclid
 from tpMayaLib.core import common, attribute as attr_utils, name as name_utils, shape as shape_utils
-from tpRigToolkit.externals.python import euclid
 
 
 class MetaAttributeValidator(attr_utils.AttributeValidator):
@@ -1660,7 +1660,7 @@ class MetaAttributeUtils(object):
         :return:
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         data = data_attr
 
@@ -1743,7 +1743,7 @@ class MetaAttributeUtils(object):
         :return:
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         try:
             attr_dict = MetaAttributeUtils.validate_attribute(message_holder, message_attr)
@@ -1995,7 +1995,7 @@ class MetaDataListUtils(object):
         :return: bool
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         fn_name = 'data_list_purge'
 
@@ -2056,7 +2056,7 @@ class MetaDataListUtils(object):
         :return: bool
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         fn_name = 'data_list_connect'
 
@@ -2109,7 +2109,7 @@ class MetaDataListUtils(object):
         :return:
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         fn_name = 'data_list_get'
 
@@ -2344,7 +2344,7 @@ class MetaDataListUtils(object):
         :return: bool
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         try:
             fn_name = 'store_info'
@@ -2456,7 +2456,7 @@ class MetaMessageListUtils(object):
         :return: bool
         """
 
-        from tpRigToolkit.maya.lib.meta import metanode
+        from tpMayaLib.meta import metanode
 
         fn_name = 'message_list_connect'
 

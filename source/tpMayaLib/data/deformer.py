@@ -8,7 +8,6 @@ import copy
 
 import maya.cmds as cmds
 
-import tpRigToolkit as tp
 from tpPyUtils import python
 
 
@@ -44,8 +43,8 @@ class MayaDeformerData(object):
         Builds deformer data
         """
 
-        from tpRigToolkit.maya.data import mesh
-        from tpRigToolkit.maya.lib import deformer
+        from tpMayaLib.data import mesh
+        from tpMayaLib.core import deformer
 
         if not self._deformer:
             return
