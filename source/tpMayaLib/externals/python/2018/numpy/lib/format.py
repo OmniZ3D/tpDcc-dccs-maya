@@ -480,7 +480,7 @@ def _read_array_header(fp, version):
 
     # The header is a pretty-printed string representation of a literal
     # Python dictionary with trailing newlines padded to a 16-byte
-    # boundary. The keys are string.
+    # boundary. The keys are strings.
     #   "shape" : tuple of int
     #   "fortran_order" : bool
     #   "descr" : dtype.descr
@@ -698,7 +698,7 @@ def open_memmap(filename, mode='r+', dtype=None, shape=None,
     mode : str, optional
         The mode in which to open the file; the default is 'r+'.  In
         addition to the standard file modes, 'c' is also accepted to mean
-        "copy on write."  See `memmap` for the available mode string.
+        "copy on write."  See `memmap` for the available mode strings.
     dtype : data-type, optional
         The data type of the array if we are creating a new file in "write"
         mode, if not, `dtype` is ignored.  The default value is None, which

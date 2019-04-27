@@ -176,7 +176,7 @@ class LineSplitter(object):
         ----------
         method : function
             Function that takes a single argument and returns a sequence of
-            string.
+            strings.
 
         Returns
         -------

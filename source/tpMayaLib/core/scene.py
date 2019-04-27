@@ -151,7 +151,6 @@ def reference_scene(file_path, namespace=None, save=True):
 def save():
     """
     Saves current scene in current Maya file
-    :param file_path: str
     :return: bool, Whether the scene was saved or not
     """
 

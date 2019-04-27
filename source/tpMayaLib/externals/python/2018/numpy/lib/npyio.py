@@ -293,7 +293,7 @@ def load(file, mmap_mode=None, allow_pickle=True, fix_imports=True,
         is True, pickle will try to map the old Python 2 names to the new names
         used in Python 3.
     encoding : str, optional
-        What encoding to use when reading Python 2 string. Only useful when
+        What encoding to use when reading Python 2 strings. Only useful when
         loading Python 2 generated pickled files on Python 3, which includes
         npy/npz files containing object arrays. Values other than 'latin1',
         'ASCII', and 'bytes' are not allowed, as they can corrupt numerical
@@ -1891,7 +1891,7 @@ def genfromtxt(fname, dtype=float, comments='#', delimiter=None,
     if dtype is None:
         # Get the dtypes from the types of the converters
         column_types = [conv.type for conv in converters]
-        # Find the columns with string...
+        # Find the columns with strings...
         strcolidx = [i for (i, v) in enumerate(column_types)
                      if v in (type('S'), np.string_)]
         # ... and take the largest number of chars.

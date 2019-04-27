@@ -705,7 +705,7 @@ _function_signature_re = re.compile(r"[a-z0-9_]+\(.*[,=].*\)", re.I)
 def lookfor(what, module=None, import_modules=True, regenerate=False,
             output=None):
     """
-    Do a keyword search on docstring.
+    Do a keyword search on docstrings.
 
     A list of of objects that matched the search is displayed,
     sorted by relevance. All given keywords need to be found in the

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that contains functions and classes related with directories and files
+Module that contains functions and classes related with directories and files in Maya
 """
 
 from __future__ import print_function, division, absolute_import

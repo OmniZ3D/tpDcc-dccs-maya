@@ -8,6 +8,7 @@ Initialization module for tpMayaLib
 from __future__ import print_function, division, absolute_import
 
 import os
+import sys
 import inspect
 
 # Do not remove Maya imports
@@ -80,6 +81,29 @@ class tpMayaLib(importer.Importer, object):
 
         return mod_dir
 
+    def externals_path(self):
+        """
+        Returns the paths where dccutils externals packages are stored
+        :return: str
+        """
+
+        return os.path.join(self.get_module_path(), 'externals')
+
+    def update_paths(self):
+        """
+        Adds path to system paths at startup
+        """
+
+        ext_path = self.externals_path()
+        python_path = os.path.join(ext_path, 'python')
+        maya_path = os.path.join(python_path, str(cmds.about(v=True)))
+
+        paths_to_update = [self.externals_path(), maya_path]
+
+        for p in paths_to_update:
+            if os.path.isdir(p) and p not in sys.path:
+                sys.path.append(p)
+
 
 def init(do_reload=False):
     """
@@ -88,6 +112,7 @@ def init(do_reload=False):
     """
 
     tpmayalib_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=do_reload)
+    tpmayalib_importer.update_paths()
     use_new_api()
 
     global logger
@@ -95,6 +120,7 @@ def init(do_reload=False):
 
     tpmayalib_importer.import_modules()
     tpmayalib_importer.import_packages(only_packages=True)
+
 
 def create_metadata_manager():
     """
