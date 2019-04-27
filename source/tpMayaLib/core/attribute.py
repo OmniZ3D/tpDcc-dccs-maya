@@ -17,7 +17,7 @@ import traceback
 
 
 from tpPyUtils import python, name as name_utils
-from tpPyUtils import color as color_utils
+from tpQtLib.core import color as color_utils
 import tpMayaLib as maya
 from tpMayaLib.core import exceptions, mathutils
 from tpMayaLib.core import node as node_utils

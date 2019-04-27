@@ -19,7 +19,7 @@ except ImportError:
     from shiboken import wrapInstance
 
 import tpMayaLib as maya
-from tpPyUtils import qtutils
+from tpQtLib.core import qtutils
 
 # ===================================================================================
 
@@ -446,9 +446,9 @@ def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right'
     path = 'MayaWindow|{}'.format(dock_name)
     if maya.cmds.dockControl(path, exists=True):
         maya.cmds.deleteUI(dock_name, control=True)
-        if hasattr(window, '_has_exit_prompt'):
-            window._has_exit_prompt = False
-        window.close()
+        # if hasattr(window, '_has_exit_prompt'):
+        #     window._has_exit_prompt = False
+        # window.close()
     maya.mel.eval('updateRendererUI;')
 
     try:

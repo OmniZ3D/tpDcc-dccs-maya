@@ -15,7 +15,7 @@ from tpQtLib.Qt.QtCore import *
 from tpQtLib.Qt.QtWidgets import *
 
 import tpMayaLib as maya
-from tpPyUtils import qtutils
+from tpQtLib.core import qtutils
 from tpMayaLib.core import gui
 
 

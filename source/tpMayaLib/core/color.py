@@ -9,37 +9,7 @@ from __future__ import print_function, division, absolute_import
 
 from tpQtLib.Qt.QtGui import *
 
-from tpPyUtils import color as color_utils
-
-# ================================================================================
-_NUMERALS = '0123456789abcdefABCDEF'
-_HEXDEC = {v: int(v, 16) for v in (x+y for x in _NUMERALS for y in _NUMERALS)}
-_LOWERCASE, _UPPERCASE = 'x', 'X'
-# ================================================================================
-
-BLACK = QColor(0.0, 0.0, 0.0)
-GRAY = QColor(0.5, 0.5, 0.5)
-RED = QColor(1.0, 0.0, 0.0)
-GREEN = QColor(0.0, 1.0, 0.0)
-BLUE = QColor(0.0, 0.0, 1.0)
-YELLOW = QColor(1.0, 1.0, 0.0)
-MAGENTA = QColor(1.0, 0.0, 1.0)
-CYAN = QColor(0.0, 1.0, 1.0)
-WHITE = QColor(1.0, 1.0, 1.0)
-DARK_GRAY = QColor(0.25, 0.25, 0.25)
-DARK_RED = QColor(0.75, 0.0, 0.0)
-DARK_GREEN = QColor(0.0, 0.75, 0.0)
-DARK_BLUE = QColor(0.0, 0.0, 0.75)
-DARK_YELLOW = QColor(0.75, 0.75, 0.0)
-DARK_MAGENTA = QColor(0.75, 0.0, 0.75)
-DARK_CYAN = QColor(0.0, 0.75, 0.75)
-LIGHT_GRAY = QColor(0.75, 0.75, 0.75)
-LIGHT_RED = QColor(1.0, 0.25, 0.25)
-LIGHT_GREEN = QColor(0.25, 1.0, 0.25)
-LIGHT_BLUE = QColor(0.25, 0.25, 1.0)
-LIGHT_YELLOW = QColor(1.0, 1.0, 0.25)
-LIGHT_MAGENTA = QColor(1.0, 0.25, 1.0)
-LIGHT_CYAN = QColor(0.25, 1.0, 1.0)
+from tpQtLib.core import color as color_utils
 
 
 # ==== Control Colors

@@ -9,7 +9,7 @@ from tpQtLib.Qt.QtCore import *
 from tpQtLib.Qt.QtWidgets import *
 
 import tpMayaLib as maya
-from tpPyUtils import qtutils as qt
+from tpQtLib.core import qtutils as qt
 from tpMayaLib.core import gui
 
 

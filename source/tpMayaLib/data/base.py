@@ -9,17 +9,11 @@ from __future__ import print_function, division, absolute_import
 
 import traceback
 
-from tpQtLib.Qt.QtCore import *
-from tpQtLib.Qt.QtWidgets import *
-
 import tpDccLib as tp
 import tpMayaLib as maya
-from tpPyUtils import path, osplatform, mathlib, version, qtutils
-from tpQtLib.widgets import splitters, button
+from tpPyUtils import path, osplatform, mathlib, version
 from tpDccLib.core import data
 from tpMayaLib.core import constants, node, geometry, scene, helpers
-
-# from tpRigToolkit.core.data import base
 
 
 class DataTypes(data.DataTypes, object):
