@@ -20,7 +20,12 @@ import tpMayaLib as maya
 from tpMayaLib.meta import metautils
 from tpMayaLib.core import exceptions, helpers, name as name_utils, attribute as attr_utils
 from tpMayaLib.managers import metadatamanager
-# from tpRigToolkit.core.tools.nameit import nameit
+
+NAME_IT_AVAILABLE = True
+try:
+    from tpNameIt.core import nameit
+except ImportError:
+    NAME_IT_AVAILABLE = False
 
 
 def node_lock_manager(fn):
@@ -125,7 +130,7 @@ class MetaNode(object):
         if name_kwargs is None:
             name_kwargs = dict()
 
-        if auto_rename:
+        if auto_rename and NAME_IT_AVAILABLE:
             if name_args or name_kwargs:
                 current_rule = nameit.NameIt.get_active_rule()
                 if current_rule:
@@ -548,11 +553,11 @@ class MetaNode(object):
                 sel.add(node)
                 sel.getDependNode(0, mobj)
 
-                maya.logger.debug('Updating Meta Node: \n\tMObject=>{} \n\tMObjectHandle=>{} \n\tMFnDependencyNode=>{}'.format(mobj, OpenMaya.MObjectHandle(mobj), OpenMaya.MFnDependencyNode(mobj)))
+                maya.logger.debug('Updating Meta Node: \n\tMObject=>{} \n\tMObjectHandle=>{} \n\tMFnDependencyNode=>{}'.format(mobj, maya.OpenMaya.MObjectHandle(mobj), maya.OpenMaya.MFnDependencyNode(mobj)))
 
                 object.__setattr__(self, '_MObject', mobj)
-                object.__setattr__(self, '_MObjectHandle', OpenMaya.MObjectHandle(mobj))
-                object.__setattr__(self, '_MFnDependencyNode', OpenMaya.MFnDependencyNode(mobj))
+                object.__setattr__(self, '_MObjectHandle', maya.OpenMaya.MObjectHandle(mobj))
+                object.__setattr__(self, '_MFnDependencyNode', maya.OpenMaya.MFnDependencyNode(mobj))
             except StandardError as e:
                 raise StandardError(e)
         else:
@@ -959,14 +964,14 @@ class MetaNode(object):
         :return: list<str>
         """
 
-        dep_node_fn = OpenMaya.MFnDependencyNode(self.meta_node_mobj)
+        dep_node_fn = maya.OpenMaya.MFnDependencyNode(self.meta_node_mobj)
         attr_count = dep_node_fn.attributeCount()
         ret = list()
         for i in range(attr_count):
             attr_object = dep_node_fn.attribute(i)
             if attr_type:
                 if attr_type == 'message':
-                    if not attr_object.hasFn(OpenMaya.MFn.kMessageAttribute):
+                    if not attr_object.hasFn(maya.OpenMaya.MFn.kMessageAttribute):
                         continue
             mplug = dep_node_fn.findPlug(attr_object)
             ret.append(mplug.name().split('.')[1])
@@ -1073,7 +1078,7 @@ class MetaNode(object):
         will be renamed to reflect the change in node name
         """
 
-        if auto_rename:
+        if auto_rename and NAME_IT_AVAILABLE:
             current_rule = nameit.NameIt.get_active_rule()
             if current_rule:
                 name = nameit.NameIt.solve(name, *args, **kwargs)
@@ -1522,7 +1527,7 @@ class MetaNode(object):
         result = metautils.MetaAttributeUtils.get_message(self.meta_node, attr, data_attr=data_attr, data_key=data_key, simple=simple)
 
         if as_meta and result:
-            return metautils.MetaAttributeValidator.validate_object_list_arg(result)
+            return validate_obj_list_arg(result)
         if result and full_path:
             return [name_utils.get_long_name(o) for o in result]
 

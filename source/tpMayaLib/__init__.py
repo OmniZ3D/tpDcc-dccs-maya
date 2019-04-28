@@ -121,6 +121,8 @@ def init(do_reload=False):
     tpmayalib_importer.import_modules()
     tpmayalib_importer.import_packages(only_packages=True)
 
+    create_metadata_manager()
+
 
 def create_metadata_manager():
     """
