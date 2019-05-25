@@ -40,6 +40,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return helpers.get_maya_version()
 
     @staticmethod
+    def is_batch():
+        """
+        Returns whether DCC is being executed in batch mode or not
+        :return: bool
+        """
+
+        return maya.cmds.about(batch=True)
+
+    @staticmethod
     def get_main_window():
         """
         Returns Qt object that references to the main DCC window
@@ -107,13 +116,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.ls(l=full_path)
 
     @staticmethod
-    def select_object(node, **kwargs):
+    def select_object(node, replace_selection=False, **kwargs):
         """
         Selects given object in the current scene
+        :param replace_selection: bool
         :param node: str
         """
 
-        maya.cmds.select(node, **kwargs)
+        maya.cmds.select(node, replace=replace_selection, **kwargs)
 
     @staticmethod
     def clear_selection():
@@ -685,6 +695,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.unknownPlugin(plugin_name, remove=True)
+
+    @staticmethod
+    def is_component_mode():
+        """
+        Returns whether current DCC selection mode is component mode or not
+        :return: bool
+        """
+
+        return maya.cmds.selectMode(query=True, component=True)
 
     @staticmethod
     def scene_name():

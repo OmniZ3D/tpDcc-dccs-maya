@@ -1224,11 +1224,18 @@ def get_skin_influences(skin_deformer, short_name=True, return_dict=False):
 
     mobj = node.get_mobject(skin_deformer)
     mf_skin = maya.OpenMayaAnim.MFnSkinCluster(mobj)
-    influence_dag_paths = mf_skin.influenceObjects()
+
+    if maya.is_new_api():
+        influence_dag_paths = mf_skin.influenceObjects()
+        total_paths = len(influence_dag_paths)
+    else:
+        influence_dag_paths = maya.OpenMaya.MDagPathArray()
+        mf_skin.influenceObjects(influence_dag_paths)
+        total_paths = influence_dag_paths.length()
 
     influence_ids = dict()
     influence_names = list()
-    for i in range(len(influence_dag_paths)):
+    for i in range(total_paths):
         influence_path = influence_dag_paths[i]
         if not short_name:
             influence_path_name = influence_dag_paths[i].fullPathName()

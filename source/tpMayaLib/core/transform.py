@@ -839,6 +839,38 @@ def match_scale_pivot(target, source, world_space=False):
     set_scale_pivot(transform_name=target, scale_pivot_vector=source_scale_pivot, world_space=world_space)
 
 
+def match_orient(target, source):
+    """
+    Matches target orientation using an orientation constraint
+    :param target: str, transform we want to match scale pivot to source
+    :param source: str, source transform
+    """
+
+    maya.cmds.delete(maya.cmds.orientConstraint(source, target, mo=False))
+
+
+def match_point(target, source):
+    """
+    Matches target position using a position constraint
+    :param target: str, transform we want to match scale pivot to source
+    :param source: str, source transform
+    """
+
+    maya.cmds.delete(maya.cmds.pointConstraint(source, target, mo=False))
+
+
+def match_orient_point(target, source):
+    """
+    Matches target position and orientation using position and orientation constraints
+    :param target: str, transform we want to match scale pivot to source
+    :param source: str, source transform
+    """
+
+    maya.cmds.delete(maya.cmds.orientConstraint(source, target, mo=False))
+    maya.cmds.delete(maya.cmds.pointConstraint(source, target, mo=False))
+
+
+
 def get_distance(source_transform, target_transform):
     """
     Get the distance between source and target transforms

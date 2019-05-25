@@ -13,7 +13,7 @@ import tpDccLib as tp
 import tpMayaLib as maya
 from tpPyUtils import path, osplatform, mathlib, version
 from tpDccLib.core import data
-from tpMayaLib.core import constants, node, geometry, scene, helpers
+from tpMayaLib.core import constants, geometry, scene, helpers
 
 
 class DataTypes(data.DataTypes, object):
@@ -169,7 +169,7 @@ class MayaFileData(MayaCustomData, object):
         return top_transforms
 
     def reference_data(self, file_path=''):
-        if not tp.Dcc.get_name() == tp.Dccs.Maya:
+        if not tp.is_maya():
             maya.logger.warning('Data must be accessed from within Maya!')
             return
 
@@ -192,7 +192,7 @@ class MayaFileData(MayaCustomData, object):
         return top_transforms
 
     def export_data(self, comment):
-        if not tp.Dcc.get_name() == tp.Dccs.Maya:
+        if not tp.is_maya():
             maya.logger.warning('Data must be accessed from within Maya!')
             return
 
@@ -210,6 +210,23 @@ class MayaFileData(MayaCustomData, object):
         version_file.save(comment)
 
         helpers.display_info('Export {} data'.format(self.name))
+
+    def clean_student_license(self, file_path=''):
+        if not tp.is_maya():
+            maya.logger.warning('Data must be accessed from within Maya!')
+            return
+
+        if file_path:
+            file_to_clean = file_path
+        else:
+            file_to_clean = self.get_file()
+        if not path.is_file(file_to_clean):
+            maya.logger.warning('Impossible to reference invalid data file: {}'.format(file_path))
+            return
+
+        changed = helpers.clean_student_line(file_to_clean)
+        if changed:
+            maya.logger.debug('Cleaned student license from file: {}'.format(file_to_clean))
     # endregion
 
     # region Private Functions
@@ -248,7 +265,7 @@ class MayaFileData(MayaCustomData, object):
             )
 
             if value == 'Yes':
-                node.delete_unknown_nodes()
+                scene.delete_unknown_nodes()
             if value == 'No':
                 if self.maya_file_type == self.maya_binary:
                     maya.cmds.warning('\tThis file contains unknown nodes. Try saving as Maya ASCII instead.')
