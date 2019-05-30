@@ -893,6 +893,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return gui.get_time_slider_range(highlighted=False)
 
     @staticmethod
+    def fit_view(animation=True):
+        """
+        Fits current viewport to current selection
+        :param animation: bool, Animated fit is available
+        """
+
+        maya.cmds.viewFit(an=animation)
+
+    @staticmethod
     def refresh_viewport():
         """
         Refresh current DCC viewport
