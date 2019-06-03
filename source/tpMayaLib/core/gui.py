@@ -591,3 +591,17 @@ def add_attribute_widget(layout, layout_parent, lbl, attr=None, attr_type='cbx',
             maya.cmds.deleteUI('tempAttrWidgetWin')
 
     return qtobj
+
+
+def current_model_panel():
+    """
+    Returns current model panel name
+    :return: str
+    """
+
+    current_panel = maya.cmds.getPanel(withFocus=True)
+    current_panel_type = maya.cmds.getPanel(typeOf=current_panel)
+    if current_panel_type not in ['modelPanel']:
+        return None
+
+    return current_panel

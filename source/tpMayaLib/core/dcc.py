@@ -1065,6 +1065,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         maya.cmds.undoInfo(closeChunk=True)
 
+    @staticmethod
+    def focus(object_to_focus):
+        """
+        Focus in given object
+        :param object_to_focus: str
+        """
+
+        maya.cmds.setFocus(object_to_focus)
+
     # =================================================================================================================
 
     @staticmethod

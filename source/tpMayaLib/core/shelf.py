@@ -81,7 +81,7 @@ class MayaShelf(object):
         font = self.category_lbl.font()
         font.setPointSize(6)
         self.category_lbl.setFont(font)
-        menu_ptr = OpenMayaUI.MQtUtil.findControl(self.name)
+        menu_ptr = maya.OpenMayaUI.MQtUtil.findControl(self.name)
         menu_widget = qtutils.wrapinstance(menu_ptr, QWidget)
         menu_widget.layout().addWidget(self.category_btn)
         menu_widget.layout().addWidget(self.category_lbl)
@@ -93,7 +93,7 @@ class MayaShelf(object):
         Sets this shelf as active shelf in current DCC session
         """
 
-        main_shelf = mel.eval("$_tempVar = $gShelfTopLevel")
+        main_shelf = maya.mel.eval("$_tempVar = $gShelfTopLevel")
         maya.cmds.tabLayout(main_shelf, edit=True, selectTab=self.name)
 
     def add_button(self, label, tooltip=None, icon='customIcon.png', command=None, double_command=None, command_type='python'):

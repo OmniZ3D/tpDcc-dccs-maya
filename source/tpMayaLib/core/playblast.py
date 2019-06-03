@@ -8,7 +8,25 @@ Module that contains functions and classes related with playblasts
 import os
 import glob
 
+from tpPyUtils import osplatform
+
 import tpMayaLib as maya
+from tpMayaLib.core import gui
+
+
+class PlayblastRenderers(object):
+    VIEWPORT2 = 'vp2Renderer'
+    OPENGL = 'base_OpenGL_Renderer'
+    HW_OPENGL = 'hwRender_OpenGL_Renderer'
+    STUB = 'stub_Renderer'
+
+
+class PlayblastError(Exception):
+    """
+    Class to raise playblast related exceptions
+    """
+
+    pass
 
 
 def get_playblast_formats():
@@ -64,3 +82,58 @@ def fix_playblast_output_path(file_path):
         file_path = max(files, key=os.path.getmtime)
 
     return file_path
+
+
+def playblast(filename, model_panel, start_frame, end_frame, width, height, step=1, renderer=None, off_screen=False):
+    """
+    Do a playblast with given parameters
+    :param filename: str
+    :param model_panel: str
+    :param start_frame: int
+    :param end_frame: int
+    :param width: int
+    :param height: int
+    :param step: int
+    :param renderer: PlayblastRenderers
+    :param off_screen: bool
+    :return: str
+    """
+
+    if osplatform.is_linux():
+        off_screen = True
+
+    maya.logger.info('Playblasting "{}"'.format(filename))
+    if start_frame == end_frame and os.path.exists(filename):
+        os.remove(filename)
+
+    frame = [i for i in range(start_frame, end_frame+1, step)]
+
+    model_panel = model_panel or gui.current_model_panel()
+    if maya.cmds.modelPanel(model_panel, query=True, exists=True):
+        maya.cmds.setFocus(model_panel)
+        if renderer:
+            maya.cmds.modelEditor(model_panel, edit=True, rendererName=renderer)
+
+    name, compression = os.path.splitext(filename)
+    filename = filename.replace(compression, '')
+    compression = compression.replace('.', '')
+
+    path = maya.cmds.playblast(
+        format='image', viewer=False, percent=100, quality=100,
+        frame=frame, width=width, height=height, filename=filename,
+        endTime=end_frame, startTime=start_frame, offScreen=off_screen,
+        forceOverwrite=True, showOrnaments=False, compression=compression
+    )
+    if not path:
+        raise PlayblastError('Playblast was cancelled by user!')
+
+    source = path.replace('####', str(int(0)).rjust(4, '0'))
+    if start_frame == end_frame:
+        target = source.replace('.0000.', '.')
+        maya.logger.debug('Renaming "{}" > "{}"'.format(source, target))
+        os.rename(source, target)
+        source = target
+
+    maya.logger.info('Playblasted "{}"'.format(source))
+
+    return source

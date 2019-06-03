@@ -112,7 +112,7 @@ class MayaFileData(MayaCustomData, object):
         return top_transforms
 
     def save(self, comment):
-        if not tp.Dcc.get_name() == tp.Dccs.Maya:
+        if not tp.is_maya():
             maya.logger.warning('Maya data must be accessed from within Maya!')
             return
 
