@@ -16,7 +16,7 @@ import tpMayaLib as maya
 from tpPyUtils import osplatform
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 from tpQtLib.core import window
-from tpMayaLib.core import gui, helpers, name, shelf
+from tpMayaLib.core import gui, helpers, name, shelf, namespace
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -191,6 +191,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.referenceQuery(node, isNodeReferenced=True)
+
+    @staticmethod
+    def node_reference_path(node, without_copy_number=False):
+        """
+        Returns reference path of the referenced node
+        :param node: str
+        :param without_copy_number: bool
+        :return: str
+        """
+
+        return maya.cmds.referenceQuery(node, filename=True, wcn=without_copy_number)
 
     @staticmethod
     def node_is_loaded(node):
@@ -378,6 +389,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.ls(materials=True)
+
+    @staticmethod
+    def scene_namespaces():
+        """
+        Returns all the available namespaces in the current scene
+        :return: list(str)
+        """
+
+        return namespace.get_all_namespaces()
 
     @staticmethod
     def change_namespace(old_namespace, new_namespace):

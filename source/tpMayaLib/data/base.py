@@ -65,8 +65,8 @@ class MayaFileData(MayaCustomData, object):
     maya_binary = 'mayaBinary'
     maya_ascii = 'mayaAscii'
 
-    def __init__(self, name=None):
-        super(MayaFileData, self).__init__(name)
+    def __init__(self, name=None, path=None):
+        super(MayaFileData, self).__init__(name=name, path=path)
 
         self.maya_file_type = self.get_maya_file_type()
 
@@ -281,8 +281,8 @@ class MayaFileData(MayaCustomData, object):
 
 
 class MayaBinaryFileData(MayaFileData):
-    def __init__(self, name=None):
-        super(MayaBinaryFileData, self).__init__(name)
+    def __init__(self, name=None, path=None):
+        super(MayaBinaryFileData, self).__init__(name=name, path=path)
 
     # region Override Functions
     @staticmethod
@@ -296,8 +296,8 @@ class MayaBinaryFileData(MayaFileData):
 
 
 class MayaAsciiFileData(MayaFileData):
-    def __init__(self, name=None):
-        super(MayaAsciiFileData, self).__init__(name)
+    def __init__(self, name=None, path=None):
+        super(MayaAsciiFileData, self).__init__(name=name, path=path)
 
     # region Override Functions
     @staticmethod

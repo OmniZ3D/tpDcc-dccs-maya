@@ -5,6 +5,8 @@
 Module that contains functions and classes related with namespaces
 """
 
+import tpMayaLib as maya
+
 
 def get_namespace(name):
     """
@@ -31,3 +33,18 @@ def remove_namespace_from_string(name):
         new_name = sub_name[-1]
 
     return new_name
+
+
+def get_all_namespaces():
+    """
+    Returns all the available namespaces in the scene
+    :return: list(str)
+    """
+
+    IGNORE_NAMESPACES = ['UI', 'shared']
+
+    namespaces = maya.cmds.namespaceInfo(listOnlyNamespaces=True, recurse=True)
+    namespaces = list(set(namespaces) - set(IGNORE_NAMESPACES))
+    namespaces = sorted(namespaces)
+
+    return namespaces
