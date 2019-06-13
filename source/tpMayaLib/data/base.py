@@ -12,7 +12,7 @@ import traceback
 import tpDccLib as tp
 import tpMayaLib as maya
 from tpPyUtils import path, osplatform, mathlib, version
-from tpDccLib.core import data
+from tpDccLib.core import data, scripts
 from tpMayaLib.core import constants, geometry, scene, helpers
 
 
@@ -21,11 +21,11 @@ class DataTypes(data.DataTypes, object):
     MayaBinary = 'MayaBinary'
 
 
-class ScriptTypes(data.ScriptTypes, object):
+class ScriptTypes(scripts.ScriptTypes, object):
     MEL = 'MELScript'
 
 
-class ScriptMelData(data.ScriptData, object):
+class ScriptMelData(scripts.ScriptData, object):
 
     # region Override Functions
     @staticmethod
@@ -84,7 +84,7 @@ class MayaFileData(MayaCustomData, object):
         return self.maya_binary
 
     def open(self, file_path=None):
-        if not tp.Dcc.get_name() == tp.Dccs.Maya:
+        if not tp.is_maya():
             maya.logger.warning('Maya data must be accessed from within Maya!')
             return
 
