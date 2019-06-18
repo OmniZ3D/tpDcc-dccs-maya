@@ -27,7 +27,6 @@ class ScriptTypes(scripts.ScriptTypes, object):
 
 class ScriptMelData(scripts.ScriptData, object):
 
-    # region Override Functions
     @staticmethod
     def get_data_type():
         return constants.ScriptLanguages.MEL
@@ -38,7 +37,6 @@ class ScriptMelData(scripts.ScriptData, object):
 
 
 class MayaCustomData(data.CustomData, object):
-    # region Private Functions
     def _center_view(self):
         if scene.is_batch():
             return
@@ -58,7 +56,6 @@ class MayaCustomData(data.CustomData, object):
         if dst > 10000:
             near = (dst/10000) * near
         maya.cmds.setAttr('persp.nearClipPlane', near)
-    # endregion
 
 
 class MayaFileData(MayaCustomData, object):
@@ -227,9 +224,7 @@ class MayaFileData(MayaCustomData, object):
         changed = helpers.clean_student_line(file_to_clean)
         if changed:
             maya.logger.debug('Cleaned student license from file: {}'.format(file_to_clean))
-    # endregion
 
-    # region Private Functions
     def _check_after_save(self, client_data, comment=None):
         file_path = maya.cmds.file(query=True, sn=True)
         version_file = version.VersionFile(file_path)
@@ -277,14 +272,11 @@ class MayaFileData(MayaCustomData, object):
         if not to_select:
             to_select = ['persp', 'side', 'top', 'front']
         maya.cmds.select(to_select, r=True)
-    # endregion
 
 
 class MayaBinaryFileData(MayaFileData):
     def __init__(self, name=None, path=None):
         super(MayaBinaryFileData, self).__init__(name=name, path=path)
-
-    # region Override Functions
     @staticmethod
     def get_data_type():
         return 'maya.binary'
@@ -292,14 +284,12 @@ class MayaBinaryFileData(MayaFileData):
     @staticmethod
     def get_data_extension():
         return 'mb'
-    # endregion
 
 
 class MayaAsciiFileData(MayaFileData):
     def __init__(self, name=None, path=None):
         super(MayaAsciiFileData, self).__init__(name=name, path=path)
 
-    # region Override Functions
     @staticmethod
     def get_data_type():
         return 'maya.ascii'
@@ -311,4 +301,3 @@ class MayaAsciiFileData(MayaFileData):
     @staticmethod
     def get_data_title():
         return 'Maya ASCII'
-    # endregion

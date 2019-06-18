@@ -116,6 +116,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.ls(l=full_path)
 
     @staticmethod
+    def rename_node(node, new_name):
+        """
+        Renames given node with new given name
+        :param node: str
+        :param new_name: str
+        :return: str
+        """
+
+        return maya.cmds.rename(node, new_name)
+
+    @staticmethod
     def select_object(node, replace_selection=False, **kwargs):
         """
         Selects given object in the current scene
@@ -124,6 +135,24 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         maya.cmds.select(node, replace=replace_selection, **kwargs)
+
+    @staticmethod
+    def select_hierarchy(root=None, add=False):
+        """
+        Selects the hierarchy of the given node
+        If no object is given current selection will be used
+        :param root: str
+        :param add: bool, Whether new selected objects need to be added to current selection or not
+        """
+
+        if not root or not MayaDcc.object_exists(root):
+            sel = maya.cmds.ls(selection=True)
+            for obj in sel:
+                if not add:
+                    maya.cmds.select(clear=True)
+                maya.cmds.select(obj, hi=True, add=True)
+        else:
+            maya.cmds.select(root, hi=True, add=add)
 
     @staticmethod
     def clear_selection():
@@ -151,6 +180,26 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.ls(sl=True, l=full_path)
+
+    @staticmethod
+    def all_shapes_nodes(full_path=True):
+        """
+        Returns all shapes nodes in current scene
+        :param full_path: bool
+        :return: list<str>
+        """
+
+        return maya.cmds.ls(shapes=True, l=full_path)
+
+    @staticmethod
+    def default_scene_nodes(full_path=True):
+        """
+        Returns a list of nodes that are created by default by the DCC when a new scene is created
+        :param full_path: bool
+        :return: list<str>
+        """
+
+        return maya.cmds.ls(defaultNodes=True)
 
     @staticmethod
     def node_short_name(node):
@@ -212,6 +261,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.referenceQuery(node, isLoaded=True)
+
+    @staticmethod
+    def node_is_locked(node):
+        """
+        Returns whether given node is locked or not
+        :param node: str
+        :return: bool
+        """
+
+        return maya.cmds.lockNode(node, q=True, l=True)
 
     @staticmethod
     def node_children(node, all_hierarchy=True, full_path=True):
@@ -1093,6 +1152,24 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         maya.cmds.setFocus(object_to_focus)
+
+    @staticmethod
+    def find_available_name(self, *args, **kwargs):
+        """
+        Returns an available object name in current DCC scene
+        :param args: list
+        :param kwargs: dict
+        :return: str
+        """
+
+        text = kwargs.get('name', '')
+        suffix = kwargs.get('suffix', None)
+        index = kwargs.get('index', 0)
+        padding = kwargs.get('padding', 0)
+        letters = kwargs.get('letters', False)
+        capital = kwargs.get('capital', False)
+
+        return name.find_available_name(name=text, suffix=suffix, index=index, padding=padding, letters=letters, capital=capital)
 
     # =================================================================================================================
 
