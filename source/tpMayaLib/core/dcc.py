@@ -1285,8 +1285,6 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
         break_progress = maya.cmds.progressBar(self.progress_ui, query=True, isCancelled=True)
         if break_progress:
             self.end()
-            if osplatform.get_env_var('RIGTASK_RUN') == 'True':
-                osplatform.set_env_var('RIGTASK_STOP', True)
             return True
 
         return False
