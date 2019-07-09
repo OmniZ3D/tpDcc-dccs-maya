@@ -257,6 +257,9 @@ def find_available_name(name, suffix=None, index=0, padding=0, letters=False, ca
     @param capital: bool, True if we want letters to be capital
     """
 
+    if not maya.cmds.objExists(name):
+        return name
+
     if letters is True:
         letter = strings.get_alpha(index - 1, capital)
         test_name = '%s_%s' % (name, letter)

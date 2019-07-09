@@ -1099,6 +1099,8 @@ class MetaNode(object):
                     except Exception:
                         maya.logger.warning('Failed to rename attribute: {} on node: {}'.format(attr, child.meta_node))
 
+        return name
+
     def delete(self):
         """
         Delete the meta node and this class instance

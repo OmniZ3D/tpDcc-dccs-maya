@@ -109,6 +109,22 @@ def get_main_window():
     return maya.mel.eval("$tempVar = $gMainWindow")
 
 
+def get_script_editor(source_type='python', command_completion=False, show_tooltip_help=False):
+    """
+    Returns Maya script editor window
+    :param source_type: str
+    :param command_completion: bool
+    :param show_tooltip_help: bool
+    :return:
+    """
+
+    maya.cmds.window()
+    maya.cmds.columnLayout()
+    executer = maya.cmds.cmdScrollFieldExecuter(sourceType=source_type, commandCompletion=command_completion, showTooltipHelp=show_tooltip_help)
+    qtobj = to_qt_object(executer, QTextEdit)
+    return executer, qtobj
+
+
 def viewport_message(text):
     """
     Shows a message in the Maya viewport

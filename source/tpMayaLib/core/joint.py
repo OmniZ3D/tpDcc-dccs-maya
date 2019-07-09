@@ -188,6 +188,24 @@ class OrientJointAttributes(object):
             ori.set_default_values()
 
     @staticmethod
+    def zero_orient_joint(joint):
+        """
+        Move orientation to orient joint attributes and zero out orient attributes from the given joint node
+        :param joint: str, name of valid joint node
+        """
+
+        if type(joint) is not list:
+            joint = [joint]
+
+        for jnt in joint:
+            if not is_joint(jnt):
+                continue
+            for axis in 'XYZ':
+                rotate_value = cmds.getAttr('{}.rotate{}'.format(jnt, axis))
+                maya.cmds.setAttr('{}.rotate{}'.format(jnt, axis), 0)
+                maya.cmds.setAttr('{}.jointOrient{}'.format(jnt, axis), rotate_value)
+
+    @staticmethod
     def remove_orient_attributes(joint):
         """
         Removes orient attributes from the given joint node
@@ -219,8 +237,7 @@ class OrientJointAttributes(object):
         for obj in objects_to_orient:
             relatives = cmds.listRelatives(obj, f=True)
             if not cmds.objExists('{}.ORIENT_INFO'.format(obj)):
-                print('adsfasdf')
-                if force_orient_attributes:
+                if force_oriernt_attributes:
                     cls.add_orient_attributes(obj)
                 else:
                     if relatives:
@@ -609,7 +626,7 @@ class OrientJoint(object):
 
         cmds.makeIdentity(self.joint, apply=True, r=True, s=True)
 
-        if children:
+        if found_children:
             cmds.parent(found_children, self.joint)
 
     def _pin(self):

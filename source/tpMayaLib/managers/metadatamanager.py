@@ -347,16 +347,17 @@ class MetaDataManager(window.MainWindow, object):
 
     @classmethod
     @decorators.timer
-    def get_meta_nodes(cls, meta_types=[], meta_instances=[], meta_classes=[], meta_attrs=None, data_type='MetaClass',
+    def get_meta_nodes(cls, meta_types=[], meta_instances=[], meta_classes_grps=[], meta_attrs=None, data_type='MetaClass',
                        node_types=None, **kwargs):
         """
         Get all MetaClass nodes in the current scene and return as MetaClass objects if possible
-        :param meta_types:
-        :param meta_instances:
-        :param meta_classes:
+        :param meta_types: list(str), if given, only will return the meta nodes of the given type
+        :param meta_instances: list(str), if given the meta inheritance will be checked and child classes will be returned
+        :param meta_classes_grps:
         :param meta_attrs:
         :param data_type:
         :param node_types:
+        :param system_root:
         :param kwargs:
         :return:
         """
@@ -365,33 +366,40 @@ class MetaDataManager(window.MainWindow, object):
 
         meta_nodes = list()
 
-        if node_types:
-            meta_node_types = node_types
+        if not node_types:
+            nodes = maya.cmds.ls(type=cls.get_metanode_types_registry(), l=True)
         else:
-            meta_node_types = cls.get_metanode_types_registry()
-
-        nodes = list()
-        for t in meta_node_types:
-            nodes_of_type = maya.cmds.ls(sl=True, type=t)
-            nodes.extend(nodes_of_type)
+            nodes = maya.cmds.ls(type=node_types, l=True)
+        if not nodes:
+            return meta_nodes
 
         for node in nodes:
             meta_node = False
             if not meta_instances:
-                if metanode.MetaNode.is_meta_node(node=node.name(), meta_types=meta_types):
+                if metanode.MetaNode.is_meta_node(node=node, meta_types=meta_types):
                     meta_node = True
             else:
                 if metanode.MetaNode.is_meta_node_inherited(node=node, meta_instances=meta_instances):
                     meta_node = True
             if meta_node:
-                # TODO: Check metaClassGroups functionality
-                meta_nodes.append(node)
+                if meta_classes_grps:
+                    if not hasattr(meta_classes_grps, '__iter__'):
+                        meta_classes_grps = [meta_classes_grps]
+                    if metanode.MetaNode.is_meta_node_class_grp(node, meta_classes_grps):
+                        meta_nodes.append(node)
+                else:
+                    meta_nodes.append(node)
 
         if not meta_nodes:
             return meta_nodes
 
-        # TODO: Finish
-        return meta_nodes
+        if meta_attrs:
+            raise NotImplementedError('not implemented yet')
+
+        if data_type == 'MetaClass':
+            return [metanode.MetaNode(node, **kwargs) for node in meta_nodes]
+        else:
+            return meta_nodes
 
     def _update_ui(self):
 

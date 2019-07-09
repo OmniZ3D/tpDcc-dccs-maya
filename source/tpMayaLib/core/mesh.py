@@ -10,6 +10,7 @@ from __future__ import print_function, division, absolute_import
 from collections import defaultdict
 
 import tpMayaLib as maya
+from tpPyUtils import python
 from tpMayaLib.core import helpers, exceptions, node
 
 
@@ -44,6 +45,52 @@ def is_mesh(mesh):
         return False
 
     return True
+
+
+def get_meshes_from_nodes(nodes, search_child_node=False, full_path=False, mesh=True, nurbs=False):
+    """
+    Function that returns polygon meshes from given nodes
+    :param nodes: list(str)
+    :param search_child_node: bool
+    :param full_path: bool
+    :param mesh: bool
+    :param nurbs: bool
+    :return: list(str)
+    """
+
+    nodes = python.force_list(nodes)
+    polygon_meshes = list()
+
+    if search_child_node:
+        parent_nodes = nodes
+        for n in parent_nodes:
+            try:
+                found_nodes = maya.cmds.listRelatives(n, ad=True, c=True, type='transform', fullPath=full_path, s=False)
+            except Exception:
+                pass
+            if found_nodes is not None:
+                nodes += found_nodes
+
+    for n in nodes:
+        if mesh:
+            try:
+                mesh_node = maya.cmds.listRelatives(n, s=True, pa=True, type='mesh', fullPath=True)
+                if mesh_node:
+                    polygon_meshes.append(n)
+            except Exception:
+                pass
+        if nurbs:
+            try:
+                nurbs_node = maya.cmds.listRelatives(s=True, pa=True, type='nurbsSurface', fullPath=True)
+                if nurbs_node:
+                    polygon_meshes.append(nurbs_node)
+            except Exception:
+                pass
+
+    if len(polygon_meshes) > 0:
+        return polygon_meshes
+    else:
+        return list()
 
 
 def is_open(mesh):

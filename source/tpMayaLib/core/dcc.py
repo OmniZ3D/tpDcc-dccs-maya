@@ -13,7 +13,6 @@ from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 import tpDccLib
 import tpMayaLib as maya
-from tpPyUtils import osplatform
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 from tpQtLib.core import window
 from tpMayaLib.core import gui, helpers, name, shelf, namespace
@@ -94,6 +93,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.objectType(node, isType=node_type)
+
+    @staticmethod
+    def node_handle(node):
+        """
+        Returns unique identifier of the given node
+        :param node: str
+        :return: str
+        """
+
+        return maya.cmds.ls(node, uuid=True)
 
     @staticmethod
     def node_type(node):
@@ -210,6 +219,35 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return name.get_short_name(node)
+
+    @staticmethod
+    def node_object_color(node):
+        """
+        Returns the color of the given node
+        :param node: str
+        :return: list(int, int, int, int)
+        """
+
+        return maya.cmds.getAttr('{}.objectColor'.format(node))
+
+    @staticmethod
+    def node_override_enabled(node):
+        """
+        Returns whether the given node has its display override attribute enabled or not
+        :param node: str
+        :return: bool
+        """
+
+        return maya.cmds.getAttr('{}.overrideEnabled'.format(node))
+
+    @staticmethod
+    def namespace_separator():
+        """
+        Returns character used to separate namespace from the node name
+        :return: str
+        """
+
+        return '|'
 
     @staticmethod
     def node_namespace(node):
@@ -519,6 +557,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.addAttr(node, ln=attribute_name, dt='string', k=keyable)
 
     @staticmethod
+    def add_string_array_attribute(node, attribute_name, keyable=False):
+        """
+        Adds a new string array attribute into the given node
+        :param node: str
+        :param attribute_name: str
+        :param keyable: bool
+        """
+
+        return maya.cmds.addAttr(node, ln=attribute_name, dt='stringArray', k=keyable)
+
+    @staticmethod
     def attribute_query(node, attribute_name, **kwargs):
         """
         Returns attribute qyer
@@ -756,6 +805,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         maya.cmds.loadPlugin(plugin_path, quiet=True)
+
+    @staticmethod
+    def unload_plugin(plugin_path):
+        """
+        Unloads the given plugin
+        :param plugin_path: str
+        """
+
+        maya.cmds.unloadPlugin(plugin_path)
 
     @staticmethod
     def list_old_plugins():
@@ -1154,22 +1212,21 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         maya.cmds.setFocus(object_to_focus)
 
     @staticmethod
-    def find_available_name(self, *args, **kwargs):
+    def find_available_name(node_name, **kwargs):
         """
         Returns an available object name in current DCC scene
-        :param args: list
+        :param node_name: str
         :param kwargs: dict
         :return: str
         """
 
-        text = kwargs.get('name', '')
         suffix = kwargs.get('suffix', None)
         index = kwargs.get('index', 0)
         padding = kwargs.get('padding', 0)
         letters = kwargs.get('letters', False)
         capital = kwargs.get('capital', False)
 
-        return name.find_available_name(name=text, suffix=suffix, index=index, padding=padding, letters=letters, capital=capital)
+        return name.find_available_name(name=node_name, suffix=suffix, index=index, padding=padding, letters=letters, capital=capital)
 
     # =================================================================================================================
 
