@@ -51,7 +51,7 @@ class MayaCustomData(data.CustomData, object):
     def _fix_camera(self):
         camera_pos = maya.cmds.xform('persp', q=True, ws=True, t=True)
         dst = mathlib.get_distance([0, 0, 0], camera_pos)
-        maya.cmds.setAttr('persp.farClipPlane', dst)
+        maya.cmds.setAttr('persp.farClipPlane', dst * 10)
         near = 0.1
         if dst > 10000:
             near = (dst/10000) * near
@@ -157,7 +157,7 @@ class MayaFileData(MayaCustomData, object):
         track = scene.TrackNodes()
         track.load('transform')
 
-        scene.import_scene(import_file)
+        scene.import_scene(import_file, do_save=False)
         self._after_open()
 
         transforms = track.get_delta()
@@ -189,19 +189,21 @@ class MayaFileData(MayaCustomData, object):
         return top_transforms
 
     def export_data(self, comment):
+
         if not tp.is_maya():
             maya.logger.warning('Data must be accessed from within Maya!')
             return
 
         file_path = self.get_file()
+
         osplatform.get_permission(file_path)
         self._handle_unknowns()
         self._clean_scene()
         maya.cmds.file(rename=file_path)
         self._prepare_scene_for_export()
 
-        maya.cmds.file(exportSelected=True, prompt=False, force=True, pr=True, ch=True, chn=True, exp=True, con=True,
-                  stx='always', type=self.maya_file_type)
+        # maya.cmds.file(exportSelected=True, prompt=False, force=True, pr=True, ch=False, chn=True, exp=True, con=False,
+        #           stx='never', type=self.maya_file_type)
 
         version_file = version.VersionFile(file_path)
         version_file.save(comment)
@@ -285,6 +287,9 @@ class MayaBinaryFileData(MayaFileData):
     def get_data_extension():
         return 'mb'
 
+    def get_maya_file_type(self):
+        return self.maya_ascii
+
 
 class MayaAsciiFileData(MayaFileData):
     def __init__(self, name=None, path=None):
@@ -301,3 +306,6 @@ class MayaAsciiFileData(MayaFileData):
     @staticmethod
     def get_data_title():
         return 'Maya ASCII'
+
+    def get_maya_file_type(self):
+        return self.maya_ascii

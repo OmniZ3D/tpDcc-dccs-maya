@@ -384,11 +384,15 @@ def clean_student_line(filename):
         maya.logger.info('File is already cleaned: no student line found!')
         return False
 
+    if not filename.endswith('.ma'):
+        maya.logger.info('Maya Binary files cannot be cleaned!')
+        return False
+
     with open(filename, 'r') as f:
         lines = f.readlines()
     step = len(lines)/4
 
-    no_student_filename = filename.replace('.ma', '.no_student.ma')
+    no_student_filename = filename[:-3] + '.no_student.ma'
     with open(no_student_filename, 'w') as f:
         step_count = 0
         for line in lines:
