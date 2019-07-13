@@ -37,6 +37,10 @@ class ScriptMelData(scripts.ScriptData, object):
 
 
 class MayaCustomData(data.CustomData, object):
+
+    # When dealing with Maya files we are not interested in generating a settings file
+    SETTINGS_FILE = None
+
     def _center_view(self):
         if scene.is_batch():
             return
@@ -108,7 +112,7 @@ class MayaFileData(MayaCustomData, object):
 
         return top_transforms
 
-    def save(self, comment):
+    def save(self, comment, create_version=True):
         if not tp.is_maya():
             maya.logger.warning('Maya data must be accessed from within Maya!')
             return
@@ -132,9 +136,10 @@ class MayaFileData(MayaCustomData, object):
 
         saved = scene.save_as(file_path)
         if saved:
-            version_file = version.VersionFile(file_path)
-            # if scene.is_batch() or not version_file.has_versions():
-            version_file.save(comment)
+            if create_version:
+                version_file = version.VersionFile(file_path)
+                # if scene.is_batch() or not version_file.has_versions():
+                version_file.save(comment)
 
             helpers.display_info('Saved {} data'.format(self.name))
             return True
