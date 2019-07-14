@@ -83,7 +83,7 @@ class tpMayaLib(importer.Importer, object):
 
     def externals_path(self):
         """
-        Returns the paths where dccutils externals packages are stored
+        Returns the paths where tpPyUtils externals packages are stored
         :return: str
         """
 
