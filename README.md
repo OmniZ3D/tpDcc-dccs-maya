@@ -1,5 +1,10 @@
 # tpMayaLib
 
+<p align="left">
+    <a href="https://github.com/tpoveda/tpPyUtils/blob/master/LICENSE" alt="License">
+        <img src="https://img.shields.io/github/license/tpoveda/tpMayaLib.svg?logo=mit" /></a>
+</p>
+
 Maya implementation for tpDccLib and tpQtLib packages.
 
 Also, this module contains a lot of utilities functions and classes to work with Maya Python APIs (cmds and OpenMaya)
