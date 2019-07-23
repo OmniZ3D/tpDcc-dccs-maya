@@ -12,7 +12,7 @@ import traceback
 import contextlib
 from collections import OrderedDict
 
-from tpQtLib.Qt.QtWidgets import *
+from Qt.QtWidgets import *
 try:
     from shiboken2 import wrapInstance
 except ImportError:

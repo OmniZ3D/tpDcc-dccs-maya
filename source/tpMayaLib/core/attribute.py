@@ -1227,6 +1227,17 @@ class Attribute(object):
 
         return is_keyable(self.get_full_name())
 
+    def is_hidden(self):
+        """
+        Returns whether the attribute is hidden or not
+        :return: bool
+        """
+
+        if not self.exists():
+            return self.hidden
+
+        return is_hidden(self.get_full_name())
+
     def is_numeric(self):
         """
         Returns whether the attribute value is numeric or not
@@ -1299,6 +1310,15 @@ class Attribute(object):
 
         self.keyable = keyable
         self._set_keyable()
+
+    def set_hidden(self, hidden):
+        """
+        Set the hidden state of the variable
+        :param hidden: bool
+        """
+
+        self.hidden = hidden
+        self._set_hidden()
 
     def set_variable_type(self, attribute_type):
         """
@@ -1401,10 +1421,12 @@ class Attribute(object):
             return
 
         locked_state = self.is_locked()
+        hidden_state = self.is_hidden()
 
         add_attribute(node=self.node, attr=self.name, value=self.value)
 
         self.set_locked(locked_state)
+        self.set_hidden(locked_state)
 
     def _set_data_type(self):
         """
@@ -1434,6 +1456,16 @@ class Attribute(object):
             return
 
         maya.cmds.setAttr(self.get_full_name(), k=self.keyable)
+
+    def _set_hidden(self):
+        """
+        Internal function to set the hidden state depending the hidden stored variable
+        """
+
+        if not self.exists():
+            return
+
+        maya.cmds.setAttr(self.get_full_name(), cb=not self.hidden)
 
     def _create_attribute(self):
         """
@@ -2109,6 +2141,18 @@ def is_keyable(attr):
     check_attribute(attr)
 
     return maya.cmds.getAttr(attr, k=True)
+
+
+def is_hidden(attr):
+    """
+    Returns whether the given attribute is hidden or not
+    :param attr: str, attribute to check if it is hidden
+    :return: bool
+    """
+
+    check_attribute(attr)
+
+    return maya.cmds.getAttr(attr, cb=True)
 
 
 def is_numeric(attr):

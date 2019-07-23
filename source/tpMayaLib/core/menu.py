@@ -11,6 +11,7 @@ import os
 import json
 from collections import OrderedDict
 
+import tpDccLib
 import tpMayaLib as maya
 
 
@@ -132,3 +133,6 @@ def find_menu(menu_name):
             return m
 
     return None
+
+
+tpDccLib.Menu = MayaMenu

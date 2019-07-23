@@ -11,24 +11,20 @@ import json
 from collections import OrderedDict
 from functools import partial
 
-from tpQtLib.Qt.QtCore import *
-from tpQtLib.Qt.QtWidgets import *
+from Qt.QtCore import *
+from Qt.QtWidgets import *
 
+import tpDccLib
 import tpMayaLib as maya
+from tpDccLib.abstract import shelf as abstract_shelf
 from tpQtLib.core import qtutils
 from tpMayaLib.core import gui
 
 
-class MayaShelf(object):
-    def __init__(self, name='tpRigToolkit', label_background=(0, 0, 0, 0), label_color=(0.9, 0.9, 0.9)):
-        super(MayaShelf, self).__init__()
+class MayaShelf(abstract_shelf.AbstractShelf, object):
 
-        self.name = name
-        self.label_background = label_background
-        self.label_color = label_color
-
-        self.category_btn = None
-        self.category_menu = None
+    def __init__(self, name='MayaShelf', label_background=(0, 0, 0, 0), label_color=(0.9, 0.9, 0.9), category_icon=None):
+        super(MayaShelf, self).__init__(name=name, label_background=label_background, label_color=label_color, category_icon=category_icon)
 
     @staticmethod
     def add_menu_item(parent, label, command='', icon=''):
@@ -61,30 +57,31 @@ class MayaShelf(object):
         """
 
         if delete_if_exists:
-            if gui.shelf_exists(shelf_name=self.name):
-                gui.delete_shelf(shelf_name=self.name)
+            if gui.shelf_exists(shelf_name=self._name):
+                gui.delete_shelf(shelf_name=self._name)
         else:
-            assert not gui.shelf_exists(self.name), 'Shelf with name {} already exists!'.format(self.name)
+            assert not gui.shelf_exists(self._name), 'Shelf with name {} already exists!'.format(self._name)
 
-        self.name = gui.create_shelf(name=self.name)
+        self._name = gui.create_shelf(name=self._name)
 
         # ========================================================================================================
 
-        self.category_btn = QPushButton('')
-        self.category_btn.setIcon(resource.icon('category'))
-        self.category_btn.setIconSize(QSize(18, 18))
-        self.category_menu = QMenu(self.category_btn)
-        self.category_btn.setStyleSheet('QPushButton::menu-indicator {image: url(myindicator.png);subcontrol-position: right center;subcontrol-origin: padding;left: -2px;}')
-        self.category_btn.setMenu(self.category_menu)
-        self.category_lbl = QLabel('MAIN')
-        self.category_lbl.setAlignment(Qt.AlignCenter)
-        font = self.category_lbl.font()
+        self._category_btn = QPushButton('')
+        if self._category_icon:
+            self._category_btn.setIcon(self._category_icon)
+        self._category_btn.setIconSize(QSize(18, 18))
+        self._category_menu = QMenu(self._category_btn)
+        self._category_btn.setStyleSheet('QPushButton::menu-indicator {image: url(myindicator.png);subcontrol-position: right center;subcontrol-origin: padding;left: -2px;}')
+        self._category_btn.setMenu(self._category_menu)
+        self._category_lbl = QLabel('MAIN')
+        self._category_lbl.setAlignment(Qt.AlignCenter)
+        font = self._category_lbl.font()
         font.setPointSize(6)
-        self.category_lbl.setFont(font)
-        menu_ptr = maya.OpenMayaUI.MQtUtil.findControl(self.name)
+        self._category_lbl.setFont(font)
+        menu_ptr = maya.OpenMayaUI.MQtUtil.findControl(self._name)
         menu_widget = qtutils.wrapinstance(menu_ptr, QWidget)
-        menu_widget.layout().addWidget(self.category_btn)
-        menu_widget.layout().addWidget(self.category_lbl)
+        menu_widget.layout().addWidget(self._category_btn)
+        menu_widget.layout().addWidget(self._category_lbl)
 
         self.add_separator()
 
@@ -94,7 +91,7 @@ class MayaShelf(object):
         """
 
         main_shelf = maya.mel.eval("$_tempVar = $gShelfTopLevel")
-        maya.cmds.tabLayout(main_shelf, edit=True, selectTab=self.name)
+        maya.cmds.tabLayout(main_shelf, edit=True, selectTab=self._name)
 
     def add_button(self, label, tooltip=None, icon='customIcon.png', command=None, double_command=None, command_type='python'):
         """
@@ -108,12 +105,12 @@ class MayaShelf(object):
         :return:
         """
 
-        maya.cmds.setParent(self.name)
+        maya.cmds.setParent(self._name)
         command = command or ''
         double_command = double_command or ''
         return maya.cmds.shelfButton(width=37, height=37, image=icon or '', label=label, command=command,
                                 doubleClickCommand=double_command, annotation=tooltip or '', imageOverlayLabel=label,
-                                overlayLabelBackColor=self.label_background, overlayLabelColor=self.label_color,
+                                overlayLabelBackColor=self._label_background, overlayLabelColor=self._label_color,
                                 sourceType=command_type)
 
     def add_separator(self):
@@ -123,11 +120,11 @@ class MayaShelf(object):
         :return:
         """
 
-        maya.cmds.separator(parent=self.name, manage=True, visible=True, horizontal=False, style='shelf', enableBackground=False, preventOverride=False)
+        maya.cmds.separator(parent=self._name, manage=True, visible=True, horizontal=False, style='shelf', enableBackground=False, preventOverride=False)
 
     def build_category(self, shelf_file, category_name):
 
-        self.category_lbl.setText(category_name.upper())
+        self._category_lbl.setText(category_name.upper())
 
         self.load_category(shelf_file, 'general', clear=True)
         if category_name != 'general':
@@ -140,7 +137,7 @@ class MayaShelf(object):
         :param categories: list<str>, list of categories to build
         """
 
-        self.category_lbl.setText('ALL')
+        self._category_lbl.setText('ALL')
 
         self.load_category(shelf_file, 'general', clear=True)
         for cat in categories:
@@ -161,11 +158,11 @@ class MayaShelf(object):
 
         with open(shelf_file) as f:
             shelf_data = json.load(f, object_pairs_hook=OrderedDict)
-            if 'tpRigToolkit' not in shelf_data:
-                maya.logger.warning('Impossible to create tpRigToolkit Shelf! Please contact TD!')
+            if self._name not in shelf_data:
+                maya.logger.warning('Impossible to create Shelf!')
                 return
 
-            for item, item_data in shelf_data['tpRigToolkit'].items():
+            for item, item_data in shelf_data[self._name].items():
                 if item != category_name:
                     continue
 
@@ -193,29 +190,36 @@ class MayaShelf(object):
 
         with open(shelf_file) as f:
             shelf_data = json.load(f, object_pairs_hook=OrderedDict)
-            if 'tpRigToolkit' not in shelf_data:
-                maya.logger.warning('Impossible to create tpRigToolkit Shelf! Please contact TD!')
+            if self._name not in shelf_data:
+                maya.logger.warning('Impossible to create Shelf!')
                 return
 
-            for i, item in enumerate(shelf_data['tpRigToolkit'].keys()):
+            for i, item in enumerate(shelf_data[self._name].keys()):
                 if i == 0:
                     first_item = item
 
-                category_action = self.category_menu.addAction(item.title())
+                category_action = self._category_menu.addAction(item.title())
                 category_action.triggered.connect(partial(self.build_category, shelf_file, item))
                 all_categories.append(item)
 
-            category_action = self.category_menu.addAction('All')
+            category_action = self._category_menu.addAction('All')
             category_action.triggered.connect(partial(self.build_categories, shelf_file, all_categories))
 
         if first_item:
             self.load_category(shelf_file, first_item, clear=False)
 
     def clear_list(self):
-        if gui.shelf_exists(shelf_name=self.name):
-            menu_items = maya.cmds.shelfLayout(self.name, query=True, childArray=True)
+        """
+        Clears all the elements of the shelf
+        """
+
+        if gui.shelf_exists(shelf_name=self._name):
+            menu_items = maya.cmds.shelfLayout(self._name, query=True, childArray=True)
             for item in menu_items:
                 try:
                     maya.cmds.deleteUI(item)
                 except Exception:
                     pass
+
+
+tpDccLib.Shelf = MayaShelf

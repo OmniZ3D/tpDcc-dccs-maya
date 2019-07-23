@@ -9,8 +9,8 @@ from __future__ import print_function, division, absolute_import
 
 import inspect
 
-from tpQtLib.Qt.QtCore import *
-from tpQtLib.Qt.QtWidgets import *
+from Qt.QtCore import *
+from Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpPyUtils import name as name_utils

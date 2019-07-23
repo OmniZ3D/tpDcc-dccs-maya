@@ -7,7 +7,7 @@ Module that contains functions to work with Maya model panels
 
 from __future__ import print_function, division, absolute_import
 
-from tpQtLib.Qt.QtWidgets import *
+from Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpMayaLib.core import gui

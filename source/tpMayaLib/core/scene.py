@@ -12,7 +12,7 @@ import string
 import traceback
 import contextlib
 
-from tpQtLib.Qt.QtWidgets import *
+from Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpPyUtils import path

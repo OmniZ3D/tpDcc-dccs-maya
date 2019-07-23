@@ -7,7 +7,7 @@ Module that contains DCC functionality for Maya
 
 from __future__ import print_function, division, absolute_import
 
-from tpQtLib.Qt.QtCore import *
+from Qt.QtCore import *
 
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
@@ -37,6 +37,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return helpers.get_maya_version()
+
+    @staticmethod
+    def get_version_name():
+        """
+        Returns version of the DCC
+        :return: int
+        """
+
+        return str(helpers.get_maya_version())
 
     @staticmethod
     def is_batch():
@@ -899,6 +908,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         maya.cmds.warning(message)
+
+    @staticmethod
+    def error(message):
+        """
+        Prints a error message
+        :param message: str
+        :return:
+        """
+
+        maya.cmds.error(message)
 
     @staticmethod
     def add_shelf_menu_item(parent, label, command='', icon=''):

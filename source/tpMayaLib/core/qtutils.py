@@ -5,8 +5,8 @@
 Module that contains utils functions to work with Qt in Maya
 """
 
-from tpQtLib.Qt.QtCore import *
-from tpQtLib.Qt.QtWidgets import *
+from Qt.QtCore import *
+from Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpQtLib.core import qtutils as qt

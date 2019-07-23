@@ -11,7 +11,7 @@ from __future__ import print_function, division, absolute_import
 import os
 import tempfile
 
-from tpQtLib.Qt.QtWidgets import *
+from Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpMayaLib.core import gui
