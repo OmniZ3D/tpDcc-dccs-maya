@@ -8,6 +8,8 @@ Module that contains DCC functionality for Maya
 from __future__ import print_function, division, absolute_import
 
 from Qt.QtCore import *
+from Qt.QtWidgets import *
+from Qt.QtGui import *
 
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
@@ -28,6 +30,30 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return tpDccLib.Dccs.Maya
+
+    @staticmethod
+    def get_dpi(value=1):
+        """
+        Returns current DPI used by DCC
+        :param value: float
+        :return: float
+        """
+
+        qt_dpi = QApplication.devicePixelRatio() if maya.cmds.about(batch=True) else QMainWindow().devicePixelRatio()
+
+        return max(qt_dpi * value, MayaDcc.get_dpi_scale(value))
+
+    @staticmethod
+    def get_dpi_scale(value):
+        """
+        Returns current DPI scale used by DCC
+        :return: float
+        """
+
+        maya_scale = 1.0 if not hasattr(maya.cmds, "mayaDpiSetting") else maya.cmds.mayaDpiSetting(query=True, realScaleValue=True)
+
+        return maya_scale * value
+
 
     @staticmethod
     def get_version():
