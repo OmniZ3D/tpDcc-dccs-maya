@@ -32,6 +32,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return tpDccLib.Dccs.Maya
 
     @staticmethod
+    def get_extensions():
+        """
+        Returns supported extensions of the DCC
+        :return: list(str)
+        """
+
+        return ['.ma', '.mb']
+
+    @staticmethod
     def get_dpi(value=1):
         """
         Returns current DPI used by DCC
@@ -128,6 +137,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.objectType(node, isType=node_type)
+
+    @staticmethod
+    def create_node(node_type, node_name):
+        """
+        Creates a new node of the given type and with the given name
+        :param node_type: str
+        :param node_name: str
+        :return: str
+        """
+
+        return maya.cmds.createNode(node_type, name=node_name)
 
     @staticmethod
     def node_handle(node):
@@ -253,7 +273,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: str
         """
 
-        return name.get_short_name(node)
+        return name.get_basename(node)
+
+    @staticmethod
+    def node_long_name(node):
+        """
+        Returns long name of the given node
+        :param node: str
+        :return: str
+        """
+
+        return name.get_long_name(node)
 
     @staticmethod
     def node_object_color(node):
@@ -483,7 +513,6 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         if relative_type:
-
             return maya.cmds.listRelatives(node, allDescendents=all_hierarchy, fullPath=full_path, type=relative_type, shapes=shapes, noIntermediate=not intermediate_shapes)
         else:
             return maya.cmds.listRelatives(node, allDescendents=all_hierarchy, fullPath=full_path, shapes=shapes, noIntermediate=not intermediate_shapes)
@@ -603,6 +632,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.addAttr(node, ln=attribute_name, dt='stringArray', k=keyable)
 
     @staticmethod
+    def add_message_attribute(node, attribute_name, keyable=False):
+        """
+        Adds a new message attribute into the given node
+        :param node: str
+        :param attribute_name: str
+        :param keyable: bool
+        """
+
+        return maya.cmds.addAttr(node, ln=attribute_name, dt='message', k=keyable)
+
+    @staticmethod
     def attribute_query(node, attribute_name, **kwargs):
         """
         Returns attribute qyer
@@ -635,6 +675,46 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.getAttr('{}.{}'.format(node, attribute_name, lock=True))
+
+    @staticmethod
+    def show_attribute(node, attribute_name):
+        """
+        Shows attribute in DCC UI
+        :param node: str
+        :param attribute_name: str
+        """
+
+        return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), channelBox=True)
+
+    @staticmethod
+    def hide_attribute(node, attribute_name):
+        """
+        Hides attribute in DCC UI
+        :param node: str
+        :param attribute_name: str
+        """
+
+        return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), channelBox=False)
+
+    @staticmethod
+    def keyable_attribute(node, attribute_name):
+        """
+        Makes given attribute keyable
+        :param node: str
+        :param attribute_name: str
+        """
+
+        return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), keyable=True)
+
+    @staticmethod
+    def unkeyable_attribute(node, attribute_name):
+        """
+        Makes given attribute unkeyable
+        :param node: str
+        :param attribute_name: str
+        """
+
+        return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), keyable=False)
 
     @staticmethod
     def lock_attribute(node, attribute_name):
@@ -749,6 +829,19 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.deleteAttr(n=node, at=attribute_name)
+
+    @staticmethod
+    def connect_attribute(source_node, source_attribute, target_node, target_attribute, force=False):
+        """
+        Connects source attribute to given target attribute
+        :param source_node: str
+        :param source_attribute: str
+        :param target_node: str
+        :param target_attribute: str
+        :param force: bool
+        """
+
+        return maya.cmds.connectAttr('{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), force=force)
 
     @staticmethod
     def list_connections(node, attribute_name):
