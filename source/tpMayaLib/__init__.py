@@ -111,15 +111,17 @@ def init(do_reload=False):
     :param do_reload: bool, Whether to reload modules or not
     """
 
-    tpmayalib_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=do_reload)
+    tpmayalib_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
     tpmayalib_importer.update_paths()
     use_new_api()
 
     global logger
     logger = tpmayalib_importer.logger
 
-    tpmayalib_importer.import_modules()
-    tpmayalib_importer.import_packages(only_packages=True)
+    tpmayalib_importer.import_modules(skip_modules=['tpMayaLib.core'])
+    tpmayalib_importer.import_packages(only_packages=True, order=['tpMayaLib.core'])
+    if do_reload:
+        tpmayalib_importer.reload_all()
 
     create_metadata_manager()
 

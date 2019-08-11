@@ -640,7 +640,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param keyable: bool
         """
 
-        return maya.cmds.addAttr(node, ln=attribute_name, dt='message', k=keyable)
+        return maya.cmds.addAttr(node, ln=attribute_name, at='message', k=keyable)
 
     @staticmethod
     def attribute_query(node, attribute_name, **kwargs):
