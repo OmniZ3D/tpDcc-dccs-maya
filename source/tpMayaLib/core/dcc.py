@@ -9,7 +9,6 @@ from __future__ import print_function, division, absolute_import
 
 from Qt.QtCore import *
 from Qt.QtWidgets import *
-from Qt.QtGui import *
 
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
@@ -17,7 +16,7 @@ import tpDccLib
 import tpMayaLib as maya
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 from tpQtLib.core import window
-from tpMayaLib.core import gui, helpers, name, shelf, namespace
+from tpMayaLib.core import gui, helpers, name, namespace
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -62,7 +61,6 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         maya_scale = 1.0 if not hasattr(maya.cmds, "mayaDpiSetting") else maya.cmds.mayaDpiSetting(query=True, realScaleValue=True)
 
         return maya_scale * value
-
 
     @staticmethod
     def get_version():
@@ -128,15 +126,33 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.objectType(node)
 
     @staticmethod
-    def check_object_type(node, node_type):
+    def check_object_type(node, node_type, check_sub_types=False):
         """
         Returns whether give node is of the given type or not
         :param node: str
         :param node_type: str
+        :param check_sub_types: bool
         :return: bool
         """
 
-        return maya.cmds.objectType(node, isType=node_type)
+        is_type = maya.cmds.objectType(node, isType=node_type)
+        if not is_type and check_sub_types:
+            is_type = maya.cmds.objectType(node, isAType=node_type)
+
+        return is_type
+
+    @staticmethod
+    def create_empty_group(name, parent=None):
+        """
+        Creates a new empty group node
+        :param name: str
+        :param parent: str or None
+        """
+
+        if parent:
+            return maya.cmds.group(n=name, empty=True, parent=parent)
+        else:
+            return maya.cmds.group(n=name, empty=True, world=True)
 
     @staticmethod
     def create_node(node_type, node_name):
@@ -148,6 +164,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.createNode(node_type, name=node_name)
+
+    @staticmethod
+    def node_name(node):
+        """
+        Returns the name of the given node
+        :param node: str
+        :return: str
+        """
+
+        return node
 
     @staticmethod
     def node_handle(node):
@@ -1072,7 +1098,6 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         return maya.cmds.separator(parent=shelf_name, manage=True, visible=True, horizontal=False, style='shelf', enableBackground=False, preventOverride=False)
 
-
     @staticmethod
     def shelf_exists(shelf_name):
         """
@@ -1081,7 +1106,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: bool
         """
 
-        return shelf.shelf_exists(shelf_name=shelf_name)
+        return gui.shelf_exists(shelf_name=shelf_name)
 
     @staticmethod
     def create_shelf(shelf_name, shelf_label=None):
@@ -1091,7 +1116,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param shelf_label: str
         """
 
-        return shelf.create_shelf(name=shelf_name)
+        return gui.create_shelf(name=shelf_name)
 
     @staticmethod
     def delete_shelf(shelf_name):
@@ -1100,7 +1125,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param shelf_name: str
         """
 
-        return shelf.delete_shelf(shelf_name=shelf_name)
+        return gui.delete_shelf(shelf_name=shelf_name)
 
     @staticmethod
     def select_file_dialog(title, start_directory=None, pattern=None):

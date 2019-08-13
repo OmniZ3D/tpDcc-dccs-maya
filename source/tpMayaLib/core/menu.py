@@ -12,10 +12,11 @@ import json
 from collections import OrderedDict
 
 import tpDccLib
+from tpDccLib.abstract import menu as abstract_menu
 import tpMayaLib as maya
 
 
-class MayaMenu(object):
+class MayaMenu(abstract_menu.AbstractMenu, object):
     def __init__(self, name='MayaMenu'):
         super(MayaMenu, self).__init__()
 

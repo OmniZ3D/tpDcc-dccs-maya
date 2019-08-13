@@ -158,11 +158,8 @@ class MayaShelf(abstract_shelf.AbstractShelf, object):
 
         with open(shelf_file) as f:
             shelf_data = json.load(f, object_pairs_hook=OrderedDict)
-            if self._name not in shelf_data:
-                maya.logger.warning('Impossible to create Shelf!')
-                return
 
-            for item, item_data in shelf_data[self._name].items():
+            for item, item_data in shelf_data.items():
                 if item != category_name:
                     continue
 
@@ -190,11 +187,8 @@ class MayaShelf(abstract_shelf.AbstractShelf, object):
 
         with open(shelf_file) as f:
             shelf_data = json.load(f, object_pairs_hook=OrderedDict)
-            if self._name not in shelf_data:
-                maya.logger.warning('Impossible to create Shelf!')
-                return
 
-            for i, item in enumerate(shelf_data[self._name].keys()):
+            for i, item in enumerate(shelf_data.keys()):
                 if i == 0:
                     first_item = item
 
