@@ -1,15 +1,15 @@
 language: python
 install:
-  - pip install -r requirements.txt
-  - python setup.py install
+- pip install -r requirements.txt
+- python setup.py install
 script:
-  - pytest
+- pytest
 deploy:
   skip_cleanup: true
   provider: pypi
   user: tpoveda
   password:
-    secure: HZ6VfZDEOWn9OcnY22dyF36fXN5e16rTM46UI66kfFIK1VuXaDP5v7WKWoorniTuYdEa6u8VNeCwa1xqx7i1iycYxShXuJl3F2J2zes0OY+ajw/tjlos8XyXW6e3mprRZY59Es5JjLubI8cKdOfBbOcnKKAXGpBcpV+q2oYf4S2TWQcZePN8DtTfQVtI13k+6ixxDX2RAs01Kn12BnB8K95dTSbZejffIlITRD1lmnzLc8lpPxDUImRB7KNNrgAAmaKizvhAAzV+4VGe4h2f9Su/TtrExZGPqVoiZVcMgBnarvnB6a8k7Qta4G0NJu7BCJLnJFFMcy4evVVr8oa4WwYuU6cx+MIXrAw+0ftnHUS/06qyitCnjjlbcEaK6OyxP45diwLx59+E63ZttX2Re8V7C78AsyS/R9DpaSOikb3CIi6MT69vM7sPPykMbwqpYNPqg09WznDZmju15G5Au4l2RLDX2noOD6ZwCiSEjBFXmxvAue6AkoZw065s6WZ1zlhA0cdIVnUY32FvQ96KwQXdAruFcYqO1oJsJ5HYagpNoNsPPRtRgQcnEt8ZzKLRF1vMBZqmGkRkJZ46usQriM3o4BXXeILXPRqORX0ggAo3vVBW4rFIUoD9q4p0aeGIPrB+8ulcRx6//xab91bxFGxypkhXI8z4Jp8fIKL79wI=
+    secure: dDtoYv1iPiK03U1jk3tBtKHJXVwiDIahk+f0eRV6dvYojhiyHyrfYjX6IHW8GJEJb/Ihlm6fSnfr0kgo5uaQibDghnz/Hj4qBY2LlpAErUEi9z0FVAR0C21rrFKacTE2AyhiVWznuI6a92CdaDD7yX7SgKstYp5tAjGCEviTIVjlU5g/9ITnKAbyZIK/cbMgomVo+m7iZ70UYDZd+aKb37AAxAX40pZ/+PSAO5DK0sssDmcbEaujY7wAW5alXcfRjmXdSQesITU/Ub3o0ZMwKJPBQZ5gmPg6OsCMt/qHdSXS6U+6XT+z3iFReBdvHdDVNeh+D4KCSz2eIy2dXQHWyzTp4D8Tg3RI8XF6cUsCbhTF28H1TLMq8fvZXrr9SK61wCRbXEx3XxoV6d1WbboFUCnc6p7hCj5OOo2WSnu46n0ahhbbJa+jO9LbW0tsBj/UH4zF41dQa3MiqJhIOxF9FcaiNL2PL/E9Ue6d8ouerYd60fFKIg4qqYD8pQq/5yaSpuJXKIG7B8d1tIRj6fvmcgbVCWTrpg4kNu+nHqg98iYwY2awgvbyus2x7BF1vTlsoQu1L1HmdL9iW++k8TP7M0q11wWV76HtmOM2uK+Vp0DbLIRzuO7fQg+WYpgij6s/seSpIJjPYjOOPLwfH43SEz/TX0EXdOSc9L/KYxzHV3o=
   on:
     branch: master
     tags: true
