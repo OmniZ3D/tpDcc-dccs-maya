@@ -16,7 +16,7 @@ import tpDccLib
 import tpMayaLib as maya
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 from tpQtLib.core import window
-from tpMayaLib.core import gui, helpers, name, namespace
+from tpMayaLib.core import gui, helpers, name, namespace, scene
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -1021,7 +1021,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param force: bool
         """
 
-        return maya.cmds.file(save=True, f=force)
+        scene_name = MayaDcc.scene_name()
+        if scene_name:
+            return maya.cmds.file(save=True, f=force)
+        else:
+            if force:
+                return maya.cmds.SaveScene()
+            else:
+                if MayaDcc.scene_is_modified():
+                    return maya.cmds.SaveScene()
+
+        return False
 
     @staticmethod
     def confirm_dialog(title, message, button=None, cancel_button=None, default_button=None, dismiss_string=None):
@@ -1391,6 +1401,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         return name.find_available_name(name=node_name, suffix=suffix, index=index, padding=padding, letters=letters, capital=capital)
 
+    @staticmethod
+    def clean_scene():
+        """
+        Cleans invalid nodes from current scene
+        """
+
+        scene.clean_scene()
+
     # =================================================================================================================
 
     @staticmethod
@@ -1438,7 +1456,6 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
 
             maya.cmds.progressBar(self.progress_ui, edit=True, beginProgress=begin, isInterruptable=True, status=title, maxValue=count)
 
-    # region Public Functions
     def set_count(self, count_number):
         maya.cmds.progressBar(self.progress_ui, edit=True, maxValue=int(count_number))
 
@@ -1508,7 +1525,6 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
             return True
 
         return False
-    # endregion
 
 
 class MayaDockedWindow(MayaQWidgetDockableMixin, window.MainWindow):

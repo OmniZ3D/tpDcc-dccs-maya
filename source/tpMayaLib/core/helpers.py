@@ -368,13 +368,16 @@ def file_has_student_line(filename):
     return False
 
 
-def clean_student_line(filename):
+def clean_student_line(filename=None):
     """
     Clean the student line from the given Maya file name
     :param filename: str
     """
 
     changed = False
+
+    if not filename:
+        filename = maya.cmds.file(query=True, sn=True)
 
     if not os.path.exists(filename):
         maya.logger.error('File "{}" does not exists!'.format(filename))

@@ -518,7 +518,7 @@ def delete_garbage():
         straight_delete_types += ['hyperLayout', 'hyperView']       # Maya 2014 crashes when tyring to remove those
 
     deleted_nodes = node.delete_nodes_of_type(straight_delete_types)
-    check_connection_node_type = ['shadingEngine', 'partition','objectSet']
+    check_connection_node_type = ['shadingEngine', 'partition', 'objectSet']
     check_connection_nodes = list()
     for check_type in check_connection_node_type:
         nodes_of_type = maya.cmds.ls(type=check_type)
@@ -542,3 +542,14 @@ def delete_garbage():
                 garbage_nodes.append(n)
 
     maya.logger.debug('Delete Garbage Nodes: {}'.format(garbage_nodes))
+
+
+def clean_scene():
+    """
+    Cleans invalid nodes from current scene
+    """
+
+    delete_unknown_nodes()
+    delete_turtle_nodes()
+    delete_unused_plugins()
+    delete_garbage()
