@@ -432,3 +432,18 @@ def load_plugin(plugin_name):
             return False
 
     return True
+
+
+def get_project_rule(rule):
+    """
+    Get the full path of the rule of the project
+    :param rule: str
+    :return: str
+    """
+
+    workspace = maya.cmds.workspace(query=True, rootDirectory=True)
+    workspace_folder = maya.cmds.workspace(fileRuleEntry=rule)
+    if not workspace_folder:
+        maya.logger.warning('File Rule Entry "{}" has no value, please check if the rule name is typed correctly!'.format(rule))
+
+    return os.path.join(workspace, workspace_folder)
