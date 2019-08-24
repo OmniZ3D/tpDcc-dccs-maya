@@ -938,7 +938,29 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param force: bool
         """
 
-        return maya.cmds.file(file_path, o=True, f=force)
+        return maya.cmds.file(file_path, o=True, f=force, returnNewNodes=True)
+
+    @staticmethod
+    def import_file(file_path, force=True):
+        """
+        Imports given file into current DCC scene
+        :param file_path: str
+        :param force: bool
+        :return:
+        """
+
+        return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True)
+
+    @staticmethod
+    def reference_file(file_path, force=True):
+        """
+        References given file into current DCC scene
+        :param file_path: str
+        :param force: bool
+        :return:
+        """
+
+        return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True)
 
     @staticmethod
     def is_plugin_loaded(plugin_name):
