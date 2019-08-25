@@ -16,7 +16,7 @@ import tpDccLib
 import tpMayaLib as maya
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 from tpQtLib.core import window
-from tpMayaLib.core import gui, helpers, name, namespace, scene
+from tpMayaLib.core import gui, helpers, name, namespace, scene, node as maya_node
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -217,6 +217,24 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.rename(node, new_name)
 
     @staticmethod
+    def show_object(node):
+        """
+        Shows given object
+        :param node: str
+        """
+
+        maya.cmds.showHidden(node)
+
+    @staticmethod
+    def hide_object(node):
+        """
+        Hides given object
+        :param node: str
+        """
+
+        maya.cmds.hide(node)
+
+    @staticmethod
     def select_object(node, replace_selection=False, **kwargs):
         """
         Selects given object in the current scene
@@ -243,6 +261,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
                 maya.cmds.select(obj, hi=True, add=True)
         else:
             maya.cmds.select(root, hi=True, add=add)
+
+    @staticmethod
+    def deselect_object(node):
+        """
+        Deselects given node from current selection
+        :param node: str
+        """
+
+        maya.cmds.select(node, deselect=True)
 
     @staticmethod
     def clear_selection():
@@ -359,6 +386,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.referenceQuery(node, parentNamespace=True)
+
+    @staticmethod
+    def node_is_visible(node):
+        """
+        Returns whether given node is visible or not
+        :param node: str
+        :return: bool
+        """
+
+        return maya_node.is_visible(node=node)
 
     @staticmethod
     def node_is_referenced(node):
