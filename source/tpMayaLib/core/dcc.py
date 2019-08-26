@@ -16,7 +16,7 @@ import tpDccLib
 import tpMayaLib as maya
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 from tpQtLib.core import window
-from tpMayaLib.core import gui, helpers, name, namespace, scene, node as maya_node
+from tpMayaLib.core import gui, helpers, name, namespace, scene, node as maya_node, reference as ref_utils
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -417,6 +417,22 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.referenceQuery(node, filename=True, wcn=without_copy_number)
+
+    @staticmethod
+    def node_unreference(node):
+        """
+        Unreferences given node
+        :param node: str
+        """
+
+        ref_node = None
+        if ref_utils.is_referenced(node):
+            ref_node = ref_utils.get_reference_node(node)
+        elif ref_utils.is_reference(node):
+            ref_node = node
+
+        if ref_node:
+            return ref_utils.remove_reference(ref_node)
 
     @staticmethod
     def node_is_loaded(node):
