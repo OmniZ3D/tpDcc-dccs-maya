@@ -23,8 +23,8 @@ from tpMayaLib.core import gui
 
 class MayaShelf(abstract_shelf.AbstractShelf, object):
 
-    def __init__(self, name='MayaShelf', label_background=(0, 0, 0, 0), label_color=(0.9, 0.9, 0.9), category_icon=None):
-        super(MayaShelf, self).__init__(name=name, label_background=label_background, label_color=label_color, category_icon=category_icon)
+    def __init__(self, name='MayaShelf', label_background=(0, 0, 0, 0), label_color=(0.9, 0.9, 0.9), category_icon=None, enable_labels=True):
+        super(MayaShelf, self).__init__(name=name, label_background=label_background, label_color=label_color, category_icon=category_icon, enable_labels=enable_labels)
 
     @staticmethod
     def add_menu_item(parent, label, command='', icon=''):
@@ -108,6 +108,10 @@ class MayaShelf(abstract_shelf.AbstractShelf, object):
         maya.cmds.setParent(self._name)
         command = command or ''
         double_command = double_command or ''
+
+        if not self._enable_labels:
+            label = ''
+
         return maya.cmds.shelfButton(width=37, height=37, image=icon or '', label=label, command=command,
                                 doubleClickCommand=double_command, annotation=tooltip or '', imageOverlayLabel=label,
                                 overlayLabelBackColor=self._label_background, overlayLabelColor=self._label_color,
