@@ -16,7 +16,7 @@ import tpDccLib
 import tpMayaLib as maya
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 from tpQtLib.core import window
-from tpMayaLib.core import gui, helpers, name, namespace, scene, node as maya_node, reference as ref_utils
+from tpMayaLib.core import gui, helpers, name, namespace, scene, playblast, node as maya_node, reference as ref_utils, camera as cam_utils
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -622,6 +622,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.listRelatives(node, shapes=True, fullPath=full_path, children=True, allDescendents=all_hierarchy, noIntermediate=not intermediate_shapes)
 
     @staticmethod
+    def shape_transform(shape_node, full_path=True):
+        """
+        Returns the transform parent of the given shape node
+        :param shape_node: str
+        :param full_path: bool
+        :return: str
+        """
+
+        return maya.cmds.listRelatives(shape_node, parent=True, fullPath=full_path)
+
+    @staticmethod
     def list_materials():
         """
         Returns a list of materials in the current scene
@@ -850,6 +861,18 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), attribute_value, type=attribute_type)
 
     @staticmethod
+    def set_boolean_attribute_value(node, attribute_name, attribute_value):
+        """
+        Sets the boolean value of the given attribute in the given node
+        :param node: str
+        :param attribute_name: str
+        :param attribute_value: int
+        :return:
+        """
+
+        return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), bool(attribute_value))
+
+    @staticmethod
     def set_numeric_attribute_value(node, attribute_name, attribute_value, clamp=False):
         """
         Sets the integer value of the given attribute in the given node
@@ -898,6 +921,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), str(attribute_value), type='string')
+
+    @staticmethod
+    def set_float_vector3_attribute_value(node, attribute_name, attribute_value):
+        """
+        Sets the vector3 value of the given attribute in the given node
+        :param node: str
+        :param attribute_name: str
+        :param attribute_value: str
+        """
+
+        return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), float(attribute_value[0]), float(attribute_value[1]), float(attribute_value[2]), type='double3')
 
     @staticmethod
     def delete_attribute(node, attribute_name):
@@ -1260,6 +1294,24 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return res
 
     @staticmethod
+    def get_start_frame():
+        """
+        Returns current start frame
+        :return: int
+        """
+
+        return maya.cmds.playbackOptions(query=True, minTime=True)
+
+    @staticmethod
+    def get_end_frame():
+        """
+        Returns current end frame
+        :return: int
+        """
+
+        return maya.cmds.playbackOptions(query=True, maxTime=True)
+
+    @staticmethod
     def get_current_frame():
         """
         Returns current frame set in time slider
@@ -1267,6 +1319,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return gui.get_current_frame()
+
+    @staticmethod
+    def set_current_frame(frame):
+        """
+        Sets the current frame in time slider
+        :param frame: int
+        """
+
+        return gui.set_current_frame(frame)
 
     @staticmethod
     def get_time_slider_range():
@@ -1441,7 +1502,6 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         maya.cmds.undoInfo(openChunk=True)
 
-
     @staticmethod
     def disable_undo():
         """
@@ -1483,6 +1543,106 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         scene.clean_scene()
+
+    @staticmethod
+    def get_current_camera(full_path=True):
+        """
+        Returns camera currently being used in scene
+        :param full_path: bool
+        :return: list(str)
+        """
+
+        return cam_utils.get_current_camera(full_path=full_path)
+
+    @staticmethod
+    def get_playblast_formats():
+        """
+        Returns a list of supported formats for DCC playblast
+        :return: list(str)
+        """
+
+        return playblast.get_playblast_formats()
+
+    @staticmethod
+    def get_playblast_compressions(playblast_format):
+        """
+        Returns a list of supported compressions for DCC playblast
+        :param playblast_format: str
+        :return: list(str)
+        """
+
+        return playblast.get_playblast_compressions(format=playblast_format)
+
+    @staticmethod
+    def get_viewport_resolution_width():
+        """
+        Returns the default width resolution of the current DCC viewport
+        :return: int
+        """
+
+        current_panel = gui.get_active_editor()
+        if not current_panel:
+            return 0
+
+        return maya.cmds.control(current_panel, query=True, width=True)
+
+    @staticmethod
+    def get_viewport_resolution_height():
+        """
+        Returns the default height resolution of the current DCC viewport
+        :return: int
+        """
+
+        current_panel = gui.get_active_editor()
+        if not current_panel:
+            return 0
+
+        return maya.cmds.control(current_panel, query=True, height=True)
+
+    @staticmethod
+    def get_renderers():
+        """
+        Returns dictionary with the different renderers supported by DCC
+        :return: dict(str, str)
+        """
+
+        active_editor = gui.get_active_editor()
+        if not active_editor:
+            return {}
+
+        renderers_ui = maya.cmds.modelEditor(active_editor, query=True, rendererListUI=True)
+        renderers_id = maya.acmds.modelEditor(active_editor, query=True, rendererList=True)
+
+        renderers = dict(zip(renderers_ui, renderers_id))
+
+        return renderers
+
+    @staticmethod
+    def get_default_render_resolution_width():
+        """
+        Sets the default resolution of the current DCC panel
+        :return: int
+        """
+
+        return maya.cmds.getAttr('defaultResolution.width')
+
+    @staticmethod
+    def get_default_render_resolution_height():
+        """
+        Sets the default resolution of the current DCC panel
+        :return: int
+        """
+
+        return maya.cmds.getAttr('defaultResolution.height')
+
+    @staticmethod
+    def get_default_render_resolution_aspect_ratio():
+        """
+        Returns the default resolution aspect ratio of the current DCC render settings
+        :return: float
+        """
+
+        return maya.cmds.getAttr('defaultResolution.deviceAspectRatio')
 
     # =================================================================================================================
 

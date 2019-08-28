@@ -186,6 +186,17 @@ def get_active_editor():
     return panel.split('|')[-1]
 
 
+def get_active_panel():
+    """
+    Returns the current active modelPanel
+    :return: str, name of the active panel or raises an error if no active modelPanel iis found
+    """
+
+    panel = maya.cmds.getPanel(withFocus=True)
+
+    return panel
+
+
 def get_current_frame():
     """
     Return current Maya frame set in time slier
@@ -193,6 +204,15 @@ def get_current_frame():
     """
 
     return maya.cmds.currentTime(query=True)
+
+
+def set_current_frame(frame):
+    """
+    Sets current Maya fram in time slider
+    :param frame: int
+    """
+
+    return maya.cmds.currentTime(frame, update=True)
 
 
 def get_time_slider_range(highlighted=True, within_highlighted=True, highlighted_only=False):

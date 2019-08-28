@@ -11,21 +11,28 @@ import tpMayaLib as maya
 from tpMayaLib.core import node
 
 
-def get_current_camera(use_api=True):
+def get_current_camera(use_api=True, full_path=True):
     """
     Returns the currently active camera
     :param use_api: bool, Whether to use OpenMaya API to retrieve the camera path or not
+    :param full_path: bool
     :return: str, name of the active camera transform
     """
 
     if use_api:
         if maya.is_new_api():
             camera_path = maya.OpenMayaUI.M3dView().active3dView().getCamera()
-            return camera_path.fullPathName()
+            if full_path:
+                return camera_path.fullPathName()
+            else:
+                return camera_path.partialPathName()
         else:
             camera_path = maya.OpenMaya.MDagPath()
             maya.OpenMayaUI.M3dView().active3dView().getCamera(camera_path)
-            return camera_path.fullPathName()
+            if full_path:
+                return camera_path.fullPathName()
+            else:
+                return camera_path.partialPathName()
     else:
         panel = maya.cmds.getPanel(withFocus=True)
         if maya.cmds.getPanel(typeOf=panel) == 'modelPanel':
@@ -34,19 +41,19 @@ def get_current_camera(use_api=True):
                 if maya.cmds.nodeType(cam) == 'transform':
                     return cam
                 elif maya.cmds.objectType(cam, isAType='shape'):
-                    parent = maya.cmds.listRelatives(cam, parent=True, fullPath=True)
+                    parent = maya.cmds.listRelatives(cam, parent=True, fullPath=full_path)
                     if parent:
                         return parent[0]
 
         cam_shapes = maya.cmds.ls(sl=True, type='camera')
         if cam_shapes:
-            return maya.cmds.listRelatives(cam_shapes, parent=True, fullPath=True)[0]
+            return maya.cmds.listRelatives(cam_shapes, parent=True, fullPath=full_path)[0]
 
         transforms = maya.cmds.ls(sl=True, type='transform')
         if transforms:
             cam_shapes = maya.cmds.listRelatives(transforms, shapes=True, type='camera')
             if cam_shapes:
-                return maya.cmds.listRelatives(cam_shapes, parent=True, fullPath=True)[0]
+                return maya.cmds.listRelatives(cam_shapes, parent=True, fullPath=full_path)[0]
 
 
 def set_current_camera(camera_name):

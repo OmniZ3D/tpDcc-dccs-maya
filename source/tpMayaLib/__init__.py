@@ -18,12 +18,14 @@ import maya.utils as utils
 import maya.OpenMaya as OpenMaya
 import maya.OpenMayaUI as OpenMayaUI
 import maya.OpenMayaAnim as OpenMayaAnim
+import maya.OpenMayaRender as OpenMayaRender
 
 new_api = True
 try:
     import maya.api.OpenMaya as OpenMayaV2
     import maya.api.OpenMayaUI as OpenMayaUIV2
     import maya.api.OpenMayaAnim as OpenMayaAnimV2
+    import maya.api.OpenMayaRender as OpenMayaRenderV2
 except Exception:
     new_api = False
 
@@ -38,14 +40,16 @@ logger = None
 api = {
     'OpenMaya': OpenMaya,
     'OpenMayaUI': OpenMayaUI,
-    'OpenMayaAnim': OpenMayaAnim
+    'OpenMayaAnim': OpenMayaAnim,
+    'OpenMayaRender': OpenMayaRender
 }
 
 if new_api:
     api2 = {
         'OpenMaya': OpenMayaV2,
         'OpenMayaUI': OpenMayaUIV2,
-        'OpenMayaAnim': OpenMayaAnimV2
+        'OpenMayaAnim': OpenMayaAnimV2,
+        'OpenMayaRender': OpenMayaRenderV2
     }
 else:
     api2 = api
@@ -53,6 +57,7 @@ else:
 OpenMaya = OpenMaya
 OpenMayaUI = OpenMayaUI
 OpenMayaAnim = OpenMayaAnim
+OpenMayaRender = OpenMayaRender
 
 # =================================================================================
 
@@ -151,14 +156,17 @@ def use_new_api(flag=False):
             OpenMaya = api2['OpenMaya']
             OpenMayaUI = api2['OpenMayaUI']
             OpenMayaAnim = api2['OpenMayaAnim']
+            OpenMayaRender = api2['OpenMayaRender']
         else:
             OpenMaya = api['OpenMaya']
             OpenMayaUI = api['OpenMayaUI']
             OpenMayaAnim = api['OpenMayaAnim']
+            OpenMayaRender = api['OpenMayaRender']
     else:
         OpenMaya = api['OpenMaya']
         OpenMayaUI = api['OpenMayaUI']
         OpenMayaAnim = api['OpenMayaAnim']
+        OpenMayaRender = api['OpenMayaRender']
 
 
 def is_new_api():
