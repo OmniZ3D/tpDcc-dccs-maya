@@ -1184,6 +1184,22 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         maya.cmds.error(message)
 
     @staticmethod
+    def show_message_in_viewport(msg, **kwargs):
+        """
+        Shows a message in DCC viewport
+        :param msg: str, Message to show
+        :param kwargs: dict, extra arguments
+        """
+
+        color = kwargs.get('color', '')
+        pos = kwargs.get('pos', 'topCenter')
+
+        if color != '':
+            msg = "<span style=\"color:{0};\">{1}</span>".format(color, msg)
+
+        maya.cmds.inViewMessage(amg=msg, pos=pos, fade=True, fst=1000, dk=True)
+
+    @staticmethod
     def add_shelf_menu_item(parent, label, command='', icon=''):
         """
         Adds a new menu item
