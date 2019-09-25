@@ -53,13 +53,13 @@ def build_matrix(translate=(0,0,0), x_axis=(1,0,0), y_axis=(0,1,0), z_axis=(0,0,
     values = list()
 
     if not isinstance(translate, maya.OpenMaya.MVector):
-        translate = maya.OpenMaya.MVector(translate)
-    if not isinstance(translate, maya.OpenMaya.MVector):
-        x_axis = maya.OpenMaya.MVector(x_axis)
-    if not isinstance(translate, maya.OpenMaya.MVector):
-        y_axis = maya.OpenMaya.MVector(y_axis)
-    if not isinstance(translate, maya.OpenMaya.MVector):
-        z_axis = maya.OpenMaya.MVector(z_axis)
+        translate = maya.OpenMaya.MVector(translate[0], translate[1], translate[2])
+    if not isinstance(x_axis, maya.OpenMaya.MVector):
+        x_axis = maya.OpenMaya.MVector(x_axis[0], x_axis[1], x_axis[2])
+    if not isinstance(y_axis, maya.OpenMaya.MVector):
+        y_axis = maya.OpenMaya.MVector(y_axis[0], y_axis[1], y_axis[2])
+    if not isinstance(z_axis, maya.OpenMaya.MVector):
+        z_axis = maya.OpenMaya.MVector(z_axis[0], y_axis[1], y_axis[2])
 
     set_matrix_row(matrix, x_axis, 0)
     set_matrix_row(matrix, y_axis, 1)

@@ -597,13 +597,14 @@ def get_mpoint(point):
     return mpoint
 
 
-def get_matrix(transform, world_space=True, time=None):
+def get_matrix(transform, world_space=True, time=None, as_list=False):
     """
     Returns world/local matrix of given transform
     :param transform: str, transform object to get world matrix from
     :param world_space: bool, Whether to get world space matrix or local space matrix
     :param time: int || float, frame to get the transform world matrix for. If is None, will use the current frame
-    :return: MMatrix
+    :param as_list: bool, whether to return matrix as OpenMaya.MMatrix object or as a list
+    :return: MMatrix or list
     """
 
     from tpMayaLib.core import matrix
@@ -621,6 +622,9 @@ def get_matrix(transform, world_space=True, time=None):
         mat = maya.cmds.getAttr(transform+'.'+matrix_attr, t=time)
     else:
         mat = maya.cmds.getAttr(transform+'.'+matrix_attr)
+
+    if as_list:
+        return mat
 
     # Build matrix
     xform_matrix = matrix.build_matrix(
