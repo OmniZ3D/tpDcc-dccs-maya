@@ -16,7 +16,8 @@ import tpDccLib
 import tpMayaLib as maya
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 from tpQtLib.core import window
-from tpMayaLib.core import gui, helpers, name, namespace, scene, playblast, node as maya_node, reference as ref_utils, camera as cam_utils
+from tpMayaLib.core import gui, helpers, name, namespace, scene, playblast, transform, attribute
+from tpMayaLib.core import node as maya_node, reference as ref_utils, camera as cam_utils
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -534,6 +535,26 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.referenceQuery(node, filename=True, withoutCopyNumber=no_copy_number)
 
     @staticmethod
+    def node_matrix(node):
+        """
+        Returns the world matrix of the given node
+        :param node: str
+        :return:
+        """
+
+        return transform.get_matrix(transform=node, as_list=True)
+
+    @staticmethod
+    def set_node_matrix(node, matrix):
+        """
+        Sets the world matrix of the given node
+        :param node: str
+        :param matrix: variant, MMatrix or list
+        """
+
+        maya.cmds.xform(node, matrix=matrix, worldSpace=True)
+
+    @staticmethod
     def list_node_types(type_string):
         """
         List all dependency node types satisfying given classification string
@@ -835,7 +856,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: variant
         """
 
-        return maya.cmds.getAttr('{}.{}'.format(node, attribute_name))
+        return attribute.get_attribute(obj=node, attr=attribute_name)
 
     @staticmethod
     def get_attribute_type(node, attribut_name):
@@ -1039,15 +1060,19 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True)
 
     @staticmethod
-    def reference_file(file_path, force=True):
+    def reference_file(file_path, force=True, **kwargs):
         """
         References given file into current DCC scene
         :param file_path: str
         :param force: bool
+        :param kwargs: keyword arguments
         :return:
         """
 
-        return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True)
+        if 'namespace' in kwargs:
+            return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True, namespace=kwargs['namespace'])
+        else:
+            return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True)
 
     @staticmethod
     def is_plugin_loaded(plugin_name):
@@ -1067,7 +1092,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param quiet: bool
         """
 
-        maya.cmds.loadPlugin(plugin_path, quiet=True)
+        return helpers.load_plugin(plugin_path, quiet=quiet)
 
     @staticmethod
     def unload_plugin(plugin_path):
@@ -1559,6 +1584,26 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         scene.clean_scene()
+
+    @staticmethod
+    def is_camera(node_name):
+        """
+        Returns whether given node is a camera or not
+        :param node_name: str
+        :return: bool
+        """
+
+        return cam_utils.is_camera(node_name)
+
+    @staticmethod
+    def get_all_cameras(full_path=True):
+        """
+        Returns all cameras in the scene
+        :param full_path: bool
+        :return: list(str)
+        """
+
+        return cam_utils.get_all_cameras(exclude_standard_cameras=True, return_transforms=True)
 
     @staticmethod
     def get_current_camera(full_path=True):

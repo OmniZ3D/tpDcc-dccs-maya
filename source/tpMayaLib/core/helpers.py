@@ -418,15 +418,16 @@ def clean_student_line(filename=None):
     return changed
 
 
-def load_plugin(plugin_name):
+def load_plugin(plugin_name, quiet=True):
     """
     Loads plugin with the given name (full path)
     :param plugin_name: str, name or path of the plugin to load
+    :param quiet: bool, Whether to show info to user that plugin has been loaded or not
     """
 
     if not maya.cmds.pluginInfo(plugin_name, query=True, loaded=True):
         try:
-            maya.cmds.loadPlugin(plugin_name)
+            maya.cmds.loadPlugin(plugin_name, quiet=quiet)
         except Exception as e:
             maya.logger.error('Impossible to load plugin: {}'.format(plugin_name))
             return False
