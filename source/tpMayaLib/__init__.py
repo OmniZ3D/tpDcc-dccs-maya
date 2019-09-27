@@ -110,7 +110,7 @@ class tpMayaLib(importer.Importer, object):
                 sys.path.append(p)
 
 
-def init(do_reload=False):
+def init_dcc(do_reload=False):
     """
     Initializes module
     :param do_reload: bool, Whether to reload modules or not
@@ -123,8 +123,24 @@ def init(do_reload=False):
     global logger
     logger = tpmayalib_importer.logger
 
-    tpmayalib_importer.import_modules(skip_modules=['tpMayaLib.core'])
-    tpmayalib_importer.import_packages(only_packages=True, order=['tpMayaLib.core'])
+    tpmayalib_importer.import_modules()
+    tpmayalib_importer.import_packages(only_packages=True)
+    if do_reload:
+        tpmayalib_importer.reload_all()
+
+    create_metadata_manager()
+
+
+def init_ui(do_reload=False):
+    tpmayalib_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
+    tpmayalib_importer.update_paths()
+    use_new_api()
+
+    global logger
+    logger = tpmayalib_importer.logger
+
+    tpmayalib_importer.import_modules(skip_modules=['tpMayaLib.core', 'tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.meta'])
+    tpmayalib_importer.import_packages(only_packages=True, skip_modules=['tpMayaLib.core', 'tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.meta'])
     if do_reload:
         tpmayalib_importer.reload_all()
 
