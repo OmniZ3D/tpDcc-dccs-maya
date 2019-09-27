@@ -10,10 +10,48 @@ from __future__ import print_function, division, absolute_import
 import tpMayaLib as maya
 
 
-def get_file(caption='Select File', file_mode=1, filters='*', start_directory=''):
-    result = maya.cmds.fileDialog2(caption=caption, fileMode=file_mode, fileFilter=filters, startingDirectory=start_directory)
-    if result:
-        result = result[0]
-        return result
+def select_file_dialog(title, start_directory=None, pattern=None):
+    """
+    Shows select file dialog
+    :param title: str
+    :param start_directory: str
+    :param pattern: str
+    :return: str
+    """
 
-    return None
+    res = maya.cmds.fileDialog2(fm=1, dir=start_directory, cap=title, ff=pattern)
+    if res:
+        res = res[0]
+
+    return res
+
+
+def select_folder_dialog(title, start_directory=None):
+    """
+    Shows select folder dialog
+    :param title: str
+    :param start_directory: str
+    :return: str
+    """
+
+    res = maya.cmds.fileDialog2(fm=3, dir=start_directory, cap=title)
+    if res:
+        res = res[0]
+
+    return res
+
+
+def save_file_dialog(title, start_directory=None, pattern=None):
+    """
+    Shows save file dialog
+    :param title: str
+    :param start_directory: str
+    :param pattern: str
+    :return: str
+    """
+
+    res = maya.cmds.fileDialog2(fm=0, dir=start_directory, cap=title, ff=pattern)
+    if res:
+        res = res[0]
+
+    return res
