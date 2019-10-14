@@ -1280,7 +1280,7 @@ def get_upstream_nodes(n):
         return upstream_nodes
 
 
-def delete_all_incoming_nodes(n):
+def delete_all_incoming_nodes(node_name):
     """
     Delete all incoming nodes from the given Maya node
     :param n: str
@@ -1289,7 +1289,7 @@ def delete_all_incoming_nodes(n):
 
     upstream_nodes = list()
     upstream_nodes_clean = list()
-    connections = maya.cmds.listConnections(n, source=True, destination=False)
+    connections = maya.cmds.listConnections(node_name, source=True, destination=False)
     if connections:
         for n in connections:
             upstream_nodes.extend(get_upstream_nodes(n))
