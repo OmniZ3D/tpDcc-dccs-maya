@@ -15,7 +15,7 @@ from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 import tpDccLib
 import tpMayaLib as maya
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
-from tpQtLib.core import window
+# from tpQtLib.core import window
 from tpMayaLib.core import gui, helpers, name, namespace, scene, playblast, transform, attribute
 from tpMayaLib.core import node as maya_node, reference as ref_utils, camera as cam_utils
 
@@ -367,6 +367,26 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return '|'
+
+    @staticmethod
+    def namespace_exists(name):
+        """
+        Returns whether or not given namespace exists in current scene
+        :param name: str
+        :return: bool
+        """
+
+        return namespace.namespace_exists(name)
+
+    @staticmethod
+    def unique_namespace(name):
+        """
+        Returns a unique namespace from the given one
+        :param name: str
+        :return: str
+        """
+
+        return namespace.find_unique_namespace(name)
 
     @staticmethod
     def node_namespace(node):
@@ -1822,38 +1842,38 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
 
         return False
 
-
-class MayaDockedWindow(MayaQWidgetDockableMixin, window.MainWindow):
-    def __init__(self, parent=None, **kwargs):
-        self._dock_area = kwargs.get('dock_area', 'right')
-        self._dock = kwargs.get('dock', False)
-        super(MayaDockedWindow, self).__init__(parent=parent, **kwargs)
-
-        self.setProperty('saveWindowPref', True)
-
-        if self._dock:
-            self.show(dockable=True, floating=False, area=self._dock_area)
-
-    def ui(self):
-        if self._dock:
-            ui_name = str(self.objectName())
-            if maya.cmds.about(version=True) >= 2017:
-                workspace_name = '{}WorkspaceControl'.format(ui_name)
-                workspace_name = workspace_name.replace(' ', '_')
-                workspace_name = workspace_name.replace('-', '_')
-                if maya.cmds.workspaceControl(workspace_name, exists=True):
-                    maya.cmds.deleteUI(workspace_name)
-            else:
-                dock_name = '{}DockControl'.format(ui_name)
-                dock_name = dock_name.replace(' ', '_')
-                dock_name = dock_name.replace('-', '_')
-                # dock_name = 'MayaWindow|%s' % dock_name       # TODO: Check if we need this
-                if maya.cmds.dockControl(dock_name, exists=True):
-                    maya.cmds.deleteUI(dock_name, control=True)
-
-            self.setAttribute(Qt.WA_DeleteOnClose, True)
-
-        super(MayaDockedWindow, self).ui()
-
+# WE CANNOT USE TPQTLIB.MAINWINDOW HERE (MOVE THIS CLASS TO OTHER PLACE)
+# class MayaDockedWindow(MayaQWidgetDockableMixin, window.MainWindow):
+#     def __init__(self, parent=None, **kwargs):
+#         self._dock_area = kwargs.get('dock_area', 'right')
+#         self._dock = kwargs.get('dock', False)
+#         super(MayaDockedWindow, self).__init__(parent=parent, **kwargs)
+#
+#         self.setProperty('saveWindowPref', True)
+#
+#         if self._dock:
+#             self.show(dockable=True, floating=False, area=self._dock_area)
+#
+#     def ui(self):
+#         if self._dock:
+#             ui_name = str(self.objectName())
+#             if maya.cmds.about(version=True) >= 2017:
+#                 workspace_name = '{}WorkspaceControl'.format(ui_name)
+#                 workspace_name = workspace_name.replace(' ', '_')
+#                 workspace_name = workspace_name.replace('-', '_')
+#                 if maya.cmds.workspaceControl(workspace_name, exists=True):
+#                     maya.cmds.deleteUI(workspace_name)
+#             else:
+#                 dock_name = '{}DockControl'.format(ui_name)
+#                 dock_name = dock_name.replace(' ', '_')
+#                 dock_name = dock_name.replace('-', '_')
+#                 # dock_name = 'MayaWindow|%s' % dock_name       # TODO: Check if we need this
+#                 if maya.cmds.dockControl(dock_name, exists=True):
+#                     maya.cmds.deleteUI(dock_name, control=True)
+#
+#             self.setAttribute(Qt.WA_DeleteOnClose, True)
+#
+#         super(MayaDockedWindow, self).ui()
+#
 
 tpDccLib.Dcc = MayaDcc
