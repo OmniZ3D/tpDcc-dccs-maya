@@ -88,7 +88,7 @@ def get_maya_window():
     import maya.OpenMayaUI as OpenMayaUI
     ptr = OpenMayaUI.MQtUtil.mainWindow()
     if ptr is not None:
-        return wrapInstance(long(ptr), QWidget)
+        return wrapInstance(long(ptr), QMainWindow)
 
     return None
 
