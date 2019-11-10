@@ -14,14 +14,14 @@ from Qt.QtCore import *
 from Qt.QtWidgets import *
 
 import tpQtLib
-from tpQtLib.core import qtutils
+from tpQtLib.core import qtutils, dialog
 
-from tpMayaLib.core import gui, modelpanel, playblast, viewport
+from tpMayaLib.core import gui, modelpanel, playblast
 
 _instance = None
 
 
-class ThumbnailCaptureDialog(tpQtLib.Dialog, object):
+class ThumbnailCaptureDialog(dialog.Dialog, object):
 
     DEFAULT_WIDTH = 250
     DEFAULT_HEIGHT = 250

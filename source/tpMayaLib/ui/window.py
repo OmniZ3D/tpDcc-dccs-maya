@@ -50,6 +50,6 @@ except ImportError:
             super(MayaSubWindow, self).__init__(*args, **kwargs)
 
 
-tpQtLib.MainWindow = MayaWindow
+tpQtLib.Window = MayaWindow
 tpQtLib.DockWindow = MayaDockWindow
 tpQtLib.SubWindow = MayaSubWindow
