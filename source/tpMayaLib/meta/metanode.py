@@ -21,12 +21,6 @@ from tpMayaLib.meta import metautils
 from tpMayaLib.core import exceptions, helpers, name as name_utils, attribute as attr_utils
 from tpMayaLib.managers import metadatamanager
 
-NAME_IT_AVAILABLE = True
-try:
-    from tpNameIt.core import nameit
-except ImportError:
-    NAME_IT_AVAILABLE = False
-
 
 def node_lock_manager(fn):
     @wraps(fn)
@@ -130,7 +124,8 @@ class MetaNode(object):
         if name_kwargs is None:
             name_kwargs = dict()
 
-        if auto_rename and NAME_IT_AVAILABLE:
+        if auto_rename:
+            from tpNameIt.core import nameit
             if name_args or name_kwargs:
                 current_rule = nameit.NameIt.get_active_rule()
                 if current_rule:
@@ -1078,7 +1073,8 @@ class MetaNode(object):
         will be renamed to reflect the change in node name
         """
 
-        if auto_rename and NAME_IT_AVAILABLE:
+        if auto_rename:
+            from tpNameIt.core import nameit
             current_rule = nameit.NameIt.get_active_rule()
             if current_rule:
                 name = nameit.NameIt.solve(name, *args, **kwargs)
@@ -1939,7 +1935,7 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
                     raise Exception('Default MetaType ({0}) initialization failed | {1}'.format(default_meta_type, e))
             elif metautils.MetaAttributeValidator.is_transform(_node_short):
                 try:
-                    from tpRigToolkit.maya.lib.meta import metaobject
+                    from tpMayaLib.meta import metaobject
                     meta_node = metaobject.MetaObject(_node_short)
                 except Exception as e:
                     raise Exception('MetaObject initialized failed | {}'.format(e))
