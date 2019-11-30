@@ -356,6 +356,10 @@ def file_has_student_line(filename):
         maya.logger.error('File "{}" does not exists!'.format(filename))
         return False
 
+    if filename.endswith('.mb'):
+        maya.logger.warning('Student License Check is not supported in binary files!')
+        return True
+
     with open(filename, 'r') as f:
         lines = f.readlines()
 
