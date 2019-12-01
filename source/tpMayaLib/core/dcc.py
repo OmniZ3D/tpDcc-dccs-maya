@@ -1317,6 +1317,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: str
         """
 
+        if not pattern:
+            pattern = 'All Files (*.*)'
+
         res = maya.cmds.fileDialog2(fm=1, dir=start_directory, cap=title, ff=pattern)
         if res:
             res = res[0]
