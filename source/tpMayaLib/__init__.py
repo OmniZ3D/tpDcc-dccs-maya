@@ -63,8 +63,8 @@ OpenMayaRender = OpenMayaRender
 
 
 class tpMayaLib(importer.Importer, object):
-    def __init__(self):
-        super(tpMayaLib, self).__init__(module_name='tpMayaLib')
+    def __init__(self, *args, **kwargs):
+        super(tpMayaLib, self).__init__(module_name='tpMayaLib', *args, **kwargs)
 
     def get_module_path(self):
         """
@@ -139,8 +139,10 @@ def init_ui(do_reload=False):
     global logger
     logger = tpmayalib_importer.logger
 
-    tpmayalib_importer.import_modules(skip_modules=['tpMayaLib.core', 'tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.meta'])
-    tpmayalib_importer.import_packages(only_packages=True, skip_modules=['tpMayaLib.core', 'tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.meta'])
+    # tpmayalib_importer.import_modules(skip_modules=['tpMayaLib.core', 'tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.meta'])
+    # tpmayalib_importer.import_packages(only_packages=True, skip_modules=['tpMayaLib.core', 'tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.meta'])
+    tpmayalib_importer.import_modules()
+    tpmayalib_importer.import_packages(only_packages=True)
     if do_reload:
         tpmayalib_importer.reload_all()
 
