@@ -49,7 +49,7 @@ def get_shading_node_type(shader_node):
     :return: str
     """
 
-    connections = maya.cmds.listConnections(shader_node, source=False, destination=True)
+    connections = maya.cmds.listConnections(shader_node, source=False, destination=True) or list()
     if 'defaultTextureList1' in connections:
         return 'asTexture'
     if 'defaultShaderList1' in connections:

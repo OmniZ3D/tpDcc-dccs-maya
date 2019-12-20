@@ -315,7 +315,7 @@ def import_gpu_cache(cache_path, cache_name=None, namespace=''):
                 index += 1
             namespace = '{}{}'.format(namespace, index)
 
-    cache_node = maya.cmds.createNode('gpuCache', name='{}Cache'.format(cache_name))
+    cache_node = maya.cmds.createNode('gpuCache', name='{}Shape'.format(cache_name))
     cache_parent = maya.cmds.listRelatives(cache_node, p=True, pa=True)
     cache_parent = maya.cmds.rename(cache_parent, cache_name)
 
