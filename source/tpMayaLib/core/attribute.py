@@ -2461,7 +2461,12 @@ def multi_index_list(attr):
         raise exceptions.InvalidMultiAttribute(attr)
 
     # Check existing indices
-    ex_index_list = attr_mplug.getExistingArrayAttributeIndices()
+    if maya.is_new_api():
+        ex_index_list = attr_mplug.getExistingArrayAttributeIndices()
+    else:
+        ex_index_list = maya.OpenMaya.MIntArray()
+        attr_mplug.getExistingArrayAttributeIndices(ex_index_list)
+
 
     return list(ex_index_list)
 
