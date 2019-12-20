@@ -389,14 +389,18 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return namespace.find_unique_namespace(name)
 
     @staticmethod
-    def node_namespace(node):
+    def node_namespace(node, check_node=True):
         """
         Returns namespace of the given node
         :param node: str
+        :param check_node: bool
         :return: str
         """
 
-        return maya.cmds.referenceQuery(node, namespace=True)
+        if MayaDcc.node_is_referenced(node):
+            return maya.cmds.referenceQuery(node, namespace=True)
+        else:
+            return namespace.get_namespace(node, check_obj=check_node)
 
     @staticmethod
     def node_parent_namespace(node):
@@ -426,6 +430,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: bool
         """
 
+        if not maya.cmds.objExists(node):
+            return False
+
         return maya.cmds.referenceQuery(node, isNodeReferenced=True)
 
     @staticmethod
@@ -436,6 +443,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param without_copy_number: bool
         :return: str
         """
+
+        if not maya.cmds.objExists(node):
+            return None
 
         return maya.cmds.referenceQuery(node, filename=True, wcn=without_copy_number)
 
@@ -514,14 +524,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         if not node:
             return None
 
-        n = node
-        while True:
-            parent = maya.cmds.listRelatives(n, parent=True, fullPath=full_path)
-            if not parent:
-                break
-            n = parent[0]
-
-        return n
+        return scene.get_node_transform_root(node, full_path=full_path)
 
     @staticmethod
     def set_parent(node, parent):
