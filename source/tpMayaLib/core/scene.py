@@ -396,6 +396,23 @@ def get_top_dag_nodes_in_list(list_of_transforms):
     return found
 
 
+def get_node_transform_root(node, full_path=True):
+    """
+    :param node: str
+    Returns the transform root of the given node taking into account its hierarchy
+    :return: str
+    """
+
+    while True:
+        parent = maya.cmds.listRelatives(node, parent=True, fullPath=full_path)
+        if not parent:
+            break
+
+        node = parent[0]
+
+    return node
+
+
 def get_root_node():
     """
     Returns the root Maya object
@@ -439,7 +456,6 @@ def get_sets():
             top_sets.append(obj_set)
 
     return top_sets
-
 
 
 def delete_unknown_nodes():
