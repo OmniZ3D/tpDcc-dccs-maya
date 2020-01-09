@@ -119,17 +119,17 @@ class MetaNode(object):
         maya.logger.debug('Meta => __init__ => main args :: node={0}, name={1}, node_type={2}'.format(node, name, node_type))
 
         auto_rename = kwargs.get('auto_rename', True)
+        name_lib = kwargs.get('name_lib', None)
         if name_args is None:
             name_args = list()
         if name_kwargs is None:
             name_kwargs = dict()
 
-        if auto_rename:
-            from tpNameIt.core import nameit
+        if auto_rename and name_lib:
             if name_args or name_kwargs:
-                current_rule = nameit.NameIt.get_active_rule()
+                current_rule = name_lib().active_rule()
                 if current_rule:
-                    name = nameit.NameIt.solve(name, *name_args, **name_kwargs)
+                    name = name_lib().solve(name, *name_args, **name_kwargs)
 
         created_state = True
         if node is not None and maya.cmds.objExists(node):
@@ -588,7 +588,7 @@ class MetaNode(object):
         :return: str
         """
 
-        if type(meta_node) == MetaNode or issubclass(type(meta_node), MetaNode):
+        if type(meta_node) == MetaNode or issubclass(type(meta_node), MetaNode) or hasattr(meta_node, 'meta_node'):
             if helpers.get_maya_version() >= 2016:
                 return maya.cmds.ls(meta_node.meta_node, uuid=True)[0]
             else:
@@ -1032,6 +1032,41 @@ class MetaNode(object):
         else:
             raise StandardError('Given class it not in the MetaClass Registry: {}'.format(new_meta_class))
 
+    def is_component(self):
+        """
+        Returns whether stored data are components or not
+        :return: bool
+        """
+
+        if self._componentMode and self._component:
+            cmp = '{}.{}'.format(self.meta_node, self._component)
+            if maya.cmds.objExists(cmp):
+                return True
+            else:
+                maya.logger.warning('Component no longer exists: {}'.format(self._component))
+
+        return False
+
+    def get_component(self):
+        if self._componentMode and self._component:
+            cmp = '{}.{}'.format(self.meta_node, self._component)
+            if maya.cmds.objExists(cmp):
+                return cmp
+            else:
+                maya.logger.warning('Component no longer exists: {}'.format(self._component))
+
+        return self.meta_node
+
+    def get_components(self, arg=False, flatten=True):
+        """
+        Query comnponents of given type in our node
+        :param arg:str
+        :param flatten: bool
+        :return:list(str)
+        """
+
+        return maya.cmds.ls(['{}.{}[*]'.format(self.meta_node, arg)], flatten=flatten)
+
     def is_referenced(self):
         """
         Returns if the native MetaNode is referenced or not
@@ -1074,10 +1109,11 @@ class MetaNode(object):
         """
 
         if auto_rename:
-            from tpNameIt.core import nameit
-            current_rule = nameit.NameIt.get_active_rule()
-            if current_rule:
-                name = nameit.NameIt.solve(name, *args, **kwargs)
+            name_lib = kwargs.get('name_lib', None)
+            if name_lib:
+                current_rule = name_lib().active_rule()
+                if current_rule:
+                    name = name_lib().solve(name, *args, **kwargs)
 
         current_name = self.short_name
         maya.cmds.rename(self.meta_node, name)
@@ -1638,6 +1674,50 @@ class MetaNode(object):
         """
 
         return maya.cmds.ls(['{}.{}'.format(self.meta_node, component_type)], flatten=flatten)
+
+    def get_maya_attr(self, *args, **kwargs):
+        """
+        Returns Maya attribute of the current node
+        :param args: list
+        :param kwargs: dict
+        :return:
+        """
+
+        return metautils.MetaAttributeUtils.get(self.meta_node, *args, **kwargs)
+
+    def get_maya_attr_string(self, attr=None, name_call='long'):
+        """
+        Returns Mata attribute in string form
+        :param attr:
+        :param name_call:
+        :return: str
+        """
+
+        from tpMayaLib.core import name
+
+        return '{}.{}'.format(getattr(name, name_call)(self.meta_node), attr)
+
+    def connect_out_attribute(self, attr=None, target=None, lock=False):
+        """
+        Connects attribute to given targets attributes on our node
+        :param attr: str
+        :param target: str or list
+        :param lock: bool
+        :return: bool
+        """
+
+        if not metautils.MetaAttributeValidator.is_list_arg(target):
+            target = [target]
+
+        result = list()
+        for t in target:
+            if '.' in t:
+                result.append(metautils.MetaAttributeUtils.connect(self.get_maya_attr_string(attr), t, lock))
+            else:
+                result.append(metautils.MetaAttributeUtils.connect(self.get_maya_attr_string(attr), self.get_maya_attr_string(t), lock))
+
+        return result
+
 
 # ==============================================================================================================
 

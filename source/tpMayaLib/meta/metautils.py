@@ -2718,5 +2718,4 @@ class MetaTransformUtils(object):
                 maya.logger.debug('|{}| <<< closestPoint >>>'.format(fn_name))
                 target_type = MetaAttributeValidator.get_Maya_type(target)
                 dst = None
-    # endregion
 

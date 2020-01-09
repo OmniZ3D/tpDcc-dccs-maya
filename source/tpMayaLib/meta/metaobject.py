@@ -9,7 +9,7 @@ from __future__ import print_function, division, absolute_import
 
 import tpMayaLib as maya
 from tpMayaLib.meta import metanode, metautils
-from tpMayaLib.core import transform as transform_lib, shape as shape_lib
+from tpMayaLib.core import transform as transform_lib, shape as shape_lib, attribute as attr_utils
 
 
 class MetaObject(metanode.MetaNode, object):
@@ -31,6 +31,10 @@ class MetaObject(metanode.MetaNode, object):
 
         if not metautils.MetaAttributeValidator.is_transform(node=self.meta_node):
             raise ValueError('[{}] not a transform! The MetaObject class only work with objects that have transforms!'.format(self.meta_node))
+
+    # =============================================================================================
+    # HIERARCHY
+    # =============================================================================================
 
     def get_parent(self, as_meta=False, full_path=True):
         """
@@ -71,6 +75,95 @@ class MetaObject(metanode.MetaNode, object):
 
         return result
 
+    # =============================================================================================
+    # ATTRIBUTES
+    # =============================================================================================
+
+    def hide_attributes(self, attributes=None):
+        """
+        Lock and hide the given attributes on the control. If no attributes given, hide translate, rotate, scale and visibility
+        :param attributes: list<str>, list of attributes to hide and lock (['translateX', 'translateY'])
+        """
+
+        if attributes:
+            attr_utils.hide_attributes(self.meta_node, attributes)
+        else:
+            self.hide_translate_attributes()
+            self.hide_rotate_attributes()
+            self.hide_scale_attributes()
+            self.hide_visibility_attribute()
+
+    def hide_translate_attributes(self):
+        """
+        Lock and hide the translate attributes on the control
+        """
+
+        attr_utils.lock_translate_attributes(self.meta_node)
+
+    def hide_rotate_attributes(self):
+        """
+        Lock and hide the rotate attributes on the control
+        """
+
+        attr_utils.lock_rotate_attributes(self.meta_node)
+
+    def hide_scale_attributes(self):
+        """
+        Lock and hide the scale attributes on the control
+        """
+
+        attr_utils.lock_scale_attributes(self.meta_node)
+
+    def hide_visibility_attribute(self):
+        """
+        Lock and hide the visibility attribute on the control
+        """
+
+        attr_utils.lock_attributes(self.meta_node, ['visibility'], hide=True)
+
+    def hide_scale_and_visibility_attributes(self):
+        """
+        lock and hide the visibility and scale attributes on the control
+        """
+
+        self.hide_scale_attributes()
+        self.hide_visibility_attribute()
+
+    def hide_keyable_attributes(self):
+        """
+        Lock and hide all keyable attributes on the control
+        """
+
+        attr_utils.hide_keyable_attributes(self.meta_node)
+
+    def show_translate_attributes(self):
+        """
+        Unlock and set keyable the control translate attributes
+        """
+
+        for axis in 'XYZ':
+            maya.cmds.setAttr('{}.translate{}'.format(self.meta_node, axis), l=False, k=True)
+
+    def show_rotate_attributes(self):
+        """
+        Unlock and set keyable the control rotate attributes
+        """
+
+        for axis in 'XYZ':
+            maya.cmds.setAttr('{}.rotate{}'.format(self.meta_node, axis), l=False, k=True)
+
+    def show_scale_attributes(self):
+        """
+        Unlock and set keyable the control scale attributes
+        """
+
+        for axis in 'XYZ':
+            maya.cmds.setAttr('{}.scale{}'.format(self.meta_node, axis), l=False, k=True)
+
+    # =============================================================================================
+    # SHAPES
+    # =============================================================================================
+
     def get_shapes(self, as_meta=False, full_path=True, intermediates=False, non_intermediates=True):
         """
         Return all the shapes of a given node where the last parent is the top of hierarchy
@@ -96,6 +189,22 @@ class MetaObject(metanode.MetaNode, object):
         shapes = self.get_shapes(as_meta=False, full_path=True)
         return shape_lib.get_components_from_shapes(shapes)
 
+    # =============================================================================================
+    # TRANSFORM
+    # =============================================================================================
+
+    def get_position(self, *args, **kwargs):
+        """
+        Returns the position of the object
+        :param args:
+        :param kwargs:
+        :return:
+        """
+
+        # TODO: Improve this to handle all scenarios
+
+        return transform_lib.get_translation(self.meta_node)
+
     def snap(self, target, snap_pivot=False):
         """
         Snaps transform node into target
@@ -104,5 +213,3 @@ class MetaObject(metanode.MetaNode, object):
         """
 
         transform_lib.snap(transform=self.meta_node, target=target, snap_pivot=snap_pivot)
-
-
