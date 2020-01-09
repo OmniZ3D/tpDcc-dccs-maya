@@ -29,6 +29,9 @@ class Constraint(object):
         Constraints.PARENT, Constraints.POINT, Constraints.ORIENT, Constraints.SCALE, Constraints.AIM
     ]
 
+    def __init_(self):
+        self._set_to_last = False
+
     def get_constraint(self, xform, constraint_type):
         """
         Find a constraint on the transform with the given type
@@ -134,6 +137,14 @@ class Constraint(object):
 
         maya.cmds.setAttr('{}.interpType'.format(constraint, int_value))
 
+    def set_auto_use_last_number(self, flag):
+        """
+        Sets whether auto use last number is enabled or not
+        :param flag: bool
+        """
+
+        self._set_to_last = flag
+
     def create_title(self, node, constraint, title_name='FOLLOW'):
         """
         Creates a title enum attribute based on the targets feeding into a constraint
@@ -171,7 +182,16 @@ class Constraint(object):
         remap.create_attributes(constraint, attrs)
         remap.create()
 
+        if self._set_to_last:
+            maya.cmds.setAttr('{}.{}'.format(node, attribute), (len(attrs)-1))
+
     def delete_constraints(self, xform, constraint_type=None):
+        """
+        Removes constraints from given node
+        :param xform: str
+        :param constraint_type: str
+        """
+
         if not constraint_type:
             for cns_type in self.EDITABLE_CONSTRAINTS:
                 cns = self.get_constraint(xform, cns_type)
@@ -209,7 +229,6 @@ class MatrixConstraintNodes(object):
         self._node_decompose_matrix = None
         self._joint_orient_quat_to_euler = None
 
-    # region Public Functions
     def create(self):
         """
         Creates the matrix decomnpose setup
@@ -256,9 +275,7 @@ class MatrixConstraintNodes(object):
         """
 
         self._connect_scale = flag
-    # endregion
 
-    # region Private Functions
     def _create_decompose(self):
         """
         Internal function used to create decomposeMatrix nodes
@@ -296,7 +313,6 @@ class MatrixConstraintNodes(object):
         maya.cmds.connectAttr('{}.outputQuat'.format(quat_invert), '{}.input2Quat'.format(quat_prod))
         maya.cmds.connectAttr('{}.outputQuat'.format(quat_prod), '{}.inputQuat'.format(self._joint_orient_quat_to_euler))
         maya.cmds.connectAttr('{}.outputRotate'.format(self._joint_orient_quat_to_euler), '{}.rotate'.format(self._target))
-    # endregion
 
 
 class MatrixConstraint(MatrixConstraintNodes, object):
@@ -308,21 +324,16 @@ class MatrixConstraint(MatrixConstraintNodes, object):
         self._use_target_parent_matrix = False
         self._maintain_offset = True
 
-    # region Override Functions
     def create(self):
         super(MatrixConstraint, self).create()
         self._create_matrix_constraint()
-    # endregion
 
-    # region Public Functions
     def set_use_target_parent_matrix(self, flag):
         self._use_target_parent_matrix = flag
 
     def set_maintain_offset(self, flag):
         self._maintain_offset = flag
-    # endregion
 
-    # region Private Functions
     def _create_matrix_constraint(self):
         mult = maya.cmds.createNode('multMatrix', self.description)
         self.node_multiply_matrix = mult
@@ -352,7 +363,6 @@ class MatrixConstraint(MatrixConstraintNodes, object):
 
         if self._node_decompose_matrix:
             self._connect_decompose('{}.matrixSum'.format(mult))
-    # endregion
 
 
 class SpaceSwitch(MatrixConstraintNodes):
@@ -375,15 +385,14 @@ class SpaceSwitch(MatrixConstraintNodes):
         self._create_title = True
         self._title_name = None
 
-    # region Override Functions
     def create(self, create_switch=False):
         super(SpaceSwitch, self).create()
         switch_node = self._create_space_switch()
         if create_switch:
-            pass
-    # endregion
+            self.create_switch(self._attribute_node, self._attribute_name, switch_node)
 
-    # region Public Functions
+        return switch_node
+
     def get_space_switches(self, target):
         attrs = ['translate', 'rotate', 'scale']
         found = list()
@@ -504,9 +513,7 @@ class SpaceSwitch(MatrixConstraintNodes):
                     pass
             elif len(attrs) == 1:
                 maya.cmds.setAttr('{}.wtMatrix[0].weightIn'.format(switch_node), 1)
-    # endregion
 
-    # region Private Functions
     def _add_source(self, source, switch_node):
         matrix = MatrixConstraint(source, self._target)
         matrix.set_maintain_offset(self._maintain_offset)
@@ -545,7 +552,6 @@ class SpaceSwitch(MatrixConstraintNodes):
             self._connect_decompose(matrix_attr)
 
         return switch_node
-    # endregion
 
 
 def has_constraint(xform):

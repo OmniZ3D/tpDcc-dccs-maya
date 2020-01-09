@@ -15,7 +15,7 @@ import random
 import string
 import traceback
 
-
+import tpDccLib as tp
 from tpPyUtils import python, name as name_utils
 from tpQtLib.core import color as color_utils
 import tpMayaLib as maya
@@ -1508,6 +1508,38 @@ class NumericAttribute(Attribute, object):
         self.min_value = None
         self.max_value = None
 
+    def get_min_value(self):
+        """
+        Function that returns the minimum value of the integer attribute
+        :return: int
+        """
+
+        if not self.exists():
+            return
+
+        # We need to use tyr/except because of scale attr
+        # TODO: Check how to query if a double has ability for min and max
+        try:
+            return maya.cmds.attributeQuery(self.name, node=self.node, minimum=True)[0]
+        except Exception:
+            return
+
+    def get_max_value(self):
+        """
+        Function that returns the maximum value of the integer attribute
+        :return: int
+        """
+
+        if not self.exists():
+            return
+
+        # We need to use tyr/except because of scale attr
+        # TODO: Check how to query if a double has ability for min and max
+        try:
+            return maya.cmds.attributeQuery(self.name, node=self.node, maximum=True)[0]
+        except Exception:
+            return
+
     def set_min_value(self, value):
         """
         Set the minimum value for the integer attribute
@@ -1532,40 +1564,8 @@ class NumericAttribute(Attribute, object):
         """
 
         super(NumericAttribute, self).refresh()
-        self.min_value = self._get_min_value()
-        self.max_value = self._get_max_value()
-
-    def _get_min_value(self):
-        """
-        Internal function that returns the minimum value of the integer attribute
-        :return: int
-        """
-
-        if not self.exists():
-            return
-
-        # We need to use tyr/except because of scale attr
-        # TODO: Check how to query if a double has ability for min and max
-        try:
-            return maya.cmds.attributeQuery(self.name, node=self.node, minimum=True)[0]
-        except Exception:
-            return
-
-    def _get_max_value(self):
-        """
-        Internal function that returns the maximum value of the integer attribute
-        :return: int
-        """
-
-        if not self.exists():
-            return
-
-        # We need to use tyr/except because of scale attr
-        # TODO: Check how to query if a double has ability for min and max
-        try:
-            return maya.cmds.attributeQuery(self.name, node=self.node, maximum=True)[0]
-        except Exception:
-            return
+        self.min_value = self.get_min_value()
+        self.max_value = self.get_max_value()
 
     def _set_min_value(self):
         """
@@ -2802,7 +2802,7 @@ def connect_attribute(from_attr, to_attr, force_lock=False, transfer_connection=
     :param transfer_connection: bool, Whether you want to transfer the existing connection or or not
     """
 
-    # TODO: Add checks to check that node|attr are valid through cmds.objExista nd cmds.attributeQuery functions
+    # TODO: Add checks to check that node|attr are valid through cmds.objExist and cmds.attributeQuery functions
 
     assert from_attr != to_attr, 'Cannot connect an attribute to itself'
 
@@ -3088,6 +3088,24 @@ def store_objects_to_message(objects, storage_obj, message_name):
     except Exception:
         maya.logger.error('Storing "{0}" to "{1}.{2}" failed!'.format(objects, storage_obj, message_name))
         return False
+
+
+def store_world_matrix_to_attribute(transform, attribute_name='origMatrix', skip_if_exists=False):
+    """
+    Stores world matrix of given transform into an attribute in the same transform
+    :param transform: str
+    :param attribute_name: str
+    :param skip_if_exists: bool
+    """
+
+    world_matrix = maya.cmds.getAttr('{}.worldMatrix'.format(transform))
+    if maya.cmds.objExists('{}.{}'.format(transform, attribute_name)):
+        if skip_if_exists:
+            return
+        maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), l=False)
+        maya.cmds.deleteAttr('{}.{}'.format(transform, attribute_name))
+    maya.cmds.addAttr(transform, ln=attribute_name, at='matrix')
+    maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), *world_matrix, type='matrix', l=True)
 
 
 def repair_message_to_reference_target(obj, attr):
@@ -3563,6 +3581,78 @@ def hide_visibility(node_name):
     hide_attributes(node_name, 'visibility')
 
 
+def color_to_rgb(color_index):
+    """
+    Converts given Maya color index into RGB
+    :param color_index: int
+    :return: list(int, int, int)
+    """
+
+    values = list()
+    if color_index > 0:
+        values = maya.cmds.colorIndex(color_index, query=True)
+
+    return values
+
+
+def get_color(shape_node):
+    """
+    Returns color of given node
+    :param shape_node: str, name of node to retrieve color of
+    :return: list(int, int, int)
+    """
+
+    if not maya.cmds.objExists('{}.overrideColor'.format(shape_node)):
+        return 0
+
+    if not maya.cmds.getAttr('{}.overrideRGBColors'.format(shape_node)) or not maya.cmds.objExists('{}.overrideRGBColors'.format(shape_node)):
+        color = maya.cmds.getAttr('{}.overrideColor'.format(shape_node))
+
+        return color
+
+    if maya.cmds.getAttr('{}.overrideRGBColors'.format(shape_node)):
+        color = maya.cmds.getAttr('{}.overrideColorRGB'.format(shape_node))
+
+        color[0] *= 255
+        color[1] *= 255
+        color[2] *= 255
+
+        return color
+
+
+def get_color_of_side(side='C', sub_color=False):
+    """
+    Returns override color of the given side
+    :param side: str
+    :param sub_color: fool, whether to return a sub color or not
+    :return:
+    """
+
+    if tp.Dcc.name_is_center(side):
+        side = 'C'
+    elif tp.Dcc.name_is_left(side):
+        side = 'L'
+    elif tp.Dcc.name_is_right(side):
+        side = 'R'
+    else:
+        side = 'C'
+
+    if not sub_color:
+        if side == 'L':
+            return 6
+        elif side == 'R':
+            return 13
+        else:
+            return 17
+    else:
+        if side == 'L':
+            return 18
+        elif side == 'R':
+            return 20
+        else:
+            return 21
+
+
 def set_color(nodes, color, color_transform=False, short_range=False):
     """
     Set the override color for the given nodes
@@ -3606,23 +3696,25 @@ def set_color(nodes, color, color_transform=False, short_range=False):
                             maya.cmds.setAttr(node + '.overrideColorRGB', color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0)
     else:
         for node in nodes:
+            shapes = list()
             if maya.cmds.nodeType(node) == 'transform':
                 shapes = maya.cmds.listRelatives(node, type='shape')
-                if len(shapes) > 0:
-                    for shape in shapes:
-                        if maya.cmds.attributeQuery('overrideEnabled', node=shape, exists=True):
-                            maya.cmds.setAttr(shape + '.overrideEnabled', True)
-                            if not use_rgb_color:
-                                if maya.cmds.attributeQuery('overrideRGBColors', node=shape, exists=True):
-                                    maya.cmds.setAttr(shape + '.overrideRGBColors', False)
-                                if maya.cmds.attributeQuery('overrideColor', node=shape, exists=True):
-                                    maya.cmds.setAttr(shape + '.overrideColor', color)
-                            else:
-                                print('COLOR: {}, {}, {}'.format(color.red(), color.green(), color.blue()))
-                                if maya.cmds.attributeQuery('overrideRGBColors', node=shape, exists=True):
-                                    maya.cmds.setAttr(shape + '.overrideRGBColors', True)
-                                    if maya.cmds.attributeQuery('overrideColorRGB', node=shape, exists=True):
-                                        maya.cmds.setAttr(shape + '.overrideColorRGB', color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0)
+            elif maya.cmds.objectType(node, isAType='shape'):
+                shapes = [node]
+            if len(shapes) > 0:
+                for shape in shapes:
+                    if maya.cmds.attributeQuery('overrideEnabled', node=shape, exists=True):
+                        maya.cmds.setAttr(shape + '.overrideEnabled', True)
+                        if not use_rgb_color:
+                            if maya.cmds.attributeQuery('overrideRGBColors', node=shape, exists=True):
+                                maya.cmds.setAttr(shape + '.overrideRGBColors', False)
+                            if maya.cmds.attributeQuery('overrideColor', node=shape, exists=True):
+                                maya.cmds.setAttr(shape + '.overrideColor', color)
+                        else:
+                            if maya.cmds.attributeQuery('overrideRGBColors', node=shape, exists=True):
+                                maya.cmds.setAttr(shape + '.overrideRGBColors', True)
+                                if maya.cmds.attributeQuery('overrideColorRGB', node=shape, exists=True):
+                                    maya.cmds.setAttr(shape + '.overrideColorRGB', color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0)
 
 
 def get_attribute_values(node, keyable_only=True):
