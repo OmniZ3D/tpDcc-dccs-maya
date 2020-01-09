@@ -150,11 +150,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param parent: str or None
         """
 
-        if parent:
-            return maya.cmds.group(n=name, empty=True, parent=parent)
-        else:
-            return maya.cmds.group(n=name, empty=True, world=True)
-
+        groups = helpers.create_group(name=name, parent=parent, world=True)
+        if groups:
+            return groups[0]
+    
     @staticmethod
     def create_node(node_type, node_name):
         """
@@ -195,6 +194,20 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.nodeType(node)
+
+    @staticmethod
+    def node_is_empty(node, *args, **kwargs):
+        """
+        Returns whether given node is an empty one.
+        In Maya, an emtpy node is the one that is not referenced, has no child transforms, has no custom attributes
+        and has no connections
+        :param node: str
+        :return: bool
+        """
+
+        no_user_attributes = kwargs.pop('no_user_attributes', True)
+        no_connections = kwargs.pop('no_connections', True)
+        return maya_node.is_empty(node_name=node, no_user_attributes=no_user_attributes, no_connections=no_connections)
 
     @staticmethod
     def all_scene_objects(full_path=True):
@@ -588,23 +601,24 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.listNodeTypes(type_string)
 
     @staticmethod
-    def list_nodes(node_name=None, node_type=None):
+    def list_nodes(node_name=None, node_type=None, full_path=True):
         """
         Returns list of nodes with given types. If no type, all scene nodes will be listed
         :param node_name:
         :param node_type:
+        :param full_path:
         :return:  list<str>
         """
 
         if not node_name and not node_type:
-            return maya.cmds.ls()
+            return maya.cmds.ls(long=full_path)
 
         if node_name and node_type:
-            return maya.cmds.ls(node_name, type=node_type)
+            return maya.cmds.ls(node_name, type=node_type, long=full_path)
         elif node_name and not node_type:
-            return maya.cmds.ls(node_name)
+            return maya.cmds.ls(node_name, long=full_path)
         elif not node_name and node_type:
-            return maya.cmds.ls(type=node_type)
+            return maya.cmds.ls(type=node_type, long=full_path)
 
     @staticmethod
     def list_children(node, all_hierarchy=True, full_path=True, children_type=None):
@@ -742,6 +756,19 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.listAttr(node, userDefined=True)
+
+    @staticmethod
+    def add_bool_attribute(node, attribute_name, keyable=False, default_value=False):
+        """
+        Adds a new boolean attribute into the given node
+        :param node: str
+        :param attribute_name: str
+        :param keyable: bool
+        :param default_value: bool
+        :return:
+        """
+
+        return maya.cmds.addAttr(node, ln=attribute_name, at='bool', k=keyable, dv=default_value)
 
     @staticmethod
     def add_string_attribute(node, attribute_name, keyable=False):
@@ -999,6 +1026,18 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.connectAttr('{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), force=force)
+
+    @staticmethod
+    def connect_message_attribute(source_node, target_node, message_attribute):
+        """
+        Connects the message attribute of the input_node into a custom message attribute on target_node
+        :param source_node: str, name of a node
+        :param target_node: str, name of a node
+        :param message_attribute: str, name of the message attribute to create and connect into. If already exists,
+        just connect
+        """
+
+        attribute.connect_message(source_node, target_node, message_attribute)
 
     @staticmethod
     def list_connections(node, attribute_name):
@@ -1587,6 +1626,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         maya.cmds.setFocus(object_to_focus)
 
     @staticmethod
+    def find_unique_name(node_name, include_last_number=True):
+        """
+        Returns a unique node name by adding a number to the end of the node name
+        :param node_name: str, name fo find unique name from
+        :param include_last_number: bool
+        :return: str
+        """
+
+        return name.find_unique_name(name=node_name, include_last_number=include_last_number)
+
+    @staticmethod
     def find_available_name(node_name, **kwargs):
         """
         Returns an available object name in current DCC scene
@@ -1730,6 +1780,36 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.getAttr('defaultResolution.deviceAspectRatio')
+
+    @staticmethod
+    def match_translation(source_node, target_node):
+        """
+        Match translation of the given node to the translation of the target node
+        :param source_node: str
+        :param target_node: str
+        """
+
+        return transform.MatchTransform(source_node, target_node).translation()
+
+    @staticmethod
+    def match_rotation(source_node, target_node):
+        """
+        Match rotation of the given node to the rotation of the target node
+        :param source_node: str
+        :param target_node: str
+        """
+
+        return transform.MatchTransform(source_node, target_node).rotation()
+
+    @staticmethod
+    def match_translation_rotation(source_node, target_node):
+        """
+        Match translation and rotation of the given node to the translation and rotation of the target node
+        :param source_node: str
+        :param target_node: str
+        """
+
+        return transform.MatchTransform(source_node, target_node).translation_rotation()
 
     # =================================================================================================================
 
