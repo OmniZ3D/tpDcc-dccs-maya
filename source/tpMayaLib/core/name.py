@@ -274,3 +274,8 @@ def find_available_name(name, suffix=None, index=0, padding=0, letters=False, ca
         return find_available_name(name, suffix, index + 1, padding, letters, capital)
 
     return test_name
+
+
+short = get_short_name
+base = get_basename
+long = get_long_name

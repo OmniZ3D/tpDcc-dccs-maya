@@ -135,7 +135,7 @@ def get_all_rig_modules():
     return found
 
 
-def get_character_module(character_name):
+def get_character_module(character_name, character_meta_class='RigCharacter'):
     """
     Return root module of the given character name
     :param character_name: str
@@ -148,8 +148,8 @@ def get_character_module(character_name):
         if 'meta_class' in attrs and 'meta_node_id' in attrs:
             meta_class = maya.cmds.getAttr('{}.meta_class'.format(module))
             module_name = maya.cmds.getAttr('{}.meta_node_id'.format(module))
-            if meta_class == 'RigCharacter' and module_name == character_name:
-                return metanode.validate_obj_arg(module, 'RigCharacter')
+            if meta_class == character_meta_class and module_name == character_name:
+                return metanode.validate_obj_arg(module, character_meta_class)
 
     return None
 
@@ -169,54 +169,3 @@ def parent_shape_in_place(transform, shape_source, keep_source=True, replace_sha
 
     for shape in shape_source:
         maya.cmds.parent(shape, transform, add=True, shape=True)
-
-
-def is_center(side, patterns=None):
-    """
-    Returns whether given side is a valid center side or not
-    :param side: str
-    :param patterns: list<str>
-    :return: bool
-    """
-
-    if not patterns:
-        patterns = ['C', 'c', 'Center', 'ct', 'center', 'middle', 'm']
-
-    if str(side) in patterns:
-        return True
-
-    return False
-
-
-def is_left(side, patterns=None):
-    """
-    Returns whether given side is a valid left side or not
-    :param side: str
-    :param patterns: list<str>
-    :return: bool
-    """
-
-    if not patterns:
-        patterns = ['L', 'l', 'Left', 'left', 'lf']
-
-    if str(side) in patterns:
-        return True
-
-    return False
-
-
-def is_right(side, patterns=None):
-    """
-    Returns whether given side is a valid right side or not
-    :param side: str
-    :param patterns: list<str>
-    :return: bool
-    """
-
-    if not patterns:
-        patterns = ['R', 'r', 'Right', 'right', 'rt']
-
-    if str(side) in patterns:
-        return True
-
-    return False

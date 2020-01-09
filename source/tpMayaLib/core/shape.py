@@ -54,6 +54,19 @@ def check_shape(shape):
         raise exceptions.ShapeException(shape)
 
 
+def is_a_shape(node):
+    """
+    Checks node type to determine if the given node is a shape or not
+    :param node: str
+    :return: bool
+    """
+
+    if not maya.cmds.objectType(node, isAType='shape'):
+        return False
+
+    return True
+
+
 def is_shape(obj):
     """
     Check if the specified object is a valid shape node

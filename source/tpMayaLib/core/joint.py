@@ -18,7 +18,6 @@ class BuildJointHierarchy(object):
         self._replace_old = None
         self._replace_new = None
 
-    # region Public Functions
     def create(self):
         """
         Creates the new joint hierarchy
@@ -46,9 +45,7 @@ class BuildJointHierarchy(object):
 
         self._replace_old = old
         self._replace_new = new
-    # endregion
 
-    # region Private Functions
     def _build_hierarchy(self):
         new_joints = list()
         last_transform = None
@@ -64,7 +61,6 @@ class BuildJointHierarchy(object):
             last_transform = joint
 
         return new_joints
-    # endregion
 
 
 class AttachJoints(object):
@@ -200,8 +196,8 @@ class OrientJointAttributes(object):
                 continue
             for axis in 'XYZ':
                 rotate_value = maya.cmds.getAttr('{}.rotate{}'.format(jnt, axis))
-                maya.maya.cmds.setAttr('{}.rotate{}'.format(jnt, axis), 0)
-                maya.maya.cmds.setAttr('{}.jointOrient{}'.format(jnt, axis), rotate_value)
+                maya.cmds.setAttr('{}.rotate{}'.format(jnt, axis), 0)
+                maya.cmds.setAttr('{}.jointOrient{}'.format(jnt, axis), rotate_value)
 
     @staticmethod
     def remove_orient_attributes(joint):
@@ -235,7 +231,7 @@ class OrientJointAttributes(object):
         for obj in objects_to_orient:
             relatives = maya.cmds.listRelatives(obj, f=True)
             if not maya.cmds.objExists('{}.ORIENT_INFO'.format(obj)):
-                if force_oriernt_attributes:
+                if force_orient_attributes:
                     cls.add_orient_attributes(obj)
                 else:
                     if relatives:
@@ -311,8 +307,11 @@ class OrientJointAttributes(object):
         """
 
         self.title = attribute.EnumAttribute('Orient_Info'.upper())
-        self.title.set_locked(True)
-        self.title.create(self.joint)
+        if not maya.cmds.objExists('{}.ORIENT_INFO'.format(self.joint)):
+            self.title.create(self.joint)
+            self.title.set_locked(True)
+        else:
+            self.title.set_node(self.joint)
 
         self.attributes.append(attribute.create_axis_attribute(name='aimAxis', node=self.joint, value=0))
         self.attributes.append(attribute.create_axis_attribute(name='upAxis', node=self.joint, value=1))
@@ -324,6 +323,7 @@ class OrientJointAttributes(object):
         self.attributes.append(aim_at_attr)
 
         aim_up_attr = attribute.EnumAttribute('aimUpAt', value=0)
+        aim_up_attr.set_node(self.joint)
         aim_up_attr.set_enum_names(['world', 'parentRotate', 'childPosition', 'trianglePlane', '2ndChildPosition'])
         aim_at_attr.create(self.joint)
         self.attributes.append(aim_up_attr)

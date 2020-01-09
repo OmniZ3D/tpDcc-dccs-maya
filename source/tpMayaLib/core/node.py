@@ -63,7 +63,7 @@ def is_referenced(node_name):
 
 def is_empty(node_name, no_user_attributes=True, no_connections=True):
     """
-    Returns whether a given node is an empty one (is not referenced, has no child dtransforms, has no custom attributes and has no connections)
+    Returns whether a given node is an empty one (is not referenced, has no child transforms, has no custom attributes and has no connections)
     :param node_name: str, name of a Maya node
     :return: bool
     """

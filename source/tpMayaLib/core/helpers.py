@@ -67,10 +67,11 @@ def get_up_axis():
     return maya.cmds.upAxis(axis=True, query=True)
 
 
-def create_group(name, parent=None):
+def create_group(name, world=False, parent=None):
     """
     Creates new empty groups with the given names
     :param name: str, name of the group
+    :param world: bool
     :param parent: str, parent node of the group
     :return:
     """
@@ -79,15 +80,29 @@ def create_group(name, parent=None):
         return
 
     name = python.force_list(name)
+    parent = python.force_list(parent)
+    if parent:
+        parent = parent[0]
+
+    found = list()
+
     for n in name:
         if not maya.cmds.objExists(n):
-            n = maya.cmds.group(name=n, empty=True)
+            if world:
+                n = maya.cmds.group(name=n, empty=True, world=True)
+            else:
+                n = maya.cmds.group(name=n, empty=True)
+
         if parent and maya.cmds.objExists(parent):
             actual_parent = maya.cmds.listRelatives(n, p=True)
             if actual_parent:
                 actual_parent = actual_parent[0]
             if parent != actual_parent:
                 maya.cmds.parent(n, parent)
+
+        found.append(n)
+
+    return found
 
 
 def get_selection_iterator():
