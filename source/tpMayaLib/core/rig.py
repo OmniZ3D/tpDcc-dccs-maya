@@ -5,10 +5,11 @@
 Module that contains rig utils functions for Maya
 """
 
-import tpMayaLib as maya
 from tpPyUtils import python
+
+import tpMayaLib as maya
 from tpMayaLib.meta import metanode
-from tpMayaLib.core import constraint as cns_utils, attribute as attr_utils
+from tpMayaLib.core import constraint as cns_utils, attribute as attr_utils, transform as transform_utils
 
 
 class RigSwitch(object):
@@ -165,7 +166,48 @@ def parent_shape_in_place(transform, shape_source, keep_source=True, replace_sha
     :return: bool, Whether the operation was successful or not
     """
 
+    # TODO: Finish
+
     shape_source = python.force_list(shape_source)
 
     for shape in shape_source:
         maya.cmds.parent(shape, transform, add=True, shape=True)
+
+
+def create_follow_fade(source_guide, drivers, skip_lower=0.0001):
+    """
+    Creates a multiply divide for each transform in drivers with a weight value based on the distance from source guide
+    :param source_guide: str, name of a transform in maya to calculate distance from
+    :param drivers: list(str), list of drivers to apply fade based in the distance from source guide
+    :param skip_lower: float, distance below which multiplyDivide no fading stops
+    :return: list(str), list of multiplyDivide nodes created
+    """
+
+    distance_list, distance_dict, original_distance_order = transform_utils.get_ordered_distance_and_transform(source_guide, drivers)
+    multiplies = list()
+
+    if not distance_list[-1] > 0:
+        return multiplies
+
+    for dst in original_distance_order:
+        scaler  = 1.0 - (dst / distance_list[-1])
+        if scaler <= skip_lower:
+            continue
+        multi = attr_utils.MultiplyDivideNode(source_guide)
+        multi.set_input2(scaler, scaler, scaler)
+        multi.input1X_in('{}.translateX'.format(source_guide))
+        multi.input1Y_in('{}.translateY'.format(source_guide))
+        multi.input1Z_in('{}.translateZ'.format(source_guide))
+
+        for driver in distance_dict[dst]:
+            multi.outputX_out('{}.translateX'.format(driver))
+            multi.outputY_out('{}.translateY'.format(driver))
+            multi.outputZ_out('{}.translateZ'.format(driver))
+
+        multi_dict = dict()
+        multi_dict['node'] = multi
+        multi_dict['source'] = source_guide
+        multi_dict['target'] = driver           # ???
+        multiplies.append(multi_dict)
+
+    return multiplies
