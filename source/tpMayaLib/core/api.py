@@ -7,6 +7,8 @@ Module that contains functions and classes related with Maya API
 
 from __future__ import print_function, division, absolute_import
 
+from tpPyUtils import mathlib
+
 import tpMayaLib as maya
 
 
@@ -279,6 +281,10 @@ class MayaObject(ApiObject, object):
 
 
 class MayaFunction(MayaObject, object):
+    pass
+
+
+class MayaIterator(MayaObject, object):
     pass
 
 
@@ -621,7 +627,6 @@ class SkinCluster(ApiObject, object):
             return api_double_array
 
 
-
 class TransformFunction(MayaFunction, object):
 
     def _set_api_object(self, mobj):
@@ -656,9 +661,7 @@ class MeshFunction(MayaFunction, object):
             return maya.OpenMaya.MFnMesh(mobj.obj)
         else:
             return maya.OpenMaya.MFnMesh(mobj)
-    # endregion
 
-    # region Public Functions
     def refresh_mesh(self):
         self.obj.updateSurface()
 
@@ -705,6 +708,51 @@ class MeshFunction(MayaFunction, object):
 
         return count
 
+    def get_triangle_ids(self):
+        if maya.is_new_api():
+            triangles, triangle_verts = self.obj.getTriangles()
+        else:
+            triangles = maya.OpenMaya.MIntArray()
+            triangle_verts = maya.OpenMaya.MIntArray()
+            self.obj.getTriangles(triangles, triangle_verts)
+
+        id_list = list()
+        for i in range(len(triangles)):
+            if triangles[i] == 1:
+                id_list.append(i)
+
+        return id_list
+
+    def get_quad_ids(self):
+        if maya.is_new_api():
+            triangles, triangle_verts = self.obj.getTriangles()
+        else:
+            triangles = maya.OpenMaya.MIntArray()
+            triangle_verts = maya.OpenMaya.MIntArray()
+            self.obj.getTriangles(triangles, triangle_verts)
+
+        id_list = list()
+        for i in range(len(triangles)):
+            if triangles[i] == 2:
+                id_list.append(i)
+
+        return id_list
+
+    def get_non_tri_quad_ids(self):
+        if maya.is_new_api():
+            triangles, triangle_verts = self.obj.getTriangles()
+        else:
+            triangles = maya.OpenMaya.MIntArray()
+            triangle_verts = maya.OpenMaya.MIntArray()
+            self.obj.getTriangles(triangles, triangle_verts)
+
+        id_list = list()
+        for i in range(len(triangles)):
+            if triangles[i] > 2:
+                id_list.append(i)
+
+        return id_list
+
     def get_vertex_positions(self):
         if maya.is_new_api():
             point_array = PointArray()
@@ -731,6 +779,180 @@ class MeshFunction(MayaFunction, object):
         v = maya.OpenMaya.MScriptUtil.getFloat2ArrayItem(uv, 0, 1)
 
         return u, v
+
+    def get_point_at_uv(self, u_value=0, v_value=0):
+
+        space = maya.OpenMaya.MSpace.kWorld
+
+        point = Point(0.0, 0.0, 0.0).get_api_object()
+        util = maya.OpenMaya.MScriptUtil()
+        util.createFromList([float(u_value), float(v_value)], 2)
+        uv = util.asFloat2Ptr()
+
+        # TODO: We need to get polygon ID
+        polygon_id = 0
+        self.obj.getPointAtUV(polygon_id, point, uv, space)
+
+    def get_closest_face(self, vector):
+        pointA = maya.OpenMaya.MPoint(vector[0], vector[1], vector[2])
+        pointB = maya.OpenMaya.MPoint()
+        space = maya.OpenMaya.MSpace.kWorld
+
+        if maya.is_new_api():
+            index = self.obj.getClosestPoint(pointA, pointB, space)
+        else:
+            util = maya.OpenMaya.MScriptUtil()
+            id_pointer = util.asIntPtr()
+            self.obj.getClosestPoint(pointA, pointB, space, id_pointer)
+            index = maya.OpenMaya.MScriptUtil(id_pointer).asInt()
+
+        return index
+
+    def get_closest_position(self, source_vector):
+
+        # TODO: Implement to support both OpenMaya and OpenMaya2
+
+        new_point = maya.OpenMaya.MPoint()
+        point_base = maya.OpenMaya.MPoint()
+        point_base.x = source_vector[0]
+        point_base.y = source_vector[1]
+        point_base.z = source_vector[2]
+        accelerator = self.obj.autoUniformGridParams()
+        space = maya.OpenMaya.MSpace.kWorld
+        self.obj.getClosestPoint(point_base, new_point, space, None, accelerator)
+
+        return [new_point.x, new_point.y, new_point.z]
+
+    def get_closest_normal(self, source_vector, at_source_position=False):
+        """
+        Returns the closes normal of the given source vector
+        :param source_vector: list(float, float, float), position to find the normal closest
+        :param at_source_position: bool, Whether to add source_vector to the normal vector so it is returned relative to the source vector
+        """
+
+        # TODO: Implement to support both OpenMaya and OpenMaya2
+
+        new_point = maya.OpenMaya.MPoint()
+        point_base = maya.OpenMaya.MPoint()
+        point_base.x = source_vector[0]
+        point_base.y = source_vector[1]
+        point_base.z = source_vector[2]
+        accelerator = self.obj.autoUniformGridParams()
+        space = maya.OpenMaya.MSpace.kWorld
+        self.obj.getClosestNormal(point_base, new_point, space, None, accelerator)
+
+        if at_source_position:
+            position = mathlib.vector_add(source_vector, new_point)
+            return position
+        else:
+            return [new_point.x, new_point.y, new_point.z]
+
+
+class NurbsSurfaceFunction(MayaFunction, object):
+    def _set_api_object(self, mobj):
+        return maya.OpenMaya.MFnNurbsSurface(mobj)
+
+    def get_closest_parameter(self, vector):
+        point = Point(vector[0], vector[1], vector[2])
+        u = maya.OpenMaya.MScriptUtil()
+        u_ptr = u.asDoublePtr()
+        maya.OpenMaya.MScriptUtil.setDouble(u_ptr, 0.0)
+        v = maya.OpenMaya.MScriptUtil()
+        v_ptr = v.asDoublePtr()
+        maya.OpenMaya.MScriptUtil.setDouble(v_ptr, 0.0)
+        space = maya.OpenMaya.MSpace.kWorld
+        self.obj.closestPoint(point.get_api_object(), 0, u_ptr, v_ptr, 0, 0.00001, space)
+        u = maya.OpenMaya.MScriptUtil.getDouble(u_ptr)
+        v = maya.OpenMaya.MScriptUtil.getDouble(v_ptr)
+
+        return u, v
+
+    def get_position_from_parameter(self, u, v):
+        point = Point()
+        space = maya.OpenMaya.MSpace.kWorld
+        self.obj.getPointAtParam(u, v, point.get_api_object(), space)
+
+        return point.get_as_vector()
+
+    def get_closest_normal(self, source_vector, at_source_position=False):
+        space = maya.OpenMaya.MSpace.kWorld
+        uv = self.get_closest_parameter(source_vector)
+        vector = self.obj.normal(uv[0], uv[1], space)
+        if not at_source_position:
+            return vector
+        else:
+            position = mathlib.vector_add(source_vector, vector)
+            return position
+
+
+class NurbsCurveFunction(MayaFunction, object):
+    def _set_api_object(self, mobj):
+        return maya.OpenMaya.MFnNurbsCurve(mobj)
+
+    def get_degree(self):
+        return self.obj.degree()
+
+    def get_cv_count(self):
+        return self.obj.numCVs()
+
+    def get_cv_positions(self):
+        point = PointArray()
+        point = point.get_api_object()
+        self.obj.getCVs(point)
+        found = list()
+        for i in range(point.length()):
+            x = point[i][0]
+            y = point[i][1]
+            z = point[i][2]
+            found.append([x, y, z])
+
+        return found
+
+    def set_cv_positions(self, positions):
+        point_array = PointArray()
+        point_array.set(positions)
+        self.obj.setCVs(point_array)
+
+    def get_form(self):
+        return self.obj.form()
+
+    def get_knot_count(self):
+        return self.obj.numKnots()
+
+    def get_span_count(self):
+        return self.obj.numSpans()
+
+    def get_knot_values(self):
+        knots = DoubleArray()
+        self.obj.getKnots(knots.get_api_object())
+
+        return knots.get()
+
+    def get_position_at_parameter(self, param):
+        point = Point()
+        self.obj.getPointAtParam(param, point.get_api_object())
+
+        return point.get()[0:3]
+
+    def get_closest_position(self, list_value):
+        point = Point(list_value[0], list_value[1], list_value[2])
+        point = self.obj.closestPoint(point.get_api_object(), None, 0.0000001, maya.OpenMaya.MSpace.kWorld)
+
+        return [point.x, point.y, point.z]
+
+    def get_parameter_at_position(self, list_value):
+        u = maya.OpenMaya.MScriptUtil()
+        u_ptr = u.asDoublePtr()
+        maya.OpenMaya.MScriptUtil.setDouble(u_ptr, 0.0)
+        space = maya.OpenMaya.MSpace.kWorld
+        list_value = self.get_closest_position(list_value)
+        point = Point(list_value[0], list_value[1], list_value[2])
+        self.obj.getParamAtPoint(point.get_api_object(), u_ptr, space)
+
+        return maya.OpenMaya.MScriptUtil.getDouble(u_ptr)
+
+    def get_parameter_at_length(self, value):
+        return self.obj.findParamFromLength(value)
 
 
 class ScriptUtils(ApiObject, object):
@@ -778,3 +1000,228 @@ def get_active_selection_list():
         maya.OpenMaya.MGlobal.getActiveSelectionList(selection_list)
 
     return SelectionList(sel_list=selection_list)
+
+
+class IterateCurveCV(MayaIterator, object):
+    def _set_api_object(self, mobj):
+        return maya.OpenMaya.MItCurveCV(mobj)
+
+
+class IterateGeometry(MayaIterator, object):
+    def _set_api_object(self, mobj):
+        return maya.OpenMaya.MItGeometry(mobj)
+
+    def get_points(self):
+        space = maya.OpenMaya.MSpace.kObject
+
+        if maya.is_new_api():
+            points = self.obj.allPositions(space)
+        else:
+            points = maya.OpenMaya.MPointArray()
+            self.obj.allPositions(points, space)
+
+        return points
+
+    def set_points(self, points):
+        space = maya.OpenMaya.MSpace.kObject
+        self.obj.setAllPositions(points, space)
+
+    def get_points_as_list(self):
+        points = self.get_points()
+        found = list()
+        for i in range(points.length()):
+            x = points[i][0]
+            y = points[i][1]
+            z = points[i][2]
+            found.append([x, y, z])
+
+        return found
+
+
+class IterateEdges(MayaIterator, object):
+    def _set_api_object(self, mobj):
+        return maya.OpenMaya.MItMeshEdge(mobj)
+
+    def set_edge(self, edge_id):
+        if maya.is_new_api():
+            prev = self.obj.setIndex(edge_id)
+        else:
+            script_util = maya.OpenMaya.MScriptUtil()
+            prev = script_util.asIntPtr()
+
+        return prev
+
+    def get_connected_vertices(self, edge_id):
+        self.set_edge(edge_id)
+        vert1_id = self.obj.index(0)
+        vert2_id = self.obj.index(1)
+        self.obj.reset()
+
+        return [vert1_id, vert2_id]
+
+    def get_connected_faces(self, edge_id):
+        self.set_edge(edge_id)
+        if maya.is_new_api():
+            connected_faces = self.obj.getConnectedFaces()
+        else:
+            connected_faces = maya.OpenMaya.MIntArray()
+            self.obj.getConnectedFaces(connected_faces)
+
+        return connected_faces
+
+    def get_connected_edges(self, edge_id):
+        self.set_edge(edge_id)
+
+        if maya.is_new_api():
+            connected_edges = self.obj.getConnectedEdges()
+        else:
+            connected_edges = maya.OpenMaya.MIntArray()
+            self.obj.getConnectedFaces(connected_edges)
+
+        return connected_edges
+
+
+class IteratePolygonFaces(MayaIterator, object):
+    def _set_api_object(self, mobj):
+        return maya.OpenMaya.MItMeshPolygon(mobj)
+
+    def is_done(self):
+        return self.obj.isDone()
+
+    def index(self):
+        return self.obj.index()
+
+    def next(self):
+        self.obj.next()
+
+    def reset(self):
+        self.obj.reset()
+
+    def count(self):
+        return self.obj.count()
+
+    def get_area(self, face_id=None):
+        if face_id:
+            if maya.is_new_api():
+                prev = self.obj.setIndex(face_id)
+            else:
+                script_util = maya.OpenMaya.MScriptUtil()
+                prev = script_util.asIntPtr()
+                self.obj.setIndex(face_id, prev)
+
+        if maya.is_new_api():
+            area_value = self.obj.getArea()
+        else:
+            script_util = maya.OpenMaya.MScriptUtil()
+            area_ptr = script_util.asDoublePtr()
+            maya.OpenMaya.MScriptUtil.setDouble(area_ptr, 0.0)
+            self.obj.getArea(area_ptr)
+            area_value = maya.OpenMaya.MScriptUtil.getDouble(area_ptr)
+
+        return area_value
+
+    def get_face_center_vectors(self):
+        center_vectors = list()
+        for i in range(self.obj.count()):
+            point = self.obj.center()
+            center_vectors.append([point.x, point.y, point.z])
+            self.obj.next()
+        self.obj.reset()
+
+        return center_vectors
+
+    def get_closest_face(self, vector):
+        closest_distance = None
+        closest_face = None
+
+        while not self.obj.isDone():
+            center = self.obj.center()
+            distance = mathlib.get_distance_between_vectors(vector, [center.x, center.y, center.z])
+            if distance < 0.001:
+                closest_face = self.obj.index()
+                self.obj.reset()
+                return closest_face
+            if distance < closest_distance or not closest_distance:
+                closest_distance = distance
+                closest_face = self.obj.index()
+            self.obj.next()
+
+        self.obj.reset()
+
+        return closest_face
+
+    def get_edges(self, face_id):
+        if maya.is_new_api():
+            prev = self.obj.setIndex(face_id)
+            edges = self.obj.getEdges()
+        else:
+            script_util = maya.OpenMaya.MScriptUtil()
+            prev = script_util.asIntPtr()
+            self.obj.setIndex(face_id, prev)
+            edges = maya.OpenMaya.MIntArray()
+            self.obj.getEdges(edges)
+
+        self.obj.reset()
+
+        return edges
+
+    def get_center(self, face_id=None):
+        space = maya.OpenMaya.MSpace.kWorld
+        if face_id:
+            if maya.is_new_api():
+                prev = self.obj.setIndex(face_id)
+            else:
+                script_util = maya.OpenMaya.MScriptUtil()
+                prev = script_util.asIntPtr()
+                self.obj.setIndex(face_id, prev)
+
+        point = self.obj.center(space)
+
+        return point.x, point.y, point.z
+
+    def get_normal(self, face_id=None):
+        space = maya.OpenMaya.MSpace.kWorld
+        if face_id:
+            if maya.is_new_api():
+                prev = self.obj.setIndex(face_id)
+            else:
+                script_util = maya.OpenMaya.MScriptUtil()
+                prev = script_util.asIntPtr()
+                self.obj.setIndex(face_id, prev)
+
+        if maya.is_new_api():
+            vector = self.obj.getNormal(space)
+        else:
+            vector = maya.OpenMaya.MVector()
+            self.obj.getNormal(vector, space)
+
+        return vector.x, vector.y, vector.z
+
+    def get_normal_tangent(self, face_id=None):
+
+        # TODO: Finish this implementation
+
+        space = maya.OpenMaya.MSpace.kWorld
+        if face_id:
+            if maya.is_new_api():
+                prev = self.obj.setIndex(face_id)
+            else:
+                script_util = maya.OpenMaya.MScriptUtil()
+                prev = script_util.asIntPtr()
+                self.obj.setIndex(face_id, prev)
+
+        position = self.obj.center(space)
+        if maya.is_new_api():
+            normal_vector = self.obj.getNormal(space)
+        else:
+            normal_vector = maya.OpenMaya.MVector()
+            self.obj.getNormal(normal_vector, space)
+
+        position_vector = maya.OpenMaya.MVector()
+        position_vector.x = 0
+        position_vector.y = 0
+        position_vector.z = 0
+
+        tangent = position_vector * normal_vector
+
+        return tangent

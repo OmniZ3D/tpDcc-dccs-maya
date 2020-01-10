@@ -1,5 +1,20 @@
 order = [
+    'tpMayaLib.core.exceptions',
+    'tpMayaLib.core.time',
     'tpMayaLib.core.gui',
+    'tpMayaLib.core.name',
+    'tpMayaLib.core.api',
+    'tpMayaLib.core.helpers',
+    'tpMayaLib.core.mathutils',
     'tpMayaLib.core.modelpanel',
-    'tpMayaLib.core.playblast'
+    'tpMayaLib.core.playblast',
+    'tpMayaLib.core.node',
+    'tpMayaLib.core.shape',
+    'tpMayaLib.core.attribute',
+    'tpMayaLib.core.transform'
+    'tpMayaLib.core.geometry',
+    'tpMayaLib.core.mesh',
+    'tpMayaLib.core.constraint',
+    'tpMayaLib.core.component'
+    'tpMayaLib.core.ik'
 ]
