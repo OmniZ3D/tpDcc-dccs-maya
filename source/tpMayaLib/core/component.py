@@ -8,7 +8,7 @@ This module include data class for components
 from __future__ import print_function, division, absolute_import, unicode_literals
 
 import tpMayaLib as maya
-from tpMayaLib.core import exceptions
+from tpMayaLib.core import exceptions, node, shape as shape_utils
 
 
 component_filter = [28, 30, 31, 32, 34, 35, 36, 37, 38, 46, 47]
@@ -37,23 +37,79 @@ def is_component(component):
     return bool(maya.cmds.filterExpand(component, ex=True, sm=component_filter))
 
 
-def get_component_count(geometry):
+def get_component_count_api(geometry):
     """
     Returns the number of individual components for the given geometry
     :param geometry: str, geometry to query
     :return: int
     """
 
-    from tpMayaLib.core import node
-
     if not maya.cmds.objExists(geometry):
         raise exceptions.GeometryExistsException(geometry)
 
     geo_obj = node.get_mobject(geometry)
     if geo_obj.hasFn(maya.OpenMaya.MFn.kTransform):
-        geo_shape = maya.cmds.listRelatives(geometry, s=True, ni=True, pa=True)[0]
+        geometry = maya.cmds.listRelatives(geometry, s=True, ni=True, pa=True)[0]
 
     geo_path = node.get_mdag_path(geometry)
     geo_it = maya.OpenMaya.MItGeometry(geo_path)
 
     return geo_it.count()
+
+
+def get_component_count(transform):
+    """
+    Returns the number of components under a transform
+    :param transform: str, name of the transform
+    :return: int, number of components under given transform
+    """
+
+    components = get_components(transform)
+
+    return len(maya.cmds.ls(components[0], flatten=True))
+
+
+def get_components_from_shapes(shapes=None):
+    """
+    Returns the components from the list of shapes
+    Only supports cv and vtx components
+    :param shapes: list(str), list of shape names
+    :return: list(list), components of the given shapes
+    """
+
+    components = list()
+    if shapes:
+        for shape in shapes:
+            found_components = None
+            if maya.cmds.nodeType(shape) == 'nurbsSurface' or maya.cmds.nodeType(shape) == 'nurbsCurve':
+                found_components = '{}.cv[*]'.format(shape)
+            elif maya.cmdsnodeType(shape) == 'mesh':
+                found_components = '{}.vtx[*]'.format(shape)
+            if found_components:
+                components.append(found_components)
+
+    return components
+
+
+def get_components(transform):
+    """
+    Returns the name of the components under a transform
+    :param transform: str, name of a transform
+    :return: name of all components under a transforms
+    """
+
+    shapes = shape_utils.get_shapes(transform)
+    return get_components_from_shapes(shapes)
+
+
+def get_components_in_hierarchy(transform):
+    """
+    Returns all the components in the hierarchy
+    This includes all transforms with shapes parented under the transform
+    :param transform: str, name of a transform
+    :return: list(list), name of all components under transform
+    """
+
+    shapes = shape_utils.get_shapes_in_hierarchy(transform)
+
+    return get_components_from_shapes(shapes)

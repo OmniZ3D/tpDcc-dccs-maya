@@ -7,9 +7,11 @@ Module that contains functions and classes related with attributes
 
 from __future__ import print_function, division, absolute_import
 
-import tpMayaLib as maya
+import tpDccLib as tp
 from tpPyUtils import python
-from tpMayaLib.core import attribute, mathutils, name as name_utils
+
+import tpMayaLib as maya
+from tpMayaLib.core import attribute, mathutils, name as name_utils, transform as transform_utils, shape as shape_utils
 
 
 class Constraints(object):
@@ -29,7 +31,7 @@ class Constraint(object):
         Constraints.PARENT, Constraints.POINT, Constraints.ORIENT, Constraints.SCALE, Constraints.AIM
     ]
 
-    def __init_(self):
+    def __init__(self):
         self._set_to_last = False
 
     def get_constraint(self, xform, constraint_type):
@@ -607,3 +609,68 @@ def scale_constraint_to_world(scale_constraint):
     for i in range(weight_count):
         target = attribute.get_attribute_input('{}.target[{}].targetScale'.format(scale_constraint, i), True)
         maya.cmds.connectAttr('{}.parentInverseMatrix'.format(target), '{}.target[{}].targetParentMatrix'.format(scale_constraint, i))
+
+
+def constraint_local(source_transform, target_transform, parent=False, scale_connect=False, constraint='parentConstraint', use_duplicate=False):
+    """
+    Constraints a target transform to a source one in a way that allows for setups to remain local to the origin.
+    Useful whe na control needs to move with a rig, but move something at the origin only when the control moves
+    :param source_transform: str, name of a transform
+    :param target_transform: str, name of a transform
+    :param parent: bool, If False, the setup uses a local group to constraint the target transform. Otherwise,
+        it will parent the target_transform under the local group
+    :param scale_connect: bool, Whether to also asd a scale constraint or not
+    :param constraint: str, the type of constraint to use ('parentConstraint', 'pointConstraint', 'orientConstraint')
+    :param use_duplicate: bool
+    :return: tuple(str, str), the local group that constraints the target transforms and the buffer group above the
+        local group
+    """
+
+    if use_duplicate:
+        local_group = maya.cmds.duplicate(source_transform, n='local_{}'.format(source_transform))[0]
+        attribute.remove_user_defined_attributes(local_group)
+        children = maya.cmds.listRelatives(local_group)
+        if children:
+            maya.cmds.delete(children)
+        dup_parent = maya.cmds.listRelatives(local_group, p=True)
+        if dup_parent:
+            maya.cmds.parent(local_group, w=True)
+        buffer_group = transform_utils.create_buffer_group(local_group, use_duplicate=True)
+    else:
+        local_group = maya.cmds.group(empty=True, n=tp.Dcc.find_unique_name('local_{}'.format(source_transform)))
+        transform_utils.MatchTransform(target_transform, local_group).translation_rotation()
+        transform_utils.MatchTransform(target_transform, local_group).scale()
+        if shape_utils.has_shape_of_type(source_transform, 'follicle'):
+            buffer_group = maya.cmds.group(empty=True, n='buffer_{}'.format(local_group))
+            maya.cmds.parent(local_group, buffer_group)
+        else:
+            buffer_group = transform_utils.create_buffer_group(local_group, copy_scale=True)
+        parent_world = maya.cmds.listRelatives(source_transform, p=True)
+        if parent_world:
+            if not shape_utils.has_shape_of_type(source_transform, 'follicle'):
+                parent_world = parent_world[0]
+                transform_utils.MatchTransform(parent_world, buffer_group).translation_rotation()
+
+    if not local_group:
+        return
+
+    attribute.connect_Translate(source_transform, local_group)
+    attribute.connect_rotate(source_transform, local_group)
+    if scale_connect:
+        attribute.connect_scale(source_transform, local_group)
+    if parent:
+        maya.cmds.parent(target_transform, local_group)
+
+    if not parent:
+        if constraint == 'parentConstraint':
+            maya.cmds.parentConstraint(local_group, target_transform, mo=True)
+        if constraint == 'pointConstraint':
+            maya.cmds.pointConstraint(local_group, target_transform, mo=True)
+        if constraint == 'orientConstraint':
+            maya.cmds.orientConstraint(local_group, target_transform, mo=True)
+        if scale_connect:
+            attribute.connect_scale(source_transform, target_transform)
+
+    attribute.connect_message(local_group, source_transform, 'out_local')
+
+    return local_group, buffer_group
