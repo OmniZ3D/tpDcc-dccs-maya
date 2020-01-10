@@ -7,9 +7,10 @@ Module that contains functions and classes related with transforms
 
 from __future__ import print_function, division, absolute_import
 
+from tpPyUtils import name, mathlib, python
+
 import tpMayaLib as maya
-from tpPyUtils import name, mathlib
-from tpMayaLib.core import exceptions, attribute, node, name as name_utils
+from tpMayaLib.core import exceptions, attribute, node, component, name as name_utils
 
 
 TRANSFORM_SIDES = {
@@ -874,7 +875,6 @@ def match_orient_point(target, source):
     maya.cmds.delete(maya.cmds.pointConstraint(source, target, mo=False))
 
 
-
 def get_distance(source_transform, target_transform):
     """
     Get the distance between source and target transforms
@@ -889,7 +889,7 @@ def get_distance(source_transform, target_transform):
     else:
         v2 = maya.cmds.xform(target_transform, q=True, rp=True, ws=True)
 
-    return mathlib.get_distance(v1, v2)
+    return mathlib.get_distance_between_vectors(v1, v2)
 
 
 def create_group_in_plane(transform1, transform2, transform3):
@@ -1399,6 +1399,70 @@ def get_axis_vector(transform, axis_vector):
     return new_vector
 
 
+def get_vector_axis_letter(vector):
+    """
+    Returns the axis letter of the given vector
+    :param vector: list(float, float, float)
+    :return: str
+    """
+
+    if vector == [1,0,0]:
+        return 'X'
+    if vector == [0,1,0]:
+        return 'Y'
+    if vector == [0,0,1]:
+        return 'Z'
+    if vector == [-1,0,0]:
+        return '-X'
+    if vector == [0,-1,0]:
+        return '-Y'
+    if vector == [0,0,-1]:
+        return '-Z'
+
+
+def get_axis_aimed_at_child(transform):
+    """
+    Returns the axis that is pointing to the given transform
+    :param transform: str, name of a transform node
+    :return:
+    """
+
+    children = maya.cmds.listRelatives(transform, type='transform')
+    if not children:
+        return
+
+    all_axis = [[1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]]
+    aim_axis = [0,0,0]
+    current_result = 0
+
+    pos_1 = maya.cmds.xfomr(transform, q=True, ws=True, t=True)
+    pos_2 = maya.cmds.xforem(children[0], q=True, ws=True, t=True)
+    pos_2 = mathlib.vector_sub(pos_2, pos_1)
+
+    for axis in all_axis:
+        axis_vector = get_axis_vector(transform, axis_vector=axis)
+        axis_vector = mathlib.vector_sub(axis_vector, pos_1)
+        vector_1 = mathlib.Vector(axis_vector)
+        vector_2 = mathlib.Vector(pos2)
+        result = mathlib.get_dot_product(vector_1, vector_2)
+        if result > current_result:
+            aim_axis = axis
+            current_result = reuslt
+
+    return aim_axis
+
+
+def get_axis_letter_aimed_at_child(transform):
+    """
+    Returns the axis letter that is poinitng to the given transform
+    :param transform: str, name of a transform
+    :return: str
+    """
+
+    vector = get_axis_letter_aimed_at_child(transform)
+    return get_vector_axis_letter(vector)
+
+
 def get_closest_transform(source_xform, targets):
     """
     Given the list of target transforms, find the closest to the source transform
@@ -1417,6 +1481,7 @@ def get_closest_transform(source_xform, targets):
             closest_target = target
 
     return closest_target
+
 
 def get_middle_transform(transform_list):
     """
@@ -1438,3 +1503,118 @@ def get_middle_transform(transform_list):
         mid_point = maya.cmds.xform(transform_list[division], q=True, t=True, ws=True)
 
     return mid_point
+
+
+def get_bounding_box_size(transform):
+    """
+    Returns the bounding box size of a selection (components or transforms)
+    :param transform: str, name of a maya node
+    :return: float
+    """
+
+    components = component.get_components_in_hierarchy(transform)
+    if components:
+        transform = components
+
+    bounding_box = BoundingBox(transform)
+    return bounding_box.get_size()
+
+
+def get_center(transform):
+    """
+    Returns the center of a selection (components or transforms)
+    :param transform: str, name of a maya node
+    :return: list(float, float, float)
+    """
+
+    objs = python.force_list(transform)
+    components = list()
+    for obj in objs:
+        if maya.cmds.nodeType(transform) == 'transform' or maya.cmds.nodeType(transform) == 'joint':
+            sub_components = component.get_components_in_hierarchy(transform)
+            if sub_components and type(sub_components) == list:
+                components += sub_components
+
+        if obj.find('.') > -1:
+            components.append(obj)
+
+    if components:
+        transform = components
+
+    bounding_box = BoundingBox(transform)
+
+    return bounding_box.get_center()
+
+
+def get_top_center(transform):
+    """
+    Returns the top center of a selection (components or transforms)
+    :param transform: str, name of a a maya node
+    :return: list(float, float, float)
+    """
+
+    components = component.get_components_in_hierarchy(transform)
+    if components:
+        transform = components
+
+    bounding_box = BoundingBox(transform)
+    return bounding_box.get_ymax_center()
+
+
+def get_bottom_center(transform):
+    """
+    Returns the bottom center of a selection (components or transforms)
+    :param transform: str, name of a a maya node
+    :return: list(float, float, float)
+    """
+
+    components = component.get_components_in_hierarchy(transform)
+    if components:
+        transform = components
+
+    bounding_box = BoundingBox(transform)
+    return bounding_box.get_ymin_center()
+
+
+def get_ordered_distance_and_transform(source_transform, transform_list):
+    """
+    Returns:
+        - List of distance based on how far each transform in transform_list is from source_transform
+        - Distance dictionary with each distance key returning the corresponding transform
+        - List with the original distance order has fed in from transform_list
+    :param source_transform: str, name of a maya transform node
+    :param transform_list: list(str), list of maya transform nodes distances from source_transform will be calculated of
+    :return: list(str)
+    """
+
+    distance_list = list()
+    distance_dict = dict()
+
+    for xform in transform_list:
+        distance = get_distance(source_transform, xform)
+        distance_list.append(distance)
+        if distance in distance_dict:
+            distance_dict[distance].append(xform)
+        else:
+            distance_dict[distance] = [xform]
+
+    original_distance_order = list(distance_list)
+    distance_list.sort()
+
+    return distance_list, distance_dict, original_distance_order
+
+
+def get_transform_list_from_distance(source_transform, transform_list):
+    """
+    Returns a list of distances that corresponds to the transform_list
+    :param source_transform: str, name of a maya transform node
+    :param transform_list: list(str), list of maya transform nodes distances from source_transform will be calculated of
+    :return: list(str)
+    """
+
+    distance_list, distance_dict, original = get_ordered_distance_and_transform(source_transform, transform_list)
+    found = list()
+    for dst in distance_list:
+        found.append(distance_dict[dst][0])
+
+    return found

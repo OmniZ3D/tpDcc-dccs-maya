@@ -16,12 +16,11 @@ import string
 import traceback
 
 import tpDccLib as tp
-from tpPyUtils import python, name as name_utils
+from tpPyUtils import python, decorators, name as name_utils
 from tpQtLib.core import color as color_utils
+
 import tpMayaLib as maya
-from tpMayaLib.core import exceptions, mathutils
-from tpMayaLib.core import node as node_utils
-from tpMayaLib.core import shape as shape_utils
+from tpMayaLib.core import exceptions, mathutils, node as node_utils, shape as shape_utils
 
 
 class AttributeTypes(object):
@@ -1997,6 +1996,151 @@ class TransferConnections(object):
 
             new_attr.create(node=target_node)
             new_attr.connect_in(out_attr)
+
+
+class MayaNode(object):
+    """
+    Class for managing specific Maya node related attributes
+    """
+
+    def __init__(self, name=None):
+        self._node = None
+        self._create_node(name)
+
+    @decorators.abstractmethod
+    def _create_node(self, name):
+        raise NotImplementedError('_create_node function in MayaNode not implemented!')
+
+
+class MultiplyDivideNode(MayaNode, object):
+    """
+    Class for dealing witg multiply divide nodes
+    """
+
+    def __init__(self, name=None):
+        if not name.startswith('multiplyDivide'):
+            name = tp.Dcc.find_unique_name('multiplyDivide_{}'.format(name))
+        super(MultiplyDivideNode, self).__init__(name)
+
+    def _create_node(self, name):
+        self._node = maya.cmds.createNode('multiplyDivide', name=name)
+        maya.cmds.setAttr('{}.input2X'.format(self._node), 1)
+        maya.cmds.setAttr('{}.input2Y'.format(self._node), 1)
+        maya.cmds.setAttr('{}.input2Z'.format(self._node), 1)
+
+    def set_operation(self, value):
+        """
+        Sets multiplyDivide node operation:
+            0 = no operation
+            1 = multiply (default)
+            2 = divide
+            3 = power
+        :param value: int, operation index
+        """
+
+        maya.cmds.setAttr('{}.operation'.format(self._node), value)
+
+    def set_input1(self, value_x=None, value_y=None, value_z=None):
+        """
+        Sets input1 attribute values
+        :param value_x: float
+        :param value_y: float
+        :param value_z: float
+        """
+
+        if value_x:
+            maya.cmds.setAttr('{}.input1X'.format(self._node), value_x)
+        if value_y:
+            maya.cmds.setAttr('{}.input1Y'.format(self._node), value_y)
+        if value_z:
+            maya.cmds.setAttr('{}.input1Z'.format(self._node), value_z)
+
+    def set_input2(self, value_x=None, value_y=None, value_z=None):
+        """
+        Sets input2 attribute values
+        :param value_x: float
+        :param value_y: float
+        :param value_z: float
+        """
+
+        if value_x:
+            maya.cmds.setAttr('{}.input2X'.format(self._node), value_x)
+        if value_y:
+            maya.cmds.setAttr('{}.input2Y'.format(self._node), value_y)
+        if value_z:
+            maya.cmds.setAttr('{}.input2Z'.format(self._node), value_z)
+
+    def input1X_in(self, attribute):
+        """
+        Connects given attribute to input1X attribute
+        :param attribute: str, full attribute name (node.attribute) to connect in
+        """
+
+        maya.cmds.connectAttr(attribute, '{}.input1X'.format(self._node))
+
+    def input1Y_in(self, attribute):
+        """
+        Connects given attribute to input1Y attribute
+        :param attribute: str, full attribute name (node.attribute) to connect in
+        """
+
+        maya.cmds.connectAttr(attribute, '{}.input1Y'.format(self._node))
+
+    def input1Z_in(self, attribute):
+        """
+        Connects given attribute to input1Z attribute
+        :param attribute: str, full attribute name (node.attribute) to connect in
+        """
+
+        maya.cmds.connectAttr(attribute, '{}.input1Z'.format(self._node))
+
+    def input2X_in(self, attribute):
+        """
+        Connects given attribute to input2X attribute
+        :param attribute: str, full attribute name (node.attribute) to connect in
+        """
+
+        maya.cmds.connectAttr(attribute, '{}.input2X'.format(self._node))
+
+    def input2Y_in(self, attribute):
+        """
+        Connects given attribute to input2Y attribute
+        :param attribute: str, full attribute name (node.attribute) to connect in
+        """
+
+        maya.cmds.connectAttr(attribute, '{}.input2Y'.format(self._node))
+
+    def input2Z_in(self, attribute):
+        """
+        Connects given attribute to input2Z attribute
+        :param attribute: str, full attribute name (node.attribute) to connect in
+        """
+
+        maya.cmds.connectAttr(attribute, '{}.input2Z'.format(self._node))
+
+    def outputX_out(self, attribute):
+        """
+        Connects out from outputX to given attribute
+        :param attribute: str, full attribute name (node.attribute) to connect out into
+        """
+
+        connect_plus('{}.outputX'.format(self._node), attribute)
+
+    def outputY_out(self, attribute):
+        """
+        Connects out from outputY to given attribute
+        :param attribute: str, full attribute name (node.attribute) to connect out into
+        """
+
+        connect_plus('{}.outputY'.format(self._node), attribute)
+
+    def outputZ_out(self, attribute):
+        """
+        Connects out from outputZ to given attribute
+        :param attribute: str, full attribute name (node.attribute) to connect out into
+        """
+
+        connect_plus('{}.outputZ'.format(self._node), attribute)
 
 
 def check_attribute(attr):
@@ -4047,7 +4191,7 @@ def connect_plus(source_attr, target_attr, respect_value=False):
 
     input_attr = get_attribute_input(target_attr)
     value = maya.cmds.getAttr(target_attr)
-    if not input_attr or not respect_value:
+    if not input_attr and not respect_value:
         maya.cmds.connectAttr(source_attr, target_attr)
         return
 
