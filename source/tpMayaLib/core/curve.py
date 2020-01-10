@@ -8,7 +8,7 @@ Utility methods related to Maya Curves
 from __future__ import print_function, division, absolute_import
 
 import tpMayaLib as maya
-from tpMayaLib.core import exceptions, transform, name as name_utils
+from tpMayaLib.core import exceptions, api, transform, name as name_utils, shape as shape_utils
 
 
 def check_curve(curve):
@@ -20,6 +20,19 @@ def check_curve(curve):
 
     if not is_curve(curve):
         raise exceptions.CurveException(curve)
+
+
+def is_a_curve(curve):
+    """
+    Returns whether given node is curve or has a shape that is a curve
+    :param curve: str
+    :return: bool
+    """
+
+    if maya.cmds.objExists('{}.cv[0]'.format(curve)) and not maya.cmds.objExists('{}.cv[0][0]'.format(curve)):
+        return True
+
+    return False
 
 
 def is_curve(curve):
@@ -85,13 +98,13 @@ def create_from_point_list(point_list, degree=3, prefix=''):
     return crv
 
 
-def transforms_to_curve(transforms, curve_name, spans=None):
+def transforms_to_curve(transforms, spans=None, description='from_transforms'):
     """
     Creates a curve from a list of transforms. Each transform will define a curve CV
     Useful when creating a curve from a joint chain (spines/tails)
     :param transforms: list<str>, list of tranfsorms to generate the curve from. Positions will be used to place CVs
     :param spans: int, number of spans the final curve should have
-    :param curve_name: str, name the new curve should have
+    :param description: str, description to given to the curve
     :return: str name of the new curve
     """
 
@@ -107,7 +120,94 @@ def transforms_to_curve(transforms, curve_name, spans=None):
     curve = maya.cmds.curve(p=transform_positions, degree=1)
     if spans:
         maya.cmds.rebuildCurve(curve, ch=False, rpo=True, rt=0, end=1, kr=False, kcp=False, kep=True, kt=False, spans=spans, degree=3, tol=0.01)
-    curve = maya.cmds.rename(curve, name_utils.find_unique_name(curve_name))
+    curve = maya.cmds.rename(curve, name_utils.find_unique_name('curve_{}'.format(description)))
     maya.cmds.setAttr('{}.inheritsTransform'.format(curve), False)
 
     return curve
+
+
+def get_closest_position_on_curve(curve, value_list):
+    """
+    Returns closes position on a curve from given vector
+    :param curve: str, name of a curve
+    :param value_list: list(float, float, float)
+    :return: list(float, float, float)
+    """
+
+    curve_shapes = shape_utils.get_shapes(curve)
+    curve = curve_shapes[0] if curve_shapes else curve
+    curve = api.NurbsCurveFunction(curve)
+
+    return curve.get_closest_position(value_list)
+
+
+def get_closest_parameter_on_curve(curve, value_list):
+    """
+    Returns the closest parameter value (UV) on the curve given a vector
+    :param curve: str, name of a curve
+    :param value_list: list(int, int, int), vector from which to search for closest parameter
+    :return: float
+    """
+
+    curve_shapes = shape_utils.get_shapes(curve)
+    curve = curve_shapes[0] if curve_shapes else curve
+    curve = api.NurbsCurveFunction(curve)
+    new_point = curve.get_closest_position(value_list)
+
+    return curve.get_parameter_at_position(new_point)
+
+
+def get_parameter_from_curve_length(curve, length_value):
+    """
+    Returns the parameter value (UV) given the length section of a curve
+    :param curve: str, name of a curve
+    :param length_value: float, length along a curve
+    :return: float, parameter value at the length
+    """
+
+    curve_shapes = shape_utils.get_shapes(curve)
+    curve = curve_shapes[0] if curve_shapes else curve
+    curve = api.NurbsCurveFunction(curve)
+
+    return curve.get_parameter_at_length(length_value)
+
+
+def get_curve_length_from_parameter(curve, parameter_value):
+    """
+    Returns a curve length at given parameter UV
+    :param curve: str
+    :param parameter_value:
+    :return:
+    """
+
+    arc_node = maya.cmds.arcLengthDimension('{}.u[{}]'.format(curve, parameter_value))
+    length = maya.cmds.getAttr('{}.arcLength'.format(arc_node))
+    parent = maya.cmds.listRelatives(arc_node, p=True)
+    if parent:
+        maya.cmds.delete(parent[0])
+
+    return length
+
+
+def get_point_from_curve_parameter(curve, parameter):
+    """
+    Returns a position on a curve by giving a parameter value
+    :param curve: str, name of a curve
+    :param parameter: float, parameter value a curve
+    :return: list(float, float, float), vector found at the parameter of the curve
+    """
+
+    return maya.cmds.pointOnCurve(curve, pr=parameter, ch=False)
+
+
+def get_curve_position_from_parameter(curve, parameter):
+    """
+    Returns a position on a curve by giving a parameter value
+    :param curve: str, name of a curve
+    :param parameter: float, parameter value a curve
+    :return: list(float, float, float), vector found at the parameter of the curve
+    """
+
+    position = get_point_from_curve_parameter(curve, parameter)
+
+    return position

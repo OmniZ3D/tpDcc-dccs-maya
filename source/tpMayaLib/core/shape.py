@@ -164,6 +164,18 @@ def get_shapes(node_name, non_intermediates=True, intermediates=True, full_path=
     return shapes
 
 
+def get_shape_node_type(node_name):
+    """
+    Returns the node type of the given node
+    :param shape_node: str, name of a maya node
+    :return: str
+    """
+
+    shapes = get_shapes(node)
+    if shapes:
+        return maya.cmds.nodeType(shapes[0])
+
+
 def get_shapes_of_type(node_name, shape_type=None, no_intermediate=False):
     """
     Returns a list of shapes under a transform parent

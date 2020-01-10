@@ -13,7 +13,7 @@ import uuid
 
 from tpPyUtils import python, name
 import tpMayaLib as maya
-from tpMayaLib.core import exceptions, helpers
+from tpMayaLib.core import exceptions
 
 
 def is_a_shape(node_name):

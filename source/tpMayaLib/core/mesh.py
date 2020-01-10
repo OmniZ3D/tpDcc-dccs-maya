@@ -11,7 +11,7 @@ from collections import defaultdict
 
 import tpMayaLib as maya
 from tpPyUtils import python
-from tpMayaLib.core import helpers, exceptions, node
+from tpMayaLib.core import api, helpers, exceptions, node
 
 
 def check_mesh(mesh):
@@ -23,6 +23,16 @@ def check_mesh(mesh):
 
     if not is_mesh(mesh):
         raise exceptions.MeshException(mesh)
+
+
+def is_a_mesh(mesh):
+    """
+    Checks whether the given node is a mesh or has a shape that is a mesh
+    :param mesh: str
+    :return: bool
+    """
+
+    return maya.cmds.objExists('{}.vtx[0]'.format(mesh))
 
 
 def is_mesh(mesh):
@@ -591,3 +601,45 @@ def edges_to_smooth(edges_list):
             base_list.append([vert1, vert2])
 
     return base_list
+
+
+def get_closest_position_on_mesh(mesh, value_list):
+    """
+    Returns the closest position on a mesh from the given point
+    :param mesh: str,l name of a mesh
+    :param value_list: list(float, float, float), position to search from
+    :return:list(float, float, float(, position on the mesh that's closest
+    """
+
+    mesh_fn = api.MeshFunction(mesh)
+    position = mesh_fn.get_closest_position(value_list)
+
+    return position
+
+
+def get_closest_normal_on_mesh(mesh, value_list):
+    """
+    Returns the closest normal on the surface given vector
+    :param mesh: str, name of the surface
+    :param value_list:
+    :return:
+    """
+
+    mesh_fn = api.MeshFunction(mesh)
+    normal = mesh_fn.get_closest_normal(value_list)
+
+    return normal
+
+
+def get_closest_uv_on_mesh(mesh, value_list):
+    """
+    Returns the closest UV on a mesh given a vector
+    :param mesh: str, name of a mesh wit UVs
+    :param value_list: list(float, float, float), position vector from which to find the closest UV
+    :return: list(int, int), UV that is closest to the given vector
+    """
+
+    mesh = api.MeshFunction(mesh)
+    closest_uv = mesh.get_uv_at_point(value_list)
+
+    return closest_uv

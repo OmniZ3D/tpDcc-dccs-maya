@@ -139,6 +139,16 @@ def check_geometry(geometry):
         raise exceptions.GeometryException(geometry)
 
 
+def is_a_surface(geometry):
+    """
+    Returns whether given nodo is a surface one or not
+    :param geometry: str
+    :return: bopol
+    """
+
+    return maya.cmds.objExists('{}.cv[0][0]'.format(geometry))
+
+
 def is_geometry(geometry):
     """
     Check if the given node is a valid geometry shape node
@@ -611,3 +621,55 @@ def faces_to_vertices(faces):
                 verts.append('{}.vtx[{}]'.format(mesh, sub_vert))
 
     return verts
+
+
+def get_closest_parameter_on_surface(surface, vector):
+    """
+    Returns the closest parameter value on the surface given vector
+    :param surface: str, name of the surface
+    :param vector: list(float, float, float(, position from which to check for closes parameter on surface
+    :return: list(int, int), parameter coordinates (UV) of the closest point on the surface
+    """
+
+    shapes = shape.get_shapes(surface)
+    surface = shapes[0] if shapes else surface
+    surface = api.NurbsSurfaceFunction(surface)
+    uv = surface.get_closest_parameter(vector)
+    uv = list(uv)
+    if uv[0] == 0:
+        uv[0] = 0.001
+
+    if uv[1] == 0:
+        uv[1] = 0.001
+
+    return uv
+
+
+def get_closest_normal_on_surface(surface, vector):
+    """
+    Returns the closest normal on the surface given vector
+    :param surface: str, name of the surface
+    :param vector:
+    :return:
+    """
+
+    shapes = shape.get_shapes(surface)
+    surface = shapes[0] if shapes else surface
+    surface = api.NurbsSurfaceFunction(surface)
+
+    return surface.get_closest_normal(vector)
+
+
+def get_point_from_surface_parameter(surface, u_value, v_value):
+    """
+    Returns surface point in given UV values
+    :param surface: str, name of a surface
+    :param u_value: int, u value
+    :param v_value: int, v value
+    :return: float(list, list, list)
+    """
+
+    surface_fn = api.NurbsSurfaceFunction(surface)
+    position = surface_fn.get_position_from_parameter(u_value, v_value)
+
+    return position
