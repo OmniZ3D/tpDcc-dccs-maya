@@ -30,10 +30,12 @@ except Exception:
     new_api = False
 
 from tpPyUtils import importer
+from tpQtLib.core import resource as resource_utils
 
 # =================================================================================
 
 logger = None
+resource = None
 
 # =================================================================================
 
@@ -59,7 +61,11 @@ OpenMayaUI = OpenMayaUI
 OpenMayaAnim = OpenMayaAnim
 OpenMayaRender = OpenMayaRender
 
+
 # =================================================================================
+
+class tpMayaLibResource(resource_utils.Resource, object):
+    RESOURCES_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
 
 
 class tpMayaLib(importer.Importer, object):
@@ -121,7 +127,9 @@ def init_dcc(do_reload=False):
     use_new_api()
 
     global logger
+    global resource
     logger = tpmayalib_importer.logger
+    resource = tpMayaLibResource
 
     tpmayalib_importer.import_modules()
     tpmayalib_importer.import_packages(only_packages=True)
