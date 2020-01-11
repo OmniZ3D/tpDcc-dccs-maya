@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This module defines class for Max viewport widgets
+This module defines class for Maya viewport widgets
 """
 
 from __future__ import print_function, division, absolute_import
