@@ -641,3 +641,11 @@ def current_model_panel():
         return None
 
     return current_panel
+
+
+def open_render_settings_window():
+    """
+    Opens Maya Render Settings window
+    """
+
+    maya.mel.eval('unifiedRenderGlobalsWindow')
