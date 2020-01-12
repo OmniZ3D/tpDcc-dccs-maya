@@ -738,6 +738,23 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.file(filename, importReference=True)
 
     @staticmethod
+    def attribute_default_value(node, attribute_name):
+        """
+        Returns default value of the attribute in the given node
+        :param node: str
+        :param attribute_name: str
+        :return: object
+        """
+
+        try:
+            return maya.cmds.attributeQuery(attribute_name, node=node, listDefault=True)
+        except Exception:
+            try:
+                return maya.cmds.addAttr('{}.{}'.format(node, attribute_name), query=True, dv=True)
+            except Exception:
+                return None
+
+    @staticmethod
     def list_attributes(node, **kwargs):
         """
         Returns list of attributes of given node
@@ -1810,6 +1827,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return transform.MatchTransform(source_node, target_node).translation_rotation()
+
+    @staticmethod
+    def open_render_settings():
+        """
+        Opens DCC render settings options
+        """
+
+        gui.open_render_settings_window()
 
     # =================================================================================================================
 
