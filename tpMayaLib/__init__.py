@@ -10,6 +10,7 @@ from __future__ import print_function, division, absolute_import
 import os
 import sys
 import inspect
+import logging
 
 try:
     # Do not remove Maya imports
@@ -34,7 +35,6 @@ except Exception:
     new_api = False
 
 from tpPyUtils import importer
-from tpQtLib.core import resource as resource_utils
 
 # =================================================================================
 
@@ -43,33 +43,33 @@ resource = None
 
 # =================================================================================
 
-api = {
-    'OpenMaya': OpenMaya,
-    'OpenMayaUI': OpenMayaUI,
-    'OpenMayaAnim': OpenMayaAnim,
-    'OpenMayaRender': OpenMayaRender
-}
-
-if new_api:
-    api2 = {
-        'OpenMaya': OpenMayaV2,
-        'OpenMayaUI': OpenMayaUIV2,
-        'OpenMayaAnim': OpenMayaAnimV2,
-        'OpenMayaRender': OpenMayaRenderV2
+try:
+    api = {
+        'OpenMaya': OpenMaya,
+        'OpenMayaUI': OpenMayaUI,
+        'OpenMayaAnim': OpenMayaAnim,
+        'OpenMayaRender': OpenMayaRender
     }
-else:
-    api2 = api
 
-OpenMaya = OpenMaya
-OpenMayaUI = OpenMayaUI
-OpenMayaAnim = OpenMayaAnim
-OpenMayaRender = OpenMayaRender
+    if new_api:
+        api2 = {
+            'OpenMaya': OpenMayaV2,
+            'OpenMayaUI': OpenMayaUIV2,
+            'OpenMayaAnim': OpenMayaAnimV2,
+            'OpenMayaRender': OpenMayaRenderV2
+        }
+    else:
+        api2 = api
 
+    OpenMaya = OpenMaya
+    OpenMayaUI = OpenMayaUI
+    OpenMayaAnim = OpenMayaAnim
+    OpenMayaRender = OpenMayaRender
+except Exception:
+    # We use this empty try/except to avoid errors during CI/CD pipeline
+    pass
 
 # =================================================================================
-
-class tpMayaLibResource(resource_utils.Resource, object):
-    RESOURCES_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
 
 
 class tpMayaLib(importer.Importer, object):
@@ -89,8 +89,8 @@ class tpMayaLib(importer.Importer, object):
                 mod_dir = os.path.dirname(__file__)
             except Exception:
                 try:
-                    import tpDccLib
-                    mod_dir = tpDccLib.__path__[0]
+                    import tpMayaLib
+                    mod_dir = tpMayaLib.__path__[0]
                 except Exception:
                     return None
 
@@ -98,7 +98,7 @@ class tpMayaLib(importer.Importer, object):
 
     def externals_path(self):
         """
-        Returns the paths where tpPyUtils externals packages are stored
+        Returns the paths where tpMayaLib externals packages are stored
         :return: str
         """
 
@@ -120,11 +120,39 @@ class tpMayaLib(importer.Importer, object):
                 sys.path.append(p)
 
 
+def create_logger_directory():
+    """
+    Creates artellapipe logger directory
+    """
+
+    tpmayalib_importer = os.path.normpath(os.path.join(os.path.expanduser('~'), 'tpMayaLib', 'logs'))
+    if not os.path.isdir(tpmayalib_importer):
+        os.makedirs(tpmayalib_importer)
+
+
+def get_logging_config():
+    """
+    Returns logging configuration file path
+    :return: str
+    """
+
+    create_logger_directory()
+
+    return os.path.normpath(os.path.join(os.path.dirname(__file__), '__logging__.ini'))
+
+
 def init_dcc(do_reload=False):
     """
     Initializes module
     :param do_reload: bool, Whether to reload modules or not
     """
+
+    from tpQtLib.core import resource as resource_utils
+
+    class tpMayaLibResource(resource_utils.Resource, object):
+        RESOURCES_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
+
+    logging.config.fileConfig(get_logging_config(), disable_existing_loggers=False)
 
     tpmayalib_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
     tpmayalib_importer.update_paths()
