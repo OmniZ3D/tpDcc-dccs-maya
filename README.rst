@@ -14,6 +14,7 @@ Manual
 ~~~~~~~~~~~~~~~~~~~~~~
 1. Clone/Download tpMayaLib anywhere in your PC (If you download the repo, you will need to extract
 the contents of the .zip file).
+
 2. Copy **tpMayaLib** folder located inside **source** folder in a path added to **sys.path**
 
 Automatic

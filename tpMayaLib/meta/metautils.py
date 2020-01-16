@@ -9,9 +9,10 @@ Module that contains functions and classes related with meta system
 import pprint
 import copy
 
+import euclid
+
 import tpMayaLib as maya
 from tpPyUtils import decorators
-from tpPyUtils.externals import euclid
 from tpMayaLib.core import common, attribute as attr_utils, name as name_utils, shape as shape_utils
 
 

@@ -21,6 +21,15 @@ except ImportError:
 import tpMayaLib as maya
 
 
+def get_default_shaders():
+    """
+    Returns a list of default Maya shaders
+    :return: list(str)
+    """
+
+    return ['particleCloud1', 'shaderGlow1', 'defaultColorMgtGlobals', 'lambert1']
+
+
 def get_shading_group(geometry):
     """
     Get shading group assigned to the given geometry

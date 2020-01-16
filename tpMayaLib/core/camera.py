@@ -46,21 +46,22 @@ def is_camera(node):
     return False
 
 
-def get_all_cameras(exclude_standard_cameras=True, return_transforms=True):
+def get_all_cameras(exclude_standard_cameras=True, return_transforms=True, full_path=True):
     """
     Returns all cameras in current scene
     :param exclude_standard_cameras: bool, Whether standard cameras (persp, top, front, and side) cameras should be excluded or not
     :param return_transforms: bool, Whether tor return camera shapes or transform nodes
+    :param full_path: bool, Whether tor return full path to camera nodes or short ones
     :return: list(str)
     """
 
     if exclude_standard_cameras:
-        cameras = [c for c in maya.cmds.ls(type='camera') if not maya.cmds.camera(c, query=True, sc=True)]
+        cameras = [c for c in maya.cmds.ls(type='camera', l=full_path) if not maya.cmds.camera(c, query=True, sc=True)]
     else:
-        cameras = maya.cmds.ls(type='camera') or list()
+        cameras = maya.cmds.ls(type='camera', l=full_path) or list()
 
     if return_transforms:
-        return [maya.cmds.listRelatives(c, p=True)[0] for c in cameras]
+        return [maya.cmds.listRelatives(c, p=True, fullPath=full_path)[0] for c in cameras]
 
     return cameras
 
@@ -164,3 +165,16 @@ def get_distance_to_camera(transform_node, camera_node):
     distance = mathutils.distance_between(cam_pt, node_pt)
 
     return distance
+
+
+def get_available_cameras_film_gates():
+    """
+    Returns a list with all available camera film gates
+    NOTE: The order is VERY important, it must follows the order that appears in Maya
+    :return: list(str)
+    """
+
+    return [
+        'User', '16mm Theatrical', 'Super 16mm', '35mm Academy', '35mm TV Projection', '35mm Full Aperture',
+        '35mm 1.85 Projection', '35mm Anamorphic', '70mm Projection', 'VistaVision'
+    ]

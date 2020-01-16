@@ -291,7 +291,7 @@ def import_abc_cache(cache_path='', cache_name='', namespace='', parent='', mode
     return cache_node
 
 
-def import_gpu_cache(cache_path, cache_name=None, namespace=''):
+def import_gpu_cache(cache_path, cache_name=None, namespace='', unique_namespace=True):
     """
     Import GPU Alembic cache from file
     :param cache_path: str, alembic ache file path
@@ -309,7 +309,7 @@ def import_gpu_cache(cache_path, cache_name=None, namespace=''):
         cache_name = os.path.splitext(cache_base)[0]
 
     if namespace:
-        if maya.cmds.namespace(ex=namespace):
+        if maya.cmds.namespace(ex=namespace) and unique_namespace:
             index = 1
             while maya.cmds.namespace(ex='{}{}'.format(namespace, index)):
                 index += 1
@@ -324,6 +324,7 @@ def import_gpu_cache(cache_path, cache_name=None, namespace=''):
     if namespace:
         if not maya.cmds.namespace(ex=namespace):
             maya.cmds.namespace(add=namespace)
+
         cache_parent = maya.cmds.rename(cache_parent, '{}:{}'.format(namespace, cache_parent))
         cache_node = maya.cmds.listRelatives(cache_parent, s=True, pa=True)[0]
 

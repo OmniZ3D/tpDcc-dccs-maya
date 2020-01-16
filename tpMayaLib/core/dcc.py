@@ -16,8 +16,8 @@ import tpDccLib
 import tpMayaLib as maya
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 # from tpQtLib.core import window
-from tpMayaLib.core import gui, helpers, name, namespace, scene, playblast, transform, attribute
-from tpMayaLib.core import node as maya_node, reference as ref_utils, camera as cam_utils
+from tpMayaLib.core import gui, helpers, name, namespace, scene, playblast, transform, attribute, shape as shape_utils
+from tpMayaLib.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -176,6 +176,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return node
 
     @staticmethod
+    def node_name_without_namespace(node):
+        """
+        Returns the name of the given node without namespace
+        :param node: str
+        :return: str
+        """
+
+        return name.get_basename(node, remove_namespace=True)
+
+    @staticmethod
     def node_handle(node):
         """
         Returns unique identifier of the given node
@@ -208,6 +218,66 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         no_user_attributes = kwargs.pop('no_user_attributes', True)
         no_connections = kwargs.pop('no_connections', True)
         return maya_node.is_empty(node_name=node, no_user_attributes=no_user_attributes, no_connections=no_connections)
+
+    @staticmethod
+    def node_world_space_translation(node):
+        """
+        Returns translation of given node in world space
+        :param node: str
+        :return: list
+        """
+
+        return maya.cmds.xform(node, worldSpace=True, q=True, translation=True)
+
+    @staticmethod
+    def translate_node_in_world_space(node, translation_list):
+        """
+        Translates given node in world space with the given translation vector
+        :param node: str
+        :param translation_list:  list(float, float, float)
+        """
+
+        return maya.cmds.xform(node, worldSpace=True, t=translation_list)
+
+    @staticmethod
+    def node_world_space_rotation(node):
+        """
+        Returns world rotation of given node
+        :param node: str
+        :return: list
+        """
+
+        return maya.cmds.xform(node, worldSpace=True, q=True, rotation=True)
+
+    @staticmethod
+    def rotate_node_in_world_space(node, rotation_list):
+        """
+        Translates given node with the given translation vector
+        :param node: str
+        :param rotation_list:  list(float, float, float)
+        """
+
+        return maya.cmds.xform(node, worldSpace=True, ro=rotation_list)
+
+    @staticmethod
+    def node_world_space_scale(node):
+        """
+        Returns world scale of given node
+        :param node: str
+        :return: list
+        """
+
+        return maya.cmds.xform(node, worldSpace=True, q=True, scale=True)
+
+    @staticmethod
+    def scale_node_in_world_space(node, scale_list):
+        """
+        Scales given node with the given vector list
+        :param node: str
+        :param scale_list: list(float, float, float)
+        """
+
+        return maya.cmds.xform(node, worldSpace=True, s=scale_list)
 
     @staticmethod
     def all_scene_objects(full_path=True):
@@ -340,7 +410,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: str
         """
 
-        return name.get_basename(node)
+        return name.get_basename(node, remove_namespace=False)
 
     @staticmethod
     def node_long_name(node):
@@ -373,6 +443,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.getAttr('{}.overrideEnabled'.format(node))
 
     @staticmethod
+    def list_namespaces():
+        """
+        Returns a list of all available namespaces
+        :return: list(str)
+        """
+
+        return namespace.get_all_namespaces()
+
+    @staticmethod
     def namespace_separator():
         """
         Returns character used to separate namespace from the node name
@@ -402,18 +481,51 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return namespace.find_unique_namespace(name)
 
     @staticmethod
-    def node_namespace(node, check_node=True):
+    def node_namespace(node, check_node=True, clean=False):
         """
         Returns namespace of the given node
         :param node: str
         :param check_node: bool
+        :param clean: bool
         :return: str
         """
 
+        found_namespace = None
         if MayaDcc.node_is_referenced(node):
-            return maya.cmds.referenceQuery(node, namespace=True)
+            try:
+                found_namespace = maya.cmds.referenceQuery(node, namespace=True)
+            except Exception as exc:
+                found_namespace = namespace.get_namespace(node, check_obj=check_node)
         else:
-            return namespace.get_namespace(node, check_obj=check_node)
+            found_namespace = namespace.get_namespace(node, check_obj=check_node)
+        if not found_namespace:
+            return None
+
+        if clean:
+            if found_namespace.startswith('|') or found_namespace.startswith(':'):
+                found_namespace = found_namespace[1:]
+
+        return found_namespace
+
+    @staticmethod
+    def all_nodes_in_namespace(namespace_name):
+        """
+        Returns all nodes in given namespace
+        :return: list(str)
+        """
+
+        return namespace.get_all_in_namespace(namespace_name)
+
+    @staticmethod
+    def rename_namespace(current_namespace, new_namespace):
+        """
+        Renames namespace of the given node
+        :param current_namespace: str
+        :param new_namespace: str
+        :return: str
+        """
+
+        return namespace.rename_namepace(current_namespace, new_namespace)
 
     @staticmethod
     def node_parent_namespace(node):
@@ -446,7 +558,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         if not maya.cmds.objExists(node):
             return False
 
-        return maya.cmds.referenceQuery(node, isNodeReferenced=True)
+        try:
+            return maya.cmds.referenceQuery(node, isNodeReferenced=True)
+        except Exception as exc:
+            return  False
 
     @staticmethod
     def node_reference_path(node, without_copy_number=False):
@@ -677,7 +792,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return:
         """
 
-        return maya.cmds.listRelatives(node, shapes=True, fullPath=full_path, children=True, allDescendents=all_hierarchy, noIntermediate=not intermediate_shapes)
+        return shape_utils.get_shapes_in_hierarchy(
+            transform_node=node, full_path=full_path, intermediate_shapes=intermediate_shapes)
+
+        # return maya.cmds.listRelatives(node, shapes=True, fullPath=full_path, children=True, allDescendents=all_hierarchy, noIntermediate=not intermediate_shapes)
 
     @staticmethod
     def shape_transform(shape_node, full_path=True):
@@ -691,13 +809,36 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.listRelatives(shape_node, parent=True, fullPath=full_path)
 
     @staticmethod
-    def list_materials():
+    def default_shaders():
         """
-        Returns a list of materials in the current scene
-        :return: list<str>
+        Returns a list with all thte default shadres of the current DCC
+        :return: str
         """
 
-        return maya.cmds.ls(materials=True)
+        return shader_utils.get_default_shaders()
+
+    @staticmethod
+    def list_materials(skip_default_materials=False, nodes=None):
+        """
+        Returns a list of materials in the current scene or given nodes
+        :param skip_default_materials: bool, Whether to return also standard materials or not
+        :param nodes: list(str), list of nodes we want to search materials into. If not given, all scene materials
+            will be retrieved
+        :return: list(str)
+        """
+
+        if nodes:
+            all_materials = maya.cmds.ls(nodes, materials=True)
+        else:
+            all_materials = maya.cmds.ls(materials=True)
+
+        if skip_default_materials:
+            default_materials = shader_utils.get_default_shaders()
+            for material in default_materials:
+                if material in all_materials:
+                    all_materials.remove(material)
+
+        return all_materials
 
     @staticmethod
     def scene_namespaces():
@@ -1079,6 +1220,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.listConnections(node, type=connection_type)
 
     @staticmethod
+    def list_node_connections(node):
+        """
+        Returns all connections of the given node
+        :param node: str
+        :return: list(str)
+        """
+
+        return maya.cmds.listConnections(node)
+
+    @staticmethod
     def list_source_destination_connections(node):
         """
         Returns source and destination connections of the given node
@@ -1148,8 +1299,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return:
         """
 
-        if 'namespace' in kwargs:
-            return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True, namespace=kwargs['namespace'])
+        namespace = kwargs.get('namespace', None)
+        if namespace:
+            unique_namespace = kwargs.get('unique_namespace', True)
+            if unique_namespace:
+                return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True, namespace=namespace)
+            else:
+                return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True, mergeNamespacesOnClash=True, namespace=namespace)
+
         else:
             return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True)
 
@@ -1696,7 +1853,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list(str)
         """
 
-        return cam_utils.get_all_cameras(exclude_standard_cameras=True, return_transforms=True)
+        return cam_utils.get_all_cameras(exclude_standard_cameras=True, return_transforms=True, full_path=full_path)
 
     @staticmethod
     def get_current_camera(full_path=True):
@@ -1819,6 +1976,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return transform.MatchTransform(source_node, target_node).rotation()
 
     @staticmethod
+    def match_scale(source_node, target_node):
+        """
+        Match scale of the given node to the rotation of the target node
+        :param source_node: str
+        :param target_node: str
+        """
+
+        return transform.MatchTransform(source_node, target_node).scale()
+
+    @staticmethod
     def match_translation_rotation(source_node, target_node):
         """
         Match translation and rotation of the given node to the translation and rotation of the target node
@@ -1827,6 +1994,19 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return transform.MatchTransform(source_node, target_node).translation_rotation()
+
+    @staticmethod
+    def match_transform(source_node, target_node):
+        """
+        Match the transform (translation, rotation and scale) of the given node to the rotation of the target node
+        :param source_node: str
+        :param target_node: str
+        """
+
+        valid_translate_rotate = transform.MatchTransform(source_node, target_node).translation_rotation()
+        valid_scale = transform.MatchTransform(source_node, target_node).scale()
+
+        return bool(valid_translate_rotate and valid_scale)
 
     @staticmethod
     def open_render_settings():

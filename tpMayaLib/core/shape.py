@@ -516,18 +516,22 @@ def rename_shapes(transform_node):
         i += 1
 
 
-def get_shapes_in_hierarchy(transform_node, shape_type='', return_parent=False, skip_first_relative=False):
+def get_shapes_in_hierarchy(
+        transform_node, shape_type='', return_parent=False, skip_first_relative=False,
+        full_path=True, intermediate_shapes=False):
     """
     Get all the shapes in the child hierarchy excluding intermediates shapes
     :param transform_node: str, name of a transform
     :param shape_type: str, shape types we want to retrieve
     :param return_parent: bool, Whether to return parent node also or not
     :param skip_first_relative: bool
+    :param full_path: str
+    :param intermediate_shapes: bool
     :return: list<str, list of shape nodes
     """
 
     hierarchy = [transform_node]
-    relatives = maya.cmds.listRelatives(transform_node, ad=True, type='transform', f=True)
+    relatives = maya.cmds.listRelatives(transform_node, ad=True, type='transform', f=full_path)
     if relatives:
         hierarchy.extend(relatives)
     if skip_first_relative:
@@ -536,13 +540,14 @@ def get_shapes_in_hierarchy(transform_node, shape_type='', return_parent=False, 
     shapes = list()
 
     for child in hierarchy:
-        found_shapes = get_shapes(node=child, shape_type=shape_type)
+        found_shapes = get_shapes_of_type(node_name=child, shape_type=shape_type)
         sifted_shapes = list()
         if not found_shapes:
             continue
         for found_shape in found_shapes:
-            if maya.cmds.getAttr('{}.intermediateObject'.format(found_shape)):
-                continue
+            if not intermediate_shapes:
+                if maya.cmds.getAttr('{}.intermediateObject'.format(found_shape)):
+                    continue
             if return_parent:
                 found_shape = child
             sifted_shapes.append(found_shape)
