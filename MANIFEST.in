@@ -1,0 +1,4 @@
+include tpMayaLib/resources/*.*
+include tpMayaLib/resources/icons/*.*
+include tpMayaLib/resources/icons/default/*.*
+include tpMayaLib/resources/icons/color/*.*
