@@ -9,12 +9,15 @@ from __future__ import print_function, division, absolute_import
 
 
 import os
+import logging
 import tempfile
 
 from Qt.QtWidgets import *
 
 import tpMayaLib as maya
 from tpMayaLib.core import gui
+
+LOGGER = logging.getLogger()
 
 
 class MayaViewport(QWidget):
@@ -97,14 +100,14 @@ class MayaViewport(QWidget):
             else:
                 f = maya.cmds.playblast(fp=0, frame=maya.cmds.currentTime(query=True), format='image', compression='png', forceOverwrite=True, viewer=False)
         except Exception as e:
-            maya.logger.error(str(e))
+            LOGGER.error(str(e))
             return None
 
         f = os.path.abspath(f.replace('####', '0'))
         try:
             os.rename(f, filename + '.png')
         except Exception as e:
-            maya.logger.error(str(e))
+            LOGGER.error(str(e))
             return None
 
         return os.path.abspath(filename)

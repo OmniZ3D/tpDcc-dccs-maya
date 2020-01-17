@@ -7,11 +7,14 @@ Module that contains functions and classes related with playblasts
 
 import os
 import glob
+import logging
 
 from tpPyUtils import osplatform
 
 import tpMayaLib as maya
 from tpMayaLib.core import gui
+
+LOGGER = logging.getLogger()
 
 
 class PlayblastRenderers(object):
@@ -63,7 +66,7 @@ def fix_playblast_output_path(file_path):
     """
 
     if file_path is None:
-        maya.logger.warning('Playblast did not result in output path. Maybe it was interrupted!')
+        LOGGER.warning('Playblast did not result in output path. Maybe it was interrupted!')
         return
 
     if not os.path.exists(file_path):
@@ -102,7 +105,7 @@ def playblast(filename, model_panel, start_frame, end_frame, width, height, step
     if osplatform.is_linux():
         off_screen = True
 
-    maya.logger.info('Playblasting "{}"'.format(filename))
+    LOGGER.info('Playblasting "{}"'.format(filename))
     if start_frame == end_frame and os.path.exists(filename):
         os.remove(filename)
 
@@ -130,10 +133,10 @@ def playblast(filename, model_panel, start_frame, end_frame, width, height, step
     source = path.replace('####', str(int(0)).rjust(4, '0'))
     if start_frame == end_frame:
         target = source.replace('.0000.', '.')
-        maya.logger.debug('Renaming "{}" > "{}"'.format(source, target))
+        LOGGER.debug('Renaming "{}" > "{}"'.format(source, target))
         os.rename(source, target)
         source = target
 
-    maya.logger.info('Playblasted "{}"'.format(source))
+    LOGGER.info('Playblasted "{}"'.format(source))
 
     return source

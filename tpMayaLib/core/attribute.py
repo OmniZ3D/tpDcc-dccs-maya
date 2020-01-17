@@ -13,6 +13,7 @@ import sys
 import copy
 import random
 import string
+import logging
 import traceback
 
 import tpDccLib as tp
@@ -21,6 +22,8 @@ from tpQtLib.core import color as color_utils
 
 import tpMayaLib as maya
 from tpMayaLib.core import exceptions, mathutils, node as node_utils, shape as shape_utils
+
+LOGGER = logging.getLogger()
 
 
 class AttributeTypes(object):
@@ -199,7 +202,7 @@ class AttributeValidator(object):
         :return: variant, arg || None
         """
 
-        maya.logger.debug('Attribute Validator | bool | arg = {}'.format(arg))
+        LOGGER.debug('Attribute Validator | bool | arg = {}'.format(arg))
 
         fn_name = 'bool_arg'
 
@@ -227,7 +230,7 @@ class AttributeValidator(object):
         :return: variant, arg || None
         """
 
-        maya.logger.debug('Attribute Validator | string | arg = {}'.format(arg))
+        LOGGER.debug('Attribute Validator | string | arg = {}'.format(arg))
 
         fn_name = 'string_arg'
 
@@ -264,7 +267,7 @@ class AttributeValidator(object):
         :return: list
         """
 
-        maya.logger.debug('Attribute Validator | list | arg = {}'.format(arg))
+        LOGGER.debug('Attribute Validator | list | arg = {}'.format(arg))
 
         result = isinstance(arg, (tuple, list))
         if not result:
@@ -296,7 +299,7 @@ class AttributeValidator(object):
         :return: list
         """
 
-        maya.logger.debug('Attribute Validator | string list | arg = {} none_valid={}'.format(arg, none_valid))
+        LOGGER.debug('Attribute Validator | string list | arg = {} none_valid={}'.format(arg, none_valid))
 
         fn_name = 'string_list_arg'
         if called_from:
@@ -318,7 +321,7 @@ class AttributeValidator(object):
             if isinstance(tmp, basestring):
                 result.append(tmp)
             else:
-                maya.logger.warning(
+                LOGGER.warning(
                     'Attr {0} from function "{}" is type {1} not str'.format(a, fn_name, type(a).__name__))
 
         return result
@@ -396,14 +399,14 @@ class AttributeValidator(object):
             if shapes_len == 1:
                 return maya.cmds.objectType(shapes_list[0])
             elif shapes_len > 1:
-                maya.logger.debug('|{}| >> node: {} has multiple shapes. Returning type for {}. Remaining shapes: {}'.format(fn_name,node,shapes_list[0],shapes_list[1:]))
+                LOGGER.debug('|{}| >> node: {} has multiple shapes. Returning type for {}. Remaining shapes: {}'.format(fn_name,node,shapes_list[0],shapes_list[1:]))
                 shape_type = False
                 for s in shapes_list:
                     s_type = maya.cmds.objectType(s)
                     if not shape_type:
                         shape_type = s_type
                     elif shape_type != s_type:
-                        maya.logger.warning('|{}| >> node: {} has multiple shapes and all do not match. {} != {}'.format(fn_name, node,shape_type,s_type))
+                        LOGGER.warning('|{}| >> node: {} has multiple shapes and all do not match. {} != {}'.format(fn_name, node,shape_type,s_type))
                         return 'transform'
                 return maya.cmds.objectType(shapes_list[0])
             else:
@@ -414,7 +417,7 @@ class AttributeValidator(object):
         fn_name = 'get_maya_type'
         node = AttributeValidator.string_arg(node, False, fn_name)
 
-        maya.logger.debug('|{}| >> node: {}'.format(fn_name, node))
+        LOGGER.debug('|{}| >> node: {}'.format(fn_name, node))
         try:
             initial_check = maya.cmds.objectType(node)
         except Exception:
@@ -425,11 +428,11 @@ class AttributeValidator(object):
         if initial_check == 'transform':
             return simple_transform_shape_check(node)
         elif AttributeValidator.is_component(node):
-            maya.logger.debug('|{}| >> component mode...'.format(fn_name))
+            LOGGER.debug('|{}| >> component mode...'.format(fn_name))
             split = node.split('[')[0].split('.')
             root = split[0]
             comp_type = split[1]
-            maya.logger.debug('|{}| >> split: {} | root: {} | comp: {}'.format(fn_name, split, root, comp_type))
+            LOGGER.debug('|{}| >> split: {} | root: {} | comp: {}'.format(fn_name, split, root, comp_type))
             if 'vtx' == comp_type:
                 return 'polyVertex'
             if 'cv' == comp_type:
@@ -439,7 +442,7 @@ class AttributeValidator(object):
                 elif root == 'nurbsSurface':
                     return 'surfaceCV'
                 else:
-                    maya.logger.debug('|{}| >> Unknown CV root: {}'.format(fn_name, root))
+                    LOGGER.debug('|{}| >> Unknown CV root: {}'.format(fn_name, root))
                     return root
 
             if 'e' == comp_type:
@@ -479,7 +482,7 @@ class AttributeValidator(object):
         fn_name = 'is_transform'
 
         node = AttributeValidator.string_arg(arg=node)
-        maya.logger.debug('|{}| >> node: "{}"'.format(fn_name, node))
+        LOGGER.debug('|{}| >> node: "{}"'.format(fn_name, node))
 
         result = transform_utils.is_transform(node)
         if not result:
@@ -491,7 +494,7 @@ class AttributeValidator(object):
             return True
 
         if not maya.cmds.objExists(node):
-            maya.logger.error('|{}| >> node "{}" does not exists!'.format(fn_name, node))
+            LOGGER.error('|{}| >> node "{}" does not exists!'.format(fn_name, node))
 
     @staticmethod
     def is_shape(node=None):
@@ -502,7 +505,7 @@ class AttributeValidator(object):
         """
 
         node = AttributeValidator.string_arg(arg=node)
-        maya.logger.debug('|is_shape| >> node: "{}"'.format(node))
+        LOGGER.debug('|is_shape| >> node: "{}"'.format(node))
 
         result = shape_utils.is_shape(obj=node)
         if not result:
@@ -526,7 +529,7 @@ class AttributeValidator(object):
 
         fn_name = 'is_component'
         arg = AttributeValidator.string_arg(arg, False, fn_name)
-        maya.logger.debug('|{}| >> arg: {}'.format(fn_name, arg))
+        LOGGER.debug('|{}| >> arg: {}'.format(fn_name, arg))
 
         if maya.cmds.objExists(arg):
             if '.' in arg and '[' in arg and ']' in arg:
@@ -544,13 +547,13 @@ class AttributeValidator(object):
 
         fn_name = 'get_component'
         if AttributeValidator.is_component(arg):
-            maya.logger.debug('|{}| >> component mode ...'.format(fn_name))
+            LOGGER.debug('|{}| >> component mode ...'.format(fn_name))
             split = arg.split('[')
             split_join = '['+'['.join(split[1:])
             root_split = split[0].split('.')
             root = root_split[0]
             comp_type = root_split[1]
-            maya.logger.debug('|{}| >> split: {} | root: {} | comp: {}'.format(fn_name, split, root, comp_type))
+            LOGGER.debug('|{}| >> split: {} | root: {} | comp: {}'.format(fn_name, split, root, comp_type))
             return ['{}{}'.format(comp_type, split_join), root, comp_type, AttributeValidator.get_maya_type(arg)]
 
         return False
@@ -575,7 +578,7 @@ class AttributeValidator(object):
             TypeError | if isTransform is True, 'arg' is not a transform, and noneValid is False
         """
 
-        maya.logger.debug('MetaAttributeValidator.obj_string arg={}'.format(arg))
+        LOGGER.debug('MetaAttributeValidator.obj_string arg={}'.format(arg))
         fn_name = 'obj_string_list'
         if called_from:
             fn_name = '{}.{}({})'.format(called_from, fn_name, arg)
@@ -645,7 +648,7 @@ class AttributeValidator(object):
         :return: list
         """
 
-        maya.logger.debug('MetaAttributeValidator.obj_string_list arg={}'.format(args_list))
+        LOGGER.debug('MetaAttributeValidator.obj_string_list arg={}'.format(args_list))
         fn_name = 'obj_string_list'
         if called_from:
             fn_name = '{}.{}({})'.format(called_from, fn_name, args_list)
@@ -673,7 +676,7 @@ class AttributeValidator(object):
                 result.append(tmp)
             else:
                 arg_maya_type_str = AttributeValidator.get_maya_type(arg)
-                maya.logger.warning(
+                LOGGER.warning(
                     'Arg {} from func {} is Maya type "{}", nos str'.format(arg, fn_name, arg_maya_type_str))
 
         return result
@@ -709,14 +712,14 @@ class AttributeValidator(object):
                 if maya_type in types:
                     result.append(s)
                 else:
-                    maya.logger.warning('Attribute Validator | Maya Shape | invalid type: {0} | {1} | shape: {2}'.format(maya_type,types, s))
+                    LOGGER.warning('Attribute Validator | Maya Shape | invalid type: {0} | {1} | shape: {2}'.format(maya_type,types, s))
 
         if not result:
             return False
 
         if single_return:
             if len(result) > 1:
-                maya.logger.warning('Attribute Validator | Maya Shape | >> Too many shapes ({0}). Using first: {1}'.format(len(result), result))
+                LOGGER.warning('Attribute Validator | Maya Shape | >> Too many shapes ({0}). Using first: {1}'.format(len(result), result))
             return result[0]
 
         return result
@@ -834,12 +837,12 @@ class AttributeValidator(object):
         if file_path:
             if file_mode == 1:
                 if os.path.exists(file_path):
-                    maya.logger.debug('{} mode | file path validated ... {}'.format(open_modes.get(file_mode), file_path))
+                    LOGGER.debug('{} mode | file path validated ... {}'.format(open_modes.get(file_mode), file_path))
                     result = file_path
                 else:
-                    maya.logger.debug('Invalid file path ... {}'.format(file_path))
+                    LOGGER.debug('Invalid file path ... {}'.format(file_path))
             elif file_mode == 0:
-                maya.logger.debug('{} mode | file path invalidated ... {}'.format(open_modes.get(file_mode), file_path))
+                LOGGER.debug('{} mode | file path invalidated ... {}'.format(open_modes.get(file_mode), file_path))
                 result = file_path
 
         return result
@@ -1260,7 +1263,7 @@ class Attribute(object):
             if maya.cmds.objExists(var_name):
                 maya.cmds.renameAttr(var_name, name)
         except Exception as e:
-            maya.logger.error('Error while renaming attribute "{}" to "{}" - {}'.format(var_name, name, str(e)))
+            LOGGER.error('Error while renaming attribute "{}" to "{}" - {}'.format(var_name, name, str(e)))
             return
 
         self.name = name
@@ -1471,7 +1474,7 @@ class Attribute(object):
         Internal function that is used to create attributes with the stored variables
         """
 
-        maya.logger.debug('creating with value: {}'.format(self.value))
+        LOGGER.debug('creating with value: {}'.format(self.value))
 
         add_attribute(
             node=self.node,
@@ -2214,7 +2217,7 @@ def validate_attribute_data_type(value):
     valid_types = ['string', 'unicode', 'bool', 'int', 'float', 'complex', 'complex', 'complex']
     for py_type, valid_type in zip(python_types, valid_types):
         if issubclass(type(value), py_type):
-            maya.logger.debug('Value {0} is a "{1}" attribute'.format(py_type, valid_type))
+            LOGGER.debug('Value {0} is a "{1}" attribute'.format(py_type, valid_type))
             return valid_type
 
 
@@ -2343,7 +2346,7 @@ def get_attr_mplug(attr):
         attr_elem = re.findall(r'\w+', attr_elem_list[i])
         for n in range(attr_mplug.numChildren()):
             child_plug = attr_mplug.child(n)
-            maya.logger.debug('Looking for "{}", found "{}"'.format(attr_elem[0], child_plug.partialName()))
+            LOGGER.debug('Looking for "{}", found "{}"'.format(attr_elem[0], child_plug.partialName()))
 
     return attr_mplug
 
@@ -2365,7 +2368,7 @@ def get_attribute(obj, attr, *args, **kwargs):
             return False
         else:
             if '[' in attr:
-                maya.logger.debug('Getting indexed attribute')
+                LOGGER.debug('Getting indexed attribute')
                 return maya.cmds.listConnections(combined)
 
             attr_type = maya.cmds.getAttr(combined, type=True)
@@ -2495,7 +2498,7 @@ def add_attribute(node, attr, value=None, attr_type=None, hidden=False, **kwargs
     :return:  bool, True if the attribute was added successfully; False otherwise
     """
 
-    maya.logger.debug('|Adding Attribute| >> node: {0} | attr: {1} | attrType: {2}'.format(node, attr, attr_type))
+    LOGGER.debug('|Adding Attribute| >> node: {0} | attr: {1} | attrType: {2}'.format(node, attr, attr_type))
 
     added = False
 
@@ -2513,22 +2516,22 @@ def add_attribute(node, attr, value=None, attr_type=None, hidden=False, **kwargs
 
     # ===================================================================  IF ATTR EXISTS, EDIT ATTR
     if has_attribute(node=node, attr=attr):
-        maya.logger.debug('"{0}" : Attr already exists on the node'.format(attr))
+        LOGGER.debug('"{0}" : Attr already exists on the node'.format(attr))
         try:
             if kwargs:
                 if add_kwargs_to_edit:
                     maya.cmds.addAttr('{0}.{1}'.format(node, attr), edit=True, **add_kwargs_to_edit)
-                    maya.logger.debug('addAttr Edit flags run : {0} = {1}'.format(attr, add_kwargs_to_edit))
+                    LOGGER.debug('addAttr Edit flags run : {0} = {1}'.format(attr, add_kwargs_to_edit))
                 if set_kwargs_to_edit:
                     try:
                         if not node_utils.is_referenced(node):
                             maya.cmds.setAttr('{0}.{1}'.format(node, attr), **set_kwargs_to_edit)
-                            maya.logger.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
+                            LOGGER.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
                     except Exception:
-                        maya.logger.debug('node is referenced and the setEditFlags are therefore invalid (lock, keyable, channelBox)')
+                        LOGGER.debug('node is referenced and the setEditFlags are therefore invalid (lock, keyable, channelBox)')
         except Exception:
             if node_utils.is_referenced(node_name=node):
-                maya.logger.debug('{0} : Trying to modify an attr on a reference node'.format(attr))
+                LOGGER.debug('{0} : Trying to modify an attr on a reference node'.format(attr))
 
         if value:
             if not attr_type:
@@ -2553,7 +2556,7 @@ def add_attribute(node, attr, value=None, attr_type=None, hidden=False, **kwargs
                 add_kwargs_to_edit.pop('dv')
             attr_mapping[attr_type].update(add_kwargs_to_edit)
 
-            maya.logger.debug('addAttr : {0} : value_type : {1} > data_type keywords: {2}'.format(attr, attr_type, attr_mapping[str(attr_type)]))
+            LOGGER.debug('addAttr : {0} : value_type : {1} > data_type keywords: {2}'.format(attr, attr_type, attr_mapping[str(attr_type)]))
 
             maya.cmds.addAttr(node, longName=attr, **attr_mapping[str(attr_type)])
 
@@ -2581,11 +2584,11 @@ def add_attribute(node, attr, value=None, attr_type=None, hidden=False, **kwargs
             # Allow add_attribute to set any secondary kwargs via the setAttr call
             if set_kwargs_to_edit:
                 maya.cmds.setAttr('{0}.{1}'.format(node, attr), **set_kwargs_to_edit)
-                maya.logger.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
+                LOGGER.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
 
             added = True
         except StandardError:
-            maya.logger.error(traceback.format_exc())
+            LOGGER.error(traceback.format_exc())
 
     return added
 
@@ -2853,7 +2856,7 @@ def delete_user_attrs(obj, attrs_list=None, keep_if_connected=False):
                 maya.cmds.setAttr('{}.{}'.format(obj, attr), l=False)
                 maya.cmds.deleteAttr(obj, at=attr)
             except Exception:
-                maya.logger.warning('Problem removing attribute "{}.{}". Skipping to he next attribute ...'.format(obj, attr))
+                LOGGER.warning('Problem removing attribute "{}.{}". Skipping to he next attribute ...'.format(obj, attr))
 
     return attr_list
 
@@ -2903,16 +2906,16 @@ def break_connection(obj, attr=None):
             source_connections = source_connections[0]
 
         if not source_connections:
-            return maya.logger.warning('No source for "{0}.{1} found!'.format(obj, attr))
+            return LOGGER.warning('No source for "{0}.{1} found!'.format(obj, attr))
 
         try:
-            maya.logger.debug('Source Connections: {}'.format(source_connections))
+            LOGGER.debug('Source Connections: {}'.format(source_connections))
             driven_attr = '{0}.{1}'.format(obj, attr)
             if family and family.get('parent'):
-                maya.logger.debug('Family: {}'.format(family))
+                LOGGER.debug('Family: {}'.format(family))
                 driven_attr = '{0}.{1}'.format(obj, family.get('parent'))
 
-            maya.logger.debug('Breaking {0} to {1}'.format(source_connections, driven_attr))
+            LOGGER.debug('Breaking {0} to {1}'.format(source_connections, driven_attr))
 
             driven_lock = False
             if maya.cmds.getAttr(driven_attr, lock=True):
@@ -3053,7 +3056,7 @@ def connect_visibility(attr_name, target_node, default_value=True):
 
     for n in nodes:
         if is_connected('{}.visibility'.format(n)):
-            maya.logger.warning('"{}" and "{}".visibility are already connected!'.format(attr_name, n))
+            LOGGER.warning('"{}" and "{}".visibility are already connected!'.format(attr_name, n))
         else:
             maya.cmds.connectAttr(attr_name, '{}.visibility'.format(n))
 
@@ -3069,7 +3072,7 @@ def return_message_object(storage_object, message_attr):
     combined = '{0}.{1}'.format(storage_object, message_attr)
     if maya.cmds.objExists(combined):
         if maya.cmds.addAttr(combined, query=True, m=True):
-            maya.logger.warning('"{} is a multi message attribute. Use return_message_data instead'.format(combined))
+            LOGGER.warning('"{} is a multi message attribute. Use return_message_data instead'.format(combined))
             return False
 
         message_obj = maya.cmds.listConnections(combined)
@@ -3119,7 +3122,7 @@ def store_object_name_to_message(obj, storage_obj):
 
     combined = '{0}.{1}'.format(storage_obj, obj)
     if maya.cmds.objExists(combined):
-        maya.logger.debug(combined + ' already exists')
+        LOGGER.debug(combined + ' already exists')
     else:
         maya.cmds.addAttr(storage_obj, ln=obj, at='message')
         maya.cmds.connectAttr(obj + '.message', storage_obj + '.' + obj)
@@ -3153,13 +3156,13 @@ def store_object_to_message(obj, storage_obj, message_name):
     combined = storage_obj + '.' + message_name
     obj_long = maya.cmds.ls(obj, long=True)
     if len(obj_long) > 1:
-        maya.logger.warning('Cannot find long name for object, found "{}"'.format(obj_long))
+        LOGGER.warning('Cannot find long name for object, found "{}"'.format(obj_long))
         return False
     obj_long = obj_long[0]
 
     storage_long = maya.cmds.ls(storage_obj, long=True)
     if len(storage_long) > 1:
-        maya.logger.warning('Cannot find long name for storage, found "{}"'.format(obj_long))
+        LOGGER.warning('Cannot find long name for storage, found "{}"'.format(obj_long))
         return False
     storage_long = storage_long[0]
 
@@ -3167,19 +3170,19 @@ def store_object_to_message(obj, storage_obj, message_name):
         if maya.cmds.objExists(combined):
             if maya.cmds.attributeQuery(message_name, node=storage_obj, msg=True) and not maya.cmds.addAttr(combined, query=True, m=True):
                 if return_message_object(storage_object=storage_obj, message_attr=message_name) != obj:
-                    maya.logger.debug('{} already exists. Adding it to existing message node'.format(combined))
+                    LOGGER.debug('{} already exists. Adding it to existing message node'.format(combined))
                     break_connection(combined)
                     connect_attribute('{}.message'.format(obj), '{0}.{1}'.format(storage_obj, message_name))
                     return True
                 else:
-                    maya.logger.debug('"{0}" already stored to "{1}.{2}"'.format(obj, storage_obj, message_name))
+                    LOGGER.debug('"{0}" already stored to "{1}.{2}"'.format(obj, storage_obj, message_name))
             else:
                 connections = return_driven_attribute(combined)
                 if connections:
                     for cnt in connections:
                         break_connection(cnt)
 
-                maya.logger.debug('"{}" already exists. Not a message attribute, converting it!'.format(combined))
+                LOGGER.debug('"{}" already exists. Not a message attribute, converting it!'.format(combined))
                 delete_attribute(storage_obj, message_name)
 
                 buffer = maya.cmds.addAttr(storage_obj, ln=message_name, at='message')
@@ -3192,7 +3195,7 @@ def store_object_to_message(obj, storage_obj, message_name):
 
             return True
     except StandardError as e:
-        maya.logger.warning(e)
+        LOGGER.warning(e)
         return False
 
 
@@ -3216,7 +3219,7 @@ def store_objects_to_message(objects, storage_obj, message_name):
 
     try:
         if maya.cmds.objExists(combined):
-            maya.logger.debug(combined + ' already exists. Adding to existing message node')
+            LOGGER.debug(combined + ' already exists. Adding to existing message node')
             delete_attribute(storage_obj, message_name)
             maya.cmds.addAttr(storage_obj, ln=message_name, at='message', m=True, im=False)
             for obj in objects:
@@ -3230,7 +3233,7 @@ def store_objects_to_message(objects, storage_obj, message_name):
             maya.cmds.setAttr(combined, lock=True)
             return True
     except Exception:
-        maya.logger.error('Storing "{0}" to "{1}.{2}" failed!'.format(objects, storage_obj, message_name))
+        LOGGER.error('Storing "{0}" to "{1}.{2}" failed!'.format(objects, storage_obj, message_name))
         return False
 
 
@@ -3270,23 +3273,23 @@ def repair_message_to_reference_target(obj, attr):
     assert maya.cmds.objectType(obj_test[0]) == 'reference', '"{}" is not returning a reference!'.format(target_attr)
 
     ref = obj_test[0].split('RN.')[0]
-    maya.logger.info('Reference connection found, attempting to fix ...')
+    LOGGER.info('Reference connection found, attempting to fix ...')
 
     message_connections_out = maya.cmds.listConnections('{}.message'.format(obj), p=1)
     if message_connections_out and ref:
         for plug in message_connections_out:
             if ref in plug:
-                maya.logger.info('Checking "{}"'.format(plug))
+                LOGGER.info('Checking "{}"'.format(plug))
                 match_obj = plug.split('.')[0]
                 connect_attribute('{}.message'.format(match_obj, target_attr))
-                maya.logger.info('"{0}" restored to "{1}"'.format(target_attr, match_obj))
+                LOGGER.info('"{0}" restored to "{1}"'.format(target_attr, match_obj))
 
                 if len(message_connections_out) > 1:
-                    maya.logger.warning("Found more than one possible connection. Candidates are:'%s'"%"','".join(message_connections_out))
+                    LOGGER.warning("Found more than one possible connection. Candidates are:'%s'"%"','".join(message_connections_out))
                     return False
                 return match_obj
 
-    maya.logger.warning('No message connections and reference found')
+    LOGGER.warning('No message connections and reference found')
     return False
 
 
@@ -3299,7 +3302,7 @@ def connect_message(input_node, target_node, attr):
     """
 
     if not input_node or not maya.cmds.objExists(input_node):
-        maya.logger.warning('No input node to connect message')
+        LOGGER.warning('No input node to connect message')
         return
 
     current_index = name_utils.get_last_number(attr)
@@ -3605,7 +3608,7 @@ def create_title(node, name, name_list=None):
     """
 
     if not maya.cmds.objExists(node):
-        maya.logger.warning('{} does not exists to create title on'.format(node))
+        LOGGER.warning('{} does not exists to create title on'.format(node))
 
     title = EnumAttribute(name)
     if name_list:
@@ -3669,7 +3672,7 @@ def hide_attributes(node, attributes):
     for attr in attrs:
         current_attr = '{}.{}'.format(node, attr)
         if not maya.cmds.objExists(current_attr):
-            maya.logger.warning('Impossible to lock attribute {} because it does not exists!'.format(current_attr))
+            LOGGER.warning('Impossible to lock attribute {} because it does not exists!'.format(current_attr))
             return
 
         if maya.cmds.getAttr(current_attr, type=True) == 'double3':
@@ -3817,11 +3820,11 @@ def set_color(nodes, color, color_transform=False, short_range=False):
             color = color_utils.Color.fromRgb(*color)
     else:
         if color < 0 or color > 31:
-            maya.logger.warning('Maximum color index is 31. Using 31 value instead of {}!'.format(color))
+            LOGGER.warning('Maximum color index is 31. Using 31 value instead of {}!'.format(color))
             color = 31
 
     if use_rgb_color and maya_version < 2015:
-        maya.logger.warning('Current Maya version "{}" does not support RGB colors'.format(maya_version))
+        LOGGER.warning('Current Maya version "{}" does not support RGB colors'.format(maya_version))
         return
 
     if color_transform:

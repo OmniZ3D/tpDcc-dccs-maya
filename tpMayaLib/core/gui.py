@@ -7,6 +7,7 @@ Module that contains functions and classes related to Maya UI
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 import functools
 import traceback
 import contextlib
@@ -20,6 +21,8 @@ except ImportError:
 
 import tpMayaLib as maya
 from tpQtLib.core import qtutils
+
+LOGGER = logging.getLogger()
 
 # ===================================================================================
 
@@ -497,8 +500,8 @@ def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right'
         dock.create()
         window.show()
     except Exception:
-        maya.logger.warning('{} window failed to load. Maya may need to finish loading'.format(ui_name))
-        maya.logger.error(traceback.format_exc())
+        LOGGER.warning('{} window failed to load. Maya may need to finish loading'.format(ui_name))
+        LOGGER.error(traceback.format_exc())
 
 
 def get_progress_bar():

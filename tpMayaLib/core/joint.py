@@ -7,9 +7,13 @@ Module that contains functions and classes related with joints
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 import tpMayaLib as maya
 from tpPyUtils import strings, python
 from tpMayaLib.core import exceptions, decorators, mathutils, scene, attribute, transform, node, transform as xform_utils, constraint as cns_utils
+
+LOGGER = logging.getLogger()
 
 
 class BuildJointHierarchy(object):
@@ -225,7 +229,7 @@ class OrientJointAttributes(object):
         if not objects_to_orient:
             objects_to_orient = scene.get_top_dag_nodes()
 
-        maya.logger.debug('Orienting {}'.format(objects_to_orient))
+        LOGGER.debug('Orienting {}'.format(objects_to_orient))
 
         oriented = False
         for obj in objects_to_orient:
@@ -456,7 +460,7 @@ class OrientJoint(object):
 
         if maya.cmds.objExists('{}.active'.format(self.joint)):
             if not maya.cmds.getAttr('{}.active'.format(self.joint)):
-                maya.logger.warning('{} has orientation attributes but is not acitve. Skipping ...'.format(self.joint))
+                LOGGER.warning('{} has orientation attributes but is not acitve. Skipping ...'.format(self.joint))
                 return
 
         self._freeze()
@@ -467,7 +471,7 @@ class OrientJoint(object):
             for axis in 'xyz':
                 maya.cmds.setAttr('{}.rotateAxis{}'.format(self.joint, axis.upper()), 0)
         except Exception:
-            maya.logger.warning('Could not zero our rotateAxis on {}. This can cause rig errors!'.format(self.joint))
+            LOGGER.warning('Could not zero our rotateAxis on {}. This can cause rig errors!'.format(self.joint))
 
         self.orient_values = self._get_values()
 
@@ -494,7 +498,7 @@ class OrientJoint(object):
         """
 
         if not maya.cmds.objExists('{}.ORIENT_INFO'.format(self.joint)):
-            maya.logger.warning(
+            LOGGER.warning(
                 'Impossible to get orient attributes from {} because they do not exists!'.format(self.joint))
             return
 
@@ -587,7 +591,7 @@ class OrientJoint(object):
             mid = self._get_triangle_group(self.orient_values['triangleMid'])
             btm = self._get_triangle_group(self.orient_values['triangleBottom'])
             if not top or not mid or not btm:
-                maya.logger.warning('Could not orient {} fully with current triangle plane settings'.format(self.joint))
+                LOGGER.warning('Could not orient {} fully with current triangle plane settings'.format(self.joint))
                 return
 
             plane_grp = xform_utils.create_group_in_plane(top, mid, btm)
@@ -603,7 +607,7 @@ class OrientJoint(object):
             if self.child2 and maya.cmds.objExists(self.child2):
                 child_grp = self._get_position_group(self.child2)
             if not self.child2 or not maya.cmds.objExists(self.child2):
-                maya.logger.warning(
+                LOGGER.warning(
                     'Child2 specified as up in orient attribute but {} has no 2nd child'.format(self.joint))
 
             return child_grp
@@ -968,7 +972,7 @@ def joint_buffer(joint, index_str=0):
         if result == 'Create':
             index_str = maya.cmds.promptDialog(q=True, text=True)
         else:
-            maya.logger.warning('User canceled joint group creation ...')
+            LOGGER.warning('User canceled joint group creation ...')
             return
 
         # Get joint prefix and create joint buffer group

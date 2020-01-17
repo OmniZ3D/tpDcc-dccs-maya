@@ -9,11 +9,13 @@ from __future__ import print_function, division, absolute_import
 
 import re
 import uuid
-
+import logging
 
 from tpPyUtils import python, name
 import tpMayaLib as maya
 from tpMayaLib.core import exceptions
+
+LOGGER = logging.getLogger()
 
 
 def is_a_shape(node_name):
@@ -278,7 +280,7 @@ def is_visible(node, check_lod_vis=True, check_draw_override=True):
         if not part:
             continue
         if not maya.cmds.objExists(part):
-            maya.logger.debug('Unable to find ancestor node {}!'.format(part))
+            LOGGER.debug('Unable to find ancestor node {}!'.format(part))
             continue
 
         if not maya.cmds.getAttr(part + '.visibility'):
@@ -743,7 +745,7 @@ def create_attribute(mobj, name, data_type=None, short_name=None, default=None):
         data_type = get_attribute_data_type(default)
         if data_type == maya.OpenMaya.MFnData.kInvalid:
             data_type = None
-            maya.logger.debug('Unable to determien the attribute type => {}'.format(str(default)))
+            LOGGER.debug('Unable to determien the attribute type => {}'.format(str(default)))
         if data_type is None:
             data_type = maya.OpenMaya.MFnData.kAny
 

@@ -7,6 +7,8 @@ Module that contains DCC functionality for Maya
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 # from Qt.QtCore import *
 from Qt.QtWidgets import *
 
@@ -18,6 +20,8 @@ from tpDccLib.abstract import dcc as abstract_dcc, progressbar
 # from tpQtLib.core import window
 from tpMayaLib.core import gui, helpers, name, namespace, scene, playblast, transform, attribute, shape as shape_utils
 from tpMayaLib.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
+
+LOGGER = logging.getLogger()
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -2049,7 +2053,7 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
             self.count = count
             msg = '{} count: {}'.format(title, count)
             self.status_string = ''
-            maya.logger.debug(msg)
+            LOGGER.debug(msg)
             return
         else:
             self.progress_ui = gui.get_progress_bar()

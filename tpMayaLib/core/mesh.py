@@ -7,11 +7,14 @@ Module that contains functions and classes related with meshes
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 from collections import defaultdict
 
 import tpMayaLib as maya
 from tpPyUtils import python
 from tpMayaLib.core import api, helpers, exceptions, node
+
+LOGGER = logging.getLogger()
 
 
 def check_mesh(mesh):
@@ -234,7 +237,7 @@ def get_raw_points(mesh):
 
     use_new_api = False
     if maya.is_new_api():
-        maya.logger.warning('get_raw_points function is dependant of MFnMesh.getRawPoints() function which is not available in OpenMaya 2.0! Using OpenMaya 1.0 ...')
+        LOGGER.warning('get_raw_points function is dependant of MFnMesh.getRawPoints() function which is not available in OpenMaya 2.0! Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
         use_new_api = True
 

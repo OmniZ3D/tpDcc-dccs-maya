@@ -120,7 +120,7 @@ class SymmetryTable(object):
         # [non_symmetry_vertices.append(i) for i in negative_vertices if i != 'm']
 
         if vertices_counter != total_vertices:
-            maya.logger.warning('Mesh object "{} is not symmetrical!'.format(mesh))
+            LOGGER.warning('Mesh object "{} is not symmetrical!'.format(mesh))
 
         self.sym_table = sym_table
         self.asym_table = non_symmetry_vertices

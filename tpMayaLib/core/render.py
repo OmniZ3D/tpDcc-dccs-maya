@@ -7,10 +7,14 @@ Module that contains functions and classes related with render in Maya
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 from tpPyUtils import decorators
 
 import tpDccLib as tp
 import tpMayaLib as maya
+
+LOGGER = logging.getLogger()
 
 
 @decorators.Singleton
@@ -85,8 +89,8 @@ def get_render_globals_attribute(attribute_name, default_value=None):
 
     render_globals_node = get_render_globals_node_name()
     if not tp.Dcc.attribute_exists(render_globals_node, attribute_name):
-        maya.logger.warning(
-            'Attribute "{}" does not exists in RenderGlobasls node "{}"!'.format(attribute_name, render_globals_node))
+        LOGGER.warning(
+            'Attribute "{}" does not exists in RenderGlobals node "{}"!'.format(attribute_name, render_globals_node))
         return default_value
 
     return tp.Dcc.get_attribute_value(render_globals_node, attribute_name)
@@ -102,14 +106,14 @@ def set_render_globals_attribute(attribute_name, attribute_value):
 
     render_globals_node = get_render_globals_node_name()
     if not tp.Dcc.attribute_exists(render_globals_node, attribute_name):
-        maya.logger.warning(
+        LOGGER.warning(
             'Attribute "{}" does not exists in RenderGlobasls node "{}"!'.format(attribute_name, render_globals_node))
         return False
 
     try:
         return tp.Dcc.set_attribute_value(render_globals_node, attribute_name, attribute_value)
     except Exception as exc:
-        maya.logger.error(
+        LOGGER.error(
             'Was impossible to set attribute "{}" in RenderGlobals node "{}" with value "{}" | "{}"'.format(
                 attribute_name, render_globals_node, attribute_value, exc))
         return False
@@ -125,7 +129,7 @@ def get_default_resolution_attribute(attribute_name, default_value=None):
 
     default_resolution_node = get_default_resolution_node_name()
     if not tp.Dcc.attribute_exists(default_resolution_node, attribute_name):
-        maya.logger.warning(
+        LOGGER.warning(
             'Attribute "{}" does not exists in DefaultResolution node "{}"!'.format(
                 attribute_name, default_resolution_node))
         return default_value
@@ -143,7 +147,7 @@ def set_default_resolution_attribute(attribute_name, attribute_value):
 
     default_resolution_node = get_default_resolution_node_name()
     if not tp.Dcc.attribute_exists(default_resolution_node, attribute_name):
-        maya.logger.warning(
+        LOGGER.warning(
             'Attribute "{}" does not exists in DefafultResolution node "{}"!'.format(
                 attribute_name, default_resolution_node))
         return False
@@ -151,7 +155,7 @@ def set_default_resolution_attribute(attribute_name, attribute_value):
     try:
         return tp.Dcc.set_attribute_value(default_resolution_node, attribute_name, attribute_value)
     except Exception as exc:
-        maya.logger.error(
+        LOGGER.error(
             'Was impossible to set attribute "{}" in DefafultResolution node "{}" with value "{}" | "{}"'.format(
                 attribute_name, default_resolution_node, attribute_value, exc))
         return False

@@ -12,55 +12,12 @@ import sys
 import inspect
 import logging
 
-# Do not remove Maya imports
-import maya.cmds as cmds
-import maya.mel as mel
-import maya.utils as utils
-import maya.OpenMaya as OpenMaya
-import maya.OpenMayaUI as OpenMayaUI
-import maya.OpenMayaAnim as OpenMayaAnim
-import maya.OpenMayaRender as OpenMayaRender
-
-
-new_api = True
-try:
-    import maya.api.OpenMaya as OpenMayaV2
-    import maya.api.OpenMayaUI as OpenMayaUIV2
-    import maya.api.OpenMayaAnim as OpenMayaAnimV2
-    import maya.api.OpenMayaRender as OpenMayaRenderV2
-except Exception:
-    new_api = False
-
 from tpPyUtils import importer
 
 # =================================================================================
 
 logger = None
 resource = None
-
-# =================================================================================
-
-api = {
-    'OpenMaya': OpenMaya,
-    'OpenMayaUI': OpenMayaUI,
-    'OpenMayaAnim': OpenMayaAnim,
-    'OpenMayaRender': OpenMayaRender
-}
-
-if new_api:
-    api2 = {
-        'OpenMaya': OpenMayaV2,
-        'OpenMayaUI': OpenMayaUIV2,
-        'OpenMayaAnim': OpenMayaAnimV2,
-        'OpenMayaRender': OpenMayaRenderV2
-    }
-else:
-    api2 = api
-
-OpenMaya = OpenMaya
-OpenMayaUI = OpenMayaUI
-OpenMayaAnim = OpenMayaAnim
-OpenMayaRender = OpenMayaRender
 
 # =================================================================================
 
@@ -102,6 +59,8 @@ class tpMayaLib(importer.Importer, object):
         Adds path to system paths at startup
         """
 
+        import maya.cmds as cmds
+
         ext_path = self.externals_path()
         python_path = os.path.join(ext_path, 'python')
         maya_path = os.path.join(python_path, str(cmds.about(v=True)))
@@ -140,6 +99,8 @@ def init_dcc(do_reload=False):
     :param do_reload: bool, Whether to reload modules or not
     """
 
+    import tpMayaLib as maya
+
     from tpQtLib.core import resource as resource_utils
 
     class tpMayaLibResource(resource_utils.Resource, object):
@@ -149,7 +110,7 @@ def init_dcc(do_reload=False):
 
     tpmayalib_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
     tpmayalib_importer.update_paths()
-    use_new_api()
+    maya.use_new_api()
 
     global logger
     global resource
@@ -165,9 +126,11 @@ def init_dcc(do_reload=False):
 
 
 def init_ui(do_reload=False):
+    import tpMayaLib as maya
+
     tpmayalib_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
     tpmayalib_importer.update_paths()
-    use_new_api()
+    maya.use_new_api()
 
     global logger
     logger = tpmayalib_importer.logger
@@ -191,39 +154,3 @@ def create_metadata_manager():
     metadatamanager.MetaDataManager.register_meta_classes()
     metadatamanager.MetaDataManager.register_meta_types()
     metadatamanager.MetaDataManager.register_meta_nodes()
-
-
-def use_new_api(flag=False):
-    """
-    Enables new Maya API usage
-    """
-
-    global OpenMaya
-    global OpenMayaUI
-    global OpenMayaAnim
-
-    if new_api:
-        if flag:
-            OpenMaya = api2['OpenMaya']
-            OpenMayaUI = api2['OpenMayaUI']
-            OpenMayaAnim = api2['OpenMayaAnim']
-            OpenMayaRender = api2['OpenMayaRender']
-        else:
-            OpenMaya = api['OpenMaya']
-            OpenMayaUI = api['OpenMayaUI']
-            OpenMayaAnim = api['OpenMayaAnim']
-            OpenMayaRender = api['OpenMayaRender']
-    else:
-        OpenMaya = api['OpenMaya']
-        OpenMayaUI = api['OpenMayaUI']
-        OpenMayaAnim = api['OpenMayaAnim']
-        OpenMayaRender = api['OpenMayaRender']
-
-
-def is_new_api():
-    """
-    Returns whether new Maya API is used or not
-    :return: bool
-    """
-
-    return not OpenMaya == api['OpenMaya']

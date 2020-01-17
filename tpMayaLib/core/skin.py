@@ -7,10 +7,13 @@ Module that contains functions and classes related with skins
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 import cStringIO
 
 import tpMayaLib as maya
 from tpMayaLib.core import decorators, exceptions, api, node as node_utils, mesh as mesh_utils, joint as jnt_utils, transform as xform_utils
+
+LOGGER = logging.getLogger()
 
 
 class ShowJointInfluence(object):
@@ -81,7 +84,7 @@ class ShowJointInfluence(object):
 
         connections = list(set(maya.cmds.listConnections(self.joint, type='skinCluster')))
         if len(connections) <= 0:
-            maya.logger.warning('Wrapped joint "{}" has no skinCluster!'.format(self.joint))
+            LOGGER.warning('Wrapped joint "{}" has no skinCluster!'.format(self.joint))
             return
 
         for skin_cluster in connections:
@@ -94,7 +97,7 @@ class ShowJointInfluence(object):
                     break
 
             if skin_cluster_set <= 0:
-                maya.logger.warning('Wrapped joint "{}" with skinCluster "{}" has no valid SkinClusterSet'.format(self.joint, skin_cluster))
+                LOGGER.warning('Wrapped joint "{}" with skinCluster "{}" has no valid SkinClusterSet'.format(self.joint, skin_cluster))
                 return
 
             obj = maya.cmds.listConnections(skin_cluster_set, destination=True, source=False, plugs=False, connections=False)
@@ -254,13 +257,13 @@ class StoreSkinWeight(object):
         while not selection_list_iter.is_done():
             loop += 1
             if loop >= 10000:
-                maya.logger.warning('Too many loops while retrieving vertices from mesh node!')
+                LOGGER.warning('Too many loops while retrieving vertices from mesh node!')
                 return list()
 
             try:
                 mesh_dag = selection_list_iter.get_dag_path()
             except Exception as e:
-                maya.logger.error('Get Dag Path error : {}'.format(e.message))
+                LOGGER.error('Get Dag Path error : {}'.format(e.message))
                 selection_list_iter.next()
                 continue
 
@@ -293,7 +296,7 @@ class StoreSkinWeight(object):
             try:
                 mesh_dag, component = selection_list.get_component(0)
             except Exception as e:
-                maya.logger.erro('Get Dag Path error : {}'.format(e.message))
+                LOGGER.erro('Get Dag Path error : {}'.format(e.message))
                 continue
 
             skin_fn, vertex_array, skin_name = self._adjust_to_vertex_list(mesh_dag, component)
@@ -321,12 +324,12 @@ class StoreSkinWeight(object):
         while not selection_list_iter.is_done():
             loop += 1
             if loop >= 10000:
-                maya.logger.warning('Too many loops while retrieving vertices from mesh node!')
+                LOGGER.warning('Too many loops while retrieving vertices from mesh node!')
                 return vertex_arrays
             try:
                 mesh_dag, component = selection_list_iter.get_component()
             except Exception as e:
-                maya.logger.error('Get current vertex error : {}'.format(e.message))
+                LOGGER.error('Get current vertex error : {}'.format(e.message))
                 selection_list_iter.next()
                 continue
 
@@ -401,7 +404,7 @@ class StoreSkinWeight(object):
             try:
                 weights = api_skin_fn.get_weights(mesh_path, vertex_component)
             except Exception as e:
-                maya.logger.error('Get Skin Weight error : {}'.format(e.message))
+                LOGGER.error('Get Skin Weight error : {}'.format(e.message))
                 continue
 
             weights = self._convert_shape_weights(len(influence_indices), weights)
@@ -486,10 +489,10 @@ def is_skin_cluster(skin_cluster):
     """
 
     if not maya.cmds.objExists(skin_cluster):
-        maya.logger.error('SkinCluster "{}" does not exists!'.format(skin_cluster))
+        LOGGER.error('SkinCluster "{}" does not exists!'.format(skin_cluster))
         return False
     if maya.cmds.objectType(skin_cluster) != 'skinCluster':
-        maya.logger.error('Object "{}" is not a valid skinCluster node!'.format(skin_cluster))
+        LOGGER.error('Object "{}" is not a valid skinCluster node!'.format(skin_cluster))
         return False
 
     return True
@@ -530,7 +533,7 @@ def average_vertex(selection, use_distance):
 
     total_vertices = len(selection)
     if total_vertices < 2:
-        maya.logger.warning('Not enough vertices selected! Select a minimum of 2 vertices')
+        LOGGER.warning('Not enough vertices selected! Select a minimum of 2 vertices')
         return
 
     obj = selection[0]
@@ -604,7 +607,7 @@ def average_vertex(selection, use_distance):
             cmd.write('])')
             eval(cmd.getvalue())
     except Exception as e:
-        maya.logger.warning(str(e))
+        LOGGER.warning(str(e))
         succeeded = False
     finally:
         maya.cmds.setAttr('{0}.envelope'.format(skin_cluster_name), 1)

@@ -7,10 +7,14 @@ Module that contains functions and classes related with geometry
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 from tpPyUtils import mathlib, python
 
 import tpMayaLib as maya
 from tpMayaLib.core import api, exceptions, shape, transform as xform_utils, name as name_utils
+
+LOGGER = logging.getLogger()
 
 
 class MeshTopologyCheck(object):
@@ -429,7 +433,7 @@ def get_mbounding_box(geometry, world_space=True):
     if world_space:
         geo_bbox.transformUsing(geo_path.exclusiveMatrix())
     else:
-        maya.logger.warning('Local space Bounding Bosx is not fully reliable ...')
+        LOGGER.warning('Local space Bounding Bosx is not fully reliable ...')
         geo_bbox.transformUsing(geo_node_fn.transformationMatrix().inverse())
 
     return geo_bbox
@@ -542,7 +546,7 @@ def get_mesh_shape(mesh, shape_index=0):
     if shape_index < shape_count:
         return shapes[0]
     if shape_index > shape_count:
-        maya.logger.warning('{} does not have a shape count up to {}'.format(mesh, shape_index))
+        LOGGER.warning('{} does not have a shape count up to {}'.format(mesh, shape_index))
         return None
 
     return shapes[shape_index]

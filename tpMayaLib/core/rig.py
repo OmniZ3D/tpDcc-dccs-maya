@@ -5,11 +5,15 @@
 Module that contains rig utils functions for Maya
 """
 
+import logging
+
 from tpPyUtils import python
 
 import tpMayaLib as maya
 from tpMayaLib.meta import metanode
 from tpMayaLib.core import constraint as cns_utils, attribute as attr_utils, transform as transform_utils
+
+LOGGER = logging.getLogger()
 
 
 class RigSwitch(object):
@@ -25,13 +29,13 @@ class RigSwitch(object):
 
         self._switch_joint = switch_joint
         if not maya.cmds.objExists('{}.switch'.format(switch_joint)):
-            maya.logger.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
+            LOGGER.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
 
         self._groups = dict()
 
         weight_count = self.get_weight_count()
         if not weight_count:
-            maya.logger.warning('{} has no weights!'.format(weight_count))
+            LOGGER.warning('{} has no weights!'.format(weight_count))
 
         for i in range(weight_count):
             self._groups[i] = None
@@ -56,7 +60,7 @@ class RigSwitch(object):
         elif not self._control_name or not maya.cmds.objExists(self._control_name):
             attr_name = '{}.switch'.format(self._switch_joint)
         else:
-            maya.logger.error('Impossible to create RigSwitch Attribute ...')
+            LOGGER.error('Impossible to create RigSwitch Attribute ...')
             return
 
         for key in self._groups.keys():
@@ -92,12 +96,12 @@ class RigSwitch(object):
 
         groups = python.force_list(groups)
         if not self._switch_joint or not maya.cmds.objExists(self._switch_joint):
-            maya.logger.warning('Swtich joint {} does not exists!'.format(self._switch_joint))
+            LOGGER.warning('Swtich joint {} does not exists!'.format(self._switch_joint))
             return
 
         weight_count = self.get_weight_count()
         if weight_count < (index+1):
-            maya.logger.warning('Adding groups to index {} is undefined. {}.switch does not have that many inputs'.format(index, self._switch_joint))
+            LOGGER.warning('Adding groups to index {} is undefined. {}.switch does not have that many inputs'.format(index, self._switch_joint))
 
         self._groups[index] = groups
 

@@ -5,15 +5,17 @@
 Module that contains functions and classes related with meta system
 """
 
-
-import pprint
 import copy
+import pprint
+import logging
 
 import euclid
 
 import tpMayaLib as maya
 from tpPyUtils import decorators
 from tpMayaLib.core import common, attribute as attr_utils, name as name_utils, shape as shape_utils
+
+LOGGER = logging.getLogger()
 
 
 class MetaAttributeValidator(attr_utils.AttributeValidator):
@@ -140,27 +142,27 @@ class MetaAttributeUtils(object):
         """
 
         if len(args) == 1:
-            # maya.logger.debug('|Attribute Validation| >> single argument')
+            # LOGGER.debug('|Attribute Validation| >> single argument')
             if issubclass(type(args[0]), dict):
-                # maya.logger.debug('|Attribute Validation| >> dict argument')
+                # LOGGER.debug('|Attribute Validation| >> dict argument')
                 if args[0].get('combined'):
-                    # maya.logger.debug('|Attribute Validation| >> passed validating arg, returning it ...')
+                    # LOGGER.debug('|Attribute Validation| >> passed validating arg, returning it ...')
                     return args[0]
                 raise ValueError('Given argument is not a valid dictionary: {}'.format(args[0]))
             elif type(args[0]) in [list, tuple] and len(args[0]) == 2:
-                # maya.logger.debug('|Attribute Validation| >> list argument')
+                # LOGGER.debug('|Attribute Validation| >> list argument')
                 obj = args[0][0]
                 attr = args[0][1]
                 combined = '{0}.{1}'.format(obj, attr)
             elif '.' in args[0]:
-                # maya.logger.debug('|Attribute Validation| >> string argument')
+                # LOGGER.debug('|Attribute Validation| >> string argument')
                 obj = args[0].split('.')[0]
                 attr = '.'.join(args[0].split('.')[1:])
                 combined = args[0]
             else:
                 raise ValueError('Invalid attribute argument: {}'.format(args))
         else:
-            # maya.logger.debug('|Attribute Validation| >> multi argument')
+            # LOGGER.debug('|Attribute Validation| >> multi argument')
             combined = '{0}.{1}'.format(args[0], args[1])
             obj = args[0]
             attr = args[1]
@@ -181,7 +183,7 @@ class MetaAttributeUtils(object):
         try:
             return maya.cmds.getAttr(attr_dict['combined'], type=True)
         except Exception as e:
-            maya.logger.error('|Attribute Type Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Attribute Type Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
     @staticmethod
@@ -208,10 +210,10 @@ class MetaAttributeUtils(object):
         _attr_type = MetaAttributeUtils.validate_attr_type_name(_attr_type)
         _type_current = MetaAttributeUtils.validate_attr_type_name(MetaAttributeUtils.get_type(attr_dict))
 
-        maya.logger.debug('|Convert Attribute Type| >> attr: {0} | type: {1} | target_type: {2}'.format(combined, _type_current,_attr_type))
+        LOGGER.debug('|Convert Attribute Type| >> attr: {0} | type: {1} | target_type: {2}'.format(combined, _type_current,_attr_type))
 
         if _attr_type == _type_current:
-            maya.logger.debug('|Convert Attribute Type| >> {} already target type'.format(combined))
+            LOGGER.debug('|Convert Attribute Type| >> {} already target type'.format(combined))
             return True
 
         # ============================================== Data Gathering
@@ -248,7 +250,7 @@ class MetaAttributeUtils(object):
         MetaAttributeUtils.add(attr_dict, attr_type, enum_options=_enum)
 
         if _data is not None:
-            maya.logger.debug('|Convert Attribute Type| >> Data Setting: {}'.format(_data))
+            LOGGER.debug('|Convert Attribute Type| >> Data Setting: {}'.format(_data))
             try:
                 if _attr_type == 'string':
                     if _type_current == 'message':
@@ -260,30 +262,30 @@ class MetaAttributeUtils(object):
                 elif _attr_type == 'long':
                     _data = int(_data)
             except Exception as e:
-                maya.logger.error('|Convert Attribute Type| >> Failed to convert data: {0} | type: {1} | err: {2}'.format(_data,
+                LOGGER.error('|Convert Attribute Type| >> Failed to convert data: {0} | type: {1} | err: {2}'.format(_data,
                                                                                                             _attr_type,
                                                                                                             e))
 
             try:
                 MetaAttributeUtils.set(attr_dict, value=_data)
             except Exception as e:
-                maya.logger.error('|Convert Attribute Type| >> Failed to set back data buffer {0} | data: {1} | err: {2}'.format(combined, _data, e))
+                LOGGER.error('|Convert Attribute Type| >> Failed to set back data buffer {0} | data: {1} | err: {2}'.format(combined, _data, e))
 
         if _driver and _type_current != 'message':
-            maya.logger.debug('|Convert Attribute Type| >> Driver: {}'.format(_driver))
+            LOGGER.debug('|Convert Attribute Type| >> Driver: {}'.format(_driver))
             try:
                 MetaAttributeUtils.connect(_driver, combined)
             except Exception as e:
-                maya.logger.debug('|Convert Attribute Type| >> Failed to connect {0} >> {1} | err: {2}'.format(_driver, combined, e))
+                LOGGER.debug('|Convert Attribute Type| >> Failed to connect {0} >> {1} | err: {2}'.format(_driver, combined, e))
 
         if _driven:
-            maya.logger.debug('|Convert Attribute Type| >> Driven: {}'.format(_driven))
+            LOGGER.debug('|Convert Attribute Type| >> Driven: {}'.format(_driven))
             for c in _driven:
-                maya.logger.debug('|Convert Attribute Type| >> driven: {}'.format(c))
+                LOGGER.debug('|Convert Attribute Type| >> driven: {}'.format(c))
                 try:
                     MetaAttributeUtils.connect(combined, c)
                 except Exception as e:
-                    maya.logger.debug('|Convert Attribute Type| >> Failed to connect {0} >> {1} | err: {2}'.format(combined, c, e))
+                    LOGGER.debug('|Convert Attribute Type| >> Failed to connect {0} >> {1} | err: {2}'.format(combined, c, e))
 
         if lock:
             maya.cmds.setAttr(combined, lock=True)
@@ -309,18 +311,18 @@ class MetaAttributeUtils(object):
             if not kwargs.get('sl') or not kwargs.get('silent'):
                 kwargs['sl'] = True
 
-        maya.logger.debug('|Attribute Getter| >> arg: {}'.format(args))
+        LOGGER.debug('|Attribute Getter| >> arg: {}'.format(args))
         if kwargs:
-            maya.logger.debug('|Attribute Getter| >> kwargs: {}'.format(kwargs))
+            LOGGER.debug('|Attribute Getter| >> kwargs: {}'.format(kwargs))
 
         if '[' in attr:
-            maya.logger.debug('|Attribute Getter| >> Indexed Attribute')
+            LOGGER.debug('|Attribute Getter| >> Indexed Attribute')
             return maya.cmds.listConnections(combined)
 
         try:
             attr_type = maya.cmds.getAttr(combined, type=True)
         except Exception as e:
-            maya.logger.debug('|Attribute Getter| >> {0} failed to return type. Exists: {1}'.format(combined, maya.cmds.objExists(
+            LOGGER.debug('|Attribute Getter| >> {0} failed to return type. Exists: {1}'.format(combined, maya.cmds.objExists(
                 combined)))
             return None
 
@@ -361,7 +363,7 @@ class MetaAttributeUtils(object):
             if not connections:
                 parent = MetaAttributeUtils.get_parent(attr_dict)
                 if parent:
-                    maya.logger.debug('|Driver Attribute Getter| >> Parent Attribute Check: {}'.format(parent))
+                    LOGGER.debug('|Driver Attribute Getter| >> Parent Attribute Check: {}'.format(parent))
                     return MetaAttributeUtils.get_driver(attr_dict['node'], parent, get_node=get_node, skip_conversion_nodes=skip_conversion_nodes, long_names=long_names)
                 return False
             if long_names:
@@ -377,7 +379,7 @@ class MetaAttributeUtils(object):
                     if skip_conversion_nodes and MetaAttributeValidator.get_maya_type(node=connections) == 'unitConversion':
                         parent = MetaAttributeUtils.get_parent(attr_dict)
                         if parent:
-                            maya.logger.debug('|Driver Attribute Getter| >> Parent Attribute Check: {}'.format(parent))
+                            LOGGER.debug('|Driver Attribute Getter| >> Parent Attribute Check: {}'.format(parent))
                             return MetaAttributeUtils.get_driver(attr_dict['node'], parent, get_node=get_node, skip_conversion_nodes=skip_conversion_nodes, long_names=long)
                     if long_names:
                         return name_utils.get_long_name(obj=connections[0])
@@ -493,7 +495,7 @@ class MetaAttributeUtils(object):
 
             return combined
         except Exception as e:
-            maya.logger.error(str(e))
+            LOGGER.error(str(e))
 
     @staticmethod
     def set(node, attr=None, value=None, lock=False, **kwargs):
@@ -519,9 +521,9 @@ class MetaAttributeUtils(object):
         attr_name = attr_dict['attr']
         was_locked = False
 
-        maya.logger.debug('|Attribute Setter| >> attr: {0} | value: {1} | lock: {2}'.format(combined, value, lock))
+        LOGGER.debug('|Attribute Setter| >> attr: {0} | value: {1} | lock: {2}'.format(combined, value, lock))
         if kwargs:
-            maya.logger.debug('|Attribute Setter| >> kwargs: {0}'.format(kwargs))
+            LOGGER.debug('|Attribute Setter| >> kwargs: {0}'.format(kwargs))
 
         attr_type = maya.cmds.getAttr(combined, type=True)
         valid_type = MetaAttributeUtils.validate_attr_type_name(attr_type=attr_type)
@@ -532,11 +534,11 @@ class MetaAttributeUtils(object):
 
         if not MetaAttributeUtils.is_keyed(attr_dict):
             if MetaAttributeUtils.break_connection(attr_dict):
-                maya.logger.warning('|Attribute Setter| >> Broken connection: {}'.format(combined))
+                LOGGER.warning('|Attribute Setter| >> Broken connection: {}'.format(combined))
 
         current = MetaAttributeUtils.get(combined)
         if current == value:
-            maya.logger.debug('|Attribute Setter| >> Already has a value: {}'.format(combined))
+            LOGGER.debug('|Attribute Setter| >> Already has a value: {}'.format(combined))
             if was_locked:
                 MetaAttributeUtils.set_lock(attr_dict, True)
                 return
@@ -605,7 +607,7 @@ class MetaAttributeUtils(object):
 
                 driven_attr = MetaAttributeUtils.get_driven(attr_dict) or []
                 for plug in driven_attr:
-                    maya.logger.warning('|Attribute Deletion| >> [{0}] | Breaking out plug: {1}'.format(combined, plug))
+                    LOGGER.warning('|Attribute Deletion| >> [{0}] | Breaking out plug: {1}'.format(combined, plug))
                     MetaAttributeUtils.disconnect(combined, plug)
 
                 maya.cmds.deleteAttr(combined)
@@ -629,7 +631,7 @@ class MetaAttributeUtils(object):
         try:
             return maya.cmds.attributeQuery(attr_dict['attr'], node=attr_dict['node'], listChildren=True) or []
         except Exception as e:
-            maya.logger.error('|Attribute Children Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Attribute Children Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
     @staticmethod
@@ -648,7 +650,7 @@ class MetaAttributeUtils(object):
                 return parents[0]
             return parents
         except Exception as e:
-            maya.logger.error('|Attribute Parent Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Attribute Parent Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
     @staticmethod
@@ -664,7 +666,7 @@ class MetaAttributeUtils(object):
         try:
             return maya.cmds.attributeQuery(attr_dict['attr'], node=attr_dict['node'], listSiblings=True) or []
         except Exception as e:
-            maya.logger.error('|Attribute Siblings Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Attribute Siblings Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
     @staticmethod
@@ -726,37 +728,37 @@ class MetaAttributeUtils(object):
                 data_dict['min'] = MetaAttributeUtils.get_min(attr_dict)
             except Exception:
                 data_dict['min'] = False
-                maya.logger.debug('{0}.{1} failed to query min value'.format(obj, attr))
+                LOGGER.debug('{0}.{1} failed to query min value'.format(obj, attr))
             try:
                 data_dict['max'] = MetaAttributeUtils.get_max(attr_dict)
             except Exception:
                 data_dict['max'] = False
-                maya.logger.debug('{0}.{1} failed to query max value'.format(obj, attr))
+                LOGGER.debug('{0}.{1} failed to query max value'.format(obj, attr))
             try:
                 data_dict['default'] = MetaAttributeUtils.get_default(attr_dict)
             except Exception:
                 data_dict['default'] = False
-                maya.logger.debug('{0}.{1} failed to query default value'.format(obj, attr))
+                LOGGER.debug('{0}.{1} failed to query default value'.format(obj, attr))
             try:
                 data_dict['softMax'] = MetaAttributeUtils.get_soft_max(attr_dict)
             except Exception:
                 data_dict['softMax'] = False
-                maya.logger.debug('{0}.{1} failed to query soft max value'.format(obj, attr))
+                LOGGER.debug('{0}.{1} failed to query soft max value'.format(obj, attr))
             try:
                 data_dict['softMin'] = MetaAttributeUtils.get_soft_min(attr_dict)
             except Exception:
                 data_dict['softMin'] = False
-                maya.logger.debug('{0}.{1} failed to query soft min value'.format(obj, attr))
+                LOGGER.debug('{0}.{1} failed to query soft min value'.format(obj, attr))
             try:
                 data_dict['range'] = MetaAttributeUtils.get_range(attr_dict)
             except Exception:
                 data_dict['range'] = False
-                maya.logger.debug('{0}.{1} failed to query range value'.format(obj, attr))
+                LOGGER.debug('{0}.{1} failed to query range value'.format(obj, attr))
             try:
                 data_dict['softRange'] = MetaAttributeUtils.get_soft_range(attr_dict)
             except Exception:
                 data_dict['softRange'] = False
-                maya.logger.debug('{0}.{1} failed to query soft range value'.format(obj, attr))
+                LOGGER.debug('{0}.{1} failed to query soft range value'.format(obj, attr))
 
         return attr_dict
 
@@ -836,42 +838,42 @@ class MetaAttributeUtils(object):
         to_attr_name = to_attr
 
         if to_obj is None:
-            maya.logger.debug('|Attributes Copy| >> No to_object specified. Using from_object:{}'.format(from_object))
+            LOGGER.debug('|Attributes Copy| >> No to_object specified. Using from_object:{}'.format(from_object))
             to_obj = from_object
         if to_attr_name is None:
-            maya.logger.debug('|Attributes Copy| >> No to_attr specified. Using from-attr:{}'.format(from_attr))
+            LOGGER.debug('|Attributes Copy| >> No to_attr specified. Using from-attr:{}'.format(from_attr))
             to_attr_name = from_attr
         attr_dict_target = MetaAttributeUtils.validate_attribute(to_obj, to_attr_name)
 
         if combined == attr_dict_target['combined']:
             raise ValueError('Cannot copy to itself')
 
-        maya.logger.debug('|Attributes Copy| >> source: {}'.format(combined))
-        maya.logger.debug('|Attributes Copy| >> target: {0} | {1}'.format(to_obj, to_attr_name))
+        LOGGER.debug('|Attributes Copy| >> source: {}'.format(combined))
+        LOGGER.debug('|Attributes Copy| >> target: {0} | {1}'.format(to_obj, to_attr_name))
 
         dict_source_flags = MetaAttributeUtils.get_attribute_state(attr_dict)
 
         if values and not MetaAttributeUtils.validate_attr_type_name(dict_source_flags['type']):
-            maya.logger.warning('|Attributes Copy| >> {0} is a {1} attribute and not valid for copying'.format(attr_dict['combined'], dict_source_flags['type']))
+            LOGGER.warning('|Attributes Copy| >> {0} is a {1} attribute and not valid for copying'.format(attr_dict['combined'], dict_source_flags['type']))
             return False
 
         _driver = MetaAttributeUtils.get_driver(attr_dict, skip_conversion_nodes=True)
         _driven = MetaAttributeUtils.get_driven(attr_dict, skip_conversion_nodes=True)
         _data = MetaAttributeUtils.get(attr_dict)
 
-        maya.logger.debug('|Attributes Copy| >> data: {}'.format(_data))
-        maya.logger.debug('|Attributes Copy| >> driver: {}'.format(_driver))
-        maya.logger.debug('|Attributes Copy| >> driven: {}'.format(_driven))
+        LOGGER.debug('|Attributes Copy| >> data: {}'.format(_data))
+        LOGGER.debug('|Attributes Copy| >> driver: {}'.format(_driver))
+        LOGGER.debug('|Attributes Copy| >> driven: {}'.format(_driven))
 
         if maya.cmds.objExists(attr_dict_target['combined']):
             dict_target_flags = MetaAttributeUtils.get_attribute_state(attr_dict_target)
 
             if not MetaAttributeUtils.validate_attr_type_name(dict_target_flags['type']):
-                maya.logger.warning('|Attributes Copy| >> {0} may not copy correctly. Type did not validate'.format(attr_dict_target['combined']))
+                LOGGER.warning('|Attributes Copy| >> {0} may not copy correctly. Type did not validate'.format(attr_dict_target['combined']))
 
             if not MetaAttributeUtils.validate_attr_type_match(dict_source_flags['type'], dict_target_flags['type']):
                 if dict_target_flags['dynamic'] and convert_to_match:
-                    maya.logger.debug('Attributes Copy| >> {} not the correct type, trying to convert it'.format(attr_dict_target['combined']))
+                    LOGGER.debug('Attributes Copy| >> {} not the correct type, trying to convert it'.format(attr_dict_target['combined']))
                     MetaAttributeUtils.convert_type(attr_dict_target, dict_source_flags['type'])
                 else:
                     raise Exception('|Attributes Copy| >> {} not the correct type. Conversion is necessary and convert_to_match is disabled'.format(attr_dict_target['combined']))
@@ -882,26 +884,26 @@ class MetaAttributeUtils(object):
             try:
                 MetaAttributeUtils.set(attr_dict_target, value=_data)
             except Exception as e:
-                maya.logger.debug('|Attributes Copy| >> Failed to set back data buffer {0} | data: {1} | err: {2}'.format(attr_dict_target['combined'], _data, e))
+                LOGGER.debug('|Attributes Copy| >> Failed to set back data buffer {0} | data: {1} | err: {2}'.format(attr_dict_target['combined'], _data, e))
 
         if _driver and in_connection:
             if dict_source_flags['type'] != 'message':
-                maya.logger.debug('|Attributes Copy| >> Current Driver: {}'.format(_driver))
+                LOGGER.debug('|Attributes Copy| >> Current Driver: {}'.format(_driver))
                 try:
                     MetaAttributeUtils.connect(_driver, attr_dict_target['combined'])
                 except Exception as e:
-                    maya.logger.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driver, attr_dict_target['combined'], e))
+                    LOGGER.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driver, attr_dict_target['combined'], e))
 
         if _driven and out_connections:
-            maya.logger.debug('|Attributes Copy| >> Current Driven: {}'.format(_driven))
+            LOGGER.debug('|Attributes Copy| >> Current Driven: {}'.format(_driven))
             for c in _driven:
                 dict_driven = MetaAttributeUtils.validate_attribute(c)
                 if dict_driven['combined'] != attr_dict_target['combined']:
-                    maya.logger.debug('|Attributes Copy| >> driven: {}'.format(c))
+                    LOGGER.debug('|Attributes Copy| >> driven: {}'.format(c))
                     try:
                         MetaAttributeUtils.connect(attr_dict_target['combined'], c)
                     except Exception as e:
-                        maya.logger.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driven, attr_dict_target['combined'], e))
+                        LOGGER.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driven, attr_dict_target['combined'], e))
 
         if copy_settings:
             if dict_source_flags.get('enum'):
@@ -942,12 +944,12 @@ class MetaAttributeUtils(object):
             try:
                 MetaAttributeUtils.connect(attr_dict, attr_dict_target)
             except Exception as e:
-                maya.logger.error('|Attributes Copy| >> Failed to connect source to target {0} >> {1} | err: {2}'.format(combined, attr_dict_target['combined'], e))
+                LOGGER.error('|Attributes Copy| >> Failed to connect source to target {0} >> {1} | err: {2}'.format(combined, attr_dict_target['combined'], e))
         elif driven == 'source':
             try:
                 MetaAttributeUtils.connect(attr_dict_target, attr_dict)
             except Exception as e:
-                maya.logger.error('|Attributes Copy| >> Failed to connect target to source {0} >> {1} | err: {2}'.format(attr_dict_target['combined'], combined, e))
+                LOGGER.error('|Attributes Copy| >> Failed to connect target to source {0} >> {1} | err: {2}'.format(attr_dict_target['combined'], combined, e))
 
         if dict_source_flags['locked']:
             maya.cmds.setAttr(attr_dict_target['combined'], lock=True)
@@ -988,7 +990,7 @@ class MetaAttributeUtils(object):
         to_attr_dict = MetaAttributeUtils.validate_attribute(to_attr)
         to_combined = to_attr_dict['combined']
 
-        maya.logger.debug('|Attribute Connection| >> Connecting {0} to {1}'.format(from_combined, to_combined))
+        LOGGER.debug('|Attribute Connection| >> Connecting {0} to {1}'.format(from_combined, to_combined))
         assert from_combined != to_combined, 'Cannot connect an attribute to itself'
 
         was_locked = False
@@ -1057,11 +1059,11 @@ class MetaAttributeUtils(object):
         family = dict()
 
         if MetaAttributeUtils.get_type(attr_dict) == 'message':
-            maya.logger.debug('|Attribute Break Connection| >> message')
+            LOGGER.debug('|Attribute Break Connection| >> message')
             dst = maya.cmds.listConnections(combined, skipConversionNodes=False, destination=True, source=False, plugs=True)
             if dst:
                 for child_attr in dst:
-                    maya.logger.debug('|Attribute Break Connection| >> Disconnecting attr {}'.format(child_attr))
+                    LOGGER.debug('|Attribute Break Connection| >> Disconnecting attr {}'.format(child_attr))
                     MetaAttributeUtils.disconnect(driven_attr, child_attr)
 
         if maya.cmds.connectionInfo(combined, isDestination=True):
@@ -1074,15 +1076,15 @@ class MetaAttributeUtils(object):
                 source_connections = source_connections[0]
 
             if not source_connections:
-                maya.logger.warning('|Attribute Break Connection| >> No source for "{0}.{1}" found!'.format(obj, attr))
+                LOGGER.warning('|Attribute Break Connection| >> No source for "{0}.{1}" found!'.format(obj, attr))
                 return False
 
-            maya.logger.debug('|Attribute Break Connection| >> Source Connections: {}'.format(source_connections))
+            LOGGER.debug('|Attribute Break Connection| >> Source Connections: {}'.format(source_connections))
             if family and family.get('parent'):
-                maya.logger.debug('|Attribute Break Connection| >> Attribute Family: {}'.format(family))
+                LOGGER.debug('|Attribute Break Connection| >> Attribute Family: {}'.format(family))
                 driven_attr = '{0}.{1}'.format(obj, family.get('parent'))
 
-            maya.logger.debug('|Attribute Break Connection| >> Breaking {0} >>> to >>> {1}'.format(source_connections, driven_attr))
+            LOGGER.debug('|Attribute Break Connection| >> Breaking {0} >>> to >>> {1}'.format(source_connections, driven_attr))
             MetaAttributeUtils.disconnect(from_attr=source_connections, to_attr=driven_attr)
 
             return source_connections
@@ -1105,7 +1107,7 @@ class MetaAttributeUtils(object):
                 return True
             return False
         except Exception as e:
-            maya.logger.error('|Has Attribute| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Has Attribute| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
         return False
@@ -1143,7 +1145,7 @@ class MetaAttributeUtils(object):
         try:
             return maya.cmds.getAttr(attr_dict['combined'], lock=True)
         except Exception as e:
-            maya.logger.error('|Attribute Locker| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Attribute Locker| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
     @staticmethod
@@ -1332,7 +1334,7 @@ class MetaAttributeUtils(object):
                 return False
             return maya.cmds.addAttr(attr_dict['combined'], query=True, m=True)
         except Exception as e:
-            maya.logger.error(('|Is Multi Attribute| >> {0} | {1}'.format(attr_dict['combined'], e)))
+            LOGGER.error(('|Is Multi Attribute| >> {0} | {1}'.format(attr_dict['combined'], e)))
             return False
 
     @staticmethod
@@ -1499,7 +1501,7 @@ class MetaAttributeUtils(object):
                         return result[0]
                     return result
         except Exception as e:
-            maya.logger.error('|Max Attribute Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Max Attribute Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
         return False
@@ -1523,7 +1525,7 @@ class MetaAttributeUtils(object):
                         return result[0]
                     return result
         except Exception as e:
-            maya.logger.error('|Min Attribute Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Min Attribute Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
         return False
@@ -1542,7 +1544,7 @@ class MetaAttributeUtils(object):
         try:
             return maya.cmds.attributeQuery(attr_dict['attr'], node=attr_dict['node'], range=True) or False
         except Exception as e:
-            maya.logger.error('|Integer Range Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Integer Range Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
     @staticmethod
@@ -1559,7 +1561,7 @@ class MetaAttributeUtils(object):
         try:
             return maya.cmds.attributeQuery(attr_dict['attr'], node=attr_dict['node'], softRange=True) or False
         except Exception as e:
-            maya.logger.error('|Integer Range Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Integer Range Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
     @staticmethod
@@ -1580,7 +1582,7 @@ class MetaAttributeUtils(object):
                     return result[0]
                 return result
         except Exception as e:
-            maya.logger.error('|Integer Soft Max Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Integer Soft Max Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
         return False
@@ -1603,7 +1605,7 @@ class MetaAttributeUtils(object):
                     return result[0]
                 return result
         except Exception as e:
-            maya.logger.error('|Integer Soft Max Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
+            LOGGER.error('|Integer Soft Max Getter| >> {0} | {1}'.format(attr_dict['combined'], e))
             return False
 
         return False
@@ -1677,15 +1679,15 @@ class MetaAttributeUtils(object):
         else:
             data_key = unicode(data_key)
 
-        maya.logger.debug('|Message Getter| >> {0} || data_attr: {1} | data_Key: {2}'.format(combined, data, data_key))
+        LOGGER.debug('|Message Getter| >> {0} || data_attr: {1} | data_Key: {2}'.format(combined, data, data_key))
 
         if not maya.cmds.objExists(combined):
-            maya.logger.debug('|Message Getter| >> {0} | No attribute exists'.format(combined))
+            LOGGER.debug('|Message Getter| >> {0} | No attribute exists'.format(combined))
             return False
 
         dict_type = MetaAttributeUtils.get_type(attr_dict)
         if dict_type in ['string']:
-            maya.logger.debug('|Message Getter| >> Special Message Attr ...')
+            LOGGER.debug('|Message Getter| >> Special Message Attr ...')
             msg_buffer = maya.cmds.listConnections(combined, p=True)
             if msg_buffer and len(msg_buffer) == 1:
                 msg_buffer = [msg_buffer[0].split('.')[0]]
@@ -1698,12 +1700,12 @@ class MetaAttributeUtils(object):
                 msg_buffer = maya.cmds.listConnections(combined, destination=True, source=True)
 
         if MetaAttributeUtils.is_multi(attr_dict):
-            maya.logger.debug('|Message Getter| >> Multimessage')
+            LOGGER.debug('|Message Getter| >> Multimessage')
             if msg_buffer:
                 return msg_buffer
             return False
         else:
-            maya.logger.debug('|Message Getter| >> Single Message')
+            LOGGER.debug('|Message Getter| >> Single Message')
             if simple:
                 return msg_buffer
 
@@ -1722,7 +1724,7 @@ class MetaAttributeUtils(object):
                     if meta_node.has_attr(attr_dict_data['attr']):
                         dict_buffer = meta_node.__getattribute__(attr_dict_data['attr']) or {}
                         if dict_buffer.get(data_key):
-                            maya.logger.debug('|Message Getter| >> Extra Message Data Found')
+                            LOGGER.debug('|Message Getter| >> Extra Message Data Found')
                             return [msg_buffer[0] + '.' + dict_buffer.get(data_key)]
                     return msg_buffer
                 else:
@@ -1762,7 +1764,7 @@ class MetaAttributeUtils(object):
             if maya.cmds.objExists(combined) and maya.cmds.addAttr(combined, query=True, m=True):
                 multi = True
                 if not message:
-                    maya.logger.debug('|Message Setter| >> MultiMessage delete')
+                    LOGGER.debug('|Message Setter| >> MultiMessage delete')
                     MetaAttributeUtils.delete(combined)
                     MetaAttributeUtils.add(combined, 'message', m=True, im=False)
                     return True
@@ -1774,12 +1776,12 @@ class MetaAttributeUtils(object):
                         try:
                             MetaAttributeUtils.connect((n + '.message'), holder_dict['combined'], next_available=True)
                         except Exception as e:
-                            maya.logger.warning('|Message Setter| >> {0} failed: {1}'.format(n, e))
+                            LOGGER.warning('|Message Setter| >> {0} failed: {1}'.format(n, e))
 
                 if len(message) > 1 or multi:
                     if maya.cmds.objExists(combined):
                         if not MetaAttributeUtils.get_type(combined) == 'message':
-                            maya.logger.warning('|Message Setter| >> Not a message attribute. Converting ...')
+                            LOGGER.warning('|Message Setter| >> Not a message attribute. Converting ...')
                             MetaAttributeUtils.delete(attr_dict)
                             MetaAttributeUtils.add(message_holder, message_attr, 'message', m=True, im=False)
                             store_message_multi(message, attr_dict)
@@ -1787,19 +1789,19 @@ class MetaAttributeUtils(object):
 
                         _buffer = MetaAttributeUtils.get_message(combined, data_attr)
                         if not maya.cmds.addAttr(combined, query=True, m=True):
-                            maya.logger.warning(('|Message Setter| >> Not a multi message attribute. Converting ...'))
+                            LOGGER.warning(('|Message Setter| >> Not a multi message attribute. Converting ...'))
                             MetaAttributeUtils.delete(attr_dict)
                             MetaAttributeUtils.add(message_holder, message_attr, 'message', m=True, im=False)
                             store_message_multi(message, attr_dict)
                             return True
                         else:
-                            maya.logger.debug('|Message Setter| >> Multimesssage')
+                            LOGGER.debug('|Message Setter| >> Multimesssage')
                             message_long = [name_utils.get_long_name(m) for m in message]
                             if _buffer and [name_utils.get_long_name(m) for m in _buffer] == message_long:
-                                maya.logger.debug('|Message Setter| >> Message match. Good to go')
+                                LOGGER.debug('|Message Setter| >> Message match. Good to go')
                                 return True
                             else:
-                                maya.logger.debug('|Message Setter| >> Messages do not match')
+                                LOGGER.debug('|Message Setter| >> Messages do not match')
                                 connections = MetaAttributeUtils.get_driven(combined)
                                 if connections:
                                     for c in connections:
@@ -1809,7 +1811,7 @@ class MetaAttributeUtils(object):
                                 MetaAttributeUtils.add(message_holder, message_attr, 'message', m=True, im=False)
                                 store_message_multi(message, attr_dict)
                     else:
-                        maya.logger.debug('|Message Setter| >> New Attribute ...')
+                        LOGGER.debug('|Message Setter| >> New Attribute ...')
                         MetaAttributeUtils.add(message_holder, message_attr, 'message', m=True, im=False)
                         store_message_multi(message, attr_dict)
                     return True
@@ -1825,20 +1827,20 @@ class MetaAttributeUtils(object):
                     messaged_node = list_msg[1]
                     if simple:
                         message = list_msg[1]
-                        maya.logger.debug('|Message Setter| >> Simle. Using {0} | {1}'.format(message, list_msg))
+                        LOGGER.debug('|Message Setter| >> Simle. Using {0} | {1}'.format(message, list_msg))
                     else:
                         mode = 'comp'
-                        maya.logger.debug('|Message Setter| >> ComponentMessage: {}'.format(list_msg))
+                        LOGGER.debug('|Message Setter| >> ComponentMessage: {}'.format(list_msg))
                         messaged_extra = list_msg[0]
                 else:
                     dict_msg = MetaAttributeUtils.validate_attribute(message)
                     messaged_node = dict_msg['node']
                     if simple:
                         message = dict_msg['node']
-                        maya.logger.debug('|Message Setter| >> Simle. Using {0} | {1}'.format(message, dict_msg))
+                        LOGGER.debug('|Message Setter| >> Simle. Using {0} | {1}'.format(message, dict_msg))
                     else:
                         mode = 'attr'
-                        maya.logger.debug('|Message Setter| >> AttrMessage: {}'.format(dict_msg))
+                        LOGGER.debug('|Message Setter| >> AttrMessage: {}'.format(dict_msg))
                         messaged_extra = dict_msg['attr']
             elif MetaAttributeValidator.is_shape(message):
                 mode = 'shape'
@@ -1857,9 +1859,9 @@ class MetaAttributeUtils(object):
             else:
                 data_key = unicode(data_key)
 
-            maya.logger.debug('|Message Setter| >> mode: {0} | data_attr: {1} | data_key: {2}'.format(mode, _data_attr, data_key))
-            maya.logger.debug('|Message Setter| >> message_holder: {0} | message_attr: {1}'.format(message_holder, message_attr))
-            maya.logger.debug('|Message Setter| >> messaged_node: {0} | messaged_extra: {1} | message_long: {2}'.format(messaged_node, messaged_extra, message_long))
+            LOGGER.debug('|Message Setter| >> mode: {0} | data_attr: {1} | data_key: {2}'.format(mode, _data_attr, data_key))
+            LOGGER.debug('|Message Setter| >> message_holder: {0} | message_attr: {1}'.format(message_holder, message_attr))
+            LOGGER.debug('|Message Setter| >> messaged_node: {0} | messaged_extra: {1} | message_long: {2}'.format(messaged_node, messaged_extra, message_long))
 
             if messaged_extra:
                 if '.' in _data_attr:
@@ -1872,7 +1874,7 @@ class MetaAttributeUtils(object):
                     MetaAttributeUtils.connect((msg_node + '.message'), holder_dict['combined'])
 
                 if msg_extra:
-                    maya.logger.debug('|Message Setter| >> {0}.{1} stored to: {2}'.format(msg_node, msg_extra, holder_dict['combined']))
+                    LOGGER.debug('|Message Setter| >> {0}.{1} stored to: {2}'.format(msg_node, msg_extra, holder_dict['combined']))
 
                     if not maya.cmds.objExists(data_attr_dict['combined']):
                         MetaAttributeUtils.add(data_attr_dict['node'], data_attr_dict['attr'], 'string')
@@ -1883,12 +1885,12 @@ class MetaAttributeUtils(object):
                     meta_node = metanode.MetaNode(attr_dict['node'])
                     dict_buffer = meta_node.__getattribute__(data_attr_dict['attr']) or {}
                     dict_buffer[data_key] = messaged_extra
-                    maya.logger.debug('|Message Setter| >> buffer: {}'.format(dict_buffer))
+                    LOGGER.debug('|Message Setter| >> buffer: {}'.format(dict_buffer))
                     meta_node.__setattr__(data_attr_dict['attr'], dict_buffer)
 
                     return True
 
-                maya.logger.debug('|Message Setter| >> "{0}" stored to: "{1}"'.format(msg_node, combined))
+                LOGGER.debug('|Message Setter| >> "{0}" stored to: "{1}"'.format(msg_node, combined))
                 return True
 
             if mode == 'shape':
@@ -1898,7 +1900,7 @@ class MetaAttributeUtils(object):
 
             if maya.cmds.objExists(combined):
                 if not MetaAttributeUtils.get_type(combined) == 'message':
-                    maya.logger.warning('|Message Setter| >> Not a message attribute. Converting ...')
+                    LOGGER.warning('|Message Setter| >> Not a message attribute. Converting ...')
                     MetaAttributeUtils.delete(attr_dict)
                     MetaAttributeUtils.add(message_holder, message_attr, 'message', m=False)
                     store_message(messaged_node, messaged_extra, attr_dict, dict_data_attr, data_key)
@@ -1906,17 +1908,17 @@ class MetaAttributeUtils(object):
 
                 _buffer = MetaAttributeUtils.get_message(combined, data_attr, data_key=data_key, simple=simple)
                 if not maya.cmds.addAttr(combined, query=True, m=True):
-                    maya.logger.debug('|Message Setter| >> MessageSimple')
+                    LOGGER.debug('|Message Setter| >> MessageSimple')
                     if _buffer and name_utils.get_long_name(_buffer[0]) == message_long:
-                        maya.logger.debug('|Message Setter| >> Message match. Good to go')
+                        LOGGER.debug('|Message Setter| >> Message match. Good to go')
                         return True
                     else:
                         MetaAttributeUtils.break_connection(attr_dict)
                         store_message(messaged_node, messaged_extra, attr_dict, dict_data_attr, data_key)
                 else:
-                    maya.logger.debug('|Message Setter| >> MultiMessage')
+                    LOGGER.debug('|Message Setter| >> MultiMessage')
                     if _buffer and name_utils.get_long_name(_buffer[0]) == message_long:
-                        maya.logger.ebug('|Message Setter| >> Message match. Good to go')
+                        LOGGER.ebug('|Message Setter| >> Message match. Good to go')
                         return True
                     else:
                         connections = MetaAttributeUtils.get_driven(combined)
@@ -1928,7 +1930,7 @@ class MetaAttributeUtils(object):
                         MetaAttributeUtils.add(message_holder, message_attr, 'message', m=False)
                         store_message(messaged_node, messaged_extra, attr_dict, dict_data_attr, data_key)
             else:
-                maya.logger.debug('|Message Setter| >> New Attribute')
+                LOGGER.debug('|Message Setter| >> New Attribute')
                 MetaAttributeUtils.add(message_holder, message_attr, 'message', m=False)
                 store_message(messaged_node, messaged_extra, attr_dict, dict_data_attr, data_key)
 
@@ -1959,7 +1961,7 @@ class MetaDataListUtils(object):
                     try:
                         result[int(split_index)] = a
                     except Exception:
-                        maya.logger.debug('|get_sequential_attr_dict| >> {}.{} failed to int | int: {}'.format(name_utils.get_short_name(node), attr, split_index))
+                        LOGGER.debug('|get_sequential_attr_dict| >> {}.{} failed to int | int: {}'.format(name_utils.get_short_name(node), attr, split_index))
 
         return result
 
@@ -1977,7 +1979,7 @@ class MetaDataListUtils(object):
 
         while not exists and count < 100:
             a = '{}_{}'.format(attr, count)
-            maya.logger.debug('|get_next_available_sequential_attr_index| >> {}'.format(a))
+            LOGGER.debug('|get_next_available_sequential_attr_index| >> {}'.format(a))
             if MetaAttributeUtils.has_attr(node, a):
                 count += 1
             else:
@@ -2007,13 +2009,13 @@ class MetaDataListUtils(object):
         for k in attrs_dict.keys():
             str_attr = attrs_dict[k]
             MetaAttributeUtils.delete(node, str_attr)
-            maya.logger.debug('|{}| >> Removed: {}.{}'.format(fn_name, node, str_attr))
+            LOGGER.debug('|{}| >> Removed: {}.{}'.format(fn_name, node, str_attr))
 
         try:
             mn = metanode.MetaNode(node)
             if mn.has_attr(data_attr):
                 MetaAttributeUtils.delete(node, data_attr)
-                maya.logger.debug('|{}| >> Removed: {}.{}'.format(fn_name, node, data_attr))
+                LOGGER.debug('|{}| >> Removed: {}.{}'.format(fn_name, node, data_attr))
         except Exception:
             pass
 
@@ -2065,8 +2067,8 @@ class MetaDataListUtils(object):
         if data_attr is None:
             data_attr = '{}_datdict'.format(attr)
 
-        maya.logger.info("|{0}| >> node: {1} | attr: {2} | mode: {3}".format(fn_name, node, attr, mode))
-        maya.logger.info("|{0}| >> data | len: {1} | list: {2}".format(fn_name, len(data_list), data_list))
+        LOGGER.info("|{0}| >> node: {1} | attr: {2} | mode: {3}".format(fn_name, node, attr, mode))
+        LOGGER.info("|{0}| >> data | len: {1} | list: {2}".format(fn_name, len(data_list), data_list))
 
         attrs_list = MetaDataListUtils.data_list_get_attrs(node=node, attr=attr)
         driven_dict = dict()
@@ -2093,7 +2095,7 @@ class MetaDataListUtils(object):
                         try:
                             MetaAttributeUtils.connect('{}.{}'.format(node, attr_str), p)
                         except Exception as e:
-                            maya.logger.warning("|{0}| >> Failed to reconnect {1} | driven: {2} | err: {3}".format(fn_name, attr_str, p, e))
+                            LOGGER.warning("|{0}| >> Failed to reconnect {1} | driven: {2} | err: {3}".format(fn_name, attr_str, p, e))
 
         return True
 
@@ -2121,7 +2123,7 @@ class MetaDataListUtils(object):
         if data_attr is None:
             data_attr = '{}_datdict'.format(attr)
 
-        maya.logger.debug('|{}| >> node: {} | attr: {} | mode: {} | cull: {}'.format(fn_name, node, attr, _mode, cull))
+        LOGGER.debug('|{}| >> node: {} | attr: {} | mode: {} | cull: {}'.format(fn_name, node, attr, _mode, cull))
 
         attrs_dict = MetaDataListUtils.get_sequential_attr_dict(node, attr)
 
@@ -2136,7 +2138,7 @@ class MetaDataListUtils(object):
                 try:
                     res = MetaAttributeUtils.get(node, attrs_dict[k])
                 except Exception as e:
-                    maya.logger.warning('|{}| >> {}.{} failed" || err: {}'.format(fn_name, node, attrs_dict[k], e))
+                    LOGGER.warning('|{}| >> {}.{} failed" || err: {}'.format(fn_name, node, attrs_dict[k], e))
                     res = None
 
             if issubclass(type(res), list):
@@ -2183,7 +2185,7 @@ class MetaDataListUtils(object):
 
         fn_name = 'data_list_index'
 
-        maya.logger.debug('|{}| >> node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data, mode))
+        LOGGER.debug('|{}| >> node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data, mode))
 
         if data_attr is None:
             data_attr = '{}_datdict'.format(attr)
@@ -2203,10 +2205,10 @@ class MetaDataListUtils(object):
                 index = data_list.index(data)
 
         if index is None:
-            maya.logger.info('|{}| >> Data not found! node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data, mode))
-            maya.logger.info('|{}| >> values ....'.format(fn_name))
+            LOGGER.info('|{}| >> Data not found! node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data, mode))
+            LOGGER.info('|{}| >> values ....'.format(fn_name))
             for i, v in enumerate(data_list):
-                maya.logger.info('idx: {} | {}'.format(i, v))
+                LOGGER.info('idx: {} | {}'.format(i, v))
             raise ValueError('Data not found!')
 
         return index
@@ -2226,7 +2228,7 @@ class MetaDataListUtils(object):
 
         fn_name = 'data_list_append'
 
-        maya.logger.debug('|{}| >> node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data, data_attr))
+        LOGGER.debug('|{}| >> node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data, data_attr))
 
         if data_attr is None:
             data_attr = '{}_datdict'.format(attr)
@@ -2256,7 +2258,7 @@ class MetaDataListUtils(object):
 
         fn_name = 'data_list_remove'
 
-        maya.logger.debug('|{}| >> node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data, data_attr))
+        LOGGER.debug('|{}| >> node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data, data_attr))
 
         data = MetaAttributeValidator.list_arg(data)
         if data_attr is None:
@@ -2271,7 +2273,7 @@ class MetaDataListUtils(object):
             for i in attrs_dict.keys():
                 o_msg = MetaAttributeUtils.get_message(node, attrs_dict[i], '{}_datdict'.format(attr), data_key=i)
                 if o_msg and name_utils.get_long_name(o_msg) in data_long_list:
-                    maya.logger.debug('|{}| >> removing | idx: {} | attr: {} | value: {}'.format(fn_name, i, attrs_dict[i], o_msg))
+                    LOGGER.debug('|{}| >> removing | idx: {} | attr: {} | value: {}'.format(fn_name, i, attrs_dict[i], o_msg))
                     MetaAttributeUtils.delete(node, attrs_dict[i])
                     action = True
         else:
@@ -2279,7 +2281,7 @@ class MetaDataListUtils(object):
             for i in attrs_dict.keys():
                 value = MetaAttributeUtils.get(node, attrs_dict[i])
                 if value in data:
-                    maya.logger.debug('|{}| >> removing | idx: {} | attr: {} | value: {}'.format(fn_name, i, attrs_dict[i], value))
+                    LOGGER.debug('|{}| >> removing | idx: {} | attr: {} | value: {}'.format(fn_name, i, attrs_dict[i], value))
                     MetaAttributeUtils.delete(node, attrs_dict[i])
                     action = True
 
@@ -2299,11 +2301,11 @@ class MetaDataListUtils(object):
         indices = MetaAttributeValidator.list_arg(indices)
         attrs_dict = MetaDataListUtils.get_sequential_attr_dict(node=node, attr=attr)
 
-        maya.logger.debug('|{}| >> node: {} | attr: {} | indices: {}'.format(fn_name, node, attr, indices))
+        LOGGER.debug('|{}| >> node: {} | attr: {} | indices: {}'.format(fn_name, node, attr, indices))
 
         for i in attrs_dict.keys():
             if i in indices:
-                maya.logger.warning('|{}| >> removing... | idx: {} | attr: {}'.format(fn_name, i, attrs_dict[i]))
+                LOGGER.warning('|{}| >> removing... | idx: {} | attr: {}'.format(fn_name, i, attrs_dict[i]))
                 MetaAttributeUtils.delete(node, attrs_dict[i])
 
         return True
@@ -2321,7 +2323,7 @@ class MetaDataListUtils(object):
 
         fn_name = 'data_list_remove'
 
-        maya.logger.debug('|{}| >> node: {} | attr: {} | mode: {}'.format(fn_name, node, attr, data_attr))
+        LOGGER.debug('|{}| >> node: {} | attr: {} | mode: {}'.format(fn_name, node, attr, data_attr))
 
         if data_attr is None:
             data_attr = '{}_datdict'.format(attr)
@@ -2356,7 +2358,7 @@ class MetaDataListUtils(object):
                     data = [o.meta_node for o in data]
                     _meta_node = True
                     attr_type = 'message'
-                    maya.logger.debug('|{}| >> meta node no art passed...'.format(fn_name))
+                    LOGGER.debug('|{}| >> meta node no art passed...'.format(fn_name))
                 except Exception:
                     pass
 
@@ -2366,32 +2368,32 @@ class MetaDataListUtils(object):
                     elif len(data) > 3:
                         attr_type = 'doubleArray'
 
-            maya.logger.debug("|{}| >> node: {} | attr: {} | data: {} | attrType: {}".format(fn_name,node,attr, data, attr_type))
+            LOGGER.debug("|{}| >> node: {} | attr: {} | data: {} | attrType: {}".format(fn_name,node,attr, data, attr_type))
 
             # STORE DATA
             if attr_type == ['message','msg','messageSimple']:
-                maya.logger.debug('|{}| >> message...'.format(fn_name))
+                LOGGER.debug('|{}| >> message...'.format(fn_name))
                 MetaAttributeUtils.set_message(message_holder=node, message_attr=attr, message=data)
             elif attr_type in ['double3']:
-                maya.logger.debug('|{}| >> list...'.format(fn_name))
+                LOGGER.debug('|{}| >> list...'.format(fn_name))
                 meta_node = metanode.MetaNode(node=node)
                 if meta_node.has_attr(attr=attr):
                     try:
                         MetaAttributeUtils.set(node=node, attr=attr, value=data)
                     except Exception:
-                        maya.logger.warning('|{}| >> removing... | node: {} | attr: {} | value: {}'.format(fn_name, node, attr, meta_node.__getattribute__(attr)))
+                        LOGGER.warning('|{}| >> removing... | node: {} | attr: {} | value: {}'.format(fn_name, node, attr, meta_node.__getattribute__(attr)))
                         MetaAttributeUtils.delete(node=node, attr=attr)
                         meta_node.add_attribute(attr=attr, value=data, attr_type=attr_type)
                 else:
                     meta_node.add_attribute(attr=attr, value=data, attr_type=attr_type)
             else:
-                maya.logger.debug('|{}| >> default...'.format(fn_name))
+                LOGGER.debug('|{}| >> default...'.format(fn_name))
                 meta_node = metanode.MetaNode(node=node)
                 if meta_node.has_attr(attr=attr):
                     try:
                         MetaAttributeUtils.set(node=node, attr=attr, value=data[0])
                     except Exception:
-                        maya.logger.warning('|{}| >> removing... | node: {} | attr: {} | value: {}'.format(fn_name, node, attr, meta_node.__getattribute__(attr)))
+                        LOGGER.warning('|{}| >> removing... | node: {} | attr: {} | value: {}'.format(fn_name, node, attr, meta_node.__getattribute__(attr)))
                         MetaAttributeUtils.delete(node=node, attr=attr)
                         meta_node.add_attribute(attr=attr, value=data[0], attr_type=attr_type)
                 else:
@@ -2465,8 +2467,8 @@ class MetaMessageListUtils(object):
         if data_attr is None:
             data_attr = '{}_datdict'.format(attr)
 
-        maya.logger.debug('|{}| >> node: {} | attr: {} | connect_back: {} | data_attr: {}'.format(fn_name, node, attr, connect_back, data_attr))
-        maya.logger.debug('|{}| >> data | len: {} | list: {}'.format(fn_name, len(data), data))
+        LOGGER.debug('|{}| >> node: {} | attr: {} | connect_back: {} | data_attr: {}'.format(fn_name, node, attr, connect_back, data_attr))
+        LOGGER.debug('|{}| >> data | len: {} | list: {}'.format(fn_name, len(data), data))
 
         MetaMessageListUtils.message_list_purge(node, attr)
 
@@ -2533,7 +2535,7 @@ class MetaTransformUtils(object):
 
         node = MetaAttributeValidator.meta_node_string(node)
         result = maya.cmds.xform(node, query=True, ws=True, rp=True)
-        maya.logger.debug('|{}| >> [{}] = {}'.format('get_rotate_pivot', node, result))
+        LOGGER.debug('|{}| >> [{}] = {}'.format('get_rotate_pivot', node, result))
 
         if as_euclidean:
             return euclid.Vector3(result[0], result[1], result[2])
@@ -2551,7 +2553,7 @@ class MetaTransformUtils(object):
 
         node = MetaAttributeValidator.meta_node_string(node)
         result = maya.cmds.xform(node, query=True, ws=True, sp=True)
-        maya.logger.debug('|{}| >> [{}] = {}'.format('get_scale_pivot', node, result))
+        LOGGER.debug('|{}| >> [{}] = {}'.format('get_scale_pivot', node, result))
 
         if as_euclidean:
             return euclid.Vector3(result[0], result[1], result[2])
@@ -2569,7 +2571,7 @@ class MetaTransformUtils(object):
 
         node = MetaAttributeValidator.meta_node_string(node)
 
-        maya.logger.debug('|Parent Getter| >> node: {}'.format(node))
+        LOGGER.debug('|Parent Getter| >> node: {}'.format(node))
         parents = maya.cmds.listRelatives(node, parent=True, type='transform', fullPath=full_path) or False
         if parents:
             return parents[0]
@@ -2589,15 +2591,15 @@ class MetaTransformUtils(object):
         if parent:
             parent = MetaAttributeValidator.meta_node_string(parent)
 
-        maya.logger.debug('|Parent Setter| >> node: {}'.format(node))
-        maya.logger.debug('|Parent Setter| >> parent: {}'.format(parent))
+        LOGGER.debug('|Parent Setter| >> node: {}'.format(node))
+        LOGGER.debug('|Parent Setter| >> parent: {}'.format(parent))
 
         parents = maya.cmds.listRelatives(node, parent=True, type='transform')
         if parent:
             try:
                 return maya.cmds.parent(node, parent)[0]
             except Exception as e:
-                maya.logger.debug('|Parent Setter| >> Failed to parent "{}" to "{}" | error: {}'.format(node, parent, e))
+                LOGGER.debug('|Parent Setter| >> Failed to parent "{}" to "{}" | error: {}'.format(node, parent, e))
                 return node
         else:
             if parents:
@@ -2699,8 +2701,8 @@ class MetaTransformUtils(object):
 
         pivot = MetaAttributeValidator.kwargs_from_dict(pivot, common.PIVOT_ARGS, none_valid=False, called_from=__name__+fn_name + '>> validate pivot')
         space = MetaAttributeValidator.kwargs_from_dict(space, common.SPACE_ARGS, none_valid=False, called_from=__name__+fn_name+'>> validate space')
-        maya.logger.debug('|{}| >> obj: {} | target: {} | pivot: {} | space: {} | mode: {}'.format(fn_name, node, target, pivot, space, mode))
-        maya.logger.debug('|{}| >> position: {} | rotation: {} | rotate_axis: {} | rotate_order: {}'.format(fn_name, position, rotation, rotate_axis, rotate_order))
+        LOGGER.debug('|{}| >> obj: {} | target: {} | pivot: {} | space: {} | mode: {}'.format(fn_name, node, target, pivot, space, mode))
+        LOGGER.debug('|{}| >> position: {} | rotation: {} | rotate_axis: {} | rotate_order: {}'.format(fn_name, position, rotation, rotate_axis, rotate_order))
 
         kwargs = {'ws': False, 'os': False}
         if space == 'world':
@@ -2716,7 +2718,7 @@ class MetaTransformUtils(object):
                 kwargs_move['rpr'] = True
 
             if pivot == 'closestPoint':
-                maya.logger.debug('|{}| <<< closestPoint >>>'.format(fn_name))
+                LOGGER.debug('|{}| <<< closestPoint >>>'.format(fn_name))
                 target_type = MetaAttributeValidator.get_Maya_type(target)
                 dst = None
 

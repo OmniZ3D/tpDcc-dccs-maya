@@ -8,12 +8,14 @@ Utility methods related to Maya Deformer nodes
 from __future__ import print_function, division, absolute_import
 
 import re
+import logging
 
 import tpMayaLib as maya
 from tpPyUtils import python, mathlib, name as name_utils
 from tpMayaLib.core import node, attribute, exceptions, name as name_lib, decorators
 from tpMayaLib.core import geometry as geo_utils, shape as shape_utils
 
+LOGGER = logging.getLogger()
 
 ALL_DEFORMERS = (
     'blendShape',
@@ -139,7 +141,7 @@ class ClusterSurface(ClusterObject, object):
                     index = '[{}][*]'.format(i)
                 cv = '{}.cv{}'.format(self._geo, index)
             else:
-                maya.logger.warning('Given NURBS Maya type "{}" is not valid!'.format(self._maya_type))
+                LOGGER.warning('Given NURBS Maya type "{}" is not valid!'.format(self._maya_type))
                 return
 
             cluster, handle = self._create_cluster(cv)
@@ -328,7 +330,7 @@ class ClusterCurve(ClusterSurface, object):
         :param flag: bool
         """
 
-        maya.logger.warning('Cannot set cluster U, there is only one direction for spans on a curve.')
+        LOGGER.warning('Cannot set cluster U, there is only one direction for spans on a curve.')
     # endregion
 
 
@@ -405,7 +407,7 @@ def get_deformer_fn(deformer):
     """
 
     if maya.use_new_api():
-        maya.logger.warning('MFnWeightGeometryFilter does not exists in OpenMayaAnim 2.0 yet! Using OpenMaya 1.0 ...')
+        LOGGER.warning('MFnWeightGeometryFilter does not exists in OpenMayaAnim 2.0 yet! Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
 
     if not maya.cmds.objExists(deformer):
@@ -669,7 +671,7 @@ def find_input_shape(shape):
     if not deformer_obj.hasFn(maya.OpenMaya.MFn.kGeometryFilt):
         deformer_hist = maya.cmds.listHistory(shape, type='geometryFilter')
         if not deformer_hist:
-            maya.logger.warning('Shape node "{0}" has incoming inMesh connections but is not affected by any valid deformers! Returning "{0}"!'.format(shape))
+            LOGGER.warning('Shape node "{0}" has incoming inMesh connections but is not affected by any valid deformers! Returning "{0}"!'.format(shape))
             return shape
         else:
             deformer_obj = node.get_mobject(deformer_obj[0])
@@ -713,7 +715,7 @@ def get_weights(deformer, geometry=None):
 
     use_new_api = False
     if maya.is_new_api():
-        maya.logger.warning('get_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
+        LOGGER.warning('get_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
         use_new_api = True
 
@@ -748,7 +750,7 @@ def set_weights(deformer, weights, geometry=None):
 
     use_new_api = False
     if maya.is_new_api():
-        maya.logger.warning('set_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
+        LOGGER.warning('set_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
         use_new_api = True
 
@@ -846,7 +848,7 @@ def prune_membership_by_weights(deformer, geo_list=None, threshold=0.001):
 
     use_new_api = False
     if maya.is_new_api():
-        maya.logger.warning('prune_membership_by_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
+        LOGGER.warning('prune_membership_by_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
         use_new_api = True
 
@@ -897,7 +899,7 @@ def clean(deformer, threshold=0.001):
 
     check_deformer(deformer)
 
-    maya.logger.debug('Cleaning deformer: {}!'.format(deformer))
+    LOGGER.debug('Cleaning deformer: {}!'.format(deformer))
 
     prune_weights(deformer=deformer, threshold=threshold)
     prune_membership_by_weights(deformer=deformer, threshold=threshold)
@@ -930,9 +932,9 @@ def check_multiple_outputs(deformer, print_result=True):
         if len(plug_cnt) > 1:
             return_dict[deformer+'.outputGeometry['+str(index_list[i])+']'] = plug_cnt
             if print_result:
-                maya.logger.debug('Deformer output "'+deformer+'.outputGeometry['+str(index_list[i])+']" has '+str(len(plug_cnt))+' outgoing connections:')
+                LOGGER.debug('Deformer output "'+deformer+'.outputGeometry['+str(index_list[i])+']" has '+str(len(plug_cnt))+' outgoing connections:')
                 for cnt in plug_cnt:
-                    maya.logger.debug('\t- '+cnt)
+                    LOGGER.debug('\t- '+cnt)
 
     return return_dict
 
@@ -1365,16 +1367,16 @@ def skin_mesh_from_mesh(source_mesh, target_mesh, exclude_joints=None, include_j
     :param uv_space: bool, Whether to copy the skin weights in UV space rather than point space
     """
 
-    maya.logger.debug('Skinning {} using weights from {}'.format(target_mesh, source_mesh))
+    LOGGER.debug('Skinning {} using weights from {}'.format(target_mesh, source_mesh))
 
     skin = find_deformer_by_type(source_mesh, 'skinCluster')
     if not skin:
-        maya.logger.warning('{} has no skin. No skinning to copy!'.lformat(source_mesh))
+        LOGGER.warning('{} has no skin. No skinning to copy!'.lformat(source_mesh))
         return
 
     target_skin = find_deformer_by_type(target_mesh, 'skinCluster')
     if target_skin:
-        maya.logger.warning('{} already has a skinCluster. Deleting existing one ...'.format(target_mesh))
+        LOGGER.warning('{} already has a skinCluster. Deleting existing one ...'.format(target_mesh))
         maya.cmds.delete(target_skin)
         target_skin = None
 

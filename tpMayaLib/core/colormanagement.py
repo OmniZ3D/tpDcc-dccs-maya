@@ -7,7 +7,11 @@ Module that contains Color Management (OCIO) utils functions for Maya
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 import tpMayaLib as maya
+
+LOGGER = logging.getLogger()
 
 
 def is_color_management_enabled():
@@ -63,7 +67,7 @@ def set_rendering_space(rendering_space):
         rendering_space = all_rendering_space_names[rendering_space]
     else:
         if not rendering_space in all_rendering_space_names:
-            maya.logger.warning('Color Management Rendering Space "{}" is not valid!'.format(rendering_space))
+            LOGGER.warning('Color Management Rendering Space "{}" is not valid!'.format(rendering_space))
             return
 
     return maya.cmds.colorManagementPrefs(renderingSpaceName=rendering_space, edit=True)
@@ -89,7 +93,7 @@ def set_view_transform(view_transform):
         view_transform = get_all_view_transform_names[view_transform]
     else:
         if not view_transform in all_available_view_transforms:
-            maya.logger.warning('Color Management View Transform "{}" is not valid!'.format(view_transform))
+            LOGGER.warning('Color Management View Transform "{}" is not valid!'.format(view_transform))
             return
 
     return maya.cmds.colorManagementPrefs(viewTransformName=view_transform, edit=True)

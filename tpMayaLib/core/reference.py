@@ -7,9 +7,12 @@ Module that contains functions and classes related with reference
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 import traceback
 
 import tpMayaLib as maya
+
+LOGGER = logging.getLogger()
 
 
 def check_reference(ref_node):
@@ -132,17 +135,17 @@ def get_reference_proxy_manager(ref_node):
     """
 
     if not maya.cmds.attributeQuery('proxyMsg', n=ref_node, ex=True):
-        maya.logger.warning('Reference "{}" has no proxyMsg attribute! Unable to determine proxy manager ...'.format(ref_node))
+        LOGGER.warning('Reference "{}" has no proxyMsg attribute! Unable to determine proxy manager ...'.format(ref_node))
         return None
 
     proxy_manager = maya.cmds.ls(maya.cmds.listConnections(ref_node+'.proxyMsg', s=True, d=False) or list(), type='proxyManager') or list()
     if not proxy_manager:
-        maya.logger.warning('Reference "{}" has no valid proxyMsg connections! Unable to determine proxy manager ...')
+        LOGGER.warning('Reference "{}" has no valid proxyMsg connections! Unable to determine proxy manager ...')
         return None
 
     if len(proxy_manager) > 1:
-        maya.logger.warning('Multiple proxy manager nodes attached to reference "{}"! Returning first node only ...')
-        maya.logger.warning(str(proxy_manager))
+        LOGGER.warning('Multiple proxy manager nodes attached to reference "{}"! Returning first node only ...')
+        LOGGER.warning(str(proxy_manager))
 
     return proxy_manager[0]
 
@@ -217,7 +220,7 @@ def get_reference_from_namespace(namespace, parent_namespace=None):
 
             return ref_node
 
-        maya.logger.warning('Unable to determine reference from namespace: {}'.format(namespace))
+        LOGGER.warning('Unable to determine reference from namespace: {}'.format(namespace))
         return ''
 
 
@@ -265,12 +268,12 @@ def import_reference(ref_node):
         ref_file = maya.cmds.referenceQuery(ref_node, filename=True)
     except Exception:
         if maya.cmds.objExists(ref_node):
-            maya.logger.warning('No file associated with reference! Deleting node "{}"'.format(ref_node))
+            LOGGER.warning('No file associated with reference! Deleting node "{}"'.format(ref_node))
             maya.cmds.lockNode(ref_node, l=False)
             maya.cmds.delete(ref_node)
         else:
             maya.cmds.file(ref_file, importReference=True)
-            maya.logger.debug('Imported reference "{}" from: "{}"'.format(ref_node, ref_file))
+            LOGGER.debug('Imported reference "{}" from: "{}"'.format(ref_node, ref_file))
 
 
 def replace_reference(ref_node, ref_path):
@@ -283,7 +286,7 @@ def replace_reference(ref_node, ref_path):
     check_reference(ref_node)
 
     if get_reference_file(ref_node, without_copy_number=True) == ref_path:
-        maya.logger.warning('Reference "{}" already referencing "{}"!'.format(ref_node, ref_path))
+        LOGGER.warning('Reference "{}" already referencing "{}"!'.format(ref_node, ref_path))
         return
 
     if ref_path.endswith('.ma'):
@@ -295,7 +298,7 @@ def replace_reference(ref_node, ref_path):
 
     maya.cmds.file(ref_path, loadReference=ref_node, typ=ref_type, options='v=0')
 
-    maya.logger.debug('Replaced reference "{}" using file: "{}"'.format(ref_node, ref_path))
+    LOGGER.debug('Replaced reference "{}" using file: "{}"'.format(ref_node, ref_path))
 
     return ref_path
 
@@ -312,10 +315,10 @@ def remove_reference(ref_node):
     try:
         maya.cmds.file(referenceNode=ref_node, removeReference=True)
     except Exception as e:
-        maya.logger.error('Error removing reference "{}! {} | {}'.format(ref_node, e, traceback.format_exc()))
+        LOGGER.error('Error removing reference "{}! {} | {}'.format(ref_node, e, traceback.format_exc()))
         return False
 
-    maya.logger.debug('Removed reference "{}"! ("{}")'.format(ref_node, ref_file))
+    LOGGER.debug('Removed reference "{}"! ("{}")'.format(ref_node, ref_file))
 
     return True
 
@@ -330,7 +333,7 @@ def unload_reference(ref_node):
 
     maya.cmds.file(referenceNode=ref_node, unloadReference=True)
 
-    maya.logger.debug('Unloaded reference "{}"! ("{}")'.format(ref_node, get_reference_file(ref_node)))
+    LOGGER.debug('Unloaded reference "{}"! ("{}")'.format(ref_node, get_reference_file(ref_node)))
 
 
 def reload_reference(ref_node):
@@ -343,4 +346,4 @@ def reload_reference(ref_node):
 
     maya.cmds.file(referenceNode=ref_node, loadReference=True)
 
-    maya.logger.debug('Reloaded reference "{}"! ("{}")'.format(ref_node, get_reference_file(ref_node)))
+    LOGGER.debug('Reloaded reference "{}"! ("{}")'.format(ref_node, get_reference_file(ref_node)))

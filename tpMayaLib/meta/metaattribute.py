@@ -8,10 +8,13 @@ Module that contains functions and classes related with meta attributes
 from __future__ import print_function, division, absolute_import
 
 import copy
+import logging
 
 import tpMayaLib as maya
 from tpPyUtils import decorators
 from tpMayaLib.meta import metautils
+
+LOGGER = logging.getLogger()
 
 
 class MetaAttribute(object):
@@ -69,7 +72,7 @@ class MetaAttribute(object):
                 for o in value:
                     if maya.cmds.objExists(o):
                         self.attr_type = 'message'
-                        maya.logger.debug('MultiMessage mode!')
+                        LOGGER.debug('MultiMessage mode!')
                         break
                     self.attr_type = 'double3'
             elif maya.cmds.objExists(value):
@@ -85,7 +88,7 @@ class MetaAttribute(object):
             current_type = maya.cmds.getAttr('{0}.{1}'.format(self.obj.meta_node, attr_name), type=True)
             if not metautils.MetaAttributeUtils.validate_attr_type_match(self.attr_type, current_type) and self.attr_type is not False:
                 if self.obj.is_referenced():
-                    maya.logger.error('"{0}" is referenced. Cannot convert "{1}" to "{2}"!'.format(self.obj.meta_node, attr_name, attr_type))
+                    LOGGER.error('"{0}" is referenced. Cannot convert "{1}" to "{2}"!'.format(self.obj.meta_node, attr_name, attr_type))
                 self.convert(self.attr_type)
             else:
                 self.attr = attr_name
@@ -97,14 +100,14 @@ class MetaAttribute(object):
                     _type = 'string'
                 metautils.MetaAttributeUtils.add(self.obj.meta_node, attr_name, _type)
             except StandardError as e:
-                maya.logger.error('|Attribute Add| >> Failed" "{0}" failed to add "{1}" | type: {2}'.format(self.obj.meta_node, attr_name, self.attr_type))
+                LOGGER.error('|Attribute Add| >> Failed" "{0}" failed to add "{1}" | type: {2}'.format(self.obj.meta_node, attr_name, self.attr_type))
                 raise StandardError(e)
 
         if enum:
             try:
                 self.set_enum(enum)
             except Exception:
-                maya.logger.error('Failed to set enum value of "{}"'.format(enum))
+                LOGGER.error('Failed to set enum value of "{}"'.format(enum))
 
         if value is not None:
             self.set(value)
@@ -113,19 +116,19 @@ class MetaAttribute(object):
             try:
                 self.min_value = min_value
             except Exception:
-                maya.logger.error('|Attribute Add| >> min value on call failure!'.format(min_value))
+                LOGGER.error('|Attribute Add| >> min value on call failure!'.format(min_value))
 
         if max_value is not None:
             try:
                 self.max_value = max_value
             except Exception:
-                maya.logger.error('|Attribute Add| >> max value on call failure!'.format(min_value))
+                LOGGER.error('|Attribute Add| >> max value on call failure!'.format(min_value))
 
         if default_value is not None:
             try:
                 self.default_value = default_value
             except Exception:
-                maya.logger.error('|Attribute Add| >> default value on call failure!'.format(min_value))
+                LOGGER.error('|Attribute Add| >> default value on call failure!'.format(min_value))
 
         if keyable is not None:
             self.set_keyable(keyable)
@@ -175,16 +178,16 @@ class MetaAttribute(object):
                     if alias != self.name_alias:
                         return maya.cmds.aliasAttr(alias, self.combined_name)
                     else:
-                        maya.logger.debug('{0}.{1} already has that alias!'.format(self.obj.get_short_name(), self.attr))
+                        LOGGER.debug('{0}.{1} already has that alias!'.format(self.obj.get_short_name(), self.attr))
                 except Exception:
-                    maya.logger.warning('{0}.{1} failed to set alias of {2}'.format(self.obj.meta_node, self.attr, alias))
+                    LOGGER.warning('{0}.{1} failed to set alias of {2}'.format(self.obj.meta_node, self.attr, alias))
             else:
                 if self.name_alias:
                     self.attr = self.long_name
                     maya.cmds.aliasAttr(self.combined_name, remove=True)
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, alias, e]
-            maya.logger.error('{0}.{1}.set_alias() | arg: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set_alias() | arg: {2} | error: {3}'.format(*fmt_args))
 
     def get_nice_name(self):
         """
@@ -216,7 +219,7 @@ class MetaAttribute(object):
             else:
                 return metautils.MetaAttributeUtils.get(self.obj.meta_node, self.attr)
         except Exception as e:
-            maya.logger.warning('{0} failed to get | {1}'.format(self.combined_name, e))
+            LOGGER.warning('{0} failed to get | {1}'.format(self.combined_name, e))
 
     def set(self, value, *args, **kwargs):
         """
@@ -241,14 +244,14 @@ class MetaAttribute(object):
                                 metautils.MetaAttributeUtils.set(child_attr.obj.meta_node, child_attr.attr, value, *args, **kwargs)
                         except Exception as e:
                             fmt_args = [c, e]
-                            maya.logger.error('On child: {0} | error: {1}'.format(*fmt_args))
+                            LOGGER.error('On child: {0} | error: {1}'.format(*fmt_args))
                 else:
                     metautils.MetaAttributeUtils.set(self.obj.meta_node, self.attr, value, *args, **kwargs)
 
             object.__setattr__(self, self.attr, self.value)
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, value, e]
-            maya.logger.error('{0}.{1}.set() | arg: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set() | arg: {2} | error: {3}'.format(*fmt_args))
 
     def rename(self, name):
         """
@@ -268,10 +271,10 @@ class MetaAttribute(object):
 
         try:
             metautils.MetaAttributeUtils.delete(self.obj.meta_node, self.attr)
-            maya.logger.warning('{} deleted!'.format(self.combined_name))
+            LOGGER.warning('{} deleted!'.format(self.combined_name))
             del(self)
         except Exception:
-            maya.logger.error('{} failed to delete!'.format(self.obj.meta_node, self.attr))
+            LOGGER.error('{} failed to delete!'.format(self.obj.meta_node, self.attr))
 
     def get_locked(self):
         """
@@ -308,7 +311,7 @@ class MetaAttribute(object):
                     maya.cmds.setAttr(self.obj.meta_node+'.'+self.attr, edit=True, lock=False)
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, lock, e]
-            maya.logger.error('{0}.{1}.set_locked() | arg: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set_locked() | arg: {2} | error: {3}'.format(*fmt_args))
 
     def get_keyable(self):
         """
@@ -354,7 +357,7 @@ class MetaAttribute(object):
                             self.set_hidden(False)
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, keyable, e]
-            maya.logger.error('{0}.{1}.set_keyable() | arg: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set_keyable() | arg: {2} | error: {3}'.format(*fmt_args))
 
     def get_hidden(self):
         """
@@ -398,7 +401,7 @@ class MetaAttribute(object):
                     maya.cmds.setAttr(self.obj.meta_node+'.'+self.attr, edit=True, channelBox=True)
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, hide, e]
-            maya.logger.error('{0}.{1}.set_hidden() | arg: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set_hidden() | arg: {2} | error: {3}'.format(*fmt_args))
 
     def get_default_value(self):
         """
@@ -433,15 +436,15 @@ class MetaAttribute(object):
                             try:
                                 maya.cmds.addAttr(child_attr.obj.meta_node+'.'+child_attr.attr, edit=True, defaultValue=value)
                             except StandardError:
-                                maya.logger.debug('"{}" failed to set a default value'.format(child_attr.combined_name))
+                                LOGGER.debug('"{}" failed to set a default value'.format(child_attr.combined_name))
                     else:
                         try:
                             maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, defaultValue=value)
                         except StandardError:
-                            maya.logger.debug('"{}" failed to set a default value'.format(self.combined_name))
+                            LOGGER.debug('"{}" failed to set a default value'.format(self.combined_name))
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, value, e]
-            maya.logger.error('{0}.{1}.set_default() | value: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set_default() | value: {2} | error: {3}'.format(*fmt_args))
 
     def get_min_value(self):
         """
@@ -472,23 +475,23 @@ class MetaAttribute(object):
                 if value is False or None:
                     try:
                         maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, hasMinValue=False)
-                        maya.logger.warning('{} had its minimum value cleared'.format(self.combined_name))
+                        LOGGER.warning('{} had its minimum value cleared'.format(self.combined_name))
                     except Exception:
-                        maya.logger.error('{} failed to clear a minimum value'.format(self.combined_name))
+                        LOGGER.error('{} failed to clear a minimum value'.format(self.combined_name))
                 elif value is not None:
                     try:
                         maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, minValue=value)
                     except Exception:
-                        maya.logger.error('{} failed to set a minimum value'.format(self.combined_name))
+                        LOGGER.error('{} failed to set a minimum value'.format(self.combined_name))
 
                 if self.value < value:
                     self.value = value
-                    maya.logger.warning('Value changed due to a new minimum. Value is now: {}'.format(value))
+                    LOGGER.warning('Value changed due to a new minimum. Value is now: {}'.format(value))
             else:
-                maya.logger.error('"{}" is not a numeric attribute'.format(self.combined_name))
+                LOGGER.error('"{}" is not a numeric attribute'.format(self.combined_name))
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, value, e]
-            maya.logger.error('{0}.{1}.set_min_value() | value: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set_min_value() | value: {2} | error: {3}'.format(*fmt_args))
 
     def get_max_value(self):
         """
@@ -519,23 +522,23 @@ class MetaAttribute(object):
                 if value is False or None:
                     try:
                         maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, hasMaxValue=False)
-                        maya.logger.warning('{} had its maximum value cleared'.format(self.combined_name))
+                        LOGGER.warning('{} had its maximum value cleared'.format(self.combined_name))
                     except Exception:
-                        maya.logger.error('{} failed to clear a maximum value'.format(self.combined_name))
+                        LOGGER.error('{} failed to clear a maximum value'.format(self.combined_name))
                 elif value is not None:
                     try:
                         maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, minValue=value)
                     except Exception:
-                        maya.logger.error('{} failed to set a maximum value'.format(self.combined_name))
+                        LOGGER.error('{} failed to set a maximum value'.format(self.combined_name))
 
                 if self.value > value:
                     self.value = value
-                    maya.logger.warning('Value changed due to a new maximum. Value is now: {}'.format(value))
+                    LOGGER.warning('Value changed due to a new maximum. Value is now: {}'.format(value))
             else:
-                maya.logger.error('"{}" is not a numeric attribute'.format(self.combined_name))
+                LOGGER.error('"{}" is not a numeric attribute'.format(self.combined_name))
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, value, e]
-            maya.logger.error('{0}.{1}.set_max_value() | value: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set_max_value() | value: {2} | error: {3}'.format(*fmt_args))
 
     def get_soft_min_value(self):
         """
@@ -566,19 +569,19 @@ class MetaAttribute(object):
                 if value is False:
                     try:
                         maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, hasSoftMinValue=False)
-                        maya.logger.warning('{} had its minimum value cleared'.format(self.combined_name))
+                        LOGGER.warning('{} had its minimum value cleared'.format(self.combined_name))
                     except Exception:
-                        maya.logger.error('{} failed to clear a soft minimum value'.format(self.combined_name))
+                        LOGGER.error('{} failed to clear a soft minimum value'.format(self.combined_name))
                 elif value is not None:
                     try:
                         maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, softMinValue=value)
                     except Exception:
-                        maya.logger.error('{} failed to set a soft minimum value'.format(self.combined_name))
+                        LOGGER.error('{} failed to set a soft minimum value'.format(self.combined_name))
             else:
-                maya.logger.error('"{}" is not a numeric attribute'.format(self.combined_name))
+                LOGGER.error('"{}" is not a numeric attribute'.format(self.combined_name))
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, value, e]
-            maya.logger.error('{0}.{1}.set_min_value() | value: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set_min_value() | value: {2} | error: {3}'.format(*fmt_args))
 
     def get_soft_max_value(self):
         """
@@ -609,19 +612,19 @@ class MetaAttribute(object):
                 if value is False:
                     try:
                         maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, hasSoftMaxValue=False)
-                        maya.logger.warning('{} had its maximum value cleared'.format(self.combined_name))
+                        LOGGER.warning('{} had its maximum value cleared'.format(self.combined_name))
                     except Exception:
-                        maya.logger.error('{} failed to clear a soft maximum value'.format(self.combined_name))
+                        LOGGER.error('{} failed to clear a soft maximum value'.format(self.combined_name))
                 elif value is not None:
                     try:
                         maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, softMaxValue=value)
                     except Exception:
-                        maya.logger.error('{} failed to set a soft maximum value'.format(self.combined_name))
+                        LOGGER.error('{} failed to set a soft maximum value'.format(self.combined_name))
             else:
-                maya.logger.error('"{}" is not a numeric attribute'.format(self.combined_name))
+                LOGGER.error('"{}" is not a numeric attribute'.format(self.combined_name))
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, value, e]
-            maya.logger.error('{0}.{1}.set_max_value() | value: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.set_max_value() | value: {2} | error: {3}'.format(*fmt_args))
 
     def get_enum(self):
         """
@@ -643,12 +646,12 @@ class MetaAttribute(object):
                 if ':'.join(self.enum) != metautils.MetaAttributeValidator.string_list_arg(enums):
                     maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, at='enum', en=enums)
                 else:
-                    maya.logger.info('{} | already set'.format(base_msg))
+                    LOGGER.info('{} | already set'.format(base_msg))
             else:
-                maya.logger.warning('{} | not an enum. Invalid call'.format(base_msg))
+                LOGGER.warning('{} | not an enum. Invalid call'.format(base_msg))
         except Exception as e:
             fmt_args = [base_msg, e]
-            maya.logger.error('{0} | error: {1}'.format(*fmt_args))
+            LOGGER.error('{0} | error: {1}'.format(*fmt_args))
 
     long_name = property(get_long_name, rename)
     combined_name = property(get_combined_name)
@@ -707,7 +710,7 @@ class MetaAttribute(object):
 
         if self.attr and maya.cmds.listAttr(self.obj.meta_node, userDefined=True):
             return True
-        maya.logger.error('{}.is_dynamic: False'.format(self.combined_short_name))
+        LOGGER.error('{}.is_dynamic: False'.format(self.combined_short_name))
         return False
 
     def is_numeric(self):
@@ -727,7 +730,7 @@ class MetaAttribute(object):
         """
 
         if not self.is_dynamic():
-            maya.logger.warning('"{}" is not a dynamic attribute. Readable is not relevant'.format(self.combined_name))
+            LOGGER.warning('"{}" is not a dynamic attribute. Readable is not relevant'.format(self.combined_name))
             return False
         return maya.cmds.addAttr(self.combined_name, query=True, r=True) or False
 
@@ -738,7 +741,7 @@ class MetaAttribute(object):
         """
 
         if not self.is_dynamic():
-            maya.logger.warning('"{}" is not a dynamic attribute. Writable is not relevant'.format(self.combined_name))
+            LOGGER.warning('"{}" is not a dynamic attribute. Writable is not relevant'.format(self.combined_name))
             return False
         return maya.cmds.addAttr(self.combined_name, query=True, w=True) or False
 
@@ -749,7 +752,7 @@ class MetaAttribute(object):
         """
 
         if not self.is_dynamic():
-            maya.logger.warning('"{}" is not a dynamic attribute. Storable is not relevant'.format(self.combined_name))
+            LOGGER.warning('"{}" is not a dynamic attribute. Storable is not relevant'.format(self.combined_name))
             return False
         return maya.cmds.addAttr(self.combined_name, query=True, s=True) or False
 
@@ -760,7 +763,7 @@ class MetaAttribute(object):
         """
 
         if not self.is_dynamic():
-            maya.logger.warning('"{}" is not a dynamic attribute. UsedAsColor is not relevant'.format(self.combined_name))
+            LOGGER.warning('"{}" is not a dynamic attribute. UsedAsColor is not relevant'.format(self.combined_name))
             return False
         return maya.cmds.addAttr(self.combined_name, query=True, usedAsColor=True) or False
 
@@ -785,9 +788,9 @@ class MetaAttribute(object):
 
         try:
             if self.obj.is_referenced():
-                maya.logger.error('"{0}" is referenced. Cannot convert "{1}" to "{2}"!'.format(self.obj.meta_node, self.nice_name, attr_type))
+                LOGGER.error('"{0}" is referenced. Cannot convert "{1}" to "{2}"!'.format(self.obj.meta_node, self.nice_name, attr_type))
             if self.get_children():
-                maya.logger.error('"{}" has children, cannot convert'.format(self.combined_name))
+                LOGGER.error('"{}" has children, cannot convert'.format(self.combined_name))
 
             keyable = copy.copy(self.keyable)
             hidden = copy.copy(self.hidden)
@@ -821,7 +824,7 @@ class MetaAttribute(object):
             self.attr_type = maya.cmds.getAttr(self.combined_name, type=True)
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, attr_type, e]
-            maya.logger.error('{0}.{1}.convert() | attr_type: {2} | error: {3}'.format(*fmt_args))
+            LOGGER.error('{0}.{1}.convert() | attr_type: {2} | error: {3}'.format(*fmt_args))
 
     def get_children(self, as_meta=False):
         """
@@ -843,7 +846,7 @@ class MetaAttribute(object):
             fmt_args = [self.obj.short_name, self.long_name]
             fn_msg = '{0}.{1}.get_children()'.format(*fmt_args)
             fmt_args = [fn_msg, as_meta, e]
-            maya.logger.error('{0} | as_meta: {1} | error: {2}'.format(*fmt_args))
+            LOGGER.error('{0} | as_meta: {1} | error: {2}'.format(*fmt_args))
 
     def get_parent(self, as_meta=False):
         """
@@ -862,7 +865,7 @@ class MetaAttribute(object):
             fmt_args = [self.obj.short_name, self.long_name]
             fn_msg = '{0}.{1}.get_parent()'.format(*fmt_args)
             fmt_args = [fn_msg, as_meta, e]
-            maya.logger.error('{0} | as_meta: {1} | error: {2}'.format(*fmt_args))
+            LOGGER.error('{0} | as_meta: {1} | error: {2}'.format(*fmt_args))
 
     def get_siblings(self, as_meta=False):
         """
@@ -881,4 +884,4 @@ class MetaAttribute(object):
             fmt_args = [self.obj.short_name, self.long_name]
             fn_msg = '{0}.{1}.get_siblings()'.format(*fmt_args)
             fmt_args = [fn_msg, as_meta, e]
-            maya.logger.error('{0} | as_meta: {1} | error: {2}'.format(*fmt_args))
+            LOGGER.error('{0} | as_meta: {1} | error: {2}'.format(*fmt_args))

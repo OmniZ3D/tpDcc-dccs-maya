@@ -7,8 +7,12 @@ Utility methods related to Maya Curves
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 import tpMayaLib as maya
 from tpMayaLib.core import exceptions, api, transform, name as name_utils, shape as shape_utils
+
+LOGGER = logging.getLogger()
 
 
 def check_curve(curve):
@@ -109,7 +113,7 @@ def transforms_to_curve(transforms, spans=None, description='from_transforms'):
     """
 
     if not transforms:
-        maya.logger.warning('Impossible to create curve from transforms because no transforms given!')
+        LOGGER.warning('Impossible to create curve from transforms because no transforms given!')
         return None
 
     transform_positions = list()

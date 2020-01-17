@@ -7,9 +7,12 @@ Module that contains functions and classes related to shapes
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 
 import tpMayaLib as maya
 from tpMayaLib.core import node, exceptions
+
+LOGGER = logging.getLogger()
 
 
 TYPE_DICT = {
@@ -363,13 +366,13 @@ def find_input_shape(obj, recursive=False, print_exceptions=False):
             input_shape = find_input_shape_1(obj)
         except Exception as e:
             if print_exceptions:
-                maya.logger.debug('Caught exception: {}'.format(str(e)))
+                LOGGER.debug('Caught exception: {}'.format(str(e)))
     if not input_shape:
         try:
             input_shape = find_input_shape_2(obj)
         except Exception as e:
             if print_exceptions:
-                maya.logger.debug('Caught exception: {}'.format(str(e)))
+                LOGGER.debug('Caught exception: {}'.format(str(e)))
 
     # Check if input shape is valid
     if not input_shape:

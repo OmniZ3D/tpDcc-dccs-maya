@@ -7,9 +7,13 @@ Module that contains functions and classes related with Maya API
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 from tpPyUtils import mathlib
 
 import tpMayaLib as maya
+
+LOGGER = logging.getLogger()
 
 
 class ApiObject(object):
@@ -363,7 +367,7 @@ class SelectionList(ApiObject, object):
         try:
             self.obj.add(name)
         except Exception:
-            maya.logger.warning('Could not add {} into selection list'.format(name))
+            LOGGER.warning('Could not add {} into selection list'.format(name))
             return
 
     def get_depend_node(self, index=0):
@@ -380,7 +384,7 @@ class SelectionList(ApiObject, object):
                 self.obj.getDependNode(0, mobj())
             return mobj()
         except Exception:
-            maya.logger.warning('Could not get MObject at index {}'.format(index))
+            LOGGER.warning('Could not get MObject at index {}'.format(index))
             return
 
     def get_dag_path(self, index=0):
@@ -641,7 +645,7 @@ class TransformFunction(MayaFunction, object):
 
     def get_vector_matrix_product(self, vector):
         # TODO: Not working properly
-        maya.logger.warning('get_vector_matrix_product() does not work properly yet ...!')
+        LOGGER.warning('get_vector_matrix_product() does not work properly yet ...!')
         vct = maya.OpenMaya.MVector()
         vct.x = vector[0]
         vct.y = vector[1]

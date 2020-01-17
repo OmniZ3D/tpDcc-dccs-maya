@@ -7,9 +7,13 @@ Module that contains functions and classes related to names
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 import tpMayaLib as maya
 from tpPyUtils import strings
 from tpPyUtils import name as naming_utils
+
+LOGGER = logging.getLogger()
 
 
 class FindUniqueName(naming_utils.FindUniqueString, object):
@@ -85,7 +89,7 @@ def get_basename(obj, remove_namespace=True, remove_attribute=False):
     """
 
     # if not cmds.objExists(obj):
-    #     maya.logger.error('No object exists: {}'.format(obj))
+    #     LOGGER.error('No object exists: {}'.format(obj))
     #     return False
 
     split_name = obj.split('|')
@@ -118,9 +122,9 @@ def get_short_name(obj):
     if node_names:
         if len(node_names) == 1:
             return node_names[0]
-        maya.logger.warning('Too many objects named "{}"'.format(obj))
+        LOGGER.warning('Too many objects named "{}"'.format(obj))
         for i, o in enumerate(node_names):
-            maya.logger.warning(' ' * 4 + '{0}: "{1}"'.format(i, o))
+            LOGGER.warning(' ' * 4 + '{0}: "{1}"'.format(i, o))
         raise ValueError('Get Node Short Name || More than one object with name {}'.format(obj))
     raise ValueError('Get Node Short Name || No object with name {} exists'.format(obj))
 
@@ -141,9 +145,9 @@ def get_long_name(obj):
     if node_names:
         if len(node_names) == 1:
             return node_names[0]
-        maya.logger.error('Too many objects named "{}"'.format(obj))
+        LOGGER.error('Too many objects named "{}"'.format(obj))
         for i, o in enumerate(node_names):
-            maya.logger.error(' ' * 4 + '{0}: "{1}"'.format(i, o))
+            LOGGER.error(' ' * 4 + '{0}: "{1}"'.format(i, o))
         raise ValueError('Get Node Long Name || More than one object with name {}'.format(obj))
 
     raise ValueError('Get Node Long Name || No object with name {} exists'.format(obj))

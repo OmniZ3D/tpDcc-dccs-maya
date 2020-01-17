@@ -7,8 +7,12 @@ This module include data class for blendshapes
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 import tpMayaLib as maya
 from tpMayaLib.core import exceptions
+
+LOGGER = logging.getLogger()
 
 
 class BlendShapeOrigin(object):
@@ -358,7 +362,7 @@ def create(base_geo, target_geo=None, origin='local', deform_order=None, prefix=
 
     blend_shape = prefix + '_blendShape'
     if is_blendshape(blend_shape):
-        maya.logger.debug('BlendShape {} already exists!'.format(blend_shape))
+        LOGGER.debug('BlendShape {} already exists!'.format(blend_shape))
         return blend_shape
 
     if deform_order == BlendShapeDeformerOrder.After:
@@ -581,9 +585,9 @@ def remove_unconnected_targets(blend_shape, base):
             try:
                 remove_target(blend_shape, target, base)
             except Exception:
-                maya.logger.warning('Unable to delete blendshape target "{}"!'.format(target))
+                LOGGER.warning('Unable to delete blendshape target "{}"!'.format(target))
             else:
-                maya.logger.warning('Target "{}" deleted!')
+                LOGGER.warning('Target "{}" deleted!')
                 deleted_target_list.append(target)
 
     return deleted_target_list

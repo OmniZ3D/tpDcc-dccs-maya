@@ -7,10 +7,14 @@ Module that contains functions and classes related with transforms
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 from tpPyUtils import name, mathlib, python
 
 import tpMayaLib as maya
 from tpMayaLib.core import exceptions, attribute, node, component, name as name_utils
+
+LOGGER = logging.getLogger()
 
 
 TRANSFORM_SIDES = {
@@ -557,7 +561,7 @@ def get_position(point):
 
     if type(point) == list or type(point) == tuple:
         if len(point < 3):
-            maya.logger.exception('Invalid point value supplied! Not enough list/tuple elements!')
+            LOGGER.exception('Invalid point value supplied! Not enough list/tuple elements!')
             return
         pos = point[0:3]
     elif type(point) == str or type(point) == unicode:
@@ -573,10 +577,10 @@ def get_position(point):
             except:
                 pass
         if not pos:
-            maya.logger.exception('Invalid point value supplied! Unable to determine type of point "{0}"!'.format(str(point)))
+            LOGGER.exception('Invalid point value supplied! Unable to determine type of point "{0}"!'.format(str(point)))
             return
     else:
-        maya.logger.exception('Invalid point value supplied! Invalid argument type!')
+        LOGGER.exception('Invalid point value supplied! Invalid argument type!')
         return
 
     return pos
@@ -995,7 +999,7 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
     scope_transforms += transforms
     scope = list(set(scope_joints + scope_transforms))
     if not scope:
-        maya.logger.warning('No objects to mirror!')
+        LOGGER.warning('No objects to mirror!')
         return
 
     other_parents = dict()
@@ -1031,7 +1035,7 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
             if maya.cmds.objExists('{}.mirror'.format(other)):
                 mirror = maya.cmds.getAttr('{}.mirror'.format(other))
                 if not mirror:
-                    maya.logger.debug('{} was not mirrored because its mirror attribute is set off!'.format(other))
+                    LOGGER.debug('{} was not mirrored because its mirror attribute is set off!'.format(other))
                     continue
 
             lock_xforms = list()

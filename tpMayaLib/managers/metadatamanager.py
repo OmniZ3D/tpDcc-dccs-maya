@@ -8,6 +8,7 @@ Manager to control current scene meta data values and nodes
 from __future__ import print_function, division, absolute_import
 
 import inspect
+import logging
 
 from Qt.QtCore import *
 from Qt.QtWidgets import *
@@ -24,6 +25,8 @@ METANODE_CLASSES_REGISTER = list()
 METANODE_TYPES_REGISTER = list()
 METANODE_CLASSES_INHERITANCE_MAP = list()
 # ===================================================================================================================
+
+LOGGER = logging.getLogger()
 
 
 class MetaDataManager(window.MainWindow, object):
@@ -82,7 +85,7 @@ class MetaDataManager(window.MainWindow, object):
         :return: str
         """
 
-        maya.logger.debug('Generating a new UUID')
+        LOGGER.debug('Generating a new UUID')
 
         valid_uuid = False
         generated_uuid = None
@@ -94,9 +97,9 @@ class MetaDataManager(window.MainWindow, object):
                 valid_uuid = True
             else:
                 if not meta_node == METANODES_CACHE[uuid]:
-                    maya.logger.debug('METANODES_CACHE: {0} : UUID is registered to a different node : modifying UUID: {1}'.format( uuid, meta_node.meta_node))
+                    LOGGER.debug('METANODES_CACHE: {0} : UUID is registered to a different node : modifying UUID: {1}'.format( uuid, meta_node.meta_node))
                 else:
-                    maya.logger.debug('METANODES_CACHE : UUID {0} is already registered in METANODES_CACHE'.format(uuid))
+                    LOGGER.debug('METANODES_CACHE : UUID {0} is already registered in METANODES_CACHE'.format(uuid))
 
         return generated_uuid
 
@@ -114,7 +117,7 @@ class MetaDataManager(window.MainWindow, object):
         uuid = metanode.MetaNode.get_metanode_uuid(meta_node=meta_node)
 
         if METANODES_CACHE or uuid not in METANODES_CACHE.keys():
-            maya.logger.debug('CACHE: Adding to MetaNode UUID Cache: {0} > {1}'.format(meta_node.meta_node, uuid))
+            LOGGER.debug('CACHE: Adding to MetaNode UUID Cache: {0} > {1}'.format(meta_node.meta_node, uuid))
             METANODES_CACHE[uuid] = meta_node
 
         meta_node._lastUUID = uuid
@@ -132,10 +135,10 @@ class MetaDataManager(window.MainWindow, object):
             try:
                 if not metanode.MetaNode.check_metanode_validity(v):
                     METANODES_CACHE.pop(k)
-                    maya.logger.debug('CACHE : {} being removed from the META NODE CACHE due to invalid MObject'.format(k))
+                    LOGGER.debug('CACHE : {} being removed from the META NODE CACHE due to invalid MObject'.format(k))
             except Exception as e:
-                maya.logger.debug('CACHE : Clean cache failed!')
-                maya.logger.debug(str(e))
+                LOGGER.debug('CACHE : Clean cache failed!')
+                LOGGER.debug(str(e))
 
     @staticmethod
     def get_metanode_from_cache(meta_node):
@@ -165,7 +168,7 @@ class MetaDataManager(window.MainWindow, object):
         METANODE_CLASSES_INHERITANCE_MAP[meta_data_name]['short'] = meta_data_name
 
         for meta_class in python.itersubclasses(metanode.MetaNode):
-            maya.logger.debug('Registering: {}'.format(meta_class))
+            LOGGER.debug('Registering: {}'.format(meta_class))
             METANODE_CLASSES_REGISTER[meta_class.__name__] = meta_class
             METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__] = dict()
             METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__]['full'] = list(inspect.getmro(meta_class))
@@ -205,12 +208,12 @@ class MetaDataManager(window.MainWindow, object):
 
             for node_type in base_types:
                 if node_type not in METANODE_TYPES_REGISTER and node_type in valid_dcc_metanode_types:
-                    maya.logger.debug('MetaNode type: {0} : added to METANODE_TYPES_REGISTER'.format(node_type))
+                    LOGGER.debug('MetaNode type: {0} : added to METANODE_TYPES_REGISTER'.format(node_type))
                     METANODE_TYPES_REGISTER.append(node_type)
                 else:
-                    maya.logger.debug('MetaNode TYPE: {0} is an invalid Maya Meta type'.format(node_type))
+                    LOGGER.debug('MetaNode TYPE: {0} is an invalid Maya Meta type'.format(node_type))
         except Exception as e:
-            maya.logger.warning('Fail when register MetaNode types: {0}'.format(str(e)))
+            LOGGER.warning('Fail when register MetaNode types: {0}'.format(str(e)))
 
     @staticmethod
     def register_meta_nodes():
@@ -267,10 +270,10 @@ class MetaDataManager(window.MainWindow, object):
             if v and v in meta_nodes:
                 try:
                     METANODES_CACHE.pop(k)
-                    maya.logger.debug('METANODES CACHE: {0} being removed from the MetaNodes Cache >> {1}'.format(
+                    LOGGER.debug('METANODES CACHE: {0} being removed from the MetaNodes Cache >> {1}'.format(
                         name_utils.strip_name(k), name_utils.strip_name(v.meta_node)))
                 except Exception as e:
-                    maya.logger.debug('METANODES CACHE: Failed to remove {0} from cache >> {1}'.format(k, v.meta_node))
+                    LOGGER.debug('METANODES CACHE: Failed to remove {0} from cache >> {1}'.format(k, v.meta_node))
 
     @staticmethod
     def reset_metanodes_cache():
@@ -334,7 +337,7 @@ class MetaDataManager(window.MainWindow, object):
         if not type(nodes) == list:
             nodes = [nodes]
         for n in nodes:
-            maya.logger.debug('Converting node {0} >> to {1} MetaNode'.format(name_utils.strip_name(n), meta_class))
+            LOGGER.debug('Converting node {0} >> to {1} MetaNode'.format(name_utils.strip_name(n), meta_class))
             meta_node = metanode.MetaNode(n)
             meta_node.add_attribute('meta_class',value=MetaDataManager.meta_types_to_registry_key(meta_class)[0])
             meta_node.add_attribute('meta_node_id', value=name_utils.strip_name(n))
