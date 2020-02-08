@@ -105,7 +105,7 @@ def get_current_namespace():
     :return: str
     """
 
-    current_namespace = maya.cmds.namespaceInfo(curr=True)
+    current_namespace = maya.cmds.namespaceInfo(cur=True)
     if not current_namespace.startswith(':'):
         current_namespace = ':{}'.format(current_namespace)
 

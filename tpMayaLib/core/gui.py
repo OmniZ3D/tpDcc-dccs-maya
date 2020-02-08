@@ -218,6 +218,15 @@ def set_current_frame(frame):
     return maya.cmds.currentTime(frame, update=True)
 
 
+def get_playblack_slider():
+    """
+    Returns playback slider Maya control
+    :return: str
+    """
+
+    return maya.mel.eval("global string $gPlayBackSlider; " "$gPlayBackSlider = $gPlayBackSlider;")
+
+
 def get_time_slider_range(highlighted=True, within_highlighted=True, highlighted_only=False):
     """
     Return the time range from Maya time slider
@@ -230,7 +239,7 @@ def get_time_slider_range(highlighted=True, within_highlighted=True, highlighted
     """
 
     if highlighted is True:
-        playback_slider = maya.mel.eval("global string $gPlayBackSlider; " "$gPlayBackSlider = $gPlayBackSlider;")
+        playback_slider = get_playblack_slider()
         if maya.cmds.timeControl(playback_slider, query=True, rangeVisible=True):
             highlighted_range = maya.cmds.timeControl(playback_slider, query=True, rangeArray=True)
             if within_highlighted:

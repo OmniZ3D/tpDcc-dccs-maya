@@ -294,9 +294,10 @@ def import_abc_cache(cache_path='', cache_name='', namespace='', parent='', mode
 def import_gpu_cache(cache_path, cache_name=None, namespace='', unique_namespace=True):
     """
     Import GPU Alembic cache from file
-    :param cache_path: str, alembic ache file path
+    :param cache_path: str, alembic cache file path
     :param cache_name: str, alembic cache name. If empty, filename will be used
     :param namespace: str, namespace of the imported gpu alembic node
+    :param unique_namespace: bool
     """
 
     if not os.path.isfile(cache_path):

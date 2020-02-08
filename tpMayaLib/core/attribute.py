@@ -2369,7 +2369,9 @@ def get_attribute(obj, attr, *args, **kwargs):
         else:
             if '[' in attr:
                 LOGGER.debug('Getting indexed attribute')
-                return maya.cmds.listConnections(combined)
+                connections = maya.cmds.listConnections(combined) or list()
+                if not connections:
+                    return maya.cmds.getAttr(combined)
 
             attr_type = maya.cmds.getAttr(combined, type=True)
             if attr_type in ['TdataCompound']:
