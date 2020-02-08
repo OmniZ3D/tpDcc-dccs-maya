@@ -122,7 +122,7 @@ def init_dcc(do_reload=False):
     if do_reload:
         tpmayalib_importer.reload_all()
 
-    create_metadata_manager()
+    maya.create_metadata_manager()
 
 
 def init_ui(do_reload=False):
@@ -142,15 +142,6 @@ def init_ui(do_reload=False):
     if do_reload:
         tpmayalib_importer.reload_all()
 
-    create_metadata_manager()
+    maya.create_metadata_manager()
 
 
-def create_metadata_manager():
-    """
-    Creates MetaDataManager for Maya
-    """
-
-    from tpMayaLib.managers import metadatamanager
-    metadatamanager.MetaDataManager.register_meta_classes()
-    metadatamanager.MetaDataManager.register_meta_types()
-    metadatamanager.MetaDataManager.register_meta_nodes()
