@@ -7,9 +7,21 @@ This module contains functions and classes to handle Maya Camera Sequencer funct
 
 from __future__ import print_function, division, absolute_import
 
+import os
+import logging
+
 from Qt.QtWidgets import *
 
 import tpMayaLib as maya
+
+LOGGER = logging.getLogger()
+
+
+class ShotsExporter(object):
+    def __init__(self):
+        self._shots = None
+        self._sequence_file = None
+        self._shots_dict = dict()
 
 
 def open_camera_sequencer_window():
@@ -66,3 +78,116 @@ def get_camera_sequencer_panel():
     qt_obj = gui.to_qt_object(sequencer)
 
     return qt_obj
+
+
+def get_all_scene_shots():
+    """
+    Returns all shot nodes in current Maya scene
+    :return: list(str)
+    """
+
+    return maya.cmds.ls(type='shot') or list()
+
+
+def get_shot_is_muted(shot_node):
+    """
+    Returns whether or not given shot node is muted
+    :param shot_node: str
+    :return: bool
+    """
+
+    return maya.cmds.shot(shot_node, query=True, mute=True)
+
+
+def get_shot_track_number(shot_node):
+    """
+    Returns track where given shot node is located
+    :param shot_node: str
+    :return: int
+    """
+
+    return maya.cmds.getAttr('{}.track'.format(shot_node))
+
+
+def get_shot_start_frame_in_sequencer(shot_node):
+    """
+    Returns the start frame of the given shot in sequencer time
+    :param shot_node: str
+    :return: int
+    """
+
+    return int(maya.cmds.shot(shot_node, query=True, sequenceStartTime=True))
+
+
+def get_shot_end_frame_in_sequencer(shot_node):
+    """
+    Returns the end frame of the given shot in sequencer time
+    :param shot_node: str
+    :return: int
+    """
+
+    return int(maya.cmds.shot(shot_node, query=True, sequenceEndTime=True))
+
+
+def get_shot_pre_hold(shot_node):
+    """
+    Returns shot prehold value
+    :param shot_node: str
+    :return: int
+    """
+
+    return maya.cmds.getAttr('{}.preHold'.format(shot_node))
+
+
+def get_shot_post_hold(shot_node):
+    """
+    Returns shot posthold value
+    :param shot_node: str
+    :return: int
+    """
+
+    return maya.cmds.getAttr('{}.postHold'.format(shot_node))
+
+
+def get_shot_scale(shot_node):
+    """
+    Returns the scale of the given shot
+    :param shot_node: str
+    :return: int
+    """
+
+    return maya.cmds.getAttr('{}.scale'.format(shot_node))
+
+
+def get_shot_start_frame(shot_node):
+    """
+    Returns the start frame of the given shot
+    :param shot_node: str
+    :return: int
+    """
+
+    return maya.cmds.getAttr('{}.startFrame'.format(shot_node))
+
+
+def get_shot_end_frame(shot_node):
+    """
+    Returns the end frame of the given shot
+    :param shot_node: str
+    :return: int
+    """
+
+    return maya.cmds.getAttr('{}.endFrame'.format(shot_node))
+
+
+def get_shot_camera(shot_node):
+    """
+    Returns camera associated given node
+    :param shot_node: str
+    :return: str
+    """
+
+    camera_connections = maya.cmds.listConnections('{}.currentCamera'.format(shot_node), source=True)
+    if not camera_connections:
+        return None
+
+    return camera_connections[0]
