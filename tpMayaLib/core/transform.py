@@ -145,10 +145,9 @@ class MatchTransform(object):
         Matches target translation and rotation to source ones
         """
 
+        self._set_translation()
         self._set_scale_pivot()
         self._set_rotate_pivot()
-
-        self._set_translation()
         self._set_rotation()
 
     def translation_to_rotate_pivot(self):
@@ -664,9 +663,9 @@ def set_translation(transform_name, translate_vector, world_space=True):
     """
 
     if world_space:
-        maya.cmds.xform(transform_name, t=translate_vector, ws=True)
+        return maya.cmds.xform(transform_name, t=translate_vector, ws=True)
 
-    maya.cmds.xform(transform_name, t=translate_vector, os=True)
+    return maya.cmds.xform(transform_name, t=translate_vector, os=True)
 
 
 def get_rotation(transform_name, world_space=True):
