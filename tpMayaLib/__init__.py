@@ -91,3 +91,14 @@ def is_new_api():
     """
 
     return not OpenMaya == api['OpenMaya']
+
+
+def create_metadata_manager():
+    """
+    Creates MetaDataManager for Maya
+    """
+
+    from tpMayaLib.managers import metadatamanager
+    metadatamanager.MetaDataManager.register_meta_classes()
+    metadatamanager.MetaDataManager.register_meta_types()
+    metadatamanager.MetaDataManager.register_meta_nodes()

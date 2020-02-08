@@ -9,7 +9,6 @@ from __future__ import print_function, division, absolute_import
 
 import logging
 
-# from Qt.QtCore import *
 from Qt.QtWidgets import *
 
 # from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
@@ -17,9 +16,9 @@ from Qt.QtWidgets import *
 import tpDccLib
 import tpMayaLib as maya
 from tpDccLib.abstract import dcc as abstract_dcc, progressbar
-# from tpQtLib.core import window
 from tpMayaLib.core import gui, helpers, name, namespace, scene, playblast, transform, attribute, shape as shape_utils
 from tpMayaLib.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
+from tpMayaLib.core import sequencer, animation, decorators as maya_decorators
 
 LOGGER = logging.getLogger()
 
@@ -387,6 +386,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.ls(sl=True, l=full_path)
 
     @staticmethod
+    def selected_nodes_of_type(node_type, full_path=True):
+        """
+        Returns a list of selected nodes of given type
+        :param node_type: str
+        :param full_path: bool
+        :return: list(str)
+        """
+
+        return maya.cmds.ls(sl=True, type=node_type, l=full_path)
+
+    @staticmethod
     def all_shapes_nodes(full_path=True):
         """
         Returns all shapes nodes in current scene
@@ -494,7 +504,6 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: str
         """
 
-        found_namespace = None
         if MayaDcc.node_is_referenced(node):
             try:
                 found_namespace = maya.cmds.referenceQuery(node, namespace=True)
@@ -565,7 +574,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         try:
             return maya.cmds.referenceQuery(node, isNodeReferenced=True)
         except Exception as exc:
-            return  False
+            return False
 
     @staticmethod
     def node_reference_path(node, without_copy_number=False):
@@ -666,7 +675,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param parent: str
         """
 
-        maya.cmds.parent(node, parent)
+        return maya.cmds.parent(node, parent)
+
+    @staticmethod
+    def set_parent_to_world(node):
+        """
+        Parent given node to the root world node
+        :param node: str
+        """
+
+        return maya.cmds.parent(node, world=True)
 
     @staticmethod
     def node_nodes(node):
@@ -1177,6 +1195,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.deleteAttr(n=node, at=attribute_name)
 
     @staticmethod
+    def delete_multi_attribute(node, attribute_name, attribute_index):
+        """
+        Deletes given multi attribute of given node
+        :param node: str
+        :param attribute_name:str
+        :param attribute_index: int or str
+        """
+
+        return maya.cmds.removeMultiInstance('{}.{}[{}]'.format(node, attribute_name, attribute_index))
+
+    @staticmethod
     def connect_attribute(source_node, source_attribute, target_node, target_attribute, force=False):
         """
         Connects source attribute to given target attribute
@@ -1283,7 +1312,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.file(file_path, o=True, f=force, returnNewNodes=True)
 
     @staticmethod
-    def import_file(file_path, force=True):
+    def import_file(file_path, force=True, **kwargs):
         """
         Imports given file into current DCC scene
         :param file_path: str
@@ -1291,7 +1320,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return:
         """
 
-        return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True)
+        namespace = kwargs.get('namespace', None)
+        if namespace:
+            unique_namespace = kwargs.get('unique_namespace', True)
+            if unique_namespace:
+                return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True, namespace=namespace)
+            else:
+                return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True, mergeNamespacesOnClash=True, namespace=namespace)
+        else:
+            return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True)
 
     @staticmethod
     def reference_file(file_path, force=True, **kwargs):
@@ -1870,6 +1907,26 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return cam_utils.get_current_camera(full_path=full_path)
 
     @staticmethod
+    def look_through_camera(camera_name):
+        """
+        Updates DCC viewport to look through given camera
+        :param camera_name: str
+        :return:
+        """
+
+        return maya.cmds.lookThru(camera_name)
+
+    @staticmethod
+    def get_camera_focal_length(camera_name):
+        """
+        Returns focal length of the given camera
+        :param camera_name: str
+        :return: float
+        """
+
+        return maya.cmds.getAttr('{}.focalLength'.format(camera_name))
+
+    @staticmethod
     def get_playblast_formats():
         """
         Returns a list of supported formats for DCC playblast
@@ -1926,7 +1983,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             return {}
 
         renderers_ui = maya.cmds.modelEditor(active_editor, query=True, rendererListUI=True)
-        renderers_id = maya.acmds.modelEditor(active_editor, query=True, rendererList=True)
+        renderers_id = maya.cmds.modelEditor(active_editor, query=True, rendererList=True)
 
         renderers = dict(zip(renderers_ui, renderers_id))
 
@@ -2020,6 +2077,307 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         gui.open_render_settings_window()
 
+    @staticmethod
+    def all_scene_shots():
+        """
+        Returns all shots in current scene
+        :return: list(str)
+        """
+
+        return sequencer.get_all_scene_shots()
+
+    @staticmethod
+    def shot_is_muted(shot_node):
+        """
+        Returns whether or not given shot node is muted
+        :param shot_node: str
+        :return: bool
+        """
+
+        return sequencer.get_shot_is_muted(shot_node)
+
+    @staticmethod
+    def shot_track_number(shot_node):
+        """
+        Returns track where given shot node is located
+        :param shot_node: str
+        :return: int
+        """
+
+        return sequencer.get_shot_track_number(shot_node)
+
+    @staticmethod
+    def shot_start_frame_in_sequencer(shot_node):
+        """
+        Returns the start frame of the given shot in sequencer time
+        :param shot_node: str
+        :return: int
+        """
+
+        return sequencer.get_shot_start_frame_in_sequencer(shot_node)
+
+    @staticmethod
+    def shot_end_frame_in_sequencer(shot_node):
+        """
+        Returns the end frame of the given shot in sequencer time
+        :param shot_node: str
+        :return: int
+        """
+
+        return sequencer.get_shot_end_frame_in_sequencer(shot_node)
+
+    @staticmethod
+    def shot_pre_hold(shot_node):
+        """
+        Returns shot prehold value
+        :param shot_node: str
+        :return: int
+        """
+
+        return sequencer.get_shot_post_hold(shot_node)
+
+    @staticmethod
+    def shot_post_hold(shot_node):
+        """
+        Returns shot posthold value
+        :param shot_node: str
+        :return: int
+        """
+
+        return sequencer.get_shot_pre_hold(shot_node)
+
+    @staticmethod
+    def shot_scale(shot_node):
+        """
+        Returns the scale of the given shot
+        :param shot_node: str
+        :return: int
+        """
+
+        return sequencer.get_shot_scale(shot_node)
+
+    @staticmethod
+    def shot_start_frame(shot_node):
+        """
+        Returns the start frame of the given shot
+        :param shot_node: str
+        :return: int
+        """
+
+        return sequencer.get_shot_start_frame(shot_node)
+
+    @staticmethod
+    def set_shot_start_frame(shot_node, start_frame):
+        """
+        Sets the start frame of the given shot
+        :param shot_node: str
+        :param start_frame: int
+        :return: int
+        """
+
+        return maya.cmds.setAttr('{}.startFrame'.format(shot_node), start_frame)
+
+    @staticmethod
+    def shot_end_frame(shot_node):
+        """
+        Returns the end frame of the given shot
+        :param shot_node: str
+        :return: int
+        """
+
+        return sequencer.get_shot_end_frame(shot_node)
+
+    @staticmethod
+    def set_shot_end_frame(shot_node, end_frame):
+        """
+        Sets the end frame of the given shot
+        :param shot_node: str
+        :param end_frame: int
+        :return: int
+        """
+
+        return maya.cmds.setAttr('{}.endFrame'.format(shot_node), end_frame)
+
+    @staticmethod
+    def shot_camera(shot_node):
+        """
+        Returns camera associated given node
+        :param shot_node: str
+        :return: str
+        """
+
+        return sequencer.get_shot_camera(shot_node)
+
+    @staticmethod
+    def export_shot_animation_curves(anim_curves_to_export, export_file_path, start_frame, end_frame, *args, **kwargs):
+        """
+        Exports given shot animation curves in the given path and in the given frame range
+        :param anim_curves_to_export: list(str), animation curves to export
+        :param export_file_path: str, file path to export animation curves information into
+        :param start_frame: int, start frame to export animation from
+        :param end_frame: int, end frame to export animation until
+        :param args:
+        :param kwargs:
+        :return:
+        """
+
+        sequencer_least_key = kwargs.get('sequencer_least_key', None)
+        sequencer_great_key = kwargs.get('sequencer_great_key', None)
+
+        return sequencer.export_shot_animation_curves(
+            anim_curves_to_export=anim_curves_to_export, export_file_path=export_file_path, start_frame=start_frame,
+            end_frame=end_frame, sequencer_least_key=sequencer_least_key, sequencer_great_key=sequencer_great_key)
+
+    @staticmethod
+    def import_shot_animation_curves(anim_curves_to_import, import_file_path, start_frame, end_frame):
+        """
+        Imports given shot animation curves in the given path and in the given frame range
+        :param anim_curves_to_import: list(str), animation curves to import
+        :param import_file_path: str, file path to import animation curves information fron
+        :param start_frame: int, start frame to import animation from
+        :param end_frame: int, end frame to import animation until
+        :param args:
+        :param kwargs:
+        """
+
+        return sequencer.import_shot_animation_curves(
+            anim_curves_to_import=anim_curves_to_import, import_file_path=import_file_path,
+            start_frame=start_frame, end_frame=end_frame)
+
+    @staticmethod
+    def node_animation_curves(node):
+        """
+        Returns all animation curves of the given node
+        :param node: str
+        :return:
+        """
+
+        return animation.get_node_animation_curves(node)
+
+    @staticmethod
+    def all_animation_curves():
+        """
+        Returns all animation located in current DCC scene
+        :return: list(str)
+        """
+
+        return animation.get_all_anim_curves()
+
+    @staticmethod
+    def all_keyframes_in_anim_curves(anim_curves=None):
+        """
+        Retursn al keyframes in given anim curves
+        :param anim_curves: list(str)
+        :return: list(str)
+        """
+
+        return animation.get_all_keyframes_in_anim_curves(anim_curves)
+
+    @staticmethod
+    def key_all_anim_curves_in_frames(frames, anim_curves=None):
+        """
+        Inserts keyframes on all animation curves on given frame
+        :param frame: list(int)
+        :param anim_curves: list(str)
+        """
+
+        return animation.key_all_anim_curves_in_frames(frames=frames, anim_curves=anim_curves)
+
+    @staticmethod
+    def remove_keys_from_animation_curves(range_to_delete, anim_curves=None):
+        """
+        Inserts keyframes on all animation curves on given frame
+        :param range_to_delete: list(int ,int)
+        :param anim_curves: list(str)
+        """
+
+        return animation.delete_keys_from_animation_curves_in_range(
+            range_to_delete=range_to_delete, anim_curves=anim_curves)
+
+    @staticmethod
+    def check_anim_curves_has_fraction_keys(anim_curves, selected_range=None):
+        """
+        Returns whether or not given curves have or not fraction keys
+        :param anim_curves: list(str)
+        :param selected_range: list(str)
+        :return: bool
+        """
+
+        return animation.check_anim_curves_has_fraction_keys(anim_curves=anim_curves, selected_range=selected_range)
+
+    @staticmethod
+    def convert_fraction_keys_to_whole_keys(animation_curves=None, consider_selected_range=False):
+        """
+        Find keys on fraction of a frame and insert a key on the nearest whole number frame
+        Useful to make sure that no keys are located on fraction of frames
+        :param animation_curves: list(str)
+        :param consider_selected_range: bool
+        :return:
+        """
+
+        return animation.convert_fraction_keys_to_whole_keys(
+            animation_curves=animation_curves, consider_selected_range=consider_selected_range)
+
+    @staticmethod
+    def set_active_frame_range(start_frame, end_frame):
+        """
+        Sets current animation frame range
+        :param start_frame: int
+        :param end_frame: int
+        """
+
+        return animation.set_active_frame_range(start_frame, end_frame)
+
+    @staticmethod
+    def create_aim_constraint(source, point_to, **kwargs):
+        """
+        Sets current animation frame range
+        :param source: str
+        :param point_to: str
+        """
+
+        aim_axis = kwargs.get('aim_axis')
+        up_axis = kwargs.get('up_axis')
+        world_up_axis = kwargs.get('world_up_axis')
+        world_up_type = kwargs.get('world_up_type', 'vector')
+        weight = kwargs.get('weight', 1.0)
+        return maya.cmds.aimConstraint(
+            point_to, source, aim=aim_axis, upVector=up_axis,
+            worldUpVector=world_up_axis, worldUpType=world_up_type, weight=weight
+        )
+
+    @staticmethod
+    def zero_scale_joint(jnt):
+        """
+        Sets the given scale to zero and compensate the change by modifying the joint translation and rotation
+        :param jnt: str
+        """
+
+        return maya.cmds.joint(jnt, edit=True, zeroScaleOrient=True)
+
+    @staticmethod
+    def reset_node_transforms(node, **kwargs):
+        """
+        Reset the transformations of the given node and its children
+        :param node: str
+        """
+
+        preserve_pivot_transforms = kwargs.get('apply', False)
+
+        return maya.cmds.makeIdentity(node, apply=preserve_pivot_transforms)
+
+    @staticmethod
+    def set_node_rotation_axis_in_object_space(node, x, y, z):
+        """
+        Sets the rotation axis of given node in object space
+        :param node: str
+        :param x: int
+        :param y: int
+        :param z: int
+        """
+
+        return maya.cmds.xform(node, rotateAxis=[x, y, z], relative=True, objectSpace=True)
+
     # =================================================================================================================
 
     @staticmethod
@@ -2038,6 +2396,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return MayaProgessBar
+
+    @staticmethod
+    def get_undo_decorator():
+        """
+        Returns undo decorator for current DCC
+        """
+
+        return maya_decorators.undo_chunk
 
 
 class MayaProgessBar(progressbar.AbstractProgressBar, object):
