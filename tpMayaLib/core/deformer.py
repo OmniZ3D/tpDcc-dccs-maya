@@ -11,7 +11,7 @@ import re
 import logging
 
 import tpMayaLib as maya
-from tpPyUtils import python, mathlib, name as name_utils
+from tpDcc.libs.python import python, mathlib, name as name_utils
 from tpMayaLib.core import node, attribute, exceptions, name as name_lib, decorators
 from tpMayaLib.core import geometry as geo_utils, shape as shape_utils
 
