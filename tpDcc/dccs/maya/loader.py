@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Initialization module for tpMayaLib
+Initialization module for tpDcc.dccs.maya
 """
 
 from __future__ import print_function, division, absolute_import
@@ -13,10 +13,6 @@ import inspect
 import logging
 
 from tpDcc.libs.python import importer
-
-# =================================================================================
-
-resource = None
 
 # =================================================================================
 
@@ -74,11 +70,11 @@ except Exception:
 
 class tpMayaLib(importer.Importer, object):
     def __init__(self, *args, **kwargs):
-        super(tpMayaLib, self).__init__(module_name='tpMayaLib', *args, **kwargs)
+        super(tpMayaLib, self).__init__(module_name='tpDcc-dccs-maya', *args, **kwargs)
 
     def get_module_path(self):
         """
-        Returns path where tpMayaLib module is stored
+        Returns path where tpDcc.dccs.maya module is stored
         :return: str
         """
 
@@ -98,7 +94,7 @@ class tpMayaLib(importer.Importer, object):
 
     def externals_path(self):
         """
-        Returns the paths where tpMayaLib externals packages are stored
+        Returns the paths where tpDcc.dccs.maya externals packages are stored
         :return: str
         """
 
@@ -120,6 +116,18 @@ class tpMayaLib(importer.Importer, object):
         for p in paths_to_update:
             if os.path.isdir(p) and p not in sys.path:
                 sys.path.append(p)
+
+
+def create_logger():
+    """
+    Returns logger of current module
+    """
+
+    logging.config.fileConfig(get_logging_config(), disable_existing_loggers=False)
+    create_logger_directory()
+    logger = logging.getLogger('tpDcc-dccs-maya')
+
+    return logger
 
 
 def create_logger_directory():
@@ -149,49 +157,89 @@ def init_dcc(do_reload=False):
     :param do_reload: bool, Whether to reload modules or not
     """
 
-    import tpDcc.dccs.maya as maya
-
+    from tpDcc.dccs.maya import register
     from tpDcc.libs.qt.core import resource as resource_utils
 
     class tpMayaLibResource(resource_utils.Resource, object):
         RESOURCES_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
 
-    logging.config.fileConfig(get_logging_config(), disable_existing_loggers=False)
+    logger = create_logger()
 
-    tpmayalib_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
-    tpmayalib_importer.update_paths()
-    maya.use_new_api()
+    maya_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
+    maya_importer.update_paths()
+    use_new_api()
 
-    global logger
-    global resource
-    logger = tpmayalib_importer.logger
-    resource = tpMayaLibResource
+    register.register_class('resource', tpMayaLibResource)
+    register.register_class('logger', logger)
 
-    tpmayalib_importer.import_modules()
-    tpmayalib_importer.import_packages(only_packages=True)
+    maya_importer.import_modules()
+    maya_importer.import_packages(only_packages=True)
     if do_reload:
-        tpmayalib_importer.reload_all()
+        maya_importer.reload_all()
 
-    maya.create_metadata_manager()
+    create_metadata_manager()
 
 
 def init_ui(do_reload=False):
-    import tpMayaLib as maya
-
-    tpmayalib_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
-    tpmayalib_importer.update_paths()
-    maya.use_new_api()
-
-    global logger
-    logger = tpmayalib_importer.logger
+    maya_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
+    maya_importer.update_paths()
+    use_new_api()
 
     # tpmayalib_importer.import_modules(skip_modules=['tpMayaLib.core', 'tpMayaLib.data',
     # 'tpMayaLib.managers', 'tpMayaLib.meta'])
     # tpmayalib_importer.import_packages(only_packages=True, skip_modules=['tpMayaLib.core',
     # 'tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.meta'])
-    tpmayalib_importer.import_modules()
-    tpmayalib_importer.import_packages(only_packages=True)
+    maya_importer.import_modules()
+    maya_importer.import_packages(only_packages=True)
     if do_reload:
-        tpmayalib_importer.reload_all()
+        maya_importer.reload_all()
 
-    maya.create_metadata_manager()
+    create_metadata_manager()
+
+
+def use_new_api(flag=False):
+    """
+    Enables new Maya API usage
+    """
+
+    global OpenMaya
+    global OpenMayaUI
+    global OpenMayaAnim
+
+    if new_api:
+        if flag:
+            OpenMaya = api2['OpenMaya']
+            OpenMayaUI = api2['OpenMayaUI']
+            OpenMayaAnim = api2['OpenMayaAnim']
+            OpenMayaRender = api2['OpenMayaRender']
+        else:
+            OpenMaya = api['OpenMaya']
+            OpenMayaUI = api['OpenMayaUI']
+            OpenMayaAnim = api['OpenMayaAnim']
+            OpenMayaRender = api['OpenMayaRender']
+    else:
+        OpenMaya = api['OpenMaya']
+        OpenMayaUI = api['OpenMayaUI']
+        OpenMayaAnim = api['OpenMayaAnim']
+        OpenMayaRender = api['OpenMayaRender']
+
+
+def is_new_api():
+    """
+    Returns whether new Maya API is used or not
+    :return: bool
+    """
+
+    return not OpenMaya == api['OpenMaya']
+
+
+def create_metadata_manager():
+    """
+    Creates MetaDataManager for Maya
+    """
+
+    from tpDcc.dccs.maya.managers import metadatamanager
+
+    metadatamanager.MetaDataManager.register_meta_classes()
+    metadatamanager.MetaDataManager.register_meta_types()
+    metadatamanager.MetaDataManager.register_meta_nodes()

@@ -1663,7 +1663,7 @@ class MetaAttributeUtils(object):
         :return:
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         data = data_attr
 
@@ -1746,7 +1746,7 @@ class MetaAttributeUtils(object):
         :return:
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         try:
             attr_dict = MetaAttributeUtils.validate_attribute(message_holder, message_attr)
@@ -1998,7 +1998,7 @@ class MetaDataListUtils(object):
         :return: bool
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         fn_name = 'data_list_purge'
 
@@ -2059,7 +2059,7 @@ class MetaDataListUtils(object):
         :return: bool
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         fn_name = 'data_list_connect'
 
@@ -2112,7 +2112,7 @@ class MetaDataListUtils(object):
         :return:
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         fn_name = 'data_list_get'
 
@@ -2347,7 +2347,7 @@ class MetaDataListUtils(object):
         :return: bool
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         try:
             fn_name = 'store_info'
@@ -2459,7 +2459,7 @@ class MetaMessageListUtils(object):
         :return: bool
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         fn_name = 'message_list_connect'
 

@@ -247,7 +247,7 @@ def import_abc_cache(cache_path='', cache_name='', namespace='', parent='', mode
     :param debug: bool, whether turn on or off debug messages
     """
 
-    from tpMayaLib.core import namespace as namespace_utils
+    from tpDcc.dccs.maya.core import namespace as namespace_utils
 
     if not os.path.isfile(cache_path):
         raise Exception('Cache Path "{}" does not exist!')
@@ -339,7 +339,7 @@ def load_abc_from_gpu_cache(gpu_cache_node, debug=False):
     :param debug: bool, print debug info
     """
 
-    from tpMayaLib.core import namespace as namespace_utils
+    from tpDcc.dccs.maya.core import namespace as namespace_utils
 
     if not is_gpu_cache_node(gpu_cache_node):
         raise Exception('Object "{}" is not a valid GPU Cache node!'.format(gpu_cache_node))

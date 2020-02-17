@@ -71,7 +71,7 @@ def get_camera_sequencer_panel():
     Returns Maya Camera Sequencer Panel as a QtWidget
     :return: QtWidget or None
     """
-    from tpMayaLib.core import gui
+    from tpDcc.dccs.maya.core import gui
     open_camera_sequencer_window()
     sequencer = maya.cmds.getPanel(scriptType='sequenceEditorPanel')[0]
     qt_obj = gui.to_qt_object(sequencer)

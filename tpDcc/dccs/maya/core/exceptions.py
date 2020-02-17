@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 
 class MayaLibException(Exception):
     """
-    Raise exceptions specific to tpMayaLib
+    Raise exceptions specific to tpDcc.dccs.maya
     """
 
     pass

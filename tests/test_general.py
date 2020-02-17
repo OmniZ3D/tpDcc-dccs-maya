@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that contains tests for tpMayaLib
+Module that contains tests for tpDcc.dccs.maya
 """
 
 import pytest

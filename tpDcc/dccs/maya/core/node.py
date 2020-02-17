@@ -139,7 +139,7 @@ def get_node_types(nodes, return_shape_type=True):
     :return: dict<str>, [node_type_name], node dictionary of matching nodes
     """
 
-    from tpMayaLib.core import shape
+    from tpDcc.dccs.maya.core import shape
 
     nodes = python.force_list(nodes)
 

@@ -601,7 +601,7 @@ def scale_shapes(node, scale, use_pivot=True, relative=True):
     if use_pivot:
         pivot = maya.cmds.xform(node, query=True, rp=True, ws=True)
     else:
-        from tpMayaLib.core import transform
+        from tpDcc.dccs.maya.core import transform
         bounding_box = transform.BoundingBox(comps)
         pivot = bounding_box.get_center()
 

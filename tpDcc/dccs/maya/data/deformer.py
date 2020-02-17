@@ -43,8 +43,8 @@ class MayaDeformerData(object):
         Builds deformer data
         """
 
-        from tpMayaLib.data import mesh
-        from tpMayaLib.core import deformer
+        from tpDcc.dccs.maya.data import mesh
+        from tpDcc.dccs.maya.core import deformer
 
         if not self._deformer:
             return

@@ -1696,7 +1696,7 @@ class MetaNode(object):
         :return: str
         """
 
-        from tpMayaLib.core import name
+        from tpDcc.dccs.maya.core import name
 
         return '{}.{}'.format(getattr(name, name_call)(self.meta_node), attr)
 
@@ -2018,7 +2018,7 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
                     raise Exception('Default MetaType ({0}) initialization failed | {1}'.format(default_meta_type, e))
             elif metautils.MetaAttributeValidator.is_transform(_node_short):
                 try:
-                    from tpMayaLib.meta import metaobject
+                    from tpDcc.dccs.maya.meta import metaobject
                     meta_node = metaobject.MetaObject(_node_short)
                 except Exception as e:
                     raise Exception('MetaObject initialized failed | {}'.format(e))

@@ -51,7 +51,7 @@ class PinTransform(object):
         Creates the pin constraints on parent and children
         """
 
-        from tpMayaLib.core import name
+        from tpDcc.dccs.maya.core import name
 
         self.lock_state = dict()
         parent = maya.cmds.listRelatives(self.transform, p=True, f=True)
@@ -332,7 +332,7 @@ class BoundingBox(mathlib.BoundingBox, object):
         :return: BoundingBox
         """
 
-        from tpMayaLib.core import shape as shape_lib
+        from tpDcc.dccs.maya.core import shape as shape_lib
         shapes = shape_lib.get_shapes(self._node, intermediates=False, full_path=True)
         if shapes:
             x_min, y_min, z_min, x_max, y_max, z_max = maya.cmds.exactWorldBoundingBox(shapes)
@@ -611,7 +611,7 @@ def get_matrix(transform, world_space=True, time=None, as_list=False):
     :return: MMatrix or list
     """
 
-    from tpMayaLib.core import matrix
+    from tpDcc.dccs.maya.core import matrix
 
     if not maya.cmds.objExists(transform):
         exceptions.NodeExistsException(transform)

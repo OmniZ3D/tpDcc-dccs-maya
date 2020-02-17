@@ -422,7 +422,7 @@ def get_root_node():
     :return:
     """
 
-    from tpMayaLib.core import node
+    from tpDcc.dccs.maya.core import node
 
     for n in node.get_objects_of_mtype_iterator(object_type=maya.OpenMaya.MFn.kWorld):
         return n
@@ -436,7 +436,7 @@ def get_all_scene_nodes():
     :return:
     """
 
-    from tpMayaLib.core import node
+    from tpDcc.dccs.maya.core import node
 
     obj_types = (maya.OpenMaya.MFn.kDagNode, maya.OpenMaya.MFn.kCharacter, maya.OpenMaya.MFn.kDependencyNode)
     return node.get_objects_of_mtype_iterator(obj_types)
@@ -482,7 +482,7 @@ def delete_turtle_nodes():
     Find all turtle nodes in a scene and delete them
     """
 
-    from tpMayaLib.core import node
+    from tpDcc.dccs.maya.core import node
 
     plugin_list = maya.cmds.pluginInfo(query=True, pluginsInUse=True)
     turtle_nodes = list()
@@ -531,7 +531,7 @@ def delete_garbage():
     Delete all garbage nodes from scene
     """
 
-    from tpMayaLib.core import helpers, node
+    from tpDcc.dccs.maya.core import helpers, node
 
     straight_delete_types = list()
     if helpers.get_maya_version() > 2014:

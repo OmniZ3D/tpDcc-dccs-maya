@@ -326,7 +326,7 @@ def get_mpoint_array(geometry, world_space=True):
     :return: MPointArray
     """
 
-    from tpMayaLib.core import node
+    from tpDcc.dccs.maya.core import node
 
     check_geometry(geometry)
 
@@ -398,7 +398,7 @@ def set_mpoint_array(geometry, points, world_space=False):
     :return: bool, Whether to set point positions in world or object space
     """
 
-    from tpMayaLib.core import node
+    from tpDcc.dccs.maya.core import node
 
     check_geometry(geometry)
 
@@ -421,7 +421,7 @@ def get_mbounding_box(geometry, world_space=True):
     :return: MBoundingBox
     """
 
-    from tpMayaLib.core import node
+    from tpDcc.dccs.maya.core import node
 
     check_geometry(geometry)
 
@@ -458,7 +458,7 @@ def smooth_preview_all(smooth_flag=True):
     :param smooth_flag: bool
     """
 
-    from tpMayaLib.core import scene
+    from tpDcc.dccs.maya.core import scene
 
     if scene.is_batch():
         return

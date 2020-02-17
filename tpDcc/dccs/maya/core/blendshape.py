@@ -62,7 +62,7 @@ def get_base_geo(blend_shape):
     :return: list<str>
     """
 
-    from tpMayaLib.core import deformer
+    from tpDcc.dccs.maya.core import deformer
 
     check_blendshape(blend_shape)
 
@@ -95,7 +95,7 @@ def get_base_index(blend_shape, base):
     :return: str
     """
 
-    from tpMayaLib.core import deformer
+    from tpDcc.dccs.maya.core import deformer
 
     check_blendshape(blend_shape)
     if not has_base(blend_shape, base):
@@ -169,7 +169,7 @@ def get_target_geo(blend_shape, target, base_geo=''):
     :return: str
     """
 
-    from tpMayaLib.core import deformer
+    from tpDcc.dccs.maya.core import deformer
 
     target_index = get_target_index(blend_shape, target)
     geo_index = 0
@@ -230,7 +230,7 @@ def get_target_name(blend_shape, target_geo):
     :return: str
     """
 
-    from tpMayaLib.core import shape
+    from tpDcc.dccs.maya.core import shape
 
     check_blendshape(blend_shape)
     if not maya.cmds.objExists(target_geo):
@@ -422,7 +422,7 @@ def get_target_weights(blend_shape, target, geometry=''):
     :return: str
     """
 
-    from tpMayaLib.core import deformer
+    from tpDcc.dccs.maya.core import deformer
 
     check_blendshape(blend_shape)
     if not maya.cmds.objExists(blend_shape+'.'+target):
@@ -452,7 +452,7 @@ def set_target_weights(blend_shape, target ,wt, geometry=''):
     :param geometry: str, name of blendshape driven geometry to set weights on
     """
 
-    from tpMayaLib.core import deformer, component
+    from tpDcc.dccs.maya.core import deformer, component
 
     check_blendshape(blend_shape)
     if not maya.cmds.objExists(blend_shape+'.'+target):
@@ -484,7 +484,7 @@ def connect_to_target(blend_shape, target_geo, target_name, base_geo, weight=1.0
     :param force: bool, force connection
     """
 
-    from tpMayaLib.core import deformer
+    from tpDcc.dccs.maya.core import deformer
 
     check_blendshape(blend_shape)
     if not has_target(blend_shape, target_name):

@@ -388,7 +388,7 @@ def convert_fraction_keys_to_whole_keys(animation_curves, consider_selected_rang
     :return:
     """
 
-    from tpMayaLib.core import gui
+    from tpDcc.dccs.maya.core import gui
 
     if not animation_curves:
         animation_curves = get_all_anim_curves()

@@ -109,7 +109,7 @@ class MetaDataManager(window.MainWindow, object):
         :param meta_node: dcclib.Meta
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         global METANODES_CACHE
 
@@ -128,7 +128,7 @@ class MetaDataManager(window.MainWindow, object):
         MObjectHandles
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         for k, v in METANODES_CACHE.items():
             try:
@@ -146,14 +146,14 @@ class MetaDataManager(window.MainWindow, object):
         :param meta_node: str, name of the node from DAG
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         return metanode.MetaNode.get_meta_from_cache(meta_node=meta_node)
 
     @staticmethod
     def register_meta_classes():
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         global METANODE_CLASSES_REGISTER
         METANODE_CLASSES_REGISTER = dict()
@@ -176,7 +176,7 @@ class MetaDataManager(window.MainWindow, object):
     @staticmethod
     def register_meta_types(node_types=None):
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         if node_types is None:
             node_types = list()
@@ -331,7 +331,7 @@ class MetaDataManager(window.MainWindow, object):
         are or not already instantiated or bound to Meta system
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         if not type(nodes) == list:
             nodes = [nodes]
@@ -364,7 +364,7 @@ class MetaDataManager(window.MainWindow, object):
         :return:
         """
 
-        from tpMayaLib.meta import metanode
+        from tpDcc.dccs.maya.meta import metanode
 
         meta_nodes = list()
 
