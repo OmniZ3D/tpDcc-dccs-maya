@@ -13,6 +13,7 @@ from Qt.QtWidgets import *
 
 # from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
+import tpDcc
 from tpDcc import register
 import tpDcc.dccs.maya as maya
 from tpDcc.abstract import dcc as abstract_dcc, progressbar
@@ -32,7 +33,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: str
         """
 
-        return tpDccLib.Dccs.Maya
+        return tpDcc.Dccs.Maya
 
     @staticmethod
     def get_extensions():

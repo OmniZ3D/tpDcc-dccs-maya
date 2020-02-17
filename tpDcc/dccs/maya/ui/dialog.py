@@ -9,7 +9,7 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-from tpDcc.libs.qt import register
+from tpDcc import register
 from tpDcc.libs.python import path as path_utils
 from tpDcc.libs.qt.core import dialog as core_dialog
 from tpDcc.dccs.maya.core import directory

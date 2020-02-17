@@ -13,6 +13,7 @@ import inspect
 import logging
 
 from tpDcc.libs.python import importer
+from tpDcc.dccs.maya import register
 
 # =================================================================================
 
@@ -57,10 +58,13 @@ try:
     else:
         api2 = api
 
-    OpenMaya = OpenMaya
-    OpenMayaUI = OpenMayaUI
-    OpenMayaAnim = OpenMayaAnim
-    OpenMayaRender = OpenMayaRender
+    register.register_class('cmds', cmds)
+    register.register_class('mel', mel)
+    register.register_class('utils', utils)
+    register.register_class('OpenMaya', OpenMaya)
+    register.register_class('OpenMayaUI', OpenMayaUI)
+    register.register_class('OpenMayaAnim', OpenMayaAnim)
+    register.register_class('OpenMayaRender', OpenMayaRender)
 except Exception:
     # NOTE: We use this empty try/catch to avoid errors during CI/CD
     pass
@@ -70,7 +74,7 @@ except Exception:
 
 class tpMayaLib(importer.Importer, object):
     def __init__(self, *args, **kwargs):
-        super(tpMayaLib, self).__init__(module_name='tpDcc-dccs-maya', *args, **kwargs)
+        super(tpMayaLib, self).__init__(module_name='tpDcc.dccs.maya', *args, **kwargs)
 
     def get_module_path(self):
         """
@@ -202,9 +206,7 @@ def use_new_api(flag=False):
     Enables new Maya API usage
     """
 
-    global OpenMaya
-    global OpenMayaUI
-    global OpenMayaAnim
+    from tpDcc.dccs.maya import register
 
     if new_api:
         if flag:
@@ -222,6 +224,11 @@ def use_new_api(flag=False):
         OpenMayaUI = api['OpenMayaUI']
         OpenMayaAnim = api['OpenMayaAnim']
         OpenMayaRender = api['OpenMayaRender']
+
+    register.register_class('OpenMaya', OpenMaya)
+    register.register_class('OpenMayaUI', OpenMayaUI)
+    register.register_class('OpenMayaAnim', OpenMayaAnim)
+    register.register_class('OpenMayaRender', OpenMayaRender)
 
 
 def is_new_api():

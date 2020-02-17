@@ -7,7 +7,7 @@ Module that contains rig utils functions for Maya
 
 import logging
 
-from tpPyUtils import python
+from tpDcc.libs.python import python
 
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.meta import metanode

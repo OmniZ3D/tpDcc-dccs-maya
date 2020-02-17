@@ -7,7 +7,7 @@ Module that contains functionality for Maya windows
 
 from __future__ import print_function, division, absolute_import
 
-from tpDcc.libs.qt import register
+from tpDcc import register
 from tpDcc.libs.qt.core import window as core_window
 from tpDcc.libs.qt.widgets import framelesswindow
 

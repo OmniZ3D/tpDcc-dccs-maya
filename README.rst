@@ -1,7 +1,7 @@
 tpDcc-dccs-maya
 ============================================================
 
-Maya implementation for tpDccLib and tpQtLib packages.
+Maya implementation for tpDcc.
 
 Also, this module contains a lot of utilities functions and classes to work with Maya Python APIs (cmds and OpenMaya)
 

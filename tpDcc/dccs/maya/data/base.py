@@ -12,8 +12,8 @@ import traceback
 
 import tpDcc as tp
 import tpDcc.dccs.maya as maya
+from tpDcc.core import data, scripts
 from tpDcc.libs.python import path, osplatform, mathlib, version
-from tpDcc.libs.qt.core import data, scripts
 from tpDcc.dccs.maya.core import constants, geometry, scene, helpers
 
 LOGGER = logging.getLogger()
