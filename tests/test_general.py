@@ -7,7 +7,7 @@ Module that contains tests for tpMayaLib
 
 import pytest
 
-from tpMayaLib import __version__
+from tpDcc.dccs.maya import __version__
 
 
 def test_version():

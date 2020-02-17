@@ -1,7 +1,8 @@
 # ===================================================================
-# tpQtLib requirements file
+# tpDcc-dccs-maya requirements file
 # ===================================================================
+
 euclid
-tpPyUtils
-tpDccLib
-tpQtLib
+tpDcc-core
+tpDcc-libs-python
+tpDcc-libs-qt

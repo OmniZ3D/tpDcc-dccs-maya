@@ -1,5 +1,5 @@
-include tpMayaLib/__logging__.ini
-include tpMayaLib/resources/*.*
-include tpMayaLib/resources/icons/*.*
-include tpMayaLib/resources/icons/default/*.*
-include tpMayaLib/resources/icons/color/*.*
+include tpDcc/dccs/maya/__logging__.ini
+include tpDcc/dccs/maya/resources/*.*
+include tpDcc/dccs/maya/resources/icons/*.*
+include tpDcc/dccs/maya/resources/icons/default/*.*
+include tpDcc/dccs/maya/resources/icons/color/*.*
