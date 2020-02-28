@@ -84,8 +84,8 @@ class MetaObject(metanode.MetaNode, object):
 
     def hide_attributes(self, attributes=None):
         """
-        Lock and hide the given attributes on the control. If no attributes given, hide translate, rotate, 
-        scale and visibility
+        Lock and hide the given attributes on the control.
+        If no attributes given, hide translate, rotate, scale and visibility
         :param attributes: list<str>, list of attributes to hide and lock (['translateX', 'translateY'])
         """
 
