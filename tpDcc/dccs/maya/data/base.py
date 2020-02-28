@@ -61,7 +61,7 @@ class MayaCustomData(data.CustomData, object):
         maya.cmds.setAttr('persp.farClipPlane', dst * 10)
         near = 0.1
         if dst > 10000:
-            near = (dst/10000) * near
+            near = (dst / 10000) * near
         maya.cmds.setAttr('persp.nearClipPlane', near)
 
 
@@ -210,8 +210,9 @@ class MayaFileData(MayaCustomData, object):
         maya.cmds.file(rename=file_path)
         self._prepare_scene_for_export()
 
-        # maya.cmds.file(exportSelected=True, prompt=False, force=True, pr=True, ch=False, chn=True, exp=True, con=False,
-        #           stx='never', type=self.maya_file_type)
+        # maya.cmds.file(
+        # exportSelected=True, prompt=False, force=True, pr=True, ch=False,
+        # chn=True, exp=True, con=False, stx='never', type=self.maya_file_type)
 
         version_file = version.VersionFile(file_path)
         version_file.save(comment)
@@ -262,7 +263,8 @@ class MayaFileData(MayaCustomData, object):
         if unknown_nodes:
             value = maya.cmds.confirmDialog(
                 title='Unknown Nodes!',
-                message='Unknown nodes usually happen when a plugin that was being used is not loaded.\nLoad the missing plugin, and the unknown nodes could become valid.\n\nDelete unknown nodes?\n',
+                message='Unknown nodes usually happen when a plugin that was being used is not loaded.\n'
+                        'Load the missing plugin, and the unknown nodes could become valid.\n\nDelete unknown nodes?\n',
                 button=['Yes', 'No'],
                 defaultButton='Yes',
                 cancelButton='No',

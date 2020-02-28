@@ -96,7 +96,9 @@ class MetaDataManager(window.MainWindow, object):
                 valid_uuid = True
             else:
                 if not meta_node == METANODES_CACHE[uuid]:
-                    LOGGER.debug('METANODES_CACHE: {0} : UUID is registered to a different node : modifying UUID: {1}'.format( uuid, meta_node.meta_node))
+                    LOGGER.debug(
+                        'METANODES_CACHE: {0} : UUID is registered to a different node : modifying UUID: {1}'.format(
+                            uuid, meta_node.meta_node))
                 else:
                     LOGGER.debug('METANODES_CACHE : UUID {0} is already registered in METANODES_CACHE'.format(uuid))
 
@@ -315,7 +317,7 @@ class MetaDataManager(window.MainWindow, object):
         for cls in meta_types:
             try:
                 keys.append(cls.__name__)
-            except:
+            except Exception:
                 keys.append(cls)
 
         # Remove unregistered keys
@@ -338,7 +340,7 @@ class MetaDataManager(window.MainWindow, object):
         for n in nodes:
             LOGGER.debug('Converting node {0} >> to {1} MetaNode'.format(name_utils.strip_name(n), meta_class))
             meta_node = metanode.MetaNode(n)
-            meta_node.add_attribute('meta_class',value=MetaDataManager.meta_types_to_registry_key(meta_class)[0])
+            meta_node.add_attribute('meta_class', value=MetaDataManager.meta_types_to_registry_key(meta_class)[0])
             meta_node.add_attribute('meta_node_id', value=name_utils.strip_name(n))
             meta_node.attr_set_locked('meta_class', True)
             meta_node.attr_set_locked('meta_node_id', True)
@@ -349,17 +351,17 @@ class MetaDataManager(window.MainWindow, object):
 
     @classmethod
     @decorators.timer
-    def get_meta_nodes(cls, meta_types=[], meta_instances=[], meta_classes_grps=[], meta_attrs=None, data_type='MetaClass',
-                       node_types=None, **kwargs):
+    def get_meta_nodes(cls, meta_types=[], meta_instances=[], meta_classes_grps=[], meta_attrs=None,
+                       data_type='MetaClass', node_types=None, **kwargs):
         """
         Get all MetaClass nodes in the current scene and return as MetaClass objects if possible
         :param meta_types: list(str), if given, only will return the meta nodes of the given type
-        :param meta_instances: list(str), if given the meta inheritance will be checked and child classes will be returned
+        :param meta_instances: list(str), if given the meta inheritance will be checked and child classes
+            will be returned
         :param meta_classes_grps:
         :param meta_attrs:
         :param data_type:
         :param node_types:
-        :param system_root:
         :param kwargs:
         :return:
         """
@@ -369,9 +371,9 @@ class MetaDataManager(window.MainWindow, object):
         meta_nodes = list()
 
         if not node_types:
-            nodes = maya.cmds.ls(type=cls.get_metanode_types_registry(), l=True)
+            nodes = maya.cmds.ls(type=cls.get_metanode_types_registry(), long=True)
         else:
-            nodes = maya.cmds.ls(type=node_types, l=True)
+            nodes = maya.cmds.ls(type=node_types, long=True)
         if not nodes:
             return meta_nodes
 

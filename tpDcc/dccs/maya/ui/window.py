@@ -61,7 +61,7 @@ class MayaWindow(core_window.MainWindow, object):
         bootstrap = self.bootstrap_widget()
 
         if bootstrap is not None:
-            self.setProperty("bootstrapWidget", None) # avoid recursion by setting to none
+            self.setProperty("bootstrapWidget", None)   # avoid recursion by setting to none
             bootstrap.close()
 
 
@@ -129,8 +129,10 @@ class BootStrapWidget(MayaQWidgetDockableMixin, QWidget):
             maya.cmds.deleteUI(name)
             maya.cmds.workspaceControlState(name, remove=True)
         kwargs["retain"] = False
-        kwargs["uiScript"] = 'try: from tpDcc.dccs.maya.ui import window;window.rebuild("{}")\nexcept ImportError: pass'.format(self.objectName())
-        kwargs["closeCallback"] = 'try: from tpDcc.dccs.maya.ui import window;window.bootstrap_destroy_window("{}")\nexcept ImportError: pass'.format(self.objectName())
+        kwargs["uiScript"] = 'try: from tpDcc.dccs.maya.ui import window;window.rebuild("{}")\n' \
+                             'except ImportError: pass'.format(self.objectName())
+        kwargs["closeCallback"] = 'try: from tpDcc.dccs.maya.ui import window;window.bootstrap_destroy_window("{}")\n' \
+                                  'except ImportError: pass'.format(self.objectName())
         super(BootStrapWidget, self).show(**kwargs)
 
 

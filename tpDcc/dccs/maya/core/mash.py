@@ -14,7 +14,7 @@ try:
     import MASHoutliner
     import mash_repro_utils
     import mash_repro_aetemplate
-except:
+except ImportError:
     MASH_AVAILABLE = False
 
 import tpDcc.dccs.maya as maya
@@ -71,7 +71,7 @@ if MASH_AVAILABLE:
     @undo.chunk
     def add_mesh_to_repro(repro_node, meshes=None):
         maya.cmds.undoInfo(ock=True)
-        if meshes == None:
+        if meshes is None:
             meshes = maya.cmds.ls(sl=True)
 
         for obj in meshes:

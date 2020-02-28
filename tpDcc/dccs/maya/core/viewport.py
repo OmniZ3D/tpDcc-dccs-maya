@@ -43,7 +43,9 @@ class MayaViewport(QWidget):
         maya.cmds.hide(self.camera_name)
         self.model_panel_name = maya.cmds.modelPanel(label=self.label, camera=self.camera_name, menuBarVisible=False)
 
-        maya.mel.eval('modelPanelBarDecorationsCallback("GridBtn","' + self.model_panel_name + '", "' + self.model_panel_name + '|modelEditorIconBar");')
+        maya.mel.eval(
+            'modelPanelBarDecorationsCallback('
+            '"GridBtn","' + self.model_panel_name + '", "' + self.model_panel_name + '|modelEditorIconBar");')
         self.model_panel = gui.to_qt_object(self.model_panel_name)
 
         self.main_layout.addWidget(self.pane_layout)
@@ -54,11 +56,10 @@ class MayaViewport(QWidget):
 
         self.collapse_menu_bar(True)
 
-    # region Override Functions
     def update_viewport(self):
         """
         Implements abstract update_viewport method
-        In Maya viewport, the update is managed automtically by Maya
+        In Maya viewport, the update is managed automatically by Maya
         """
         super(MayaViewport, self).update_viewport()
 
@@ -70,7 +71,8 @@ class MayaViewport(QWidget):
 
         if maya.cmds.objExists(self.camera_name):
             maya.cmds.delete(self.camera_name)
-        maya.cmds.modelEditor(self.model_panel_name, edit=True, displayAppearance='smoothShaded', lw=self._original_line_width)
+        maya.cmds.modelEditor(
+            self.model_panel_name, edit=True, displayAppearance='smoothShaded', lw=self._original_line_width)
 
         # Un-parent model panel before deleting the widget. Doing this will avoid show an error on the Maya
         # console indicating that the model panel can't update
@@ -81,7 +83,8 @@ class MayaViewport(QWidget):
         """
         Implements create_snapshot abstract function
         :param filename: str, Path where the snapshot will be stored
-        :param size: tuple<int, int>, tuple defining size and width of the image. If None, the complete width and height of the viewport will be used
+        :param size: tuple<int, int>, tuple defining size and width of the image. If None, the complete width and
+            height of the viewport will be used
         :param focus; bool, True if you want to focus to the model panel before taking the snapshot
         :return: str, Path where the snapshot has been stored or None if some error happens during snapshot
         """
@@ -96,9 +99,13 @@ class MayaViewport(QWidget):
         # Create playblast of the viewport
         try:
             if size:
-                f = maya.cmds.playblast(wh=(size[0], size[1]), fp=0, frame=maya.cmds.currentTime(query=True), format='image', compression='png', forceOverwrite=True, viewer=False)
+                f = maya.cmds.playblast(
+                    wh=(size[0], size[1]), fp=0, frame=maya.cmds.currentTime(query=True), format='image',
+                    compression='png', forceOverwrite=True, viewer=False)
             else:
-                f = maya.cmds.playblast(fp=0, frame=maya.cmds.currentTime(query=True), format='image', compression='png', forceOverwrite=True, viewer=False)
+                f = maya.cmds.playblast(
+                    fp=0, frame=maya.cmds.currentTime(query=True), format='image', compression='png',
+                    forceOverwrite=True, viewer=False)
         except Exception as e:
             LOGGER.error(str(e))
             return None
@@ -111,9 +118,7 @@ class MayaViewport(QWidget):
             return None
 
         return os.path.abspath(filename)
-    # endregion
 
-    # region Public Functions
     def collapse_menu_bar(self, value):
         """
         Sets the collapsed state for the menu bar of the Maya viewport
@@ -123,9 +128,7 @@ class MayaViewport(QWidget):
         bar_layout = self._get_bar_layout()
         if maya.cmds.frameLayout(bar_layout, query=True, exists=True):
             maya.cmds.frameLayout(bar_layout, edit=True, collapse=value)
-    # endregion
 
-    # region Private Functions
     def _get_bar_layout(self):
         """
         Returns the bar layout associated to the Maya viewport
@@ -134,4 +137,3 @@ class MayaViewport(QWidget):
 
         bar_layout = maya.cmds.modelPanel(self.model_panel_name, query=True, barLayout=True)
         return bar_layout
-    # endregion

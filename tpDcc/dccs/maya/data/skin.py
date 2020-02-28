@@ -16,4 +16,3 @@ class SkinWeightsData(base.MayaCustomData, object):
 
     def get_data_title(self):
         return 'maya_skin_weights'
-

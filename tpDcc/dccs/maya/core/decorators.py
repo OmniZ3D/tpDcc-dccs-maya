@@ -54,7 +54,9 @@ class ShowMayaProgress(object):
             return
 
         maya.cmds.waitCursor(state=True)
-        maya.cmds.progressBar(self._main_progressbar, edit=True, beginProgress=True, isInterruptable=self._interruptable, status=self._status, minValue=self._start_value, maxValue=self._end_value)
+        maya.cmds.progressBar(self._main_progressbar, edit=True, beginProgress=True,
+                              isInterruptable=self._interruptable, status=self._status,
+                              minValue=self._start_value, maxValue=self._end_value)
         maya.cmds.refresh()
 
     def end(self):
@@ -351,13 +353,13 @@ def repeat_static_command(class_name):
             arg_str = ''
             if args:
                 for each in args:
-                    arg_str += str(each)+', '
+                    arg_str += str(each) + ', '
 
             if kwargs:
                 for k, v in kwargs.items():
                     arg_str += str(k) + '=' + str(v) + ', '
 
-            cmd = 'python("'+class_name+'.'+fn.__name__+'('+arg_str+')")'
+            cmd = 'python("' + class_name + '.' + fn.__name__+'(' + arg_str + ')")'
             fn_return = fn(*args, **kwargs)
             try:
                 maya.cmds.repeatLast(ac=cmd, acl=fn.__name__)

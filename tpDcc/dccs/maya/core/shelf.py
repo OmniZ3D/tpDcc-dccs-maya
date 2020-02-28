@@ -23,8 +23,10 @@ from tpDcc.dccs.maya.core import gui
 
 class MayaShelf(abstract_shelf.AbstractShelf, object):
 
-    def __init__(self, name='MayaShelf', label_background=(0, 0, 0, 0), label_color=(0.9, 0.9, 0.9), category_icon=None, enable_labels=True):
-        super(MayaShelf, self).__init__(name=name, label_background=label_background, label_color=label_color, category_icon=category_icon, enable_labels=enable_labels)
+    def __init__(self, name='MayaShelf', label_background=(0, 0, 0, 0), label_color=(0.9, 0.9, 0.9),
+                 category_icon=None, enable_labels=True):
+        super(MayaShelf, self).__init__(name=name, label_background=label_background, label_color=label_color,
+                                        category_icon=category_icon, enable_labels=enable_labels)
 
     @staticmethod
     def add_menu_item(parent, label, command='', icon=''):
@@ -71,7 +73,9 @@ class MayaShelf(abstract_shelf.AbstractShelf, object):
             self._category_btn.setIcon(self._category_icon)
         self._category_btn.setIconSize(QSize(18, 18))
         self._category_menu = QMenu(self._category_btn)
-        self._category_btn.setStyleSheet('QPushButton::menu-indicator {image: url(myindicator.png);subcontrol-position: right center;subcontrol-origin: padding;left: -2px;}')
+        self._category_btn.setStyleSheet(
+            'QPushButton::menu-indicator {image: url(myindicator.png);'
+            'subcontrol-position: right center;subcontrol-origin: padding;left: -2px;}')
         self._category_btn.setMenu(self._category_menu)
         self._category_lbl = QLabel('MAIN')
         self._category_lbl.setAlignment(Qt.AlignCenter)
@@ -93,7 +97,8 @@ class MayaShelf(abstract_shelf.AbstractShelf, object):
         main_shelf = maya.mel.eval("$_tempVar = $gShelfTopLevel")
         maya.cmds.tabLayout(main_shelf, edit=True, selectTab=self._name)
 
-    def add_button(self, label, tooltip=None, icon='customIcon.png', command=None, double_command=None, command_type='python'):
+    def add_button(self, label, tooltip=None, icon='customIcon.png', command=None,
+                   double_command=None, command_type='python'):
         """
         Adds a shelf button width the given parameters
         :param label:
@@ -113,9 +118,9 @@ class MayaShelf(abstract_shelf.AbstractShelf, object):
             label = ''
 
         return maya.cmds.shelfButton(width=37, height=37, image=icon or '', label=label, command=command,
-                                doubleClickCommand=double_command, annotation=tooltip or '', imageOverlayLabel=label,
-                                overlayLabelBackColor=self._label_background, overlayLabelColor=self._label_color,
-                                sourceType=command_type)
+                                     doubleClickCommand=double_command, annotation=tooltip or '',
+                                     imageOverlayLabel=label, overlayLabelBackColor=self._label_background,
+                                     overlayLabelColor=self._label_color, sourceType=command_type)
 
     def add_separator(self):
         """
@@ -124,7 +129,9 @@ class MayaShelf(abstract_shelf.AbstractShelf, object):
         :return:
         """
 
-        maya.cmds.separator(parent=self._name, manage=True, visible=True, horizontal=False, style='shelf', enableBackground=False, preventOverride=False)
+        maya.cmds.separator(
+            parent=self._name, manage=True, visible=True, horizontal=False, style='shelf',
+            enableBackground=False, preventOverride=False)
 
     def build_category(self, shelf_file, category_name):
 

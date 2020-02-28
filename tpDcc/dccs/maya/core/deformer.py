@@ -120,7 +120,7 @@ class ClusterSurface(ClusterObject, object):
                 index = '[*][0]'
 
             self._cv_count = len(maya.cmds.ls('{}.cv{}'.format(self._geo, index), flatten=True))
-            
+
         start_index = 0
         cv_count = self._cv_count
         if self._join_ends:
@@ -210,9 +210,9 @@ class ClusterSurface(ClusterObject, object):
 
         if self._maya_type == 'nurbsCurve':
             start_cvs = '{}.cv[0:1]'.format(self._geo)
-            end_cvs = '{}.cv[{}:{}]'.format(self._geo, self._cv_count-2, self._cv_count-1)
+            end_cvs = '{}.cv[{}:{}]'.format(self._geo, self._cv_count - 2, self._cv_count - 1)
             start_pos = maya.cmds.xforem('{}.cv[0]'.format(self._geo), q=True, ws=True, t=True)
-            end_pos = maya.cmds.xform('{}.cv[{}]'.format(self._geo, self._cv_count-1), q=True, ws=True, t=True)
+            end_pos = maya.cmds.xform('{}.cv[{}]'.format(self._geo, self._cv_count - 1), q=True, ws=True, t=True)
         elif self._maya_type == 'nurbsSurface':
             if self._cluster_u:
                 cv_count_u = len(maya.cmds.ls('{}.cv[*][0]'.format(self._geo), flatten=True))
@@ -260,14 +260,14 @@ class ClusterSurface(ClusterObject, object):
 
         if self._maya_type == 'nurbsCurve':
             start_cvs = '{}.cv[0:1]'.format(self._geo)
-            end_cvs = '{}.cv[{}:{}]'.format(self._geo, self._cv_count-2, self._cv_count-1)
+            end_cvs = '{}.cv[{}:{}]'.format(self._geo, self._cv_count - 2, self._cv_count - 1)
         elif self._maya_type == 'nurbsSurface':
             if self._cluster_u:
                 index_1 = '[0:*][0]'
-                index_2 = '[0:*][{}]'.format(self._cv_count-1)
+                index_2 = '[0:*][{}]'.format(self._cv_count - 1)
             else:
                 index_1 = '[0][0:*}'
-                index_2 = '[{}][0:*]'.format(self._cv_count-1)
+                index_2 = '[{}][0:*]'.format(self._cv_count - 1)
 
             start_cvs = '{}.cv{}'.format(self._geo, index_1)
             end_cvs = '{}.cv{}'.format(self._geo, index_2)
@@ -318,7 +318,8 @@ class ClusterCurve(ClusterSurface, object):
         pos = maya.cmds.xform('{}.cv[0]'.format(self._geo), q=True, ws=True, t=True)
         maya.cmds.xform(handle, ws=True, rp=pos, sp=pos)
 
-        last_cluster, last_handle = self._create_cluster('{}.cv[{}:{}]'.format(self._geo, self._cv_count-2, self._cv_count-1))
+        last_cluster, last_handle = self._create_cluster(
+            '{}.cv[{}:{}]'.format(self._geo, self._cv_count - 2, self._cv_count - 1))
         pos = maya.cmds.xform('{}.cv[{}]'.format(self._geo, self._cv_count-1), q=True, ws=True, t=True)
         maya.cmds.xform(last_handle, ws=True, rp=pos, sp=pos)
 
@@ -369,7 +370,8 @@ def get_deformer_list(node_type='geometryFilter', affected_geometry=[], regex_fi
     Returns a list of deformers that match the input criteria
     You can list deformers connected to a specific geometry, by type and filer the results using regular expressions
     :param node_type: str, Deformer type as string. Optional arg, only return deformers of specified type
-    :param affected_geometry: list(str), Affected geometry list. Optional arg, will list deformers connected to the specific geometry
+    :param affected_geometry: list(str), Affected geometry list. Optional arg, will list deformers connected to the
+        specific geometry
     :param regex_filter: str, Regular expression as string. Optional arg, will filter results
     """
 
@@ -386,10 +388,10 @@ def get_deformer_list(node_type='geometryFilter', affected_geometry=[], regex_fi
     deformer_nodes = python.remove_dupes(deformer_nodes)
     tweak_nodes = maya.cmds.ls(deformer_nodes, type='tweak')
     if tweak_nodes:
-        deformer_nodes = [x for x in deformer_nodes if not x in tweak_nodes]
+        deformer_nodes = [x for x in deformer_nodes if x not in tweak_nodes]
     transfer_attr_nodes = maya.cmds.ls(deformer_nodes, type='transferAttributes')
     if transfer_attr_nodes:
-        deformer_nodes = [x for x in deformer_nodes if not x in transfer_attr_nodes]
+        deformer_nodes = [x for x in deformer_nodes if x not in transfer_attr_nodes]
 
     # Filter results
     if regex_filter:
@@ -559,7 +561,7 @@ def get_deformer_set_member_indices(deformer, geometry=''):
     if maya.cmds.objectType(geometry) == 'transform':
         try:
             geometry = maya.cmds.listRelatives(geometry, s=True, ni=True, pa=True)[0]
-        except:
+        except Exception:
             exceptions.GeometryException(geo)
 
     geometry_type = maya.cmds.objectType(geometry)
@@ -658,7 +660,7 @@ def find_input_shape(shape):
         raise exceptions.ShapeException(shape)
 
     # Get inMesh connection
-    in_mesh_cnt = maya.cmds.listConnections(shape+'.inMesh', source=True, destination=False, shapes=True)
+    in_mesh_cnt = maya.cmds.listConnections(shape + '.inMesh', source=True, destination=False, shapes=True)
     if not in_mesh_cnt:
         return shape
 
@@ -671,7 +673,9 @@ def find_input_shape(shape):
     if not deformer_obj.hasFn(maya.OpenMaya.MFn.kGeometryFilt):
         deformer_hist = maya.cmds.listHistory(shape, type='geometryFilter')
         if not deformer_hist:
-            LOGGER.warning('Shape node "{0}" has incoming inMesh connections but is not affected by any valid deformers! Returning "{0}"!'.format(shape))
+            LOGGER.warning(
+                'Shape node "{0}" has incoming inMesh connections but is not affected by any valid deformers! '
+                'Returning "{0}"!'.format(shape))
             return shape
         else:
             deformer_obj = node.get_mobject(deformer_obj[0])
@@ -698,7 +702,7 @@ def rename_deformer_set(deformer, deformer_set_name=''):
     if not deformer_set_name:
         deformer_set_name = deformer + 'Set'
 
-    deformer_set = maya.cmds.listConnections(deformer+'.message', type='objectSet')[0]
+    deformer_set = maya.cmds.listConnections(deformer + '.message', type='objectSet')[0]
     if deformer_set != deformer_set_name:
         deformer_set_name = maya.cmds.rename(deformer_set, deformer_set_name)
 
@@ -715,7 +719,9 @@ def get_weights(deformer, geometry=None):
 
     use_new_api = False
     if maya.is_new_api():
-        LOGGER.warning('get_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
+        LOGGER.warning(
+            'get_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! '
+            'Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
         use_new_api = True
 
@@ -750,7 +756,9 @@ def set_weights(deformer, weights, geometry=None):
 
     use_new_api = False
     if maya.is_new_api():
-        LOGGER.warning('set_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
+        LOGGER.warning(
+            'set_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! '
+            'Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
         use_new_api = True
 
@@ -780,14 +788,15 @@ def bind_pre_matrix(deformer, bind_pre_matrix='', parent=True):
     """
     Creates a bindPreMatrix transform for the given deformer
     :param deformer: str, deformer to create bind pre matrix transform for
-    :param bind_pre_matrix: str, specify existing transform for bind pre matrix connec tion. If empty, create a new transform
+    :param bind_pre_matrix: str, specify existing transform for bind pre matrix connec tion.
+        If empty, create a new transform
     :param parent: bool, parent the deformer handle to the bind pre matrix transform
     :return: str
     """
 
     check_deformer(deformer)
 
-    deformer_handle = maya.cmds.listConnections(deformer+'.matrix', s=True, d=False)
+    deformer_handle = maya.cmds.listConnections(deformer + '.matrix', s=True, d=False)
     if deformer_handle:
         deformer_handle = deformer_handle[0]
     else:
@@ -805,7 +814,7 @@ def bind_pre_matrix(deformer, bind_pre_matrix='', parent=True):
     maya.cmds.xform(bind_pre_matrix, ws=True, piv=maya.cmds.xform(deformer_handle, query=True, ws=True, rp=True))
 
     # Connect inverse matrix to deformer
-    maya.cmds.connectAttr(bind_pre_matrix+'.worldInverseMatrix[0]', deformer+'.bindPreMatrix', f=True)
+    maya.cmds.connectAttr(bind_pre_matrix + '.worldInverseMatrix[0]', deformer + '.bindPreMatrix', f=True)
 
     if parent:
         maya.cmds.parent(deformer_handle, bind_pre_matrix)
@@ -848,7 +857,9 @@ def prune_membership_by_weights(deformer, geo_list=None, threshold=0.001):
 
     use_new_api = False
     if maya.is_new_api():
-        LOGGER.warning('prune_membership_by_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
+        LOGGER.warning(
+            'prune_membership_by_weights function is dependant of MFnWeightGeometryFilter which is not available in '
+            'OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
         use_new_api = True
 
@@ -877,7 +888,7 @@ def prune_membership_by_weights(deformer, geo_list=None, threshold=0.001):
                 prune_list[i] = '[{}]'.format(str(prune_list[i]))
             elif type(prune_list[i]) == list:
                 prune_list[i] = [str(p) for p in prune_list[i]]
-                prune_list[i] = '['+']['.join(prune_list[i])+']'
+                prune_list[i] = '[' + ']['.join(prune_list[i]) + ']'
             prune_list[i] = geo + '.' + geo_type + str(prune_list[i])
         all_prune_list.extend(prune_list)
 
@@ -915,7 +926,7 @@ def check_multiple_outputs(deformer, print_result=True):
 
     check_deformer(deformer)
 
-    out_geo_plug = attribute.get_attr_mplug(deformer+'.outputGeometry')
+    out_geo_plug = attribute.get_attr_mplug(deformer + '.outputGeometry')
     if not out_geo_plug.isArray():
         raise Exception('Attribute ""{}".outputGeometry is not array" attribute!'.format(deformer))
 
@@ -928,11 +939,14 @@ def check_multiple_outputs(deformer, print_result=True):
 
     return_dict = dict()
     for i in range(num_index):
-        plug_cnt = maya.cmds.listConnections(deformer+'.outputGeometry['+str(index_list[i])+']', s=False, d=True, p=True)
+        plug_cnt = maya.cmds.listConnections(
+            deformer+'.outputGeometry['+str(index_list[i])+']', s=False, d=True, p=True)
         if len(plug_cnt) > 1:
             return_dict[deformer+'.outputGeometry['+str(index_list[i])+']'] = plug_cnt
             if print_result:
-                LOGGER.debug('Deformer output "'+deformer+'.outputGeometry['+str(index_list[i])+']" has '+str(len(plug_cnt))+' outgoing connections:')
+                LOGGER.debug(
+                    'Deformer output "' + deformer + '.outputGeometry[' + str(
+                        index_list[i]) + ']" has ' + str(len(plug_cnt)) + ' outgoing connections:')
                 for cnt in plug_cnt:
                     LOGGER.debug('\t- '+cnt)
 
@@ -1057,7 +1071,7 @@ def get_skin_weights(skin_deformer, vertices_ids=None):
         influence_plug = maya.OpenMaya.MPlug(weights_plug)
         for influence_id in weight_influence_ids:
             influence_plug.selectAncestorLogicalIndex(influence_id, weights_attr)
-            if not influence_id in weights:
+            if influence_id not in weights:
                 weights[influence_id] = [0] * vertices_count
 
             try:
@@ -1109,7 +1123,7 @@ def get_skin_influence_weights(influence_name, skin_deformer):
         return
 
     weights_dict = get_skin_weights(skin_deformer)
-    if weights_dict.has_key(influence_index):
+    if influence_index in weights_dict:
         weights = weights_dict[influence_index]
     else:
         indices = attribute.get_indices('{}.weightList'.format(skin_deformer))
@@ -1293,7 +1307,8 @@ def get_skin_blend_weights(skin_deformer):
 
     if blend_weights:
         for blend_weight in blend_weights:
-            blend_weights_dict[blend_weight] = maya.cmds.getAttr('{}.blendWeights[{}]'.format(skin_deformer, blend_weight))
+            blend_weights_dict[blend_weight] = maya.cmds.getAttr(
+                '{}.blendWeights[{}]'.format(skin_deformer, blend_weight))
 
     values = list()
     for i in range(len(indices)):
@@ -1301,7 +1316,7 @@ def get_skin_blend_weights(skin_deformer):
             value = blend_weights_dict[i]
             if type(value) < 0.000001:
                 value = 0.0
-            if type(value) != type(0.0):
+            if isinstance(value, float):
                 value = 0.0
             if value != value:
                 value = 0.0
@@ -1420,6 +1435,7 @@ def skin_mesh_from_mesh(source_mesh, target_mesh, exclude_joints=None, include_j
             maya.cmds.skinCluster(target_skin, edit=True, removeInfluence=jnt)
     else:
         skin_name = name_lib.get_basename(target_mesh)
-        target_skin = maya.cmds.skinCluster(influences, target_mesh, tsb=True, n=name_lib.find_unique_name('skin_{}'.format(skin_name)))[0]
+        target_skin = maya.cmds.skinCluster(
+            influences, target_mesh, tsb=True, n=name_lib.find_unique_name('skin_{}'.format(skin_name)))[0]
 
     return target_skin

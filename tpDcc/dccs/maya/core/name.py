@@ -141,7 +141,7 @@ def get_long_name(obj):
     except Exception:
         pass
 
-    node_names = maya.cmds.ls(obj, l=True)
+    node_names = maya.cmds.ls(obj, long=True)
     if node_names:
         if len(node_names) == 1:
             return node_names[0]

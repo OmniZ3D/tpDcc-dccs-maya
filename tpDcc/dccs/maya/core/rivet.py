@@ -71,11 +71,16 @@ class Rivet(object):
         vert_iterator = api.IterateEdges(shape)
         vert_ids = vert_iterator.get_connected_vertices(edge_index_1)
         edge_to_curve_1 = maya.cmds.createNode('polyEdgeToCurve', n=tp.Dcc.find_unique_name('rivetCurve1_{}'.format(self._name)))
-        maya.cmds.setAttr('{}.inputComponents'.format(edge_to_curve_1), 2,'vtx[{}]'.format(vert_ids[0]), 'vtx[{}]'.format(vert_ids[1]), type='componentList')
+        maya.cmds.setAttr(
+            '{}.inputComponents'.format(edge_to_curve_1), 2,
+            'vtx[{}]'.format(vert_ids[0]), 'vtx[{}]'.format(vert_ids[1]), type='componentList')
         vert_iterator = api.IterateEdges(shape)
         vert_ids = vert_iterator.get_connected_vertices(edge_index_2)
-        edge_to_curve_2 = maya.cmds.createNode('polyEdgeToCurve', n=tp.Dcc.find_unique_name('rivetCurve2_{}'.format(self._name)))
-        maya.cmds.setAttr('{}.inputComponents'.format(edge_to_curve_2), 2, 'vtx[{}]'.format(vert_ids[0]), 'vtx[{}]'.format(vert_ids[1]), type='componentList')
+        edge_to_curve_2 = maya.cmds.createNode(
+            'polyEdgeToCurve', n=tp.Dcc.find_unique_name('rivetCurve2_{}'.format(self._name)))
+        maya.cmds.setAttr(
+            '{}.inputComponents'.format(edge_to_curve_2), 2,
+            'vtx[{}]'.format(vert_ids[0]), 'vtx[{}]'.format(vert_ids[1]), type='componentList')
         maya.cmds.connectAttr('{}.worldMatrix'.format(mesh), '{}.inputMat'.format(edge_to_curve_1))
         maya.cmds.connectAttr('{}.outMesh'.format(mesh), '{}.inputPolymesh'.format(edge_to_curve_1))
         maya.cmds.connectAttr('{}.worldMatrix'.format(mesh), '{}.inputMat'.format(edge_to_curve_2))
@@ -100,13 +105,15 @@ class Rivet(object):
             self._rivet = maya.cmds.spaceLocator(n=name_utils.find_unique_name('rivet_{}'.format(self._name)))[0]
 
     def _create_point_on_surface(self):
-        self._point_on_surface = maya.cmds.createNode('pointOnSurfaceInfo', n=tp.Dcc.find_unique_name('pointOnSurface_{}'.format(self._surface)))
+        self._point_on_surface = maya.cmds.createNode(
+            'pointOnSurfaceInfo', n=tp.Dcc.find_unique_name('pointOnSurface_{}'.format(self._surface)))
         maya.cmds.setAttr('{}.turnOnPercentage'.format(self._point_on_surface), self._percent_on)
         maya.cmds.setAttr('{}.parameterU'.format(self._point_on_surface), self._uv[0])
         maya.cmds.setAttr('{}.parameterV'.format(self._point_on_surface), self._uv[1])
 
     def _create_aim_constraint(self):
-        self._aim_constraint = maya.cmds.createNode('aimConstraint', n=tp.Dcc.find_unique_name('aimConstraint_{}'.format(self._surface)))
+        self._aim_constraint = maya.cmds.createNode(
+            'aimConstraint', n=tp.Dcc.find_unique_name('aimConstraint_{}'.format(self._surface)))
         maya.cmds.setAttr('{}.aimVector'.format(self._aim_constraint), 0, 1, 0, type='double3')
         maya.cmds.setAttr('{}.upVector'.format(self._aim_constraint), 0, 0, 1, type='double3')
 
@@ -115,14 +122,18 @@ class Rivet(object):
             if self._local:
                 maya.cmds.connectAttr('{}.local'.format(self._surface), '{}.inputSurface'.format(self._point_on_surface))
             else:
-                maya.cmds.connectAttr('{}.worldSpace'.format(self._surface_created), '{}.inputSurface'.format(self._point_on_surface))
+                maya.cmds.connectAttr(
+                    '{}.worldSpace'.format(self._surface_created), '{}.inputSurface'.format(self._point_on_surface))
 
         if maya.cmds.objExists('{}.outputSurface'.format(self._surface)):
-            maya.cmds.connectAttr('{}.outputSurface'.format(self._surface), '{}.inputSurface'.format(self._point_on_surface))
+            maya.cmds.connectAttr(
+                '{}.outputSurface'.format(self._surface), '{}.inputSurface'.format(self._point_on_surface))
 
         maya.cmds.connectAttr('{}.position'.format(self._point_on_surface), '{}.translate'.format(self._rivet))
-        maya.cmds.connectAttr('{}.normal'.format(self._point_on_surface), '{}.target[0].targetTranslate'.format(self._aim_constraint))
-        maya.cmds.connectAttr('{}.tangentV'.format(self._point_on_surface), '{}.worldUpVector'.format(self._aim_constraint))
+        maya.cmds.connectAttr(
+            '{}.normal'.format(self._point_on_surface), '{}.target[0].targetTranslate'.format(self._aim_constraint))
+        maya.cmds.connectAttr(
+            '{}.tangentV'.format(self._point_on_surface), '{}.worldUpVector'.format(self._aim_constraint))
         maya.cmds.connectAttr('{}.constraintRotateX'.format(self._aim_constraint), '{}.rotateX'.format(self._rivet))
         maya.cmds.connectAttr('{}.constraintRotateY'.format(self._aim_constraint), '{}.rotateY'.format(self._rivet))
         maya.cmds.connectAttr('{}.constraintRotateZ'.format(self._aim_constraint), '{}.rotateZ'.format(self._rivet))
@@ -160,8 +171,8 @@ class Rivet(object):
         maya.cmds.delete(parent_surface)
 
 
-
-def attach_to_mesh(transform, mesh, deform=False, priority=None, face=None, point_constraint=False, auto_parent=False, hide_shape=True, inherit_transform=False, local=False, rotate_pivot=False, constraint=True):
+def attach_to_mesh(transform, mesh, deform=False, priority=None, face=None, point_constraint=False, auto_parent=False,
+                   hide_shape=True, inherit_transform=False, local=False, rotate_pivot=False, constraint=True):
     """
     Attach the center point of a transform (including its hierarchy and shapes) to the mesh using a rivet
     NOTE: If you need to attach to the rotate pivot of the transform make sure to set rotate_pivot = True
@@ -273,7 +284,7 @@ def attach_to_surface(transform, surface, u=None, v=None, constraint=True):
     :return: str, name of the rivet
     """
 
-    position = maya.cmds.xform(transform, query=True, ws=True ,t=True)
+    position = maya.cmds.xform(transform, query=True, ws=True, t=True)
     uv = [u, v]
     if not u or not v:
         uv = geometry.get_closest_parameter_on_surface(surface, position)

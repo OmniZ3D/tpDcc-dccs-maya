@@ -11,11 +11,11 @@ from collections import OrderedDict
 
 import tpDcc.dccs.maya as maya
 
-
 time_unit_to_fps = OrderedDict()
 for k, v in (
-('game', 15), ('film', 24), ('pal', 25), ('ntsc', 30), ('show', 48), ('palf', 50), ('ntscf', 60), ('millisec', 1000),
-('sec', 1), ('min', 1 / 60.0), ('hour', 1 / 3600.0)):
+        ('game', 15), ('film', 24), ('pal', 25), ('ntsc', 30), ('show', 48), ('palf', 50), ('ntscf', 60),
+        ('millisec', 1000),
+        ('sec', 1), ('min', 1 / 60.0), ('hour', 1 / 3600.0)):
     time_unit_to_fps.update({k: v})
 for val in (2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 40, 75, 80, 100, 120, 125, 150,
             200, 240, 250, 300, 375, 400, 500, 600, 750, 1200, 1500, 2000, 3000, 6000):
@@ -45,7 +45,7 @@ fps_to_mtime.update({'ntsc': maya.OpenMaya.MTime.kNTSCFrame})  # 30 fps
 fps_to_mtime.update({'40fps': maya.OpenMaya.MTime.k40FPS})
 fps_to_mtime.update({'show': maya.OpenMaya.MTime.kShowScan})  # 48 fps
 fps_to_mtime.update({'palf': maya.OpenMaya.MTime.kPALField})  # # 50 fps
-fps_to_mtime.update({'ntscf':maya. OpenMaya.MTime.kNTSCField})  # 60 fps
+fps_to_mtime.update({'ntscf': maya.OpenMaya.MTime.kNTSCField})  # 60 fps
 fps_to_mtime.update({'75fps': maya.OpenMaya.MTime.k75FPS})
 fps_to_mtime.update({'80fps': maya.OpenMaya.MTime.k80FPS})
 fps_to_mtime.update({'100fps': maya.OpenMaya.MTime.k100FPS})

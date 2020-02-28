@@ -4,14 +4,12 @@
 This module include base class for mesh data object
 """
 
-# region Imports
 # import maya.cmds as cmds
 #
 # import tpRigToolkit as tp
 # import tpRigToolkit.maya as maya
 # from tpRigToolkit.maya.data import base
 # from tpRigToolkit.maya.lib import mesh, exceptions
-# endregion
 
 
 # class MeshData(base.AbstractMeshData, object):
@@ -42,7 +40,6 @@ This module include base class for mesh data object
 #         if mesh:
 #             self.build_data()
 #
-#     # region Override Functions
 #     def build_data(self):
 #         """
 #         Builds mesh data
@@ -140,7 +137,9 @@ This module include base class for mesh data object
 #         else:
 #             vertex_array = dcclib.app.OpenMaya.MFloatPointArray(num_vertices, dcclib.app.OpenMaya.MFloatPoint.origin)
 #             for i in range(num_vertices):
-#                 vertex_array.set(i, self._data['vertexList'][i][0], self._data['vertexList'][i][1], self._data['vertexList'][i][2], self._data['vertexList'][i][3])
+#                 vertex_array.set(
+#                 i, self._data['vertexList'][i][0], self._data['vertexList'][i][1],
+#                 self._data['vertexList'][i][2], self._data['vertexList'][i][3])
 #
 #             mesh_fn = dcclib.app.OpenMaya.MFnMesh()
 #             mesh_data = dcclib.app.OpenMaya.MFnMeshData().create()
@@ -244,4 +243,3 @@ This module include base class for mesh data object
 #         dcclib.debug('MayaMeshData: Geometry rebuild time for mesh "{}" : {}'.format(self._mesh, str(build_time)))
 #
 #         return mesh
-#     # endregion

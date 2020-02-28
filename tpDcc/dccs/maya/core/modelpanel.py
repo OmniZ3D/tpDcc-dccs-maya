@@ -18,10 +18,10 @@ class ModelPanelWidget(QWidget, object):
         super(ModelPanelWidget, self).__init__(**kwargs)
 
         unique_name = name + str(id(self))
-        self.setObjectName(unique_name+'Widget')
+        self.setObjectName(unique_name + 'Widget')
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setObjectName(unique_name+'Layout')
+        main_layout.setObjectName(unique_name + 'Layout')
         self.setLayout(main_layout)
 
         maya.cmds.setParent(main_layout.objectName())

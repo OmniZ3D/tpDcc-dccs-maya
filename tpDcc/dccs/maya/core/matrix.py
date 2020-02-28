@@ -39,7 +39,7 @@ def set_matrix_row(matrix, vector, row):
     set_matrix_cell(matrix, vector.z, row, 2)
 
 
-def build_matrix(translate=(0,0,0), x_axis=(1,0,0), y_axis=(0,1,0), z_axis=(0,0,1)):
+def build_matrix(translate=(0, 0, 0), x_axis=(1, 0, 0), y_axis=(0, 1, 0), z_axis=(0, 0, 1)):
     """
     Builds a transformation matrix based on the input vectors
     :param translate: tuple/list, translate values for the matrix

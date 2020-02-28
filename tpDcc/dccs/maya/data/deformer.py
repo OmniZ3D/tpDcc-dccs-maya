@@ -8,6 +8,7 @@ import copy
 
 import maya.cmds as cmds
 
+import tpDcc
 from tpDcc.libs.python import python
 
 
@@ -37,7 +38,6 @@ class MayaDeformerData(object):
         if deformer:
             self.build_data()
 
-    # region Override Functions
     def build_data(self):
         """
         Builds deformer data
@@ -50,7 +50,9 @@ class MayaDeformerData(object):
             return
 
         if not deformer.is_deformer(deformer=self._deformer):
-            raise Exception('Object {} is not a valid deformer! Unable to instantiate MayaDeformerData() class object!'.format(self._deformer))
+            raise Exception(
+                'Object {} is not a valid deformer! Unable to instantiate MayaDeformerData() class object!'.format(
+                    self._deformer))
 
         timer = cmds.timerX()
 
@@ -72,7 +74,8 @@ class MayaDeformerData(object):
             self._data[geo] = dict()
             self._data[geo]['index'] = affected_geo[geo]
             self._data[geo]['geometryTypej'] = str(cmds.objectType(geo_shape))
-            self._data[geo]['membership'] = deformer.get_deformer_set_member_indices(deformer=self._deformer, geometry=geo)
+            self._data[geo]['membership'] = deformer.get_deformer_set_member_indices(
+                deformer=self._deformer, geometry=geo)
             self._data[geo]['weights'] = deformer.get_weights(deformer=self._deformer, geometry=geo)
 
             if self._data[geo]['geometryType'] == 'mesh':
@@ -84,12 +87,10 @@ class MayaDeformerData(object):
         self.get_deformer_attr_connections()
 
         build_time = cmds.timerX(st=timer)
-        tp.logger.debug('MayaDeformerData: Data build time for "{}" : "{}"'.format(self._deformer, str(build_time)))
+        tpDcc.logger.debug('MayaDeformerData: Data build time for "{}" : "{}"'.format(self._deformer, str(build_time)))
 
         return self._deformer
-    # endregion
 
-    # region Public Functions
     def get_deformer_attr_values(self):
         """
         Get deformer attribute values based on the given deformer attribute list
@@ -97,10 +98,11 @@ class MayaDeformerData(object):
 
         deformer = self._data['name']
         for attr in self._data['attrValueList']:
-            if not cmds.getAttr(deformer+'.'+attr, se=True) and cmds.listConnections(deformer+'.'+attr, s=True, d=False):
+            if not cmds.getAttr(deformer + '.' + attr, se=True) and cmds.listConnections(
+                    deformer + '.' + attr, s=True, d=False):
                 self._data['attrConnectionList'].append(attr)
             else:
-                self._data['attrValueDict'][attr] = cmds.getAttr(deformer+'.'+attr)
+                self._data['attrValueDict'][attr] = cmds.getAttr(deformer+'.' + attr)
 
     def get_deformer_attr_connections(self):
         """
@@ -109,7 +111,8 @@ class MayaDeformerData(object):
 
         deformer = self._data['name']
         for attr in self._data['attrConnectionList']:
-            attr_cnt = cmds.listConnections(deformer+'.'+attr, s=True, d=False, p=True, sh=True, skipConversionNodes=True)
+            attr_cnt = cmds.listConnections(
+                deformer+'.' + attr, s=True, d=False, p=True, sh=True, skipConversionNodes=True)
             if attr_cnt:
                 self._data['attrConnectionDict'][attr] = attr_cnt[0]
 
@@ -145,4 +148,3 @@ class MayaDeformerData(object):
             self._data['attrConnectionList'].append('refMesh')
         else:
             pass
-    # endregion

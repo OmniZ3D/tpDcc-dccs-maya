@@ -277,7 +277,7 @@ def load_maya_animation_import_export_plugin():
 
     anim_plugin_name = get_maya_animation_importer_export_plugin_name()
 
-    if not maya.cmds.pluginInfo(anim_plugin_name, query=True, l=True, n=True):
+    if not maya.cmds.pluginInfo(anim_plugin_name, query=True, long=True, n=True):
         try:
             maya.cmds.loadPlugin(anim_plugin_name)
             plugin_path = maya.cmds.pluginInfo(anim_plugin_name, query=True, path=True)
@@ -364,7 +364,8 @@ def check_anim_curves_has_fraction_keys(anim_curves, selected_range=None):
             all_keyframes = maya.cmds.keyframe(anim_curve, query=True)
             if all_keyframes is not None:
                 for keyframe in all_keyframes:
-                    if not keyframe.is_integer() and selected_start <= keyframe <= selected_end and keyframe not in fraction_keys:
+                    if not keyframe.is_integer() and selected_start <= keyframe \
+                            <= selected_end and keyframe not in fraction_keys:
                         fraction_keys.append(keyframe)
     elif selected_range is False and selected_keys is not None:
         fraction_keys = [k for k in list(set(selected_keys)) if not k.is_integer()]
@@ -452,26 +453,32 @@ def convert_fraction_keys_to_whole_keys(animation_curves, consider_selected_rang
                 frame_index = keyframes.index(frame)
                 if frame_index != 0:
                     pre_frame = keyframes[frame_index - 1]
-                    pre_value = maya.cmds.keyframe(anim_curve, time=(pre_frame, pre_frame), query=True, valueChange=True)
+                    pre_value = maya.cmds.keyframe(
+                        anim_curve, time=(pre_frame, pre_frame), query=True, valueChange=True)
                     if pre_value is not None and current_value == pre_value[0]:
                         is_hold = True
                 if frame_index != keyframes.index(keyframes[-1]):
                     post_frame = keyframes[frame_index + 1]
-                    post_value = maya.cmds.keyframe(anim_curve, time=(post_frame, post_frame), query=True, valueChange=True)
+                    post_value = maya.cmds.keyframe(
+                        anim_curve, time=(post_frame, post_frame), query=True, valueChange=True)
                     if post_value is not None and current_value == post_value[0]:
                         is_hold = True
                 try:
                     if is_hold:
-                        maya.cmds.keyframe(anim_curve, edit=True, absolute=True, timeChange=round_frame, time=(frame, frame))
+                        maya.cmds.keyframe(
+                            anim_curve, edit=True, absolute=True, timeChange=round_frame, time=(frame, frame))
                     else:
                         maya.cmds.setKeyframe(anim_curve, insert=True, t=round_frame)
                     keys_inserted.append(round_frame)
                 except Exception as exc:
                     error_msg = 'AnimCurve: {}\n'.format(anim_curve)
                     if is_hold:
-                        error_msg += 'Tried to move a key from frame {} to frame {} ({}) to maintain a hold with a value of {}. Usually failed due to keyframe already existing on frame trying to move to'.format(frame, round_frame, current_value)
+                        error_msg += 'Tried to move a key from frame {} to frame {} to maintain a hold with ' \
+                                     'a value of {}. Usually failed due to keyframe already existing on frame trying ' \
+                                     'to move to'.format(frame, round_frame, current_value)
                     else:
-                        error_msg += 'Tried to insert a key on frame {} to preserve animation curve shape to replace key on frame {}'.format(round_frame, frame)
+                        error_msg += 'Tried to insert a key on frame {} to preserve animation curve shape to replace' \
+                                     ' key on frame {}'.format(round_frame, frame)
                     LOGGER.error(error_msg)
                     if anim_curve not in failed_fixes:
                         failed_fixes[anim_curve] = [frame]
