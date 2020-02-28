@@ -24,8 +24,8 @@ class MetaObject(metanode.MetaNode, object):
         if kwargs.get('node_type') is None:
             kwargs['node_type'] = 'transform'
 
-        super(MetaObject, self).__init__\
-            (node=node, name=name, name_args=name_args, name_kwargs=name_kwargs, *args, **kwargs)
+        super(MetaObject, self).__init__(
+            node=node, name=name, name_args=name_args, name_kwargs=name_kwargs, *args, **kwargs)
 
         if self.cached:
             return

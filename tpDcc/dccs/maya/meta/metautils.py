@@ -38,21 +38,21 @@ class MetaAttributeValidator(attr_utils.AttributeValidator):
         return arg
 
     @staticmethod
-    def meta_node_string_list(l):
+    def meta_node_string_list(string_list):
         """
         Returns  list of arguments with their meta nodes if possible
-        :param l:
+        :param string_list:
         :return:
         """
 
-        l = MetaAttributeValidator.list_arg(l)
+        string_list = MetaAttributeValidator.list_arg(string_list)
         result = list()
-        for o in l:
+        for obj in string_list:
             try:
-                o = o.meta_node
+                obj = obj.meta_node
             except Exception:
                 pass
-            result.append(o)
+            result.append(obj)
 
         return result
 
@@ -925,10 +925,9 @@ class MetaAttributeUtils(object):
                 try:
                     MetaAttributeUtils.connect(_driver, attr_dict_target['combined'])
                 except Exception as e:
-                    LOGGER.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driver,
-                                                                                                       attr_dict_target[
-                                                                                                           'combined'],
-                                                                                                       e))
+                    LOGGER.error(
+                        '|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(
+                            _driver, attr_dict_target['combined'], e))
 
         if _driven and out_connections:
             LOGGER.debug('|Attributes Copy| >> Current Driven: {}'.format(_driven))
@@ -939,10 +938,9 @@ class MetaAttributeUtils(object):
                     try:
                         MetaAttributeUtils.connect(attr_dict_target['combined'], c)
                     except Exception as e:
-                        LOGGER.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driven,
-                                                                                                           attr_dict_target[
-                                                                                                               'combined'],
-                                                                                                           e))
+                        LOGGER.error(
+                            '|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(
+                                _driven, attr_dict_target['combined'], e))
 
         if copy_settings:
             if dict_source_flags.get('enum'):
@@ -986,10 +984,8 @@ class MetaAttributeUtils(object):
                 MetaAttributeUtils.connect(attr_dict, attr_dict_target)
             except Exception as e:
                 LOGGER.error(
-                    '|Attributes Copy| >> Failed to connect source to target {0} >> {1} | err: {2}'.format(combined,
-                                                                                                           attr_dict_target[
-                                                                                                               'combined'],
-                                                                                                           e))
+                    '|Attributes Copy| >> Failed to connect source to target {0} >> {1} | err: {2}'.format(
+                        combined, attr_dict_target['combined'], e))
         elif driven == 'source':
             try:
                 MetaAttributeUtils.connect(attr_dict_target, attr_dict)
@@ -1106,16 +1102,16 @@ class MetaAttributeUtils(object):
 
         if MetaAttributeUtils.get_type(attr_dict) == 'message':
             LOGGER.debug('|Attribute Break Connection| >> message')
-            dst = maya.cmds.listConnections(combined, skipConversionNodes=False, destination=True, source=False,
-                                            plugs=True)
+            dst = maya.cmds.listConnections(
+                combined, skipConversionNodes=False, destination=True, source=False, plugs=True)
             if dst:
                 for child_attr in dst:
                     LOGGER.debug('|Attribute Break Connection| >> Disconnecting attr {}'.format(child_attr))
                     MetaAttributeUtils.disconnect(driven_attr, child_attr)
 
         if maya.cmds.connectionInfo(combined, isDestination=True):
-            source_connections = maya.cmds.listConnections(combined, skipConversionNodes=False, destination=False,
-                                                           source=True, plugs=True)
+            source_connections = maya.cmds.listConnections(
+                combined, skipConversionNodes=False, destination=False, source=True, plugs=True)
             if not source_connections:
                 family = MetaAttributeUtils.get_family_dict(attr_dict)
                 source_connections = maya.cmds.connectionInfo(combined, sourceFromDestination=True)
@@ -1913,9 +1909,8 @@ class MetaAttributeUtils(object):
             LOGGER.debug(
                 '|Message Setter| >> message_holder: {0} | message_attr: {1}'.format(message_holder, message_attr))
             LOGGER.debug(
-                '|Message Setter| >> messaged_node: {0} | messaged_extra: {1} | message_long: {2}'.format(messaged_node,
-                                                                                                          messaged_extra,
-                                                                                                          message_long))
+                '|Message Setter| >> messaged_node: {0} | messaged_extra: {1} | message_long: {2}'.format(
+                    messaged_node, messaged_extra, message_long))
 
             if messaged_extra:
                 if '.' in _data_attr:
@@ -1928,17 +1923,16 @@ class MetaAttributeUtils(object):
                     MetaAttributeUtils.connect((msg_node + '.message'), holder_dict['combined'])
 
                 if msg_extra:
-                    LOGGER.debug('|Message Setter| >> {0}.{1} stored to: {2}'.format(msg_node, msg_extra,
-                                                                                     holder_dict['combined']))
+                    LOGGER.debug('|Message Setter| >> {0}.{1} stored to: {2}'.format(
+                        msg_node, msg_extra, holder_dict['combined']))
 
                     if not maya.cmds.objExists(data_attr_dict['combined']):
                         MetaAttributeUtils.add(data_attr_dict['node'], data_attr_dict['attr'], 'string')
 
                     if MetaAttributeUtils.get_type(data_attr_dict['combined']) != 'string':
-                        raise ValueError('DataAttr must be string. {0} is type {1}'.format(data_attr_dict['combined'],
-                                                                                           MetaAttributeUtils.get_type(
-                                                                                               data_attr_dict[
-                                                                                                   'combined'])))
+                        raise ValueError(
+                            'DataAttr must be string. {0} is type {1}'.format(
+                                data_attr_dict['combined'], MetaAttributeUtils.get_type(data_attr_dict['combined'])))
 
                     meta_node = metanode.MetaNode(attr_dict['node'])
                     dict_buffer = meta_node.__getattribute__(data_attr_dict['attr']) or {}
