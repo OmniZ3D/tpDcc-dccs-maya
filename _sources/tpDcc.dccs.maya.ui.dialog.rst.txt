@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.ui.dialog module
+================================
+
+.. automodule:: tpDcc.dccs.maya.ui.dialog
+   :members:
+   :undoc-members:
+   :show-inheritance:

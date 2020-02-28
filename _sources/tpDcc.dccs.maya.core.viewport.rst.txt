@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.viewport module
+====================================
+
+.. automodule:: tpDcc.dccs.maya.core.viewport
+   :members:
+   :undoc-members:
+   :show-inheritance:

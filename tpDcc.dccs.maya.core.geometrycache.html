@@ -1,0 +1,353 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tpDcc.dccs.maya.core.geometrycache module &mdash; tpDcc-dccs-maya 0.0.l documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tpDcc.dccs.maya.core.gui module" href="tpDcc.dccs.maya.core.gui.html" />
+    <link rel="prev" title="tpDcc.dccs.maya.core.geometry module" href="tpDcc.dccs.maya.core.geometry.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tpDcc-dccs-maya
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tpDcc</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tpDcc.html">tpDcc package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="tpDcc.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tpDcc.dccs.html">tpDcc.dccs package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tpDcc.html#module-tpDcc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tpDcc-dccs-maya</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">tpDcc</a> &raquo;</li>
+        
+          <li><a href="tpDcc.html">tpDcc package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.html">tpDcc.dccs package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.html">tpDcc.dccs.maya package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.core.html">tpDcc.dccs.maya.core package</a> &raquo;</li>
+        
+      <li>tpDcc.dccs.maya.core.geometrycache module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tpDcc.dccs.maya.core.geometrycache.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tpDcc.dccs.maya.core.geometrycache">
+<span id="tpdcc-dccs-maya-core-geometrycache-module"></span><h1>tpDcc.dccs.maya.core.geometrycache module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.geometrycache" title="Permalink to this headline">¶</a></h1>
+<p>Module that contains Geometry Cache related functionality for Maya</p>
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.alembic_time_offset">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">alembic_time_offset</code><span class="sig-paren">(</span><em class="sig-param">offset_node</em>, <em class="sig-param">offset_attr='alembicTimeOffset'</em>, <em class="sig-param">cache_list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.alembic_time_offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures a time offset attribute to control the incoming time value for the given cache nodes
+:param offset_node: str, node that will hold the time offset attribute
+:param offset_attr: str, time offset attribute name
+:param cache_list: list(str), list of cache nodes to connect to time offset</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.connect_time">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">connect_time</code><span class="sig-paren">(</span><em class="sig-param">cache_node</em>, <em class="sig-param">time_attr='time1.outTime'</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.connect_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects a given driver attribute to the time input for a named cache node
+:param cache_node: str, cache connect to connect time into
+:param time_attr: str, attribute name to drive the cache node time value</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.disconnect_time">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">disconnect_time</code><span class="sig-paren">(</span><em class="sig-param">cache_node</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.disconnect_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disconnects the time attribute for the given cache node
+:param cache_node: str, cache node to disconnect time from</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.export_cache_from_geometry">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">export_cache_from_geometry</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">cache_file</em>, <em class="sig-param">start_frame=1</em>, <em class="sig-param">end_frame=100</em>, <em class="sig-param">use_time_line=True</em>, <em class="sig-param">file_per_frame=False</em>, <em class="sig-param">cache_per_geo=True</em>, <em class="sig-param">force_export=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.export_cache_from_geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports caches from given geometries
+:param geometry: str, geometry to export cache from
+:param cache_file: str, output file name
+:param start_frame: int, start frame for cache output
+:param end_frame: int, end frame for cache output
+:param use_time_line: bool, get start and enf frames from the time line
+:param file_per_frame: bool, write file per frame or in a single file
+:param cache_per_geo: bool, write file per shape or single file
+:param force_export: bool, force export even if it overwrites existing files</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.import_abc_cache">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">import_abc_cache</code><span class="sig-paren">(</span><em class="sig-param">cache_path=''</em>, <em class="sig-param">cache_name=''</em>, <em class="sig-param">namespace=''</em>, <em class="sig-param">parent=''</em>, <em class="sig-param">mode='import'</em>, <em class="sig-param">debug=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.import_abc_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports an alembic cache from file
+:param cache_path: str, alembic cache file path
+:param cache_name: str, alembic cache name. If empty, file name will be used
+:param namespace: str, namespace for cache
+:param parent: str, reparent the whole hierarchy under an existing node in the current scene
+:param mode: str, import mode (‘import’, ‘open’ or ‘replace’)
+:param debug: bool, whether turn on or off debug messages</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.import_cache_to_geometries">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">import_cache_to_geometries</code><span class="sig-paren">(</span><em class="sig-param">geo_list</em>, <em class="sig-param">cache_directory</em>, <em class="sig-param">cache_file_list=None</em>, <em class="sig-param">extension='.abc'</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.import_cache_to_geometries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports and connects geometry cache files from a given path to the input geometry list
+:param geo_list: list(str), list of geometry load cache to
+:param cache_directory: str, directory path to load cache files from
+:param cache_file_list: list(str), list of cache files to load. If empty, geometry shape nodes will be used
+:param extension: list(str), str, cache file extension</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.import_cache_to_geometry">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">import_cache_to_geometry</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">cache_file</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.import_cache_to_geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports and connects geometry cache file to the given geometry
+:param geometry: str, geometry to load cache to
+:param cache_file: str, geometry cache file path to load</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.import_gpu_cache">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">import_gpu_cache</code><span class="sig-paren">(</span><em class="sig-param">cache_path</em>, <em class="sig-param">cache_name=None</em>, <em class="sig-param">namespace=''</em>, <em class="sig-param">unique_namespace=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.import_gpu_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import GPU Alembic cache from file
+:param cache_path: str, alembic cache file path
+:param cache_name: str, alembic cache name. If empty, filename will be used
+:param namespace: str, namespace of the imported gpu alembic node
+:param unique_namespace: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.is_alembic_node">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">is_alembic_node</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.is_alembic_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether or not given node is a valid Alembic cache node
+:param node: str, name of the object to query
+:return: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.is_gpu_cache_node">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">is_gpu_cache_node</code><span class="sig-paren">(</span><em class="sig-param">node</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.is_gpu_cache_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether or not given node is a valid GPU cache node
+:param node: name of the object to query
+:return: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.load_abc_export_plugin">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">load_abc_export_plugin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.load_abc_export_plugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads Alembic Export Maya Plugin (AbcExport)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.load_abc_from_gpu_cache">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">load_abc_from_gpu_cache</code><span class="sig-paren">(</span><em class="sig-param">gpu_cache_node</em>, <em class="sig-param">debug=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.load_abc_from_gpu_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads ALembic cache from a given gpuCache node
+:param gpu_cache_node: str, gpu cache node to replace with alembic cache
+:param debug: bool, print debug info</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.load_abc_import_plugin">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">load_abc_import_plugin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.load_abc_import_plugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads Alembic Import Maya Plugin (AbcImport)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.geometrycache.load_gpu_cache_plugin">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.geometrycache.</code><code class="sig-name descname">load_gpu_cache_plugin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.geometrycache.load_gpu_cache_plugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads GPU Cache Maya Plugin (gpuCache)</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+    <a href="https://github.com/tpDcc/tpDcc-libs-python" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tpDcc.dccs.maya.core.gui.html" class="btn btn-neutral float-right" title="tpDcc.dccs.maya.core.gui module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tpDcc.dccs.maya.core.geometry.html" class="btn btn-neutral float-left" title="tpDcc.dccs.maya.core.geometry module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Tomas Poveda
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

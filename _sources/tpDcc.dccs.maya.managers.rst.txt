@@ -1,0 +1,18 @@
+tpDcc.dccs.maya.managers package
+================================
+
+Submodules
+----------
+
+.. toctree::
+
+   tpDcc.dccs.maya.managers.metadatamanager
+   tpDcc.dccs.maya.managers.tools
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.dccs.maya.managers
+   :members:
+   :undoc-members:
+   :show-inheritance:

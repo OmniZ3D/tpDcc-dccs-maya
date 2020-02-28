@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.blendshape module
+======================================
+
+.. automodule:: tpDcc.dccs.maya.core.blendshape
+   :members:
+   :undoc-members:
+   :show-inheritance:

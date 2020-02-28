@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.space module
+=================================
+
+.. automodule:: tpDcc.dccs.maya.core.space
+   :members:
+   :undoc-members:
+   :show-inheritance:

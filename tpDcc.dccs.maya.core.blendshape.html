@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tpDcc.dccs.maya.core.blendshape module &mdash; tpDcc-dccs-maya 0.0.l documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tpDcc.dccs.maya.core.callback module" href="tpDcc.dccs.maya.core.callback.html" />
+    <link rel="prev" title="tpDcc.dccs.maya.core.attribute module" href="tpDcc.dccs.maya.core.attribute.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tpDcc-dccs-maya
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tpDcc</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tpDcc.html">tpDcc package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="tpDcc.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tpDcc.dccs.html">tpDcc.dccs package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tpDcc.html#module-tpDcc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tpDcc-dccs-maya</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">tpDcc</a> &raquo;</li>
+        
+          <li><a href="tpDcc.html">tpDcc package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.html">tpDcc.dccs package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.html">tpDcc.dccs.maya package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.core.html">tpDcc.dccs.maya.core package</a> &raquo;</li>
+        
+      <li>tpDcc.dccs.maya.core.blendshape module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tpDcc.dccs.maya.core.blendshape.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tpDcc.dccs.maya.core.blendshape">
+<span id="tpdcc-dccs-maya-core-blendshape-module"></span><h1>tpDcc.dccs.maya.core.blendshape module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.blendshape" title="Permalink to this headline">¶</a></h1>
+<p>This module include data class for blendshapes</p>
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">BlendShapeDeformerOrder</code><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.After">
+<code class="sig-name descname">After</code><em class="property"> = 'after'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.After" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.Before">
+<code class="sig-name descname">Before</code><em class="property"> = 'before'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.Before" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.Foc">
+<code class="sig-name descname">Foc</code><em class="property"> = 'foc'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.Foc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.Parallel">
+<code class="sig-name descname">Parallel</code><em class="property"> = 'parallel'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.Parallel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.Split">
+<code class="sig-name descname">Split</code><em class="property"> = 'split'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.BlendShapeDeformerOrder.Split" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.blendshape.BlendShapeOrigin">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">BlendShapeOrigin</code><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.BlendShapeOrigin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.blendshape.BlendShapeOrigin.Local">
+<code class="sig-name descname">Local</code><em class="property"> = 'local'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.BlendShapeOrigin.Local" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.blendshape.BlendShapeOrigin.World">
+<code class="sig-name descname">World</code><em class="property"> = 'world'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.BlendShapeOrigin.World" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.add_empty_target">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">add_empty_target</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target_alias=''</em>, <em class="sig-param">input_target_items=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.add_empty_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a new empty target into the given blendShape node
+:param blend_shape: str, name of the blendShape to add target to
+:param target_alias: str, override the default blendShape target alias
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.add_target">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">add_target</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target</em>, <em class="sig-param">base=''</em>, <em class="sig-param">target_index=-1</em>, <em class="sig-param">target_alias=''</em>, <em class="sig-param">target_weight=0.0</em>, <em class="sig-param">topology_check=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.add_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a new target to the given blendShape
+:param blend_shape: str, name of the blendShape to add target to
+:param target: str, new blendshape target geometry
+:param base: str, blendsahpe base geometry, if empty, use first connected base geometry
+:param target_index: int, specify the target index, if less than 0, use next available index
+:param target_alias: str, override the default blendShape target alias
+:param target_weight: float, set the target weight value
+:param topology_check: bool, Whether to check the topology between target and base geometries
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.add_target_in_between">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">add_target_in_between</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target_geo</em>, <em class="sig-param">target_name</em>, <em class="sig-param">base=''</em>, <em class="sig-param">target_weight=0.5</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.add_target_in_between" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a new target in between to the given blendshape target
+:param blend_shape: str, name of blendshape to add target from
+:param target_geo: str, new blendshape target inbetween geometry
+:param target_name: str, blendshape target name to add inbetween target to
+:param base: str, blendshape base geometry. If empty, use first connected base geometry
+:param target_weight: int, blendshape inbetween target weight value
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.check_blendshape">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">check_blendshape</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.check_blendshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check sif a node is a valid blendshape and raise an exception if the blenshape is not valid
+:param blend_shape: str, name of the node to be checked
+:return: bool, True if the given node is a blendshape node</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.connect_to_target">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">connect_to_target</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target_geo</em>, <em class="sig-param">target_name</em>, <em class="sig-param">base_geo</em>, <em class="sig-param">weight=1.0</em>, <em class="sig-param">force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.connect_to_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects a new target to a given blendShape target
+:param blend_shape: str, name of blendshape to connect geometry target to
+:param target_geo: str, geometry to connect to blendshape target
+:param target_name: str, blendshape target name to connect geometry to
+:param base_geo: str, blendshape base geometry name
+:param weight: float, blendshape target weight value to connect geometry to
+:param force: bool, force connection</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.create">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">base_geo</em>, <em class="sig-param">target_geo=None</em>, <em class="sig-param">origin='local'</em>, <em class="sig-param">deform_order=None</em>, <em class="sig-param">prefix=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a blend shape deformer for the given base geometry
+:param base_geo: str, geometry to apply blend shape deformer to
+:param target_geo: list&lt;str&gt;, list of blend shape target models
+:param origin: BlendShapeOrigin, create a local or world space blendshape deformer
+:param deform_order: BlendShapeDeformerOrder, deform order
+:param prefix: str, naming prefix
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.get_base_geo">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">get_base_geo</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.get_base_geo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of blendShape base geometry
+:param blend_shape: str, blendshape to get base geometry from
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.get_base_index">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">get_base_index</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">base</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.get_base_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the blendshape input geometry index for the given base geometry
+:param blend_shape: str, blendshape to get base geometry index from
+:param base: str, base geometry to get the input geometry index for
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.get_target_geo">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">get_target_geo</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target</em>, <em class="sig-param">base_geo=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.get_target_geo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the connected target geometry given a blendshape and target
+:param blend_shape: str, blendshape node to get target geometry from
+:param target: str, blendshape target to get source geometry from
+:param base_geo: str, base geometry of the blendshaspe to get the target geometry for. If empty, use base geometry</p>
+<blockquote>
+<div><p>at index 0</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.get_target_geo_list">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">get_target_geo_list</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">base_geo=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.get_target_geo_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of connected target geometry to the given blendshape
+:param blend_shape: str, blendshape node to get target geometry list from
+:param base_geo: str, base geometry of the blendshape to get the target geometry for. If empty, uses base geometry</p>
+<blockquote>
+<div><p>at index 0</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list&lt;str&gt;</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.get_target_index">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">get_target_index</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.get_target_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the target index of the given blendShape and target name
+:param blend_shape: str, name of blendshape to get target index for
+:param target: blendshape target to get the index for
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.get_target_list">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">get_target_list</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.get_target_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the target list for the given blendshape
+:param blend_shape: str, name of blendshape to get target list for
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.get_target_name">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">get_target_name</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target_geo</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.get_target_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get blendShape target alias for the given target geometry
+:param blend_shape: str, blendshape node to get target name from
+:param target_geo: str, blendshape target geometry to get alias name for
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.get_target_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">get_target_weights</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target</em>, <em class="sig-param">geometry=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.get_target_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get per vertex target weights for the given blendshape target
+:param blend_shape: str, name of blendshape to get target weights for
+:param target: str, name of blendshape target to get weights for
+:param geometry: str, name of blendshape driven geometry to get weights from
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.has_base">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">has_base</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">base</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.has_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given blendshape has a specific base geometry
+:param blend_shape: str, blendshape node to query
+:param base: str, base geometry to query
+:return: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.has_target">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">has_target</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.has_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given target exist on the given blendshape node
+:param blend_shape: str, name of blendshape to query
+:param target: str, blendshape target to query
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.has_target_geo">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">has_target_geo</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target</em>, <em class="sig-param">base=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.has_target_geo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given blendshape target has live target geometry
+:param blend_shape: str, name of blendshape to query
+:param target: str, blendshape target to query
+:param base: str, base geometry index to check for live target geometry
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.is_blendshape">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">is_blendshape</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.is_blendshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given object is a blend shape
+:param blend_shape: str, object to query
+:return: bool, True if the given node is a blend shape node</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.next_available_target_index">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">next_available_target_index</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.next_available_target_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the next available blendshape target index
+:param blend_shape: str, name of blendshape to get next available target index for
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.remove_target">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">remove_target</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target</em>, <em class="sig-param">base_geo</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.remove_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the given blendshape target
+:param blend_shape: str, name of blendshape to remove target from
+:param target: str, blendshape target to remove
+:param base_geo: str, blendshape base geometry name</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.remove_unconnected_targets">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">remove_unconnected_targets</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">base</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.remove_unconnected_targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove unconnected blendshape targets
+:param blend_shape: str, blendshape deformer to operate on
+:param base: str, base geometry connected to the blendshape
+:return: list&lt;str&gt;, list of removed blendshape targets</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.rename_target">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">rename_target</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target</em>, <em class="sig-param">new_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.rename_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename the given blendshape target
+:param blend_shape: str, name of blendshape to rename target from
+:param target: str, blenshape target to rename
+:param new_name: str, new name for the blendshpae target
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.blendshape.set_target_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.blendshape.</code><code class="sig-name descname">set_target_weights</code><span class="sig-paren">(</span><em class="sig-param">blend_shape</em>, <em class="sig-param">target</em>, <em class="sig-param">wt</em>, <em class="sig-param">geometry=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.blendshape.set_target_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set per vertex target weights for the given blendshape target
+:param blend_shape: str, name of blendshape to set target weights for
+:param target: str, name of blendshape target to set weights for
+:param wt: list&lt;float&gt;, weight value list to apply to the given blendshape target
+:param geometry: str, name of blendshape driven geometry to set weights on</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+    <a href="https://github.com/tpDcc/tpDcc-libs-python" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tpDcc.dccs.maya.core.callback.html" class="btn btn-neutral float-right" title="tpDcc.dccs.maya.core.callback module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tpDcc.dccs.maya.core.attribute.html" class="btn btn-neutral float-left" title="tpDcc.dccs.maya.core.attribute module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Tomas Poveda
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

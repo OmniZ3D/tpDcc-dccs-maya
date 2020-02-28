@@ -1,0 +1,402 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tpDcc.dccs.maya.core.decorators module &mdash; tpDcc-dccs-maya 0.0.l documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tpDcc.dccs.maya.core.deformer module" href="tpDcc.dccs.maya.core.deformer.html" />
+    <link rel="prev" title="tpDcc.dccs.maya.core.dcc module" href="tpDcc.dccs.maya.core.dcc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tpDcc-dccs-maya
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tpDcc</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tpDcc.html">tpDcc package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="tpDcc.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tpDcc.dccs.html">tpDcc.dccs package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tpDcc.html#module-tpDcc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tpDcc-dccs-maya</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">tpDcc</a> &raquo;</li>
+        
+          <li><a href="tpDcc.html">tpDcc package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.html">tpDcc.dccs package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.html">tpDcc.dccs.maya package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.core.html">tpDcc.dccs.maya.core package</a> &raquo;</li>
+        
+      <li>tpDcc.dccs.maya.core.decorators module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tpDcc.dccs.maya.core.decorators.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tpDcc.dccs.maya.core.decorators">
+<span id="tpdcc-dccs-maya-core-decorators-module"></span><h1>tpDcc.dccs.maya.core.decorators module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.decorators" title="Permalink to this headline">¶</a></h1>
+<p>Module that contains collections of decorators related with Maya</p>
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.decorators.RestoreContext">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">RestoreContext</code><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.RestoreContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.decorators.ShowMayaProgress">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">ShowMayaProgress</code><span class="sig-paren">(</span><em class="sig-param">status='Working...'</em>, <em class="sig-param">start=0</em>, <em class="sig-param">end=100</em>, <em class="sig-param">interruptable=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.ShowMayaProgress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Function decorator to show user (progress) feedback
+<a class="reference external" href="http://josbalcaen.com/maya-python-progress-decorator/">http://josbalcaen.com/maya-python-progress-decorator/</a>
+&#64;usage
+from tpRigLib.utils.tpDecorators import showMayaProgress
+&#64;showMayaProgress(status=’Creating cubes…’, end=10)
+def createCubes():
+for i in range(10):</p>
+<blockquote>
+<div><p>time.sleep(1)
+if createCubes.isInterrupted(): break
+iCube = cmds.polyCube(w=1,h=1,d=1)
+cmds.move(i,i*.2,0,iCube)
+createCubes.step()</p>
+</div></blockquote>
+<p>createCubes()</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.decorators.ShowMayaProgress.end">
+<code class="sig-name descname">end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.ShowMayaProgress.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark the progress bar as ended</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.decorators.ShowMayaProgress.is_interrupted">
+<code class="sig-name descname">is_interrupted</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.ShowMayaProgress.is_interrupted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the user has interrupted the progress</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.decorators.ShowMayaProgress.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.ShowMayaProgress.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start progress bar</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.decorators.ShowMayaProgress.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">value=1</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.ShowMayaProgress.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases progress bar step by value
+:param value: int, step</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.decorators.SkipUndo">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">SkipUndo</code><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.SkipUndo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.decorators.SuspendRefresh">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">SuspendRefresh</code><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.SuspendRefresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.decorators.ToggleScrub">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">ToggleScrub</code><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.ToggleScrub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.TryExcept">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">TryExcept</code><span class="sig-paren">(</span><em class="sig-param">fn</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.TryExcept" title="Permalink to this definition">¶</a></dt>
+<dd><p>tpRigLib exception wrapper with undo functionality. Use &#64;tpTryExcept above the function to wrap it.
+&#64;param fn: function to wrap
+&#64;return: wrapped function</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.decorators.UndoChunk">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">UndoChunk</code><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.UndoChunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.operate_on_selected">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">operate_on_selected</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.operate_on_selected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function decorator that enables a function to operate only on selected objects
+:param f: fn, function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.repeat_static_command">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">repeat_static_command</code><span class="sig-paren">(</span><em class="sig-param">class_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.repeat_static_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that will make static functions repeteable for Maya
+:param class_name, str, path to the Python module where function we want to repeat is located</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.restore_context">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">restore_context</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.restore_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function decorator that restores Maya context
+:param f: fn, function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.show_arrow_cursor">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">show_arrow_cursor</code><span class="sig-paren">(</span><em class="sig-param">fn</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.show_arrow_cursor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that shows arrow cursor during function execution
+:param fn:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.show_wait_cursor">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">show_wait_cursor</code><span class="sig-paren">(</span><em class="sig-param">fn</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.show_wait_cursor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that shows wait cursor during function execution
+:param fn:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.skip_undo">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">skip_undo</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.skip_undo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function decorator that skip Maya undo functionality for a function
+:param f; fn, function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.suspend_refresh">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">suspend_refresh</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.suspend_refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function decorator that suspend the refersh of Maya viewport
+:param f: fn, function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.toggle_scrub">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">toggle_scrub</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.toggle_scrub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function decorator that enables Maya scrub toggling functionality for a function
+:param f: fn, function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.undo">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">undo</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.undo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function decorator that enables undo functionality using Maya Python commands
+:param f: fn, function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.undo_chunk">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">undo_chunk</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.undo_chunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function decorator that enables Maya undo functionality for a function
+:param f: fn, function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.undo_pm">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">undo_pm</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.undo_pm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function decorator that enables undo functionality using PyMEL
+:param f: fn, function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.decorators.viewport_off">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.decorators.</code><code class="sig-name descname">viewport_off</code><span class="sig-paren">(</span><em class="sig-param">f</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.decorators.viewport_off" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function decorator that turns off Maya display while the function is running
+if the function fails, the error will be raised after
+:param f: fn, function</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+    <a href="https://github.com/tpDcc/tpDcc-libs-python" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tpDcc.dccs.maya.core.deformer.html" class="btn btn-neutral float-right" title="tpDcc.dccs.maya.core.deformer module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tpDcc.dccs.maya.core.dcc.html" class="btn btn-neutral float-left" title="tpDcc.dccs.maya.core.dcc module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Tomas Poveda
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

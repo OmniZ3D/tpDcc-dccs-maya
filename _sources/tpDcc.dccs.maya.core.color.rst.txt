@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.color module
+=================================
+
+.. automodule:: tpDcc.dccs.maya.core.color
+   :members:
+   :undoc-members:
+   :show-inheritance:

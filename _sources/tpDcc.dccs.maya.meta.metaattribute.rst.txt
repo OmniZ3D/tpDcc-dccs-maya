@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.meta.metaattribute module
+=========================================
+
+.. automodule:: tpDcc.dccs.maya.meta.metaattribute
+   :members:
+   :undoc-members:
+   :show-inheritance:

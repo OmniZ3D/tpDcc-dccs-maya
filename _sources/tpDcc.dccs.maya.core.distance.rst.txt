@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.distance module
+====================================
+
+.. automodule:: tpDcc.dccs.maya.core.distance
+   :members:
+   :undoc-members:
+   :show-inheritance:

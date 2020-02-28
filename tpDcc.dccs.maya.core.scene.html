@@ -1,0 +1,487 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tpDcc.dccs.maya.core.scene module &mdash; tpDcc-dccs-maya 0.0.l documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tpDcc.dccs.maya.core.sequencer module" href="tpDcc.dccs.maya.core.sequencer.html" />
+    <link rel="prev" title="tpDcc.dccs.maya.core.rivet module" href="tpDcc.dccs.maya.core.rivet.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tpDcc-dccs-maya
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tpDcc</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tpDcc.html">tpDcc package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="tpDcc.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tpDcc.dccs.html">tpDcc.dccs package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tpDcc.html#module-tpDcc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tpDcc-dccs-maya</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">tpDcc</a> &raquo;</li>
+        
+          <li><a href="tpDcc.html">tpDcc package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.html">tpDcc.dccs package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.html">tpDcc.dccs.maya package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.core.html">tpDcc.dccs.maya.core package</a> &raquo;</li>
+        
+      <li>tpDcc.dccs.maya.core.scene module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tpDcc.dccs.maya.core.scene.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tpDcc.dccs.maya.core.scene">
+<span id="tpdcc-dccs-maya-core-scene-module"></span><h1>tpDcc.dccs.maya.core.scene module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.scene" title="Permalink to this headline">¶</a></h1>
+<p>Module that contains functions and classes related with attributes</p>
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.scene.TrackNodes">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">TrackNodes</code><span class="sig-paren">(</span><em class="sig-param">full_path=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.TrackNodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Helps track new nodes that get added to a scene after a function is called
+Example of use:
+track_nodes = TrackNodes()
+track_nodes.load()
+custom_funct()
+new_nodes = track_nodes.get_delta()</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.scene.TrackNodes.get_delta">
+<code class="sig-name descname">get_delta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.TrackNodes.get_delta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the new nodes in the Maya scen created after load() was executed
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.scene.TrackNodes.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">node_type=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.TrackNodes.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes TrackNodes states
+:param node_type: str, Maya node type we want to track. If not given, all current scene objects wil lbe tracked</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.clean_scene">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">clean_scene</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.clean_scene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cleans invalid nodes from current scene</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.delete_garbage">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">delete_garbage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.delete_garbage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete all garbage nodes from scene</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.delete_turtle_nodes">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">delete_turtle_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.delete_turtle_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all turtle nodes in a scene and delete them</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.delete_unknown_nodes">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">delete_unknown_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.delete_unknown_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all unknown nodes and delete them</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.delete_unused_plugins">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">delete_unused_plugins</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.delete_unused_plugins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all nodes in the scene that belongs to unused plugins (plugins that are not loaded)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.find_additional_scene_dependencies">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">find_additional_scene_dependencies</code><span class="sig-paren">(</span><em class="sig-param">references=True</em>, <em class="sig-param">textures=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.find_additional_scene_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find additional dependencies from the scene by looking at the file references and texture paths
+:param references: bool
+:param textures: bool
+:return: set&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.find_scene_references">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">find_scene_references</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.find_scene_references" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.find_scene_textures">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">find_scene_textures</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.find_scene_textures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find scene texture dependencies of the current scene that are not referenced
+:return: set&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.find_texture_node_pairs">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">find_texture_node_pairs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.find_texture_node_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns pair with scene texture maya node, texture name of texture dependencies of the current
+scene that are not referenced
+:return: set&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.get_all_scene_nodes">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">get_all_scene_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.get_all_scene_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all nodes in the scene
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.get_current_scene_name">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">get_current_scene_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.get_current_scene_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the current scene opened in Maya
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.get_node_transform_root">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">get_node_transform_root</code><span class="sig-paren">(</span><em class="sig-param">node</em>, <em class="sig-param">full_path=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.get_node_transform_root" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node</strong> – str</p>
+</dd>
+</dl>
+<p>Returns the transform root of the given node taking into account its hierarchy
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.get_root_node">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">get_root_node</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.get_root_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the root Maya object
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.get_scene_cameras">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">get_scene_cameras</code><span class="sig-paren">(</span><em class="sig-param">include_default_cameras=True</em>, <em class="sig-param">include_non_default_cameras=True</em>, <em class="sig-param">get_transforms=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.get_scene_cameras" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list with all cameras in the scene
+:param include_default_cameras: bool, Whether to get default cameras or not
+:param include_non_default_cameras: Whether to get non default cameras or not
+:param get_transforms: bool, Whether to return cameras shape or camera transform
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.get_scene_file">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">get_scene_file</code><span class="sig-paren">(</span><em class="sig-param">directory=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.get_scene_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the scene file name or directory of the current scene
+:param directory: bool, Whether to return scene name or scene path
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.get_sets">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">get_sets</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.get_sets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of sets found in the scene (outliner)
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.get_top_dag_nodes">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">get_top_dag_nodes</code><span class="sig-paren">(</span><em class="sig-param">exclude_cameras=True</em>, <em class="sig-param">namespace=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.get_top_dag_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all transform that are at located in the root scene
+:param exclude_cameras: bool, Whether to include or not cameras
+:param namespace: str, if given, namespace of the objects that we want to get
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.get_top_dag_nodes_in_list">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">get_top_dag_nodes_in_list</code><span class="sig-paren">(</span><em class="sig-param">list_of_transforms</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.get_top_dag_nodes_in_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of transforms, returns only the ones at the top of the hierarchy (childs of the scene root)
+:param list_of_transforms: list&lt;str&gt;
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.import_scene">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">import_scene</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">force=True</em>, <em class="sig-param">do_save=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.import_scene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports a Maya scene into the current scene
+:param file_path: str, Path of the Maya scene to import
+:param force: bool, True if we want to save the scene without any prompt dialog
+:param do_save: bool, True if you want to save the current scene before importing a new scene
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.is_batch">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">is_batch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.is_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether Maya is in batch mode or node
+:return: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.isolated_nodes">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">isolated_nodes</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">panel</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.isolated_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Context Manager for isolating nodes in Maya model panel
+:param nodes:
+:param panel:
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.iter_references">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">iter_references</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.iter_references" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator function that returns a MObject for each valid reference node
+:return: Generator&lt;OpenMaya.MObject&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.iter_texture_node_pairs">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">iter_texture_node_pairs</code><span class="sig-paren">(</span><em class="sig-param">include_references=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.iter_texture_node_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>include_references</strong> – bool</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.new_scene">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">new_scene</code><span class="sig-paren">(</span><em class="sig-param">force=True</em>, <em class="sig-param">do_save=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.new_scene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new Maya scene
+:param force: bool, True if we want to save the scene without any prompt dialog
+:param do_save: bool, True if you want to save the current scene before creating new scene</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.open_scene">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">open_scene</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">force=True</em>, <em class="sig-param">save=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.open_scene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a Maya scene given its file path
+:param file_path: str, Path of the Maya scene to open
+:param force: bool, True if we want to save the scene without any prompt dialog
+:param save: bool, True if you want to save the current scene before opening a new scene</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.reference_scene">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">reference_scene</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">namespace=None</em>, <em class="sig-param">save=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.reference_scene" title="Permalink to this definition">¶</a></dt>
+<dd><p>References a Maya file
+:param file_path: str, full path and filename of the scene we want to reference
+:param namespace: variant, str || None, namespace to add to the nodes in Maya. If None, default is the name of</p>
+<blockquote>
+<div><p>the file</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>save</strong> – bool, True if you want to save the current scene before importing file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.save">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">save</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves current scene in current Maya file
+:return: bool, Whether the scene was saved or not</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.scene.save_as">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.scene.</code><code class="sig-name descname">save_as</code><span class="sig-paren">(</span><em class="sig-param">file_path</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.scene.save_as" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves Maya scene into the given file path
+:param file_path: str
+:return: bool</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+    <a href="https://github.com/tpDcc/tpDcc-libs-python" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tpDcc.dccs.maya.core.sequencer.html" class="btn btn-neutral float-right" title="tpDcc.dccs.maya.core.sequencer module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tpDcc.dccs.maya.core.rivet.html" class="btn btn-neutral float-left" title="tpDcc.dccs.maya.core.rivet module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Tomas Poveda
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

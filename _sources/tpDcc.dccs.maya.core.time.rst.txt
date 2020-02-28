@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.time module
+================================
+
+.. automodule:: tpDcc.dccs.maya.core.time
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.skin module
+================================
+
+.. automodule:: tpDcc.dccs.maya.core.skin
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,672 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tpDcc.dccs.maya.core.deformer module &mdash; tpDcc-dccs-maya 0.0.l documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tpDcc.dccs.maya.core.directory module" href="tpDcc.dccs.maya.core.directory.html" />
+    <link rel="prev" title="tpDcc.dccs.maya.core.decorators module" href="tpDcc.dccs.maya.core.decorators.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tpDcc-dccs-maya
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tpDcc</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tpDcc.html">tpDcc package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="tpDcc.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tpDcc.dccs.html">tpDcc.dccs package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tpDcc.html#module-tpDcc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tpDcc-dccs-maya</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">tpDcc</a> &raquo;</li>
+        
+          <li><a href="tpDcc.html">tpDcc package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.html">tpDcc.dccs package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.html">tpDcc.dccs.maya package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.core.html">tpDcc.dccs.maya.core package</a> &raquo;</li>
+        
+      <li>tpDcc.dccs.maya.core.deformer module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tpDcc.dccs.maya.core.deformer.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tpDcc.dccs.maya.core.deformer">
+<span id="tpdcc-dccs-maya-core-deformer-module"></span><h1>tpDcc.dccs.maya.core.deformer module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.deformer" title="Permalink to this headline">¶</a></h1>
+<p>Utility methods related to Maya Deformer nodes</p>
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterCurve">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">ClusterCurve</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterCurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.deformer.ClusterSurface" title="tpDcc.dccs.maya.core.deformer.ClusterSurface"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.deformer.ClusterSurface</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Util class for clustering a curve</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterCurve.set_cluster_u">
+<code class="sig-name descname">set_cluster_u</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterCurve.set_cluster_u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override because cluster u is not available on curves
+:param flag: bool</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterObject">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">ClusterObject</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Util class for clustering objects</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterObject.create">
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterObject.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the clusters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterObject.get_cluster_handle_list">
+<code class="sig-name descname">get_cluster_handle_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterObject.get_cluster_handle_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of cluster handles
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterObject.get_cluster_list">
+<code class="sig-name descname">get_cluster_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterObject.get_cluster_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the names of cluster deformers
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterSurface">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">ClusterSurface</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterSurface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.deformer.ClusterObject" title="tpDcc.dccs.maya.core.deformer.ClusterObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.deformer.ClusterObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Util class for clustering a surface</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterSurface.set_cluster_u">
+<code class="sig-name descname">set_cluster_u</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterSurface.set_cluster_u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets whether cluster u should be used
+:param flag: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterSurface.set_first_cluster_pivot_at_start">
+<code class="sig-name descname">set_first_cluster_pivot_at_start</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterSurface.set_first_cluster_pivot_at_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets whether move the first cluster pivot to the start of the curve
+:param flag: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterSurface.set_join_both_ends">
+<code class="sig-name descname">set_join_both_ends</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterSurface.set_join_both_ends" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets whether clusters on the ends of the surface are joined together or not
+:param flag: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterSurface.set_join_ends">
+<code class="sig-name descname">set_join_ends</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterSurface.set_join_ends" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets whether clusters on the end of the surface take up 2 CVs or 1 CV
+:param flag: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.deformer.ClusterSurface.set_last_cluster_pivot_at_end">
+<code class="sig-name descname">set_last_cluster_pivot_at_end</code><span class="sig-paren">(</span><em class="sig-param">flag</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.ClusterSurface.set_last_cluster_pivot_at_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets whether move the last cluster pivot to the end of the curve
+:param flag: bool</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.add_missing_influences">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">add_missing_influences</code><span class="sig-paren">(</span><em class="sig-param">skin_deformer1</em>, <em class="sig-param">skin_deformer2</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.add_missing_influences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure used influences in skin1 are added to skin2
+:param skin_deformer1: str, name of skinCluster
+:param skin_deformer2: str, name of skinCluster</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.bind_pre_matrix">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">bind_pre_matrix</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">bind_pre_matrix=''</em>, <em class="sig-param">parent=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.bind_pre_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a bindPreMatrix transform for the given deformer
+:param deformer: str, deformer to create bind pre matrix transform for
+:param bind_pre_matrix: str, specify existing transform for bind pre matrix connec tion.</p>
+<blockquote>
+<div><p>If empty, create a new transform</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>parent</strong> – bool, parent the deformer handle to the bind pre matrix transform</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.check_deformer">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">check_deformer</code><span class="sig-paren">(</span><em class="sig-param">deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.check_deformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a node is a valid deformer and raises and exception if the node is not valid
+:param deformer: str
+:return: bool, True if the given deformer is valid</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.check_multiple_outputs">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">check_multiple_outputs</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">print_result=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.check_multiple_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the  given deformer to check for multiple output connections from a single plug
+:param deformer: str, deformer to check for multiple output connections
+:param print_result: bool, Whether if the results should be printed or not
+:return: dict</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.clean">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">clean</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">threshold=0.001</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean given deformer by pruning weights and membership under the given tolerance
+:param deformer: str, deformer to clean
+:param threshold: float, weight value tolerance for prune operations</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.create_cluster">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">create_cluster</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.create_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a cluster on the given points
+:param points: list&lt;str&gt;, names of points to cluster
+:param name: str, name of the cluster
+:return: list&lt;str, st&gt;, [cluster, handle]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.find_all_deformers">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">find_all_deformers</code><span class="sig-paren">(</span><em class="sig-param">geo_obj</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.find_all_deformers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all deformers in the given geometry deformation history
+:param geo_obj: st,r name of the geometry
+:return: list&lt;str&gt;, list of deformers in the given geometry object deformation history</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.find_deformer_by_type">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">find_deformer_by_type</code><span class="sig-paren">(</span><em class="sig-param">geo_obj</em>, <em class="sig-param">deformer_type</em>, <em class="sig-param">return_all=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.find_deformer_by_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a mesh object find a deformer with deformer_type in its history
+:param geo_obj: str, name of a mesh
+:param deformer_type: str, correspnds to the Maya deformer type (skinCluster, blendShape, etc)
+:param return_all: bool, Whether to return all the deformer found of the given type or just the first one
+:return: list&lt;names of deformers of type found in the history&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.find_input_shape">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">find_input_shape</code><span class="sig-paren">(</span><em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.find_input_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the input shape (‘…ShapeOrig’) for the given shape node
+This function assumes that the specified shape is affected by at least one valid deformer
+:param shape: The shape node to find the corresponding input shape for
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_affected_geometry">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_affected_geometry</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">return_shapes=False</em>, <em class="sig-param">full_path_names=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_affected_geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary containing information about geometry affected by a given deformer
+Dict keys corresponds to affected geometry names and values indicate geometry index to deformer
+:param deformer: str, name of the deformer to query geometry from
+:param return_shapes: bool, Whether shape names should be returned instead of transform names
+:param full_path_names: bool, Whether full path names of affected objects should be returned
+:return: dict</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_deformer_fn">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_deformer_fn</code><span class="sig-paren">(</span><em class="sig-param">deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_deformer_fn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes and returns an MFnWeightGeometryFilter function set attached to the specific deformer
+:param deformer: str, name of the deformer to create function set for
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_deformer_history">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_deformer_history</code><span class="sig-paren">(</span><em class="sig-param">geo_obj</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_deformer_history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the history of the geometry object
+:param geo_obj: str, name of the geometry
+:return: list&lt;str&gt;, list of deformers in the deformation history</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_deformer_list">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_deformer_list</code><span class="sig-paren">(</span><em class="sig-param">node_type='geometryFilter'</em>, <em class="sig-param">affected_geometry=[]</em>, <em class="sig-param">regex_filter=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_deformer_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of deformers that match the input criteria
+You can list deformers connected to a specific geometry, by type and filer the results using regular expressions
+:param node_type: str, Deformer type as string. Optional arg, only return deformers of specified type
+:param affected_geometry: list(str), Affected geometry list. Optional arg, will list deformers connected to the</p>
+<blockquote>
+<div><p>specific geometry</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>regex_filter</strong> – str, Regular expression as string. Optional arg, will filter results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_deformer_set">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_deformer_set</code><span class="sig-paren">(</span><em class="sig-param">deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_deformer_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the deformer set name associated with the given deformer
+:param deformer: str, name of deformer to return the deform set for
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_deformer_set_fn">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_deformer_set_fn</code><span class="sig-paren">(</span><em class="sig-param">deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_deformer_set_fn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes and return an MFnSet function set attached to the deformer set of the given deformer
+:param deformer: str, name of the deformer attached to the deformer set to create function set for
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_deformer_set_member_indices">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_deformer_set_member_indices</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">geometry=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_deformer_set_member_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of deformer set member vertex indices
+:param deformer: str, deformer to set member indices for
+:param geometry: str, geometry to query deformer set membership for
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_deformer_set_member_str_list">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_deformer_set_member_str_list</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">geometry=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_deformer_set_member_str_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the deformer set members of the given deformer as a list of strings
+You can specify a shape name to query deformer membership for, otherwise, membership for the first affected
+geometry will be returned
+:param deformer: str, deformer to query set membership for
+:param geometry: str, geometry to query deformer set membership for (optional)
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_deformer_set_members">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_deformer_set_members</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">geometry=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_deformer_set_members" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the deformer set members of the given deformer
+You can specify a shape name to query deformer membership for, otherwise, membership for the first affected
+geometry will be returned
+:param deformer: str, deformer to query set membership for
+:param geometry: str, geometry to query deformer set membership for (optional)
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_geo_index">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_geo_index</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_geo_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the geometry index of a shape to a given deformer
+:param geometry: str, name of shape or parent transform to query
+:param deformer: str, name of deformery to query</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_index_at_skin_influence">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_index_at_skin_influence</code><span class="sig-paren">(</span><em class="sig-param">influence</em>, <em class="sig-param">skin_deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_index_at_skin_influence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an influence name, find at what index it connects to the skinCluster
+This corresponds to the matrix attribute.
+For example, skin_deformer.matrix[0] is the connection of the first influence
+:param influence: str, name of an influence
+:param skin_deformer: str, name of a skinCluster affected by the influence
+:return: int, index of the influence</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_non_zero_influences">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_non_zero_influences</code><span class="sig-paren">(</span><em class="sig-param">skin_deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_non_zero_influences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns influences that have non zero weights in the skinCluster
+:param skin_deformer: str, name of a skinCluster deformer
+:return: list&lt;str&gt;, list of influences found in the skinCluster that have influence</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_skin_blend_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_skin_blend_weights</code><span class="sig-paren">(</span><em class="sig-param">skin_deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_skin_blend_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the blendWeight values on the given skinCluster
+:param skin_deformer: str, name of a skinCluster deformer
+:return: list&lt;float&gt;, blend weight values corresponding to point order</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_skin_envelope">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_skin_envelope</code><span class="sig-paren">(</span><em class="sig-param">geo_obj</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_skin_envelope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns envelope value of the skinCluster in the given geometry object
+:param geo_obj: str, name of the geometry
+:return: float</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_skin_influence_at_index">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_skin_influence_at_index</code><span class="sig-paren">(</span><em class="sig-param">index</em>, <em class="sig-param">skin_deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_skin_influence_at_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns which influence connect to the skinCluster at the given index
+:param index: int, index of an influence
+:param skin_deformer: str, name of the skinCluster to check the index
+:return: str, name of the influence at the given index</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_skin_influence_indices">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_skin_influence_indices</code><span class="sig-paren">(</span><em class="sig-param">skin_deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_skin_influence_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the indices of the connected influences in the given skinCluster
+This corresponds to the matrix attribute.
+For example, skin_deformer.matrix[0] is the connection of the first influence
+:param skin_deformer: str, name of a skinCluster
+:return: list&lt;int&gt;, list of indices</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_skin_influence_names">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_skin_influence_names</code><span class="sig-paren">(</span><em class="sig-param">skin_deformer</em>, <em class="sig-param">short_name=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_skin_influence_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the names of the connected influences in the given skinCluster
+:param skin_deformer: str, name of the skinCluster
+:param short_name: bool, Whether to return full name of the influence or not
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_skin_influence_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_skin_influence_weights</code><span class="sig-paren">(</span><em class="sig-param">influence_name</em>, <em class="sig-param">skin_deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_skin_influence_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns weights of the influence in the given skinCluster deformer
+:param influence_name: str, name of the influence
+:param skin_deformer: str, skinCluster deformer name
+:return: list&lt;float&gt;, influences values</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_skin_influences">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_skin_influences</code><span class="sig-paren">(</span><em class="sig-param">skin_deformer</em>, <em class="sig-param">short_name=True</em>, <em class="sig-param">return_dict=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_skin_influences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the influences connected to the skin cluster
+Returns a dictionary with the keys being the name of the influences being the value at the
+key index where the influence connects to the skinCluster
+:param skin_deformer: str, name of a skinCluster
+:param short_name: bool, Whether to return full name of the influence or not
+:param return_dict: bool, Whether to return a dictionary or not
+:return: variant&lt;dict, list&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_skin_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_skin_weights</code><span class="sig-paren">(</span><em class="sig-param">skin_deformer</em>, <em class="sig-param">vertices_ids=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_skin_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the skin weights of the given skinCluster deformer
+:param skin_deformer: str, name of a skin deformer
+:param vertices_ids:
+:return: dict&lt;int, list&lt;float&gt;, returns a dictionary where the key is the influence id and the
+value is the list of weights of the influence</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.get_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">get_weights</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">geometry=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.get_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the weights for the given deformer. Weights returned as a Python list object
+:param deformer: str, deformer to get weights for
+:param geometry: str, target geometry to get weights from
+:return: list&lt;float&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.is_deformer">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">is_deformer</code><span class="sig-paren">(</span><em class="sig-param">deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.is_deformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a node is a valid deformer
+:param deformer: str, name of the node to be checked</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.prune_membership_by_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">prune_membership_by_weights</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">geo_list=None</em>, <em class="sig-param">threshold=0.001</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.prune_membership_by_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes components from a given deformer set if there are weights values below the given threshold
+:param deformer: str, name of the deformer to removed components from
+:param geo_list: list&lt;str&gt;, geometry objects whose components are checked for weight pruning
+:param threshold: float, weight threshold for removal</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.prune_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">prune_weights</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">geo_list=None</em>, <em class="sig-param">threshold=0.001</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.prune_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set deformer component weights to 0.0 if the original weight value is below the given threshold
+:param deformer: str, name of the deformer to removed components from
+:param geo_list: list&lt;str&gt;, geometry objects whose components are checked for weight pruning
+:param threshold: float, weight threshold for removal</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.rename_deformer_set">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">rename_deformer_set</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">deformer_set_name=''</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.rename_deformer_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename the deformer set connected to the given deformer
+:param deformer: str, name of the deformer whose deformer set you want to rename
+:param deformer_set_name: str, new name for the deformer set. If left as default, new name will be (deformer+”Set”)
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.set_skin_blend_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">set_skin_blend_weights</code><span class="sig-paren">(</span><em class="sig-param">skin_deformer</em>, <em class="sig-param">weights</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.set_skin_blend_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the blendWeights on the skinCluster given a list of weights
+:param skin_deformer: str, name of a skinCluster deformer
+:param weights: list&lt;float&gt;, list of weight values corresponding to point order</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.set_skin_envelope">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">set_skin_envelope</code><span class="sig-paren">(</span><em class="sig-param">geo_obj</em>, <em class="sig-param">envelope_value</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.set_skin_envelope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the envelope value of teh skinCluster in the given geometry object
+:param geo_obj: str, name of the geometry
+:param envelope_value: float. envelope value</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.set_skin_weights_to_zero">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">set_skin_weights_to_zero</code><span class="sig-paren">(</span><em class="sig-param">skin_deformer</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.set_skin_weights_to_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets all the weights on the given skinCluster to zero
+:param skin_deformer: str, name of a skinCluster deformer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.deformer.set_weights">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.deformer.</code><code class="sig-name descname">set_weights</code><span class="sig-paren">(</span><em class="sig-param">deformer</em>, <em class="sig-param">weights</em>, <em class="sig-param">geometry=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.deformer.set_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the weights for the give ndeformer using the input value list
+:param deformer: str, deformer to set weights for
+:param weights: list&lt;float&gt;, input weight value list
+:param geometry: str, target geometry to apply weights to. If None, use first affected geometry</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+    <a href="https://github.com/tpDcc/tpDcc-libs-python" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tpDcc.dccs.maya.core.directory.html" class="btn btn-neutral float-right" title="tpDcc.dccs.maya.core.directory module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tpDcc.dccs.maya.core.decorators.html" class="btn btn-neutral float-left" title="tpDcc.dccs.maya.core.decorators module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Tomas Poveda
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

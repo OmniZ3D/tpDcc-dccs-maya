@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.data.deformer module
+====================================
+
+.. automodule:: tpDcc.dccs.maya.data.deformer
+   :members:
+   :undoc-members:
+   :show-inheritance:

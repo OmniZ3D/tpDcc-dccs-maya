@@ -1,0 +1,848 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tpDcc.dccs.maya.core.transform module &mdash; tpDcc-dccs-maya 0.0.l documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tpDcc.dccs.maya.core.viewport module" href="tpDcc.dccs.maya.core.viewport.html" />
+    <link rel="prev" title="tpDcc.dccs.maya.core.time module" href="tpDcc.dccs.maya.core.time.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tpDcc-dccs-maya
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tpDcc</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tpDcc.html">tpDcc package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="tpDcc.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tpDcc.dccs.html">tpDcc.dccs package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tpDcc.html#module-tpDcc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tpDcc-dccs-maya</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">tpDcc</a> &raquo;</li>
+        
+          <li><a href="tpDcc.html">tpDcc package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.html">tpDcc.dccs package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.html">tpDcc.dccs.maya package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.core.html">tpDcc.dccs.maya.core package</a> &raquo;</li>
+        
+      <li>tpDcc.dccs.maya.core.transform module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tpDcc.dccs.maya.core.transform.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tpDcc.dccs.maya.core.transform">
+<span id="tpdcc-dccs-maya-core-transform-module"></span><h1>tpDcc.dccs.maya.core.transform module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.transform" title="Permalink to this headline">¶</a></h1>
+<p>Module that contains functions and classes related with transforms</p>
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.transform.BoundingBox">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">BoundingBox</code><span class="sig-paren">(</span><em class="sig-param">transform_node=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.BoundingBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.libs.python.mathlib.BoundingBox</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Util class to work with bounding box</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.BoundingBox.get_shapes_bounding_box">
+<code class="sig-name descname">get_shapes_bounding_box</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.BoundingBox.get_shapes_bounding_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns bounding box of the transform shapes
+:return: BoundingBox</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.transform.DuplicateHierarchy">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">DuplicateHierarchy</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.DuplicateHierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Duplicate the hierarchy of a transform</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.DuplicateHierarchy.create">
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.DuplicateHierarchy.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the duplicate hierarhcy</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.DuplicateHierarchy.only_these">
+<code class="sig-name descname">only_these</code><span class="sig-paren">(</span><em class="sig-param">list_of_transforms</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.DuplicateHierarchy.only_these" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only transforms of the given list will be duplicated
+:param list_of_transforms: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.DuplicateHierarchy.set_replace">
+<code class="sig-name descname">set_replace</code><span class="sig-paren">(</span><em class="sig-param">old</em>, <em class="sig-param">new</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.DuplicateHierarchy.set_replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the naming in the duplicate
+:param old: str, string in the duplicate name to replace
+:param new: str, string in the duplicate to replace with</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.DuplicateHierarchy.stop_at">
+<code class="sig-name descname">stop_at</code><span class="sig-paren">(</span><em class="sig-param">xform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.DuplicateHierarchy.stop_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hierarchy duplication will be stop at the given transform
+:param xform: str</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.transform.MatchTransform">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">MatchTransform</code><span class="sig-paren">(</span><em class="sig-param">source_transform</em>, <em class="sig-param">target_transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.MatchTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class used to match transformations between two transform nodes</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.MatchTransform.pivots">
+<code class="sig-name descname">pivots</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.MatchTransform.pivots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches the pivots of target transform to the source transform ones in object space</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.MatchTransform.rotate_scale_pivot_to_translation">
+<code class="sig-name descname">rotate_scale_pivot_to_translation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.MatchTransform.rotate_scale_pivot_to_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches the rotation and scale pivot of target transform to the translation of source</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.MatchTransform.rotation">
+<code class="sig-name descname">rotation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.MatchTransform.rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target rotation to source one</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.MatchTransform.scale">
+<code class="sig-name descname">scale</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.MatchTransform.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target transform scale to source transform scale</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.MatchTransform.translation">
+<code class="sig-name descname">translation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.MatchTransform.translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target translation to source one</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.MatchTransform.translation_rotation">
+<code class="sig-name descname">translation_rotation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.MatchTransform.translation_rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target translation and rotation to source ones</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.MatchTransform.translation_to_rotate_pivot">
+<code class="sig-name descname">translation_to_rotate_pivot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.MatchTransform.translation_to_rotate_pivot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target translation to the source transform rotate pivot</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.MatchTransform.world_pivots">
+<code class="sig-name descname">world_pivots</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.MatchTransform.world_pivots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches the pivots of target transform  to the source transform ones in world space</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.transform.PinTransform">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">PinTransform</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.PinTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class that allows to pin a transform so its parent and childs are not affected by any edits</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.PinTransform.get_pin_nodes">
+<code class="sig-name descname">get_pin_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.PinTransform.get_pin_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of nodes involved in the pinning (constraints and empty groups)
+:return: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.PinTransform.pin">
+<code class="sig-name descname">pin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.PinTransform.pin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the pin constraints on parent and children</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.transform.PinTransform.unpin">
+<code class="sig-name descname">unpin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.PinTransform.unpin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the pin
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.check_transform">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">check_transform</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.check_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a node is a valid transform and raise and exception if the transform is not valid
+:param transform_name: str, name of the node to be checked
+:return: bool, True if the given node is a shape node</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.create_buffer_group">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">create_buffer_group</code><span class="sig-paren">(</span><em class="sig-param">node_name</em>, <em class="sig-param">suffix='buffer'</em>, <em class="sig-param">use_duplicate=False</em>, <em class="sig-param">copy_scale=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.create_buffer_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a group above a transform that matches transformation of the transform
+Used to zeroing transform values of the node
+:param node_name: str, name of the transform to match
+:param suffix: str, suffix to add to the matching group
+:param use_duplicate: bool, If True, matching happens by duplication instead of changing transform values
+:param copy_scale:
+:return: str, name of the new group</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.create_group_in_plane">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">create_group_in_plane</code><span class="sig-paren">(</span><em class="sig-param">transform1</em>, <em class="sig-param">transform2</em>, <em class="sig-param">transform3</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.create_group_in_plane" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a group that is located in the triangle plane defined by 3 transforms
+:param transform1: str, name of a transform node
+:param transform2: str, name of a transform node
+:param transform3: str, name of a transform node
+:return: str, name of new group that is located in triangle plane (good place to place pole vectors)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.delete_all_incoming_nodes">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">delete_all_incoming_nodes</code><span class="sig-paren">(</span><em class="sig-param">node_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.delete_all_incoming_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete all incoming nodes from the given Maya node
+:param n: str
+:param attrs: list&lt;str&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.find_transform_left_side">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">find_transform_left_side</code><span class="sig-paren">(</span><em class="sig-param">transform</em>, <em class="sig-param">check_if_exists=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.find_transform_left_side" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to find the left side of a transform
+:param transform: str, name of a transform
+:param check_if_exists: bool, Whether to return transform if mirror does not exists or not
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.find_transform_right_side">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">find_transform_right_side</code><span class="sig-paren">(</span><em class="sig-param">transform</em>, <em class="sig-param">check_if_exists=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.find_transform_right_side" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to find the right side of a transform
+:param transform: str, name of a transform
+:param check_if_exists: bool, Whether to return transform if mirror does not exists or not
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.fix_locator_shape_position">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">fix_locator_shape_position</code><span class="sig-paren">(</span><em class="sig-param">locator_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.fix_locator_shape_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function used to fix the position shape location when doing mirror operations
+:param locator_name: str, name of the locator</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_axis_aimed_at_child">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_axis_aimed_at_child</code><span class="sig-paren">(</span><em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_axis_aimed_at_child" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the axis that is pointing to the given transform
+:param transform: str, name of a transform node
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_axis_letter_aimed_at_child">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_axis_letter_aimed_at_child</code><span class="sig-paren">(</span><em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_axis_letter_aimed_at_child" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the axis letter that is poinitng to the given transform
+:param transform: str, name of a transform
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_axis_vector">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_axis_vector</code><span class="sig-paren">(</span><em class="sig-param">transform</em>, <em class="sig-param">axis_vector</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_axis_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the vector matrix product
+If you give a vector [1, 0, 0], it will return the transform’s X point
+If you give a vector [0, 1, 0], it will return the transform’s Y point
+If you give a vector [0, 0, 1], it will return the transform’s Z point
+:param transform: str, name of a transforms. Its matrix will be checked
+:param axis_vector: list&lt;int&gt;, A vector, X = [1,0,0], Y = [0,1,0], Z = [0,0,1]
+:return: list&lt;int&gt;, the result of multiplying the vector by the matrix
+Useful to get an axis in relation to the matrix</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_bottom_center">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_bottom_center</code><span class="sig-paren">(</span><em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_bottom_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the bottom center of a selection (components or transforms)
+:param transform: str, name of a a maya node
+:return: list(float, float, float)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_bounding_box_size">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_bounding_box_size</code><span class="sig-paren">(</span><em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_bounding_box_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the bounding box size of a selection (components or transforms)
+:param transform: str, name of a maya node
+:return: float</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_center">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_center</code><span class="sig-paren">(</span><em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the center of a selection (components or transforms)
+:param transform: str, name of a maya node
+:return: list(float, float, float)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_closest_transform">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_closest_transform</code><span class="sig-paren">(</span><em class="sig-param">source_xform</em>, <em class="sig-param">targets</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_closest_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the list of target transforms, find the closest to the source transform
+:param source_xform: str, name of the transform to test distance to
+:param targets: list&lt;str&gt;, list of targets to test distance against
+:return: str, name of the target in targets that is closest to source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_distance">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_distance</code><span class="sig-paren">(</span><em class="sig-param">source_transform</em>, <em class="sig-param">target_transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the distance between source and target transforms
+:param source_transform: str, name of a transform node
+:param target_transform: str, name of a transform node
+:return: float</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_matrix">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_matrix</code><span class="sig-paren">(</span><em class="sig-param">transform</em>, <em class="sig-param">world_space=True</em>, <em class="sig-param">time=None</em>, <em class="sig-param">as_list=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns world/local matrix of given transform
+:param transform: str, transform object to get world matrix from
+:param world_space: bool, Whether to get world space matrix or local space matrix
+:param time: int || float, frame to get the transform world matrix for. If is None, will use the current frame
+:param as_list: bool, whether to return matrix as OpenMaya.MMatrix object or as a list
+:return: MMatrix or list</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_middle_transform">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_middle_transform</code><span class="sig-paren">(</span><em class="sig-param">transform_list</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_middle_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of transforms, find the middle index. If the list is even, then find the midpoint between the middle
+two indices
+:param transform_list: list&lt;str&gt;, list of transforms in order. Transforms should make a hierarchy or a sequence,
+where the order of the list matches the order in space
+:return: list&lt;x, y, z&gt;, midpoint</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_mpoint">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_mpoint</code><span class="sig-paren">(</span><em class="sig-param">point</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_mpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the position of any point or transform as an MPoint object
+:param point: variant, str || list || tuple, point to return MPoint position for
+:return: MPoint</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_ordered_distance_and_transform">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_ordered_distance_and_transform</code><span class="sig-paren">(</span><em class="sig-param">source_transform</em>, <em class="sig-param">transform_list</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_ordered_distance_and_transform" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns:</dt><dd><ul class="simple">
+<li><p>List of distance based on how far each transform in transform_list is from source_transform</p></li>
+<li><p>Distance dictionary with each distance key returning the corresponding transform</p></li>
+<li><p>List with the original distance order has fed in from transform_list</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_transform</strong> – str, name of a maya transform node</p></li>
+<li><p><strong>transform_list</strong> – list(str), list of maya transform nodes distances from source_transform will be calculated of</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list(str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_pole_vector">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_pole_vector</code><span class="sig-paren">(</span><em class="sig-param">transform1</em>, <em class="sig-param">transform2</em>, <em class="sig-param">transform3</em>, <em class="sig-param">offset=1</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_pole_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given 3 transform (such as arm, elbow, wrist), returns a position where pole vector should be located
+:param transform1: str, name of a transform node
+:param transform2: str, name of a transform node
+:param transform3: str, name of a transform node
+:param offset: float, offset value for the final pole vector position
+:return: list&lt;float, float, float&gt;, pole vector with offset</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_position">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_position</code><span class="sig-paren">(</span><em class="sig-param">point</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the position of any point or transform
+:param point: variant, str || list, tuple, point to return position for
+:return: list&lt;int, int, int&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_rotate_pivot">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_rotate_pivot</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em>, <em class="sig-param">world_space=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_rotate_pivot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rotate pivot of the given transform node
+:param transform_name: str, name of a transform node
+:param world_space: bool, Whether to get the rotate pivot on object space or world space. By default, object space
+:return: list&lt;float, float, float&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_rotation">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_rotation</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em>, <em class="sig-param">world_space=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns rotation of given transform node
+:param transform_name: str, name of a transform node
+:param world_space: bool,  Whether to get the rotation on object space or world space. By default, world space
+:return: list&lt;float, float, float&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_scale_pivot">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_scale_pivot</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em>, <em class="sig-param">world_space=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_scale_pivot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the scale pivot of the given transform node
+:param transform_name: str, name of a transform node
+:param world_space: bool, Whether to get the scale pivot on object space or world space. By default, object space
+:return: list&lt;float, float, float&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_shape_bounding_box">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_shape_bounding_box</code><span class="sig-paren">(</span><em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_shape_bounding_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the bounding box of a shape
+:param shape: str
+:return: BoundingBox</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_top_center">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_top_center</code><span class="sig-paren">(</span><em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_top_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the top center of a selection (components or transforms)
+:param transform: str, name of a a maya node
+:return: list(float, float, float)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_transform_list_from_distance">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_transform_list_from_distance</code><span class="sig-paren">(</span><em class="sig-param">source_transform</em>, <em class="sig-param">transform_list</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_transform_list_from_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of distances that corresponds to the transform_list
+:param source_transform: str, name of a maya transform node
+:param transform_list: list(str), list of maya transform nodes distances from source_transform will be calculated of
+:return: list(str)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_translation">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_translation</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em>, <em class="sig-param">world_space=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns translation of given transform node
+:param transform_name: str, name of a transform node
+:param world_space: bool,  Whether to get the translation on object space or world space. By default, world space
+:return: list&lt;float, float, float&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_upstream_nodes">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_upstream_nodes</code><span class="sig-paren">(</span><em class="sig-param">n</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_upstream_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list with all upstream nodes of the given Maya node
+:param n: str, name of the node
+:return: lsitzstr&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.get_vector_axis_letter">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">get_vector_axis_letter</code><span class="sig-paren">(</span><em class="sig-param">vector</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.get_vector_axis_letter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the axis letter of the given vector
+:param vector: list(float, float, float)
+:return: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.is_transform">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">is_transform</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.is_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the specified object is a valid transform node
+:param transform_name: str, object to check as a transform node
+:return: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.is_transform_default">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">is_transform_default</code><span class="sig-paren">(</span><em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.is_transform_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether given tranforms has the default values (identity matrix)
+translate = [0, 0, 0]
+rotate = [0, 0, 0]
+scale = [1, 1, 1]
+:param transform: str, transform to check
+:return: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match</code><span class="sig-paren">(</span><em class="sig-param">transform</em>, <em class="sig-param">target</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches given transform to target transform (by matching transform matrices)
+:param transform: str, transform to set
+:param target: str, target transform to match to</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_orient">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_orient</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_orient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target orientation using an orientation constraint
+:param target: str, transform we want to match scale pivot to source
+:param source: str, source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_orient_point">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_orient_point</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_orient_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target position and orientation using position and orientation constraints
+:param target: str, transform we want to match scale pivot to source
+:param source: str, source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_point">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_point</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target position using a position constraint
+:param target: str, transform we want to match scale pivot to source
+:param source: str, source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_rotate_pivot">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_rotate_pivot</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em>, <em class="sig-param">world_space=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_rotate_pivot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target transform rotate pivot to source one in object space
+:param target: str, transform we want to match rotate pivot to source
+:param source: str, source transform
+:param world_space: bool, Whether to match rotate pivot in object space or world space. By default, in object space</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_rotate_scale_pivot_to_translation">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_rotate_scale_pivot_to_translation</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_rotate_scale_pivot_to_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches the rotation and scale pivot of target transform to the translation of source
+:param target: str, transform we want to match
+:param source: str, source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_rotation">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_rotation</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target rotation to source one
+:param target: str, transform we want to match
+:param source: str, source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_scale">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_scale</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target transform scale to source transform scale
+:param target: str, transform we want to match scale to source
+:param source: source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_scale_pivot">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_scale_pivot</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em>, <em class="sig-param">world_space=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_scale_pivot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target transform scale pivot to source one in object space
+:param target: str, transform we want to match scale pivot to source
+:param source: str, source transform
+:param world_space: bool, Whether to match scale pivot in object space or world space. By default, in object space</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_translation">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_translation</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target translation to source one
+:param target: str, transform we want to match
+:param source: str, source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_translation_rotation">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_translation_rotation</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_translation_rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target translation and rotation to source ones
+:param target: str, transform we want to match
+:param source: str, source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.match_translation_to_rotate_pivot">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">match_translation_to_rotate_pivot</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.match_translation_to_rotate_pivot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches target translation to the source transform rotate pivot
+:param target: str, transform we want to match
+:param source: str, source transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.mirror_transform">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">mirror_transform</code><span class="sig-paren">(</span><em class="sig-param">prefix=None</em>, <em class="sig-param">suffix=None</em>, <em class="sig-param">string_search=None</em>, <em class="sig-param">create_if_missing=False</em>, <em class="sig-param">transforms=None</em>, <em class="sig-param">left_to_right=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.mirror_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mirrors the position of all transforms that match the given search strings
+:param prefix:str, prefix to search for
+:param suffix: str, suffix to search for
+:param string_search: str, search for a name containing string search
+:param create_if_missing:
+:param transforms:
+:param left_to_right:
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.parent_in_hierarchy">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">parent_in_hierarchy</code><span class="sig-paren">(</span><em class="sig-param">transform</em>, <em class="sig-param">parent</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.parent_in_hierarchy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the transform has given parent transform in its hierarchy
+:param transform: str, name of the transform
+:param parent: str, name of the parent transform
+:return: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.set_rotate_pivot">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">set_rotate_pivot</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em>, <em class="sig-param">rotate_pivot_vector</em>, <em class="sig-param">world_space=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.set_rotate_pivot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the rotation pivot of the given transform node
+:param transform_name: str, name of the node we want to set transform to
+:param rotate_pivot_vector: list&lt;float, float, float&gt;, new rotation pivot vector of the transform node
+:param world_space: bool,  Whether to set the translation on object space or world space. By default, object space</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.set_rotation">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">set_rotation</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em>, <em class="sig-param">rotation_vector</em>, <em class="sig-param">world_space=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.set_rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the rotation of the given transform node
+:param transform_name: str, name of the node we want to set transform to
+:param rotation_vector: list&lt;float, float, float&gt;, new rotation vector of the transform node
+:param world_space: bool,  Whether to set the translation on object space or world space. By default, world space</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.set_scale_pivot">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">set_scale_pivot</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em>, <em class="sig-param">scale_pivot_vector</em>, <em class="sig-param">world_space=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.set_scale_pivot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the scale pivot of the given transform node
+:param transform_name: str, name of the node we want to set transform to
+:param scale_pivot_vector: list&lt;float, float, float&gt;, new scale pivot vector of the transform node
+:param world_space: bool,  Whether to set the translation on object space or world space. By default, object space</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.set_translation">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">set_translation</code><span class="sig-paren">(</span><em class="sig-param">transform_name</em>, <em class="sig-param">translate_vector</em>, <em class="sig-param">world_space=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.set_translation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the translation of the given transform node
+:param transform_name: str, name of the node we want to set transform to
+:param translate_vector: list&lt;float, float, float&gt;, new translation vector of the transform node
+:param world_space: bool,  Whether to set the translation on object space or world space. By default, world space</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.snap">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">snap</code><span class="sig-paren">(</span><em class="sig-param">transform</em>, <em class="sig-param">target</em>, <em class="sig-param">snap_pivot=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.snap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Snaps given source to target
+:param transform: str, transform to set
+:param target:  str, target transform to match to
+:param snap_pivot: bool, Whether to snap pivot or not</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.transfer_relatives">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">transfer_relatives</code><span class="sig-paren">(</span><em class="sig-param">source_node</em>, <em class="sig-param">target_node</em>, <em class="sig-param">reparent=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.transfer_relatives" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reparent the children of source_node under target_node
+If reparent, move the target_node uner the parent of the source_node
+:param source_node: str, name of a transform to take relatives from
+:param target_node: str, name of a transform to transfer relatives to
+:param reparent: bool, Whether to reparent target_node under source_node after transfering relatives</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.transform.zero_transform_channels">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.transform.</code><code class="sig-name descname">zero_transform_channels</code><span class="sig-paren">(</span><em class="sig-param">xform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.transform.zero_transform_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zero out the translate and rotate. Set scale to 1
+:param xform: str, name of a transform node</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+    <a href="https://github.com/tpDcc/tpDcc-libs-python" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tpDcc.dccs.maya.core.viewport.html" class="btn btn-neutral float-right" title="tpDcc.dccs.maya.core.viewport module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tpDcc.dccs.maya.core.time.html" class="btn btn-neutral float-left" title="tpDcc.dccs.maya.core.time module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Tomas Poveda
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

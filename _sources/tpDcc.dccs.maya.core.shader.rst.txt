@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.shader module
+==================================
+
+.. automodule:: tpDcc.dccs.maya.core.shader
+   :members:
+   :undoc-members:
+   :show-inheritance:

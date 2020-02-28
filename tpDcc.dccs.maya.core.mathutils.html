@@ -1,0 +1,371 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tpDcc.dccs.maya.core.mathutils module &mdash; tpDcc-dccs-maya 0.0.l documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tpDcc.dccs.maya.core.matrix module" href="tpDcc.dccs.maya.core.matrix.html" />
+    <link rel="prev" title="tpDcc.dccs.maya.core.mash module" href="tpDcc.dccs.maya.core.mash.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tpDcc-dccs-maya
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tpDcc</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tpDcc.html">tpDcc package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="tpDcc.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tpDcc.dccs.html">tpDcc.dccs package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tpDcc.html#module-tpDcc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tpDcc-dccs-maya</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">tpDcc</a> &raquo;</li>
+        
+          <li><a href="tpDcc.html">tpDcc package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.html">tpDcc.dccs package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.html">tpDcc.dccs.maya package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.core.html">tpDcc.dccs.maya.core package</a> &raquo;</li>
+        
+      <li>tpDcc.dccs.maya.core.mathutils module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tpDcc.dccs.maya.core.mathutils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tpDcc.dccs.maya.core.mathutils">
+<span id="tpdcc-dccs-maya-core-mathutils-module"></span><h1>tpDcc.dccs.maya.core.mathutils module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.mathutils" title="Permalink to this headline">¶</a></h1>
+<p>Module that contains functions and classes related with maths</p>
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.average_position">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">average_position</code><span class="sig-paren">(</span><em class="sig-param">pos1=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">pos2=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">weight=0.5</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.average_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average of the two given positions. You can weight between 0 (first input) or 1 (second_input)
+:param pos1: tuple, first input position
+:param pos2: tuple, second input position
+:param weight: float, amount to weight between the two input positions
+:return: tuple</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.closest_point_on_line">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">closest_point_on_line</code><span class="sig-paren">(</span><em class="sig-param">pnt</em>, <em class="sig-param">line1</em>, <em class="sig-param">line2</em>, <em class="sig-param">clamp_segment=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.closest_point_on_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the closest point (to a given position) on the line given by the given inputs
+:param pnt: tuple, we will try to find the closes line point from this position
+:param line1: tuple, start point of line
+:param line2: tuple, end point of line
+:param clamp_segment: bool, Whether to return clamped value or not
+:return: tuple</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.cross_product">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">cross_product</code><span class="sig-paren">(</span><em class="sig-param">vector1=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">vector2=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.cross_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the cross product of two given vectors
+:param vector1: tuple, first vector for the dot product operation
+:param vector2: tuple, second vector for the dot product operation
+:return: tuple</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.distance_between">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">distance_between</code><span class="sig-paren">(</span><em class="sig-param">point1=[0.0, 0.0, 0.0], point2=[0.0, 0.0, 0.0]</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.distance_between" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distance between two given points
+:param point1: tuple, start point of the distance calculation
+:param point2: tuple, end point of the distance calculation
+:return: float</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.distribute_value">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">distribute_value</code><span class="sig-paren">(</span><em class="sig-param">samples</em>, <em class="sig-param">spacing=1.0</em>, <em class="sig-param">range_start=0.0</em>, <em class="sig-param">range_end=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.distribute_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of values distributed between a start and end range
+:param samples: int, number of values to sample across the value range
+:param spacing: float, incremental scale for each sample distance
+:param range_start: float, minimum value in the sample range
+:param range_end: float, maximum value in the sample range
+:return: list&lt;float&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.dot_product">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">dot_product</code><span class="sig-paren">(</span><em class="sig-param">vector1=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em>, <em class="sig-param">vector2=(0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0)</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.dot_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the dot product (inner product) of two given vectors
+:param vector1: tuple, first vector for the dot product operation
+:param vector2: tuple, second vector for the dot product operation
+:return: float</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.get_axis_vector">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">get_axis_vector</code><span class="sig-paren">(</span><em class="sig-param">transform</em>, <em class="sig-param">axis_vector</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.get_axis_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the vector matrix product
+If you give a vector [1, 0, 0], it will return the transform’s X point
+If you give a vector [0, 1, 0], it will return the transform’s Y point
+If you give a vector [0, 0, 1], it will return the transform’s Z point
+:param transform: str, name of a transforms. Its matrix will be checked
+:param axis_vector: list&lt;int&gt;, A vector, X = [1,0,0], Y = [0,1,0], Z = [0,0,1]
+:return: list&lt;int&gt;, the result of multiplying the vector by the matrix
+Useful to get an axis in relation to the matrix</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.inverse_distance_weight_1d">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">inverse_distance_weight_1d</code><span class="sig-paren">(</span><em class="sig-param">value_array</em>, <em class="sig-param">sample_value</em>, <em class="sig-param">value_domain=(0</em>, <em class="sig-param">1)</em>, <em class="sig-param">cycle_value=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.inverse_distance_weight_1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse distance weight for a given sample point given an array of scalar values
+:param value_array: list&lt;float&gt;, value array to calculate weights from
+:param sample_value: float, sample point to calculate weights for
+:param value_domain: variant, tuple || list, minimum and maximum range of the value array
+:param cycle_value: bool, Whether to calculate or not the distance based on a closed loop of values
+:return: float</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.inverse_distance_weight_3d">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">inverse_distance_weight_3d</code><span class="sig-paren">(</span><em class="sig-param">point_array</em>, <em class="sig-param">sample_point</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.inverse_distance_weight_3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse distance weight for a given sample point given an array of scalar values
+:param point_array: variant, tuple || list, point array to calculate weights from
+:param sample_point: variant, tuple || list, sample point to calculate weights for
+:return: float</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.magnitude">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">magnitude</code><span class="sig-paren">(</span><em class="sig-param">vector=(0</em>, <em class="sig-param">0</em>, <em class="sig-param">0)</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.magnitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the magnitude (length) or a given vector
+:param vector:  tuple, vector to return the length of
+:return: float</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.multiply_matrix">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">multiply_matrix</code><span class="sig-paren">(</span><em class="sig-param">matrix4x4_list1</em>, <em class="sig-param">matrix4x4_list2</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.multiply_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>matrix1 and matrix2 are just the list of numbers of a 4x4 matrix
+(like the ones returned by cmds.getAttr(‘transform.worldMatrix) for example
+:param matrix4x4_list1:
+:param matrix4x4_list2:
+:return: OpenMaya.MMatrix</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.normalize_vector">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">normalize_vector</code><span class="sig-paren">(</span><em class="sig-param">vector=(0</em>, <em class="sig-param">0</em>, <em class="sig-param">0)</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.normalize_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns normalized version of the input vector
+:param vector: tuple, vector to normalize
+:return: tuple</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.offset_vector">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">offset_vector</code><span class="sig-paren">(</span><em class="sig-param">point1=[0.0, 0.0, 0.0], point2=[0.0, 0.0, 0.0]</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.offset_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the offset vector between point1 and point2
+:param point1: tuple, start point of the offset calculation
+:param point2: tuple, end point of the offset calculation
+:return: tuple</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.mathutils.smooth_step">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.mathutils.</code><code class="sig-name descname">smooth_step</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">range_start=0.0</em>, <em class="sig-param">range_end=1.0</em>, <em class="sig-param">smooth=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.mathutils.smooth_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates between 2 float values using hermite interpolation
+:param value: float, value to smooth
+:param range_start: float, minimum value of interpolation range
+:param range_end: float, maximum value of interpolation range
+:param smooth: float, strength of the smooth applied to the value
+:return: float</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+    <a href="https://github.com/tpDcc/tpDcc-libs-python" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tpDcc.dccs.maya.core.matrix.html" class="btn btn-neutral float-right" title="tpDcc.dccs.maya.core.matrix module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tpDcc.dccs.maya.core.mash.html" class="btn btn-neutral float-left" title="tpDcc.dccs.maya.core.mash module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Tomas Poveda
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

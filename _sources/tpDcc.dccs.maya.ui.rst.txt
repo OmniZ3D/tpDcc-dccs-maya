@@ -1,0 +1,18 @@
+tpDcc.dccs.maya.ui package
+==========================
+
+Submodules
+----------
+
+.. toctree::
+
+   tpDcc.dccs.maya.ui.dialog
+   tpDcc.dccs.maya.ui.window
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.dccs.maya.ui
+   :members:
+   :undoc-members:
+   :show-inheritance:

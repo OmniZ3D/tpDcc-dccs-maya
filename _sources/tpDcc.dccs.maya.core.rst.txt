@@ -1,0 +1,75 @@
+tpDcc.dccs.maya.core package
+============================
+
+Submodules
+----------
+
+.. toctree::
+
+   tpDcc.dccs.maya.core.animation
+   tpDcc.dccs.maya.core.api
+   tpDcc.dccs.maya.core.attribute
+   tpDcc.dccs.maya.core.blendshape
+   tpDcc.dccs.maya.core.callback
+   tpDcc.dccs.maya.core.camera
+   tpDcc.dccs.maya.core.color
+   tpDcc.dccs.maya.core.colormanagement
+   tpDcc.dccs.maya.core.common
+   tpDcc.dccs.maya.core.component
+   tpDcc.dccs.maya.core.constants
+   tpDcc.dccs.maya.core.constraint
+   tpDcc.dccs.maya.core.contexts
+   tpDcc.dccs.maya.core.curve
+   tpDcc.dccs.maya.core.dcc
+   tpDcc.dccs.maya.core.decorators
+   tpDcc.dccs.maya.core.deformer
+   tpDcc.dccs.maya.core.directory
+   tpDcc.dccs.maya.core.distance
+   tpDcc.dccs.maya.core.exceptions
+   tpDcc.dccs.maya.core.executor
+   tpDcc.dccs.maya.core.follicle
+   tpDcc.dccs.maya.core.geometry
+   tpDcc.dccs.maya.core.geometrycache
+   tpDcc.dccs.maya.core.gui
+   tpDcc.dccs.maya.core.helpers
+   tpDcc.dccs.maya.core.ik
+   tpDcc.dccs.maya.core.joint
+   tpDcc.dccs.maya.core.layer
+   tpDcc.dccs.maya.core.mash
+   tpDcc.dccs.maya.core.mathutils
+   tpDcc.dccs.maya.core.matrix
+   tpDcc.dccs.maya.core.mayapymanager
+   tpDcc.dccs.maya.core.menu
+   tpDcc.dccs.maya.core.mesh
+   tpDcc.dccs.maya.core.modelpanel
+   tpDcc.dccs.maya.core.name
+   tpDcc.dccs.maya.core.namespace
+   tpDcc.dccs.maya.core.node
+   tpDcc.dccs.maya.core.parser
+   tpDcc.dccs.maya.core.playblast
+   tpDcc.dccs.maya.core.qtutils
+   tpDcc.dccs.maya.core.reference
+   tpDcc.dccs.maya.core.render
+   tpDcc.dccs.maya.core.rig
+   tpDcc.dccs.maya.core.rivet
+   tpDcc.dccs.maya.core.scene
+   tpDcc.dccs.maya.core.sequencer
+   tpDcc.dccs.maya.core.shader
+   tpDcc.dccs.maya.core.shape
+   tpDcc.dccs.maya.core.shelf
+   tpDcc.dccs.maya.core.skin
+   tpDcc.dccs.maya.core.space
+   tpDcc.dccs.maya.core.standin
+   tpDcc.dccs.maya.core.symmetry
+   tpDcc.dccs.maya.core.thumbnail
+   tpDcc.dccs.maya.core.time
+   tpDcc.dccs.maya.core.transform
+   tpDcc.dccs.maya.core.viewport
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.dccs.maya.core
+   :members:
+   :undoc-members:
+   :show-inheritance:

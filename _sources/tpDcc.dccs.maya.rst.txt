@@ -1,0 +1,29 @@
+tpDcc.dccs.maya package
+=======================
+
+Subpackages
+-----------
+
+.. toctree::
+
+   tpDcc.dccs.maya.core
+   tpDcc.dccs.maya.data
+   tpDcc.dccs.maya.managers
+   tpDcc.dccs.maya.meta
+   tpDcc.dccs.maya.ui
+
+Submodules
+----------
+
+.. toctree::
+
+   tpDcc.dccs.maya.loader
+   tpDcc.dccs.maya.register
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.dccs.maya
+   :members:
+   :undoc-members:
+   :show-inheritance:

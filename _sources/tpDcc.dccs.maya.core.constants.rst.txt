@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.constants module
+=====================================
+
+.. automodule:: tpDcc.dccs.maya.core.constants
+   :members:
+   :undoc-members:
+   :show-inheritance:

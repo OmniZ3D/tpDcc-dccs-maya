@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.managers.metadatamanager module
+===============================================
+
+.. automodule:: tpDcc.dccs.maya.managers.metadatamanager
+   :members:
+   :undoc-members:
+   :show-inheritance:

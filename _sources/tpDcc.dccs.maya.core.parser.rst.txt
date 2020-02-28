@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.parser module
+==================================
+
+.. automodule:: tpDcc.dccs.maya.core.parser
+   :members:
+   :undoc-members:
+   :show-inheritance:

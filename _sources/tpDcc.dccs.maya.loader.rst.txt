@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.loader module
+=============================
+
+.. automodule:: tpDcc.dccs.maya.loader
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.geometrycache module
+=========================================
+
+.. automodule:: tpDcc.dccs.maya.core.geometrycache
+   :members:
+   :undoc-members:
+   :show-inheritance:

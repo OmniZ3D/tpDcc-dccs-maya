@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.qtutils module
+===================================
+
+.. automodule:: tpDcc.dccs.maya.core.qtutils
+   :members:
+   :undoc-members:
+   :show-inheritance:

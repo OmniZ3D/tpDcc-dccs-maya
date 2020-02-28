@@ -1,0 +1,21 @@
+tpDcc.dccs.maya.data package
+============================
+
+Submodules
+----------
+
+.. toctree::
+
+   tpDcc.dccs.maya.data.base
+   tpDcc.dccs.maya.data.curve
+   tpDcc.dccs.maya.data.deformer
+   tpDcc.dccs.maya.data.mesh
+   tpDcc.dccs.maya.data.skin
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.dccs.maya.data
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.playblast module
+=====================================
+
+.. automodule:: tpDcc.dccs.maya.core.playblast
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.scene module
+=================================
+
+.. automodule:: tpDcc.dccs.maya.core.scene
+   :members:
+   :undoc-members:
+   :show-inheritance:

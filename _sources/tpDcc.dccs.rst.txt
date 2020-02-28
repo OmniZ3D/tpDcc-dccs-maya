@@ -1,0 +1,17 @@
+tpDcc.dccs package
+==================
+
+Subpackages
+-----------
+
+.. toctree::
+
+   tpDcc.dccs.maya
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.dccs
+   :members:
+   :undoc-members:
+   :show-inheritance:

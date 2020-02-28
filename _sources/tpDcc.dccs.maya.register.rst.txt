@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.register module
+===============================
+
+.. automodule:: tpDcc.dccs.maya.register
+   :members:
+   :undoc-members:
+   :show-inheritance:

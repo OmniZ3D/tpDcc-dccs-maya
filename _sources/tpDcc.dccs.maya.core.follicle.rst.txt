@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.follicle module
+====================================
+
+.. automodule:: tpDcc.dccs.maya.core.follicle
+   :members:
+   :undoc-members:
+   :show-inheritance:

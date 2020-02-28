@@ -1,0 +1,946 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tpDcc.dccs.maya.core.api module &mdash; tpDcc-dccs-maya 0.0.l documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tpDcc.dccs.maya.core.attribute module" href="tpDcc.dccs.maya.core.attribute.html" />
+    <link rel="prev" title="tpDcc.dccs.maya.core.animation module" href="tpDcc.dccs.maya.core.animation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tpDcc-dccs-maya
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tpDcc</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tpDcc.html">tpDcc package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="tpDcc.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tpDcc.dccs.html">tpDcc.dccs package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tpDcc.html#module-tpDcc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tpDcc-dccs-maya</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">tpDcc</a> &raquo;</li>
+        
+          <li><a href="tpDcc.html">tpDcc package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.html">tpDcc.dccs package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.html">tpDcc.dccs.maya package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.core.html">tpDcc.dccs.maya.core package</a> &raquo;</li>
+        
+      <li>tpDcc.dccs.maya.core.api module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tpDcc.dccs.maya.core.api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tpDcc.dccs.maya.core.api">
+<span id="tpdcc-dccs-maya-core-api-module"></span><h1>tpDcc.dccs.maya.core.api module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.api" title="Permalink to this headline">¶</a></h1>
+<p>Module that contains functions and classes related with Maya API</p>
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.ApiObject">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">ApiObject</code><a class="headerlink" href="#tpDcc.dccs.maya.core.api.ApiObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper class for MObjects</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.ApiObject.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.ApiObject.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.ApiObject.get_api_object">
+<code class="sig-name descname">get_api_object</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.ApiObject.get_api_object" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.DagPath">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">DagPath</code><span class="sig-paren">(</span><em class="sig-param">dag_path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.DagPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.DagPath.full_path_name">
+<code class="sig-name descname">full_path_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.DagPath.full_path_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a string representation of the path from the DAG root to the path’s last node
+:return: str</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.DagPath.has_fn">
+<code class="sig-name descname">has_fn</code><span class="sig-paren">(</span><em class="sig-param">fn</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.DagPath.has_fn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the object at the end of the path supports the function set represented by type.
+:param fn: MFn
+:return: bool</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.DagPathArray">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">DagPathArray</code><span class="sig-paren">(</span><em class="sig-param">dag_path_array=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.DagPathArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.DagPathArray.length">
+<code class="sig-name descname">length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.DagPathArray.length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns total numbers of elements in the array
+:return: int</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.DoubleArray">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">DoubleArray</code><span class="sig-paren">(</span><em class="sig-param">double_array=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.DoubleArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.DoubleArray.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.DoubleArray.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.DoubleArray.length">
+<code class="sig-name descname">length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.DoubleArray.length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns total numbers of elements in the array
+:return: int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.DoubleArray.set">
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">numbers</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.DoubleArray.set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.FloatPoint">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">FloatPoint</code><span class="sig-paren">(</span><em class="sig-param">x=0</em>, <em class="sig-param">y=0</em>, <em class="sig-param">z=0</em>, <em class="sig-param">w=1</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.FloatPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.FloatPoint.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.FloatPoint.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.FloatPoint.get_as_vector">
+<code class="sig-name descname">get_as_vector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.FloatPoint.get_as_vector" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.IntArray">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">IntArray</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IntArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IntArray.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IntArray.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IntArray.length">
+<code class="sig-name descname">length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IntArray.length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns total numbers of elements in the array
+:return: int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IntArray.set">
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">numbers</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IntArray.set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.IterateCurveCV">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">IterateCurveCV</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateCurveCV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaIterator" title="tpDcc.dccs.maya.core.api.MayaIterator"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaIterator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.IterateEdges">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">IterateEdges</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateEdges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaIterator" title="tpDcc.dccs.maya.core.api.MayaIterator"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaIterator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IterateEdges.get_connected_edges">
+<code class="sig-name descname">get_connected_edges</code><span class="sig-paren">(</span><em class="sig-param">edge_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateEdges.get_connected_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IterateEdges.get_connected_faces">
+<code class="sig-name descname">get_connected_faces</code><span class="sig-paren">(</span><em class="sig-param">edge_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateEdges.get_connected_faces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IterateEdges.get_connected_vertices">
+<code class="sig-name descname">get_connected_vertices</code><span class="sig-paren">(</span><em class="sig-param">edge_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateEdges.get_connected_vertices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IterateEdges.set_edge">
+<code class="sig-name descname">set_edge</code><span class="sig-paren">(</span><em class="sig-param">edge_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateEdges.set_edge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.IterateGeometry">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">IterateGeometry</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateGeometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaIterator" title="tpDcc.dccs.maya.core.api.MayaIterator"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaIterator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IterateGeometry.get_points">
+<code class="sig-name descname">get_points</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateGeometry.get_points" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IterateGeometry.get_points_as_list">
+<code class="sig-name descname">get_points_as_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateGeometry.get_points_as_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IterateGeometry.set_points">
+<code class="sig-name descname">set_points</code><span class="sig-paren">(</span><em class="sig-param">points</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IterateGeometry.set_points" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">IteratePolygonFaces</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaIterator" title="tpDcc.dccs.maya.core.api.MayaIterator"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaIterator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.count">
+<code class="sig-name descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_area">
+<code class="sig-name descname">get_area</code><span class="sig-paren">(</span><em class="sig-param">face_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_area" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_center">
+<code class="sig-name descname">get_center</code><span class="sig-paren">(</span><em class="sig-param">face_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_center" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_closest_face">
+<code class="sig-name descname">get_closest_face</code><span class="sig-paren">(</span><em class="sig-param">vector</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_closest_face" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_edges">
+<code class="sig-name descname">get_edges</code><span class="sig-paren">(</span><em class="sig-param">face_id</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_face_center_vectors">
+<code class="sig-name descname">get_face_center_vectors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_face_center_vectors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_normal">
+<code class="sig-name descname">get_normal</code><span class="sig-paren">(</span><em class="sig-param">face_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_normal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_normal_tangent">
+<code class="sig-name descname">get_normal_tangent</code><span class="sig-paren">(</span><em class="sig-param">face_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.get_normal_tangent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.index">
+<code class="sig-name descname">index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.is_done">
+<code class="sig-name descname">is_done</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.is_done" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.next">
+<code class="sig-name descname">next</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.next" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.IteratePolygonFaces.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.IteratePolygonFaces.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.Matrix">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">Matrix</code><span class="sig-paren">(</span><em class="sig-param">matrix_list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.Matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.Matrix.set_matrix_from_list">
+<code class="sig-name descname">set_matrix_from_list</code><span class="sig-paren">(</span><em class="sig-param">matrix_list</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.Matrix.set_matrix_from_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.MayaFunction">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">MayaFunction</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MayaFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaObject" title="tpDcc.dccs.maya.core.api.MayaObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.MayaIterator">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">MayaIterator</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MayaIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaObject" title="tpDcc.dccs.maya.core.api.MayaObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.MayaObject">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">MayaObject</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MayaObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper class for API objects</p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MayaObject.has_fn">
+<code class="sig-name descname">has_fn</code><span class="sig-paren">(</span><em class="sig-param">fn</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MayaObject.has_fn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the internal Maya object supports the specified function set specified by fn.
+:param fn: MFn
+:return: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MayaObject.set_node_as_mjobject">
+<code class="sig-name descname">set_node_as_mjobject</code><span class="sig-paren">(</span><em class="sig-param">node_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MayaObject.set_node_as_mjobject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the MObject from a node name
+:param node_name: str, name of a node</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">MeshFunction</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaFunction" title="tpDcc.dccs.maya.core.api.MayaFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaFunction</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.copy">
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">source_mesh</em>, <em class="sig-param">transform</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_closest_face">
+<code class="sig-name descname">get_closest_face</code><span class="sig-paren">(</span><em class="sig-param">vector</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_closest_face" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_closest_normal">
+<code class="sig-name descname">get_closest_normal</code><span class="sig-paren">(</span><em class="sig-param">source_vector</em>, <em class="sig-param">at_source_position=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_closest_normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the closes normal of the given source vector
+:param source_vector: list(float, float, float), position to find the normal closest
+:param at_source_position: bool, Whether to add source_vector to the normal vector so it is</p>
+<blockquote>
+<div><p>returned relative to the source vector</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_closest_position">
+<code class="sig-name descname">get_closest_position</code><span class="sig-paren">(</span><em class="sig-param">source_vector</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_closest_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_non_tri_quad_ids">
+<code class="sig-name descname">get_non_tri_quad_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_non_tri_quad_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_edges">
+<code class="sig-name descname">get_number_of_edges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_faces">
+<code class="sig-name descname">get_number_of_faces</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_faces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_triangles">
+<code class="sig-name descname">get_number_of_triangles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_triangles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_uvs">
+<code class="sig-name descname">get_number_of_uvs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_uvs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_vertices">
+<code class="sig-name descname">get_number_of_vertices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_number_of_vertices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_point_at_uv">
+<code class="sig-name descname">get_point_at_uv</code><span class="sig-paren">(</span><em class="sig-param">u_value=0</em>, <em class="sig-param">v_value=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_point_at_uv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_quad_ids">
+<code class="sig-name descname">get_quad_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_quad_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_triangle_ids">
+<code class="sig-name descname">get_triangle_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_triangle_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_uv_at_point">
+<code class="sig-name descname">get_uv_at_point</code><span class="sig-paren">(</span><em class="sig-param">vector</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_uv_at_point" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.get_vertex_positions">
+<code class="sig-name descname">get_vertex_positions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.get_vertex_positions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.refresh_mesh">
+<code class="sig-name descname">refresh_mesh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.refresh_mesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.MeshFunction.set_vertex_positions">
+<code class="sig-name descname">set_vertex_positions</code><span class="sig-paren">(</span><em class="sig-param">positions</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.MeshFunction.set_vertex_positions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">NurbsCurveFunction</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaFunction" title="tpDcc.dccs.maya.core.api.MayaFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaFunction</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_closest_position">
+<code class="sig-name descname">get_closest_position</code><span class="sig-paren">(</span><em class="sig-param">list_value</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_closest_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_cv_count">
+<code class="sig-name descname">get_cv_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_cv_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_cv_positions">
+<code class="sig-name descname">get_cv_positions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_cv_positions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_degree">
+<code class="sig-name descname">get_degree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_degree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_form">
+<code class="sig-name descname">get_form</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_form" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_knot_count">
+<code class="sig-name descname">get_knot_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_knot_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_knot_values">
+<code class="sig-name descname">get_knot_values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_knot_values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_parameter_at_length">
+<code class="sig-name descname">get_parameter_at_length</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_parameter_at_length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_parameter_at_position">
+<code class="sig-name descname">get_parameter_at_position</code><span class="sig-paren">(</span><em class="sig-param">list_value</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_parameter_at_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_position_at_parameter">
+<code class="sig-name descname">get_position_at_parameter</code><span class="sig-paren">(</span><em class="sig-param">param</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_position_at_parameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_span_count">
+<code class="sig-name descname">get_span_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.get_span_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsCurveFunction.set_cv_positions">
+<code class="sig-name descname">set_cv_positions</code><span class="sig-paren">(</span><em class="sig-param">positions</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsCurveFunction.set_cv_positions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.NurbsSurfaceFunction">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">NurbsSurfaceFunction</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsSurfaceFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaFunction" title="tpDcc.dccs.maya.core.api.MayaFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaFunction</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsSurfaceFunction.get_closest_normal">
+<code class="sig-name descname">get_closest_normal</code><span class="sig-paren">(</span><em class="sig-param">source_vector</em>, <em class="sig-param">at_source_position=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsSurfaceFunction.get_closest_normal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsSurfaceFunction.get_closest_parameter">
+<code class="sig-name descname">get_closest_parameter</code><span class="sig-paren">(</span><em class="sig-param">vector</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsSurfaceFunction.get_closest_parameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.NurbsSurfaceFunction.get_position_from_parameter">
+<code class="sig-name descname">get_position_from_parameter</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.NurbsSurfaceFunction.get_position_from_parameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.Point">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">Point</code><span class="sig-paren">(</span><em class="sig-param">x=0</em>, <em class="sig-param">y=0</em>, <em class="sig-param">z=0</em>, <em class="sig-param">w=1</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.Point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.Point.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.Point.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.Point.get_as_vector">
+<code class="sig-name descname">get_as_vector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.Point.get_as_vector" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.PointArray">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">PointArray</code><a class="headerlink" href="#tpDcc.dccs.maya.core.api.PointArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.PointArray.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.PointArray.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.PointArray.set">
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">positions</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.PointArray.set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.ScriptUtils">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">ScriptUtils</code><a class="headerlink" href="#tpDcc.dccs.maya.core.api.ScriptUtils" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.ScriptUtils.as_integer_pointer">
+<code class="sig-name descname">as_integer_pointer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.ScriptUtils.as_integer_pointer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an unsigned integer pointer to the data of this class.
+:return: int</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.SelectionList">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">SelectionList</code><span class="sig-paren">(</span><em class="sig-param">sel_list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionList.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">item</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionList.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds given item to the list
+:param item: variant, str or MPlug, MObject, MDagPath, component (tuple(MDagPath, MObject))</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionList.add_by_pattern">
+<code class="sig-name descname">add_by_pattern</code><span class="sig-paren">(</span><em class="sig-param">pattern</em>, <em class="sig-param">search_child_namespaces=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionList.add_by_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds to the list nay nodes, DAG paths, components or plugs which match the given pattern string
+:param pattern: str
+:param search_child_namespaces: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionList.add_item">
+<code class="sig-name descname">add_item</code><span class="sig-paren">(</span><em class="sig-param">item</em>, <em class="sig-param">merge_with_existing=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionList.add_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the given item to the list, where the item
+:param item: variant, MPlug, MObject, MDagPath, component (tuple(MDagPath, MObject))
+:param merge_with_existing: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionList.create_by_name">
+<code class="sig-name descname">create_by_name</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionList.create_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a selection list with the given object name added
+:param name: str</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionList.get_component">
+<code class="sig-name descname">get_component</code><span class="sig-paren">(</span><em class="sig-param">index=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionList.get_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the index’th item of the list as a component, represented by
+a tuple containing an MDagPath and an MObject. If the item is just a
+DAG path without a component then MObject.kNullObj will be returned
+in the second element of the tuple. Raises TypeError if the item is
+neither a DAG path nor a component. Raises IndexError if index is
+out of range.
+:return: tuple(MDagPath, MObject)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionList.get_dag_path">
+<code class="sig-name descname">get_dag_path</code><span class="sig-paren">(</span><em class="sig-param">index=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionList.get_dag_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the DAG path associated with the index’th item of the list.
+Raises TypeError if the item is neither a DAG path nor a component.
+Raises IndexError if index is out of range.
+:param index: int
+:return: DagPath</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionList.get_depend_node">
+<code class="sig-name descname">get_depend_node</code><span class="sig-paren">(</span><em class="sig-param">index=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionList.get_depend_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns depend node at given index
+:param index:
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.SelectionListIterator">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">SelectionListIterator</code><span class="sig-paren">(</span><em class="sig-param">sel_list</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionListIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionListIterator.get_component">
+<code class="sig-name descname">get_component</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionListIterator.get_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the DAG path and the component of the current selection item
+:return: tuple(MDagPath, MObject)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionListIterator.get_dag_path">
+<code class="sig-name descname">get_dag_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionListIterator.get_dag_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the DAG path of the current selection item
+:return: MDagPath</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionListIterator.is_done">
+<code class="sig-name descname">is_done</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionListIterator.is_done" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether or not there is anything more to iterator over
+:return: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SelectionListIterator.next">
+<code class="sig-name descname">next</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SelectionListIterator.next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Advances to the next item. If components are selected then advance to the next component
+If a filter is specified then the next item will be one that matches the filter</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.SingleIndexedComponent">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">SingleIndexedComponent</code><span class="sig-paren">(</span><em class="sig-param">maya_object=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SingleIndexedComponent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SingleIndexedComponent.add_elements">
+<code class="sig-name descname">add_elements</code><span class="sig-paren">(</span><em class="sig-param">elements</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SingleIndexedComponent.add_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the specified elements to the component
+:param elements: variant, int or MIntArray or IntArray</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SingleIndexedComponent.create">
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">mfn</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SingleIndexedComponent.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new, empty component, attaches it to the function set and returns a MayaObject which references it
+:param mfn: MFn
+:return: MayaObject</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.SkinCluster">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">SkinCluster</code><span class="sig-paren">(</span><em class="sig-param">skin_node</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SkinCluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.ApiObject" title="tpDcc.dccs.maya.core.api.ApiObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.ApiObject</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SkinCluster.get_weights">
+<code class="sig-name descname">get_weights</code><span class="sig-paren">(</span><em class="sig-param">shape=None</em>, <em class="sig-param">components=None</em>, <em class="sig-param">influence=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SkinCluster.get_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the skinCluster weights of the given influence objects on
+the specified components of the deformed shape.</p>
+<p>If no influence index is provided then a tuple containing the weights
+and the number of influence objects will be returned.</p>
+<p>If a single influence index is provided the an array of weights will
+be returned, one per component in the same order as in ‘components’.</p>
+<p>If an array of influence indices is provided an array of weights will
+be returned containing as many weights for each component as there
+are influences in the ‘influenceIndices’ array. The weights will be
+in component order: i.e. all of the weight values for the first
+component, followed by all the weight values for the second component,
+and so on.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shape</strong> – MDagPath or DagPath</p></li>
+<li><p><strong>components</strong> – MObject or MayaObject</p></li>
+<li><p><strong>influence</strong> – MIntArray or IntArray or int</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(DoubleArray, int) or DoubleArray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SkinCluster.index_for_influence_object">
+<code class="sig-name descname">index_for_influence_object</code><span class="sig-paren">(</span><em class="sig-param">influence_obj</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SkinCluster.index_for_influence_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the logical index of the matrix array attribute where the
+specified influence object is attached.
+:param influence_obj: MayaObject or MObject</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.SkinCluster.influence_objects">
+<code class="sig-name descname">influence_objects</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.SkinCluster.influence_objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an array of paths to the influence objects for the skinCluster
+:return: DagPathArray</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.api.TransformFunction">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">TransformFunction</code><span class="sig-paren">(</span><em class="sig-param">mobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.TransformFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tpDcc.dccs.maya.core.api.MayaFunction" title="tpDcc.dccs.maya.core.api.MayaFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">tpDcc.dccs.maya.core.api.MayaFunction</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.TransformFunction.get_matrix">
+<code class="sig-name descname">get_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.TransformFunction.get_matrix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.TransformFunction.get_transformation_matrix">
+<code class="sig-name descname">get_transformation_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.TransformFunction.get_transformation_matrix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.api.TransformFunction.get_vector_matrix_product">
+<code class="sig-name descname">get_vector_matrix_product</code><span class="sig-paren">(</span><em class="sig-param">vector</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.TransformFunction.get_vector_matrix_product" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.api.get_active_selection_list">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">get_active_selection_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.get_active_selection_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns selection list with current selected objects
+:return: maya.OpenMaya.MSelectionList</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.api.node_name_to_mobject">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.api.</code><code class="sig-name descname">node_name_to_mobject</code><span class="sig-paren">(</span><em class="sig-param">object_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.api.node_name_to_mobject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes MObject of the given node
+:param object_name: str, name of a node
+:return: MObject</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+    <a href="https://github.com/tpDcc/tpDcc-libs-python" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tpDcc.dccs.maya.core.attribute.html" class="btn btn-neutral float-right" title="tpDcc.dccs.maya.core.attribute module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tpDcc.dccs.maya.core.animation.html" class="btn btn-neutral float-left" title="tpDcc.dccs.maya.core.animation module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Tomas Poveda
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

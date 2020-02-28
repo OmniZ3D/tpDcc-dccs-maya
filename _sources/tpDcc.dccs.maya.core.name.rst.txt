@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.name module
+================================
+
+.. automodule:: tpDcc.dccs.maya.core.name
+   :members:
+   :undoc-members:
+   :show-inheritance:

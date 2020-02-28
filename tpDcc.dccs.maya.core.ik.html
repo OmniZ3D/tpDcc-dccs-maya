@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tpDcc.dccs.maya.core.ik module &mdash; tpDcc-dccs-maya 0.0.l documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tpDcc.dccs.maya.core.joint module" href="tpDcc.dccs.maya.core.joint.html" />
+    <link rel="prev" title="tpDcc.dccs.maya.core.helpers module" href="tpDcc.dccs.maya.core.helpers.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tpDcc-dccs-maya
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tpDcc</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tpDcc.html">tpDcc package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="tpDcc.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tpDcc.dccs.html">tpDcc.dccs package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tpDcc.html#module-tpDcc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tpDcc-dccs-maya</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">tpDcc</a> &raquo;</li>
+        
+          <li><a href="tpDcc.html">tpDcc package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.html">tpDcc.dccs package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.html">tpDcc.dccs.maya package</a> &raquo;</li>
+        
+          <li><a href="tpDcc.dccs.maya.core.html">tpDcc.dccs.maya.core package</a> &raquo;</li>
+        
+      <li>tpDcc.dccs.maya.core.ik module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tpDcc.dccs.maya.core.ik.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-tpDcc.dccs.maya.core.ik">
+<span id="tpdcc-dccs-maya-core-ik-module"></span><h1>tpDcc.dccs.maya.core.ik module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.ik" title="Permalink to this headline">¶</a></h1>
+<p>Module that contains functions and classes related with IKs</p>
+<dl class="class">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle">
+<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.ik.</code><code class="sig-name descname">IkHandle</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class to crete and work with IK handles</p>
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.SOLVER_RP">
+<code class="sig-name descname">SOLVER_RP</code><em class="property"> = 'ikRPsolver'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.SOLVER_RP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.SOLVER_SC">
+<code class="sig-name descname">SOLVER_SC</code><em class="property"> = 'ikSCsolver'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.SOLVER_SC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.SOLVER_SPLINE">
+<code class="sig-name descname">SOLVER_SPLINE</code><em class="property"> = 'ikSplineSolver'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.SOLVER_SPLINE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.SOLVER_SPRING">
+<code class="sig-name descname">SOLVER_SPRING</code><em class="property"> = 'ikSpringSolver'</em><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.SOLVER_SPRING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.create">
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates IK handle with the store atrributes
+:return: str, name of thre IK handle</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.set_curve">
+<code class="sig-name descname">set_curve</code><span class="sig-paren">(</span><em class="sig-param">curve</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.set_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets teh curve for Spline IK handle to use
+:param curve: str, name of the curve</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.set_end_joint">
+<code class="sig-name descname">set_end_joint</code><span class="sig-paren">(</span><em class="sig-param">joint</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.set_end_joint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set end joint for IK handle to use
+:param joint: str, name of the end joint</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.set_full_name">
+<code class="sig-name descname">set_full_name</code><span class="sig-paren">(</span><em class="sig-param">full_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.set_full_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the full name for the IK handle to use
+:param full_name: str</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.set_joints">
+<code class="sig-name descname">set_joints</code><span class="sig-paren">(</span><em class="sig-param">joints_list</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.set_joints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets  the ojints for the IK handle to use
+First entry of the list is the start joint and the last entry is the end joint
+:param joints_list: list&lt;str&gt;, a list of joints</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.set_solver">
+<code class="sig-name descname">set_solver</code><span class="sig-paren">(</span><em class="sig-param">solver_name</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.set_solver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the solver type for the IK handle to use
+:param solver_name: str, name of the solver type to use:</p>
+<blockquote>
+<div><p>‘ikRPsolver’
+‘ikSCsolver’
+‘ikSplineSolver’
+‘ikSpringSolver’</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="tpDcc.dccs.maya.core.ik.IkHandle.set_start_joint">
+<code class="sig-name descname">set_start_joint</code><span class="sig-paren">(</span><em class="sig-param">joint</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.IkHandle.set_start_joint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set start joint for IK handle to use
+:param joint: str, name of the start joint</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.ik.create_simple_spline_ik_stretch">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.ik.</code><code class="sig-name descname">create_simple_spline_ik_stretch</code><span class="sig-paren">(</span><em class="sig-param">curve</em>, <em class="sig-param">joints</em>, <em class="sig-param">stretch_axis='Y'</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.create_simple_spline_ik_stretch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stretchs joints on curve.
+Joints must be attached to a SplienIk.
+:param curve: str, name of the curve that joints are attached to via SplineIk
+:param joints: list(str), listo f joints attached to SplineIk
+:param stretch_axis: str, stretch axis
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tpDcc.dccs.maya.core.ik.create_spline_ik_stretch">
+<code class="sig-prename descclassname">tpDcc.dccs.maya.core.ik.</code><code class="sig-name descname">create_spline_ik_stretch</code><span class="sig-paren">(</span><em class="sig-param">curve</em>, <em class="sig-param">joints</em>, <em class="sig-param">node_for_attribute=None</em>, <em class="sig-param">create_stretch_on_off=False</em>, <em class="sig-param">create_bulge=True</em>, <em class="sig-param">scale_axis='X'</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.ik.create_spline_ik_stretch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes the joints stretch on the curve
+:param curve: str, name of the curve that joints are attached via Spline IK
+:param joints: list&lt;str&gt;, list of joints attached to Spline IK
+:param node_for_attribute: str, name of the node to create the attributes on
+:param create_stretch_on_off: bool, Whether to create or not extra attributes to slide the stretch value on/off
+:param create_bulge: bool, Whether to add bulging to the other axis that are not the scale axis
+:param scale_axis: str(‘X’, ‘Y’, ‘Z’), axis that the joints stretch on</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+    <a href="https://github.com/tpDcc/tpDcc-libs-python" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+    </a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tpDcc.dccs.maya.core.joint.html" class="btn btn-neutral float-right" title="tpDcc.dccs.maya.core.joint module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tpDcc.dccs.maya.core.helpers.html" class="btn btn-neutral float-left" title="tpDcc.dccs.maya.core.helpers module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Tomas Poveda
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

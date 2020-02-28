@@ -1,0 +1,20 @@
+tpDcc.dccs.maya.meta package
+============================
+
+Submodules
+----------
+
+.. toctree::
+
+   tpDcc.dccs.maya.meta.metaattribute
+   tpDcc.dccs.maya.meta.metanode
+   tpDcc.dccs.maya.meta.metaobject
+   tpDcc.dccs.maya.meta.metautils
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.dccs.maya.meta
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.constraint module
+======================================
+
+.. automodule:: tpDcc.dccs.maya.core.constraint
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.symmetry module
+====================================
+
+.. automodule:: tpDcc.dccs.maya.core.symmetry
+   :members:
+   :undoc-members:
+   :show-inheritance:

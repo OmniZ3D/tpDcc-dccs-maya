@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.rivet module
+=================================
+
+.. automodule:: tpDcc.dccs.maya.core.rivet
+   :members:
+   :undoc-members:
+   :show-inheritance:

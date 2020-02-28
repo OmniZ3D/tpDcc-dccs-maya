@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.meta.metanode module
+====================================
+
+.. automodule:: tpDcc.dccs.maya.meta.metanode
+   :members:
+   :undoc-members:
+   :show-inheritance:

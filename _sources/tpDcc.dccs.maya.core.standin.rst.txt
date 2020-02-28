@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.standin module
+===================================
+
+.. automodule:: tpDcc.dccs.maya.core.standin
+   :members:
+   :undoc-members:
+   :show-inheritance:
