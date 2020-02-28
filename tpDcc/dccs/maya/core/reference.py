@@ -135,10 +135,12 @@ def get_reference_proxy_manager(ref_node):
     """
 
     if not maya.cmds.attributeQuery('proxyMsg', n=ref_node, ex=True):
-        LOGGER.warning('Reference "{}" has no proxyMsg attribute! Unable to determine proxy manager ...'.format(ref_node))
+        LOGGER.warning(
+            'Reference "{}" has no proxyMsg attribute! Unable to determine proxy manager ...'.format(ref_node))
         return None
 
-    proxy_manager = maya.cmds.ls(maya.cmds.listConnections(ref_node+'.proxyMsg', s=True, d=False) or list(), type='proxyManager') or list()
+    proxy_manager = maya.cmds.ls(
+        maya.cmds.listConnections(ref_node + '.proxyMsg', s=True, d=False) or list(), type='proxyManager') or list()
     if not proxy_manager:
         LOGGER.warning('Reference "{}" has no valid proxyMsg connections! Unable to determine proxy manager ...')
         return None
@@ -160,7 +162,7 @@ def get_references_from_proxy_manager(proxy_manager):
     if not is_proxy_manager(proxy_manager):
         raise Exception('Object "{}" is not a valid proxyManager node!'.format(proxy_manager))
 
-    ref_list = maya.cmds.listConnections(proxy_manager+'.proxyList', s=False, d=True) or list()
+    ref_list = maya.cmds.listConnections(proxy_manager + '.proxyList', s=False, d=True) or list()
 
     return ref_list
 
@@ -210,12 +212,16 @@ def get_reference_from_namespace(namespace, parent_namespace=None):
 
         if ref_namespace == parent_namespace + namespace:
             if maya.cmds.attributeQuery('proxyMsg', n=ref_node, ex=True):
-                proxy_manager = maya.cmds.ls(maya.cmds.listConnections(ref_node+'.proxyMsg', s=True, d=True) or list(), type='proxyManager') or list()
+                proxy_manager = maya.cmds.ls(
+                    maya.cmds.listConnections(
+                        ref_node + '.proxyMsg', s=True, d=True) or list(), type='proxyManager') or list()
                 if proxy_manager:
-                    active_proxy_plug = maya.cmds.connectionInfo(proxy_manager[0]+'.activeProxy', destinationFromSource=True)[0]
+                    active_proxy_plug = maya.cmds.connectionInfo(
+                        proxy_manager[0] + '.activeProxy', destinationFromSource=True)[0]
                     active_proxy_info = maya.cmds.connectionInfo(active_proxy_plug, destinationFromSource=True)
                     if not active_proxy_info:
-                        raise Exception('Error getting active reference from proxy manager "{}"!'.format(proxy_manager[0]))
+                        raise Exception(
+                            'Error getting active reference from proxy manager "{}"!'.format(proxy_manager[0]))
                     return maya.cmds.ls(active_proxy_info[0], o=True)[0]
 
             return ref_node
@@ -269,7 +275,7 @@ def import_reference(ref_node):
     except Exception:
         if maya.cmds.objExists(ref_node):
             LOGGER.warning('No file associated with reference! Deleting node "{}"'.format(ref_node))
-            maya.cmds.lockNode(ref_node, l=False)
+            maya.cmds.lockNode(ref_node, long=False)
             maya.cmds.delete(ref_node)
         else:
             maya.cmds.file(ref_file, importReference=True)

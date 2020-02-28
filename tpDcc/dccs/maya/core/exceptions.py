@@ -53,12 +53,14 @@ class ShapeException(MayaLibException):
 
 class ShapeHistoryException(MayaLibException):
     def __init__(self, shape):
-        super(ShapeHistoryException, self).__init__('Unable to determine history nodes for shape "{}"'.format(shape))
+        super(ShapeHistoryException, self).__init__(
+            'Unable to determine history nodes for shape "{}"'.format(shape))
 
 
 class ShapeFromTransformException(MayaLibException):
     def __init__(self, transform):
-        super(ShapeFromTransformException, self).__init__('Unable to determine shape node from transform "{}!"'.format(transform))
+        super(ShapeFromTransformException, self).__init__(
+            'Unable to determine shape node from transform "{}!"'.format(transform))
 
 
 class CurveException(MayaLibException):
@@ -100,29 +102,35 @@ class SkinClusterException(MayaLibException):
 
 class NotAffectByDeformerException(MayaLibException):
     def __init__(self, geo, deformer):
-        super(NotAffectByDeformerException, self).__init__('Object "{}" is not affected by deformer "{}"'.format(geo, deformer))
+        super(NotAffectByDeformerException, self).__init__(
+            'Object "{}" is not affected by deformer "{}"'.format(geo, deformer))
 
 
 class GeometryIndexOutOfRange(MayaLibException):
     def __init__(self, deformer, geo, geo_index, total_indices):
-        super(GeometryIndexOutOfRange, self).__init__('Geometry index out of range! (Deformer: "{}", Geometry: "{}", GeoIndex: "{}", MaxIndex: "{}"'.format(deformer, geo, str(geo_index), str(total_indices)))
+        super(GeometryIndexOutOfRange, self).__init__(
+            'Geometry index out of range! (Deformer: "{}", Geometry: "{}", GeoIndex: "{}", MaxIndex: "{}"'.format(
+                deformer, geo, str(geo_index), str(total_indices)))
 
 
 class ShapeValidDeformerAffectedException(MayaLibException):
     def __init__(self, shape):
-        super(ShapeValidDeformerAffectedException, self).__init__('Shape node "{}" is not affected by any valid deformers!'.format(shape))
+        super(ShapeValidDeformerAffectedException, self).__init__(
+            'Shape node "{}" is not affected by any valid deformers!'.format(shape))
 
 
 # ======================================================================== BLENDSHAPE
 
 class BlendShapeBaseGeometryException(MayaLibException):
     def __init__(self, base, blendshape):
-        super(BlendShapeBaseGeometryException, self).__init__('Object "{}" is not a base geometry for blendshape "{}"!'.format(base, blendshape))
+        super(BlendShapeBaseGeometryException, self).__init__(
+            'Object "{}" is not a base geometry for blendshape "{}"!'.format(base, blendshape))
 
 
 class BlendShapeBaseIndexException(MayaLibException):
     def __init__(self, base, blendshape):
-        super(BlendShapeBaseIndexException, self).__init__('Unable to determine base index for "{}" on blendShape "{}"!'.format(base, blendshape))
+        super(BlendShapeBaseIndexException, self).__init__(
+            'Unable to determine base index for "{}" on blendShape "{}"!'.format(base, blendshape))
 
 
 class BlendShapeTargetException(MayaLibException):

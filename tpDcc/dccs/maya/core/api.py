@@ -831,7 +831,8 @@ class MeshFunction(MayaFunction, object):
         """
         Returns the closes normal of the given source vector
         :param source_vector: list(float, float, float), position to find the normal closest
-        :param at_source_position: bool, Whether to add source_vector to the normal vector so it is returned relative to the source vector
+        :param at_source_position: bool, Whether to add source_vector to the normal vector so it is
+            returned relative to the source vector
         """
 
         # TODO: Implement to support both OpenMaya and OpenMaya2

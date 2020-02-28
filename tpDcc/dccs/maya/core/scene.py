@@ -45,7 +45,7 @@ class TrackNodes(object):
 
         self._node_type = node_type
         if self._node_type:
-            self._nodes = maya.cmds.ls(type=node_type, l=self._full_path)
+            self._nodes = maya.cmds.ls(type=node_type, long=self._full_path)
         else:
             self._nodes = maya.cmds.ls()
 
@@ -56,9 +56,9 @@ class TrackNodes(object):
         """
 
         if self._node_type:
-            current_nodes = maya.cmds.ls(type=self._node_type, l=self._full_path)
+            current_nodes = maya.cmds.ls(type=self._node_type, long=self._full_path)
         else:
-            current_nodes = maya.cmds.ls(l=self._full_path)
+            current_nodes = maya.cmds.ls(long=self._full_path)
 
         new_set = set(current_nodes).difference(self._nodes)
 
@@ -139,7 +139,8 @@ def reference_scene(file_path, namespace=None, save=True):
     """
     References a Maya file
     :param file_path: str, full path and filename of the scene we want to reference
-    :param namespace: variant, str || None, namespace to add to the nodes in Maya. If None, default is the name of the file
+    :param namespace: variant, str || None, namespace to add to the nodes in Maya. If None, default is the name of
+        the file
     :param save: bool, True if you want to save the current scene before importing file
     """
 
@@ -149,7 +150,7 @@ def reference_scene(file_path, namespace=None, save=True):
         if split_name:
             namespace = string.join(split_name[:-1], '_')
 
-        maya.cmds.file(file_path, reference=True, gl=True, mergeNamespacesOnClash=False, namespace=namespace)
+        maya.cmds.file(file_path, reference=True, glong=True, mergeNamespacesOnClash=False, namespace=namespace)
 
 
 def save():
@@ -252,7 +253,7 @@ def find_scene_textures():
     """
 
     paths = set()
-    for f in maya.cmds.ls(l=True, type='file'):
+    for f in maya.cmds.ls(long=True, type='file'):
         if maya.cmds.referenceQuery(f, isNodeReferenced=True):
             continue
 
@@ -271,7 +272,7 @@ def find_texture_node_pairs():
     """
 
     paths = set()
-    for f in maya.cmds.ls(l=True, type='file'):
+    for f in maya.cmds.ls(long=True, type='file'):
         if maya.cmds.referenceQuery(f, isNodeReferenced=True):
             continue
 
@@ -288,7 +289,7 @@ def iter_texture_node_pairs(include_references=False):
     :return:
     """
 
-    for f in maya.cmds.ls(l=True, type='file'):
+    for f in maya.cmds.ls(long=True, type='file'):
         if include_references and maya.cmds.referenceQuery(f, isNodeReferenced=True):
             continue
 
@@ -343,8 +344,9 @@ def get_scene_cameras(include_default_cameras=True, include_non_default_cameras=
     """
 
     final_list = list()
-    cameras = maya.cmds.ls(type='camera', l=True)
-    startup_cameras = [camera for camera in cameras if maya.cmds.camera(maya.cmds.listRelatives(camera, parent=True)[0], startupCamera=True, q=True)]
+    cameras = maya.cmds.ls(type='camera', long=True)
+    startup_cameras = [camera for camera in cameras if maya.cmds.camera(maya.cmds.listRelatives(
+        camera, parent=True)[0], startupCamera=True, q=True)]
     non_startup_cameras = list(set(cameras) - set(startup_cameras))
     if include_default_cameras:
         final_list.extend(startup_cameras)
@@ -375,7 +377,7 @@ def get_top_dag_nodes(exclude_cameras=True, namespace=None):
     if namespace:
         found = list()
         for transform in top_transforms:
-            if transform.startswith(namespace+':'):
+            if transform.startswith(namespace + ':'):
                 found.append(transform)
         top_transforms = found
 
@@ -391,7 +393,7 @@ def get_top_dag_nodes_in_list(list_of_transforms):
 
     found = list()
     for xform in list_of_transforms:
-        long_name = maya.cmds.ls(xform, l=True)
+        long_name = maya.cmds.ls(xform, long=True)
         if long_name:
             if long_name[0].count('|') == 1:
                 found.append(xform)
@@ -454,7 +456,8 @@ def get_sets():
         if obj_set == 'defaultObjectSet':
             continue
 
-        outputs = maya.cmds.listConnections(obj_set, plugs=False, connections=False, destination=True, source=False, skipConversionNodes=True)
+        outputs = maya.cmds.listConnections(
+            obj_set, plugs=False, connections=False, destination=True, source=False, skipConversionNodes=True)
         if not outputs:
             top_sets.append(obj_set)
 
@@ -506,7 +509,7 @@ def delete_unused_plugins():
 
     # This functionality is not available in old Maya versions
     list_cmds = dir(maya.cmds)
-    if not 'unknownPlugin' in list_cmds:
+    if 'unknownPlugin' not in list_cmds:
         return
 
     unknown_nodes = maya.cmds.ls(type='unknown')

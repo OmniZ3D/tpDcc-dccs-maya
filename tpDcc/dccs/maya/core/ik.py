@@ -243,7 +243,8 @@ def create_spline_ik_stretch(
                 attr.set_max_value(10)
                 attr.set_keyable(True)
                 attr.create(node_for_attribute)
-                attr_utils.connect_multiply('{}.stretchyBulge'.format(node_for_attribute), '{}.blender'.format(blend), 0.1)
+                attr_utils.connect_multiply(
+                    '{}.stretchyBulge'.format(node_for_attribute), '{}.blender'.format(blend), 0.1)
             else:
                 blend_attr = '{}.outputX'.format(multiply_offset)
 

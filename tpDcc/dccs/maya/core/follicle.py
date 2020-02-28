@@ -10,7 +10,8 @@ from __future__ import print_function, division, absolute_import
 import tpDcc as tp
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import shape, geometry, constraint as constraint_utils, transform as transform_utils, mesh as mesh_utils
+from tpDcc.dccs.maya.core import shape, geometry, constraint as constraint_utils, transform as transform_utils
+from tpDcc.dccs.maya.core import mesh as mesh_utils
 
 
 def create_empty_follicle(description, uv=None):

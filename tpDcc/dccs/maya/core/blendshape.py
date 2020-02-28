@@ -102,7 +102,7 @@ def get_base_index(blend_shape, base):
         raise exceptions.BlendShapeBaseGeometryException(base=base, blendshape=blend_shape)
 
     base_geo = deformer.get_affected_geometry(blend_shape)
-    if not base_geo.has_key(base):
+    if base not in base_geo:
         raise exceptions.BlendShapeBaseIndexException(base=base, blendshape=blend_shape)
 
     return base_geo[base]
@@ -131,7 +131,7 @@ def has_target_geo(blend_shape, target, base=''):
     """
 
     check_blendshape(blend_shape)
-    if not target in get_target_list(blend_shape):
+    if target not in get_target_list(blend_shape):
         raise Exception('BlendShape "{}" has no target "{}"!'.format(blend_shape, target))
 
     target_geo = get_target_geo(blend_shape, target, base_geo=base)
@@ -148,12 +148,12 @@ def get_target_index(blend_shape, target):
     """
 
     check_blendshape(blend_shape)
-    if not maya.cmds.objExists(blend_shape+'.'+target):
+    if not maya.cmds.objExists(blend_shape + '.' + target):
         raise Exception('BlendShape "{}" has no target "{}"!'.format(blend_shape, target))
 
     alias_list = maya.cmds.aliasAttr(blend_shape, query=True)
     alias_index = alias_list.index(target)
-    alias_attr = alias_list[alias_index+1]
+    alias_attr = alias_list[alias_index + 1]
 
     target_index = int(alias_attr.split('[')[-1].split(']')[0])
 
@@ -165,7 +165,8 @@ def get_target_geo(blend_shape, target, base_geo=''):
     Get the connected target geometry given a blendshape and target
     :param blend_shape: str, blendshape node to get target geometry from
     :param target: str, blendshape target to get source geometry from
-    :param base_geo: str, base geometry of the blendshaspe to get the target geometry for. If empty, use base geometry at index 0
+    :param base_geo: str, base geometry of the blendshaspe to get the target geometry for. If empty, use base geometry
+        at index 0
     :return: str
     """
 
@@ -181,7 +182,8 @@ def get_target_geo(blend_shape, target, base_geo=''):
     # TODO: Instead, we should check all existing multi indexes
     weight_index = 6000
 
-    target_geo_attr = blend_shape+'.inputTarget['+str(geo_index)+'].inputTargetGroup['+str(target_index)+'].inputTargetItem['+str(weight_index)+'].inputGeomTarget'
+    target_geo_attr = blend_shape+'.inputTarget['+str(geo_index) + '].inputTargetGroup[' + str(
+        target_index) + '].inputTargetItem[' + str(weight_index) + '].inputGeomTarget'
     target_geo_cnt = maya.cmds.listConnections(target_geo_attr, s=True, d=False)
     if not target_geo_cnt:
         target_geo_cnt = ['']
@@ -198,7 +200,7 @@ def get_target_list(blend_shape):
 
     check_blendshape(blend_shape)
 
-    target_list = maya.cmds.listAttr(blend_shape+'.w', m=True)
+    target_list = maya.cmds.listAttr(blend_shape + '.w', m=True)
     if not target_list:
         target_list = list()
 
@@ -209,7 +211,8 @@ def get_target_geo_list(blend_shape, base_geo=''):
     """
     Get the list of connected target geometry to the given blendshape
     :param blend_shape: str, blendshape node to get target geometry list from
-    :param base_geo: str, base geometry of the blendshape to get the target geometry for. If empty, uses base geometry at index 0
+    :param base_geo: str, base geometry of the blendshape to get the target geometry for. If empty, uses base geometry
+        at index 0
     :return: list<str>
     """
 
@@ -239,7 +242,8 @@ def get_target_name(blend_shape, target_geo):
     # Get target shapes
     target_shape = shape.get_shapes(node_name=target_geo, non_intermediates=True, intermediates=False)
     if not target_shape:
-        target_shape = maya.cmds.ls(maya.cmds.listRelatives(target_geo, ad=True, pa=True), shapes=True, noIntermediate=True)
+        target_shape = maya.cmds.ls(maya.cmds.listRelatives(
+            target_geo, ad=True, pa=True), shapes=True, noIntermediate=True)
     if not target_shape:
         raise Exception('No shapes found under target geometry "{}"!'.format(target_geo))
 
@@ -248,12 +252,12 @@ def get_target_name(blend_shape, target_geo):
     if not target_cnt.count(blend_shape):
         raise Exception('Target geometry "{}" is not connected to blendShape "{}"!'.format(target_geo, blend_shape))
     target_cnt_index = target_cnt.index(blend_shape)
-    target_cnt_attr = target_cnt[target_cnt_index-1]
+    target_cnt_attr = target_cnt[target_cnt_index - 1]
     target_cnt_plug = maya.cmds.listConnections(target_cnt_attr, sh=True, p=True, d=True, s=False)[0]
 
     # Get target index and alias
     target_index = int(target_cnt_plug.split('.')[2].split('[')[1].split(']')[0])
-    target_alias = maya.cmds.aliasAttr(blend_shape+'.weight['+str(target_index)+']', query=True)
+    target_alias = maya.cmds.aliasAttr(blend_shape+'.weight[' + str(target_index) + ']', query=True)
 
     return target_alias
 
@@ -294,10 +298,14 @@ def add_empty_target(blend_shape, target_alias='', input_target_items=None):
     next_index = next_available_target_index(blend_shape)
     out_geo = maya.cmds.getAttr(blend_shape+'.outputGeometry', multiIndices=True)
     for i in out_geo:
-        maya.cmds.setAttr('{}.inputTarget[{}].inputTargetGroup[{}].inputTargetItem[6000].inputPointsTarget'.format(blend_shape, i, next_index), type='pointArray', *[0])
+        maya.cmds.setAttr(
+            '{}.inputTarget[{}].inputTargetGroup[{}].inputTargetItem[6000].inputPointsTarget'.format(
+                blend_shape, i, next_index), type='pointArray', *[0])
         if input_target_items:
             for iti in input_target_items:
-                maya.cmds.setAttr('{}.inputTarget[{}].inputTargetGroup[{}].inputTargetItem[{}].inputPointsTarget'.format(blend_shape, i, next_index, iti), type='pointArray', *[0])
+                maya.cmds.setAttr(
+                    '{}.inputTarget[{}].inputTargetGroup[{}].inputTargetItem[{}].inputPointsTarget'.format(
+                        blend_shape, i, next_index, iti), type='pointArray', *[0])
     maya.cmds.setAttr('{}.w[{}]'.format(blend_shape, next_index), 0.0)
     maya.cmds.aliasAttr(target_name, '{}.w[{}]'.format(blend_shape, next_index))
     maya.cmds.refresh()
@@ -513,7 +521,10 @@ def connect_to_target(blend_shape, target_geo, target_name, base_geo, weight=1.0
 
         weight_index = int(weight * 6000)
 
-        maya.cmds.connectAttr(geo_shape + geo_attr, blend_shape + '.inputTarget[' + str(geo_index) + '].inputTargetGroup[' + str(target_index) + '].inputTargetItem[' + str(weight_index) + '].inputGeomTarget', f=True)
+        maya.cmds.connectAttr(
+            geo_shape + geo_attr, blend_shape + '.inputTarget[' + str(
+                geo_index) + '].inputTargetGroup[' + str(target_index) + '].inputTargetItem[' + str(
+                weight_index) + '].inputGeomTarget', f=True)
     else:
         if has_target(blend_shape, target_name) and weight != 1.0:
             # Connect geometry to target input as inbetween

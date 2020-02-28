@@ -65,7 +65,8 @@ def is_referenced(node_name):
 
 def is_empty(node_name, no_user_attributes=True, no_connections=True):
     """
-    Returns whether a given node is an empty one (is not referenced, has no child transforms, has no custom attributes and has no connections)
+    Returns whether a given node is an empty one (is not referenced, has no child transforms,
+    has no custom attributes and has no connections)
     :param node_name: str, name of a Maya node
     :return: bool
     """
@@ -190,7 +191,7 @@ def update_uuid(node_name):
         ids.append(new_id)
     else:
         existing_id = maya.cmds.getAttr(uuid_attr)
-        if not existing_id in ids:
+        if existing_id not in ids:
             ids.append(existing_id)
             return
         new_id = str(uuid.uuid4())
@@ -347,6 +348,7 @@ def get_name(mobj, fullname=True):
     except Exception as e:
         maya.cmds.warning('Ipmossible to get name from MObject: {} - {}'.format(mobj, str(e)))
         return None
+
 
 def set_names(nodes, names):
     nodes = python.force_list(nodes)
@@ -637,8 +639,8 @@ def get_plug_value(plug):
             return plug.asBool()
 
         # Integer - Short, Int, Long, Byte
-        elif plug_type in [maya.OpenMaya.MFnNumericData.kShort, maya.OpenMaya.MFnNumericData.kInt, maya.OpenMaya.MFnNumericData.kLong,
-                           maya.OpenMaya.MFnNumericData.kByte]:
+        elif plug_type in [maya.OpenMaya.MFnNumericData.kShort, maya.OpenMaya.MFnNumericData.kInt,
+                           maya.OpenMaya.MFnNumericData.kLong, maya.OpenMaya.MFnNumericData.kByte]:
             return plug.asInt()
 
         # Float - Float, Double, Address
@@ -735,7 +737,8 @@ def create_attribute(mobj, name, data_type=None, short_name=None, default=None):
     :param data_type: Type of data to store in the attribute
     :param short_name: str, short name for the attribute
     :param default: default value assinged to teh attribute
-    :return: (name, short name) As name and short name are normalized, this returns the actual names used for attribute names
+    :return: (name, short name) As name and short name are normalized, this returns the actual names used for attribute
+        names
     """
 
     # TODO: Reimplement this function so it can work on all cases (take the one that appears on the MetaData class)
@@ -809,8 +812,10 @@ def display_override(obj, override_enabled=False, override_display=0, override_l
     Set display override attributes for the given object
     :param obj: str, object to set display overrides for
     :param override_enabled: bool, set the display override enable state for the given DAG object
-    :param override_display: int, set the display override type for the given DAG object (0=normal, 1=template, 2=reference)
-    :param override_lod: int, set the display override level of detail value for the given DAG object (0=full, 1=boundingBox)
+    :param override_display: int, set the display override type for the given DAG object
+        (0=normal, 1=template, 2=reference)
+    :param override_lod: int, set the display override level of detail value for the given DAG object
+        (0=full, 1=boundingBox)
     :param override_visibility: bool, set the display override visibility value for the given DAG object
     :param override_shading: bool, set the display override shading value for the given DAG object
     """
@@ -838,8 +843,8 @@ def get_input_attributes(node):
     if not maya.cmds.objExists(node):
         raise Exception('Object "{}" does not exists!'.format(node))
 
-    inputs = maya.cmds.listConnections(node, connections=True, destination=False, source=True, plugs=True,
-                                  skipConversionNodes=True)
+    inputs = maya.cmds.listConnections(
+        node, connections=True, destination=False, source=True, plugs=True, skipConversionNodes=True)
     if inputs:
         inputs.reverse()
     else:
@@ -858,8 +863,8 @@ def get_output_attributes(node):
     if not maya.cmds.objExists(node):
         raise Exception('Object "{}" does not exists!'.format(node))
 
-    outputs = maya.cmds.listConnections(node, connections=True, destination=True, source=False, plugs=True,
-                                   skipConversionNodes=True)
+    outputs = maya.cmds.listConnections(
+        node, connections=True, destination=True, source=False, plugs=True, skipConversionNodes=True)
     if not outputs:
         outputs = list()
 
@@ -898,7 +903,8 @@ def get_all_hiearchy_nodes(node, direction=None, object_type=None):
             sel_list.add(node)
             sel_list.getDependNode(0, mobj)
 
-    mit_dependency_graph = maya.OpenMaya.MItDependencyGraph(mobj, direction, maya.OpenMaya.MItDependencyGraph.kPlugLevel)
+    mit_dependency_graph = maya.OpenMaya.MItDependencyGraph(
+        mobj, direction, maya.OpenMaya.MItDependencyGraph.kPlugLevel)
 
     while not mit_dependency_graph.isDone():
         if maya.is_new_api():

@@ -29,7 +29,9 @@ class ThumbnailCaptureDialog(dialog.Dialog, object):
     capturing = Signal(str)
 
     @staticmethod
-    def thumbnail_capture(path, start_frame=None, end_frame=None, step=1, clear_cache=False, captured=None, show=False, modifier=True):
+    def thumbnail_capture(
+            path, start_frame=None, end_frame=None, step=1, clear_cache=False,
+            captured=None, show=False, modifier=True):
         """
         Helper function to capture a playblast and save it to the given path
         :param path: str
@@ -93,7 +95,7 @@ class ThumbnailCaptureDialog(dialog.Dialog, object):
         self._model_panel_widget = modelpanel.ModelPanelWidget()
         # self._model_panel_widget = viewport.MayaViewport(parent=self)
         main_layout = QVBoxLayout(self)
-        main_layout.setObjectName(self.objectName()+'Layout')
+        main_layout.setObjectName(self.objectName() + 'Layout')
         main_layout.addWidget(self._model_panel_widget)
         main_layout.addWidget(self._capture_btn)
         self.main_layout.addLayout(main_layout)

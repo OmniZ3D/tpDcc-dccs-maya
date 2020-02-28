@@ -237,7 +237,9 @@ def get_raw_points(mesh):
 
     use_new_api = False
     if maya.is_new_api():
-        LOGGER.warning('get_raw_points function is dependant of MFnMesh.getRawPoints() function which is not available in OpenMaya 2.0! Using OpenMaya 1.0 ...')
+        LOGGER.warning(
+            'get_raw_points function is dependant of MFnMesh.getRawPoints() function which is not available '
+            'in OpenMaya 2.0! Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
         use_new_api = True
 
@@ -290,7 +292,8 @@ def get_normal(mesh, vtx_id, world_space=False, angle_weighted=False):
     :param mesh: str, mesh to query normal from
     :param vtx_id: int, vertex index to query normal from
     :param world_space: bool, sample the normal direction in world space
-    :param angle_weighted: bool, If True, normal is computed taking in account the angle subtended by teh face at the vertex
+    :param angle_weighted: bool, If True, normal is computed taking in account the angle subtended by
+        the face at the vertex
     """
 
     check_mesh(mesh)
@@ -317,7 +320,8 @@ def get_normals(mesh, world_space=False, angle_weighted=False):
     Returns all vertex normals for the given mesh
     :param mesh: str, mesh to query normals from
     :param world_space: bool, sample the normals direction in world space
-    :param angle_weighted: bool, If True, normal is computed taking in account the angle subtended by teh face at the vertex
+    :param angle_weighted: bool, If True, normal is computed taking in account the angle subtended by
+        the face at the vertex
     :return: list<float>
     """
 
@@ -349,7 +353,7 @@ def get_uvs(mesh, uv_set=None):
     """
 
     check_mesh(mesh)
-    if uv_set and not uv_set in maya.cmds.polyUVSet(mesh, allUVSets=True):
+    if uv_set and uv_set not in maya.cmds.polyUVSet(mesh, allUVSets=True):
         raise exceptions.MeshNoUVSetException(mesh, uv_set)
 
     mesh_fn = get_mesh_fn(mesh)
@@ -376,7 +380,7 @@ def get_assigned_uvs(mesh, uv_set=None):
     """
 
     check_mesh(mesh)
-    if uv_set and not uv_set in maya.cmds.polyUVSet(mesh, allUVSets=True):
+    if uv_set and uv_set not in maya.cmds.polyUVSet(mesh, allUVSets=True):
         raise exceptions.MeshNoUVSetException(mesh, uv_set)
 
     mesh_fn = get_mesh_fn(mesh)

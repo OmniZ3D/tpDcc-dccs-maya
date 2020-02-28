@@ -12,7 +12,8 @@ import logging
 from tpDcc.libs.python import python
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import name as name_utils, attribute as attr_utils, transform as xform_utils, constraint as cns_utils
+from tpDcc.dccs.maya.core import name as name_utils, attribute as attr_utils, transform as xform_utils
+from tpDcc.dccs.maya.core import constraint as cns_utils
 
 LOGGER = logging.getLogger()
 

@@ -32,7 +32,7 @@ def load_abc_export_plugin():
     if not maya.cmds.pluginInfo('AbcExport', query=True, loaded=True):
         try:
             maya.cmds.loadPlugin('AbcExport', quiet=True)
-        except:
+        except Exception:
             raise Exception('Error while loading AbcExport Maya plugin!¡')
 
 
@@ -198,7 +198,9 @@ def import_cache_to_geometries(geo_list, cache_directory, cache_file_list=None, 
         import_cache_to_geometry(geo_list[i], cache_file)
 
 
-def export_cache_from_geometry(geometry, cache_file, start_frame=1, end_frame=100, use_time_line=True, file_per_frame=False, cache_per_geo=True, force_export=False):
+def export_cache_from_geometry(
+        geometry, cache_file, start_frame=1, end_frame=100, use_time_line=True,
+        file_per_frame=False, cache_per_geo=True, force_export=False):
     """
     Exports caches from given geometries
     :param geometry: str, geometry to export cache from

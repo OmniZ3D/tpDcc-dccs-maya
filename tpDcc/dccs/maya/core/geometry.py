@@ -289,7 +289,7 @@ def replace(source_geometry, target_geometry):
             target_shape = target_shapes[0]
         else:
             if target_geo_type == 'mesh':
-                if maya.cmds.listConnections(target_shapes[0]+'.inMesh', s=True, d=False):
+                if maya.cmds.listConnections(target_shapes[0] + '.inMesh', s=True, d=False):
                     for int_shape in target_int_shapes:
                         if maya.cmds.listConnections(int_shape + '.outMesh', s=False, d=True):
                             target_shape = int_shape

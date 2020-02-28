@@ -191,7 +191,7 @@ class MayaPyManager(object):
         def flagged_opt(x, y):
             return "-" + x + " " + str(y)
 
-        default_flags = [flagged(f, v) for f, v in self.flags.items() if v and not f in ('W', 'Q')] or ['']
+        default_flags = [flagged(f, v) for f, v in self.flags.items() if v and f not in ('W', 'Q')] or ['']
         special_flags = [flagged_opt(f, v) for f, v in self.flags.items() if v and f in ('W', 'Q')] or ['']
         return " ".join(default_flags + special_flags)
 
@@ -201,12 +201,15 @@ class MayaPyManager(object):
         (and the required maya paths).  Dictionary is independent of machine level settings;
         non maya/python related values are preserved.
         """
+
+        def quoted(x):
+            return '%s' % os.path.normpath(x)
+
         runtime_env = os.environ.copy()
         if self.environ:
             runtime_env = self.environ.copy()
 
         new_paths = list(self.paths)
-        quoted = lambda x: '%s' % os.path.normpath(x)
 
         # set both of these to make sure maya auto-configures
         # it's own libs correctly

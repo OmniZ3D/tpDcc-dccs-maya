@@ -27,7 +27,8 @@ class MayaCallback(object):
             """
             Function that processes given arguments during an execution of addTimerCallback
             :param args: Variable list of arguments pass from the callback function to be evaluated
-            :return: tuple<...> that is (True, Valid Data, ...) if notification should be passed to the listener or (False, None) otherwise
+            :return: tuple<...> that is (True, Valid Data, ...) if notification should be passed to the listener
+                or (False, None) otherwise
             """
 
             elapsed_time = args[0]
@@ -127,7 +128,8 @@ class MayaCallback(object):
         @classmethod
         def register(cls, fn, owner=None):
             MayaCallback.NodeSelectCallback._callback = staticmethod(fn)
-            return maya.cmds.scriptJob(e=['SelectionChanged', 'import tpDccLib; tpDccLib.Callbacks.NodeSelectCallback._callback()'])
+            return maya.cmds.scriptJob(e=[
+                'SelectionChanged', 'import tpDccLib; tpDccLib.Callbacks.NodeSelectCallback._callback()'])
 
         @classmethod
         def unregister(cls, token):
@@ -175,4 +177,3 @@ class MayaCallback(object):
 
 
 register.register_class('Callbacks', MayaCallback)
-

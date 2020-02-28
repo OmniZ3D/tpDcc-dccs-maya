@@ -942,7 +942,7 @@ def check_multiple_outputs(deformer, print_result=True):
         plug_cnt = maya.cmds.listConnections(
             deformer + '.outputGeometry[' + str(index_list[i]) + ']', s=False, d=True, p=True)
         if len(plug_cnt) > 1:
-            return_dict[deformer+'.outputGeometry[' + str(index_list[i]) + ']'] = plug_cnt
+            return_dict[deformer + '.outputGeometry[' + str(index_list[i]) + ']'] = plug_cnt
             if print_result:
                 LOGGER.debug(
                     'Deformer output "' + deformer + '.outputGeometry[' + str(

@@ -43,7 +43,6 @@ class RigSwitch(object):
         self._control_name = None
         self._attribute_name = 'switch'
 
-    # region Public Functions
     def create(self):
         if self._control_name and maya.cmds.objExists(self._control_name):
             weight_count = self.get_weight_count()
@@ -100,8 +99,10 @@ class RigSwitch(object):
             return
 
         weight_count = self.get_weight_count()
-        if weight_count < (index+1):
-            LOGGER.warning('Adding groups to index {} is undefined. {}.switch does not have that many inputs'.format(index, self._switch_joint))
+        if weight_count < (index + 1):
+            LOGGER.warning(
+                'Adding groups to index {} is undefined. {}.switch does not have that many inputs'.format(
+                    index, self._switch_joint))
 
         self._groups[index] = groups
 
@@ -120,8 +121,6 @@ class RigSwitch(object):
         """
 
         self._attribute_name = attr_name
-    # endregion
-
 
 
 def get_all_rig_modules():
@@ -187,14 +186,15 @@ def create_follow_fade(source_guide, drivers, skip_lower=0.0001):
     :return: list(str), list of multiplyDivide nodes created
     """
 
-    distance_list, distance_dict, original_distance_order = transform_utils.get_ordered_distance_and_transform(source_guide, drivers)
+    distance_list, distance_dict, original_distance_order = transform_utils.get_ordered_distance_and_transform(
+        source_guide, drivers)
     multiplies = list()
 
     if not distance_list[-1] > 0:
         return multiplies
 
     for dst in original_distance_order:
-        scaler  = 1.0 - (dst / distance_list[-1])
+        scaler = 1.0 - (dst / distance_list[-1])
         if scaler <= skip_lower:
             continue
         multi = attr_utils.MultiplyDivideNode(source_guide)

@@ -16,7 +16,6 @@ from tpDcc.dccs.maya.core import exceptions, attribute, node, component, name as
 
 LOGGER = logging.getLogger()
 
-
 TRANSFORM_SIDES = {
     'end': {
         'short': [('_L', '_R'), ('_l', '_r')],
@@ -398,6 +397,7 @@ class DuplicateHierarchy(object):
 
         self._replace_old = old
         self._replace_new = new
+
     # endregion
 
     # region Private Functions
@@ -546,7 +546,8 @@ def snap(transform, target, snap_pivot=False):
         pos = maya.cmds.xform(target, query=True, worldSpace=True, translation=True)
         rp_a = maya.cmds.xform(target, query=True, rotatePivot=True)
         rp_b = maya.cmds.xform(transform, query=True, rotatePivot=True)
-        maya.cmds.xform(transform, worldSpace=True, translation=(pos[0] + rp_a[0] - rp_b[0], pos[1] + rp_a[1] - rp_b[1], pos[2] + rp_a[2] - rp_b[2]))
+        maya.cmds.xform(transform, worldSpace=True, translation=(
+        pos[0] + rp_a[0] - rp_b[0], pos[1] + rp_a[1] - rp_b[1], pos[2] + rp_a[2] - rp_b[2]))
 
 
 def get_position(point):
@@ -576,7 +577,8 @@ def get_position(point):
             except:
                 pass
         if not pos:
-            LOGGER.exception('Invalid point value supplied! Unable to determine type of point "{0}"!'.format(str(point)))
+            LOGGER.exception(
+                'Invalid point value supplied! Unable to determine type of point "{0}"!'.format(str(point)))
             return
     else:
         LOGGER.exception('Invalid point value supplied! Invalid argument type!')
@@ -623,19 +625,19 @@ def get_matrix(transform, world_space=True, time=None, as_list=False):
 
     # Get time
     if time is not None:
-        mat = maya.cmds.getAttr(transform+'.'+matrix_attr, t=time)
+        mat = maya.cmds.getAttr(transform + '.' + matrix_attr, t=time)
     else:
-        mat = maya.cmds.getAttr(transform+'.'+matrix_attr)
+        mat = maya.cmds.getAttr(transform + '.' + matrix_attr)
 
     if as_list:
         return mat
 
     # Build matrix
     xform_matrix = matrix.build_matrix(
-        translate=(mat[12],mat[13],mat[14]),
-        x_axis=(mat[0],mat[1],mat[2]),
-        y_axis=(mat[4],mat[5],mat[6]),
-        z_axis=(mat[8],mat[9],mat[10]))
+        translate=(mat[12], mat[13], mat[14]),
+        x_axis=(mat[0], mat[1], mat[2]),
+        y_axis=(mat[4], mat[5], mat[6]),
+        z_axis=(mat[8], mat[9], mat[10]))
 
     return xform_matrix
 
@@ -820,7 +822,8 @@ def match_rotate_scale_pivot_to_translation(target, source):
     """
 
     position = get_translation(transform_name=source, world_space=True)
-    maya.cmds.move(position[0], position[1], position[2], '{}.scalePivot'.format(target), '{}.rotatePivot'.format(target), a=True)
+    maya.cmds.move(position[0], position[1], position[2], '{}.scalePivot'.format(target),
+                   '{}.rotatePivot'.format(target), a=True)
 
 
 def match_rotate_pivot(target, source, world_space=False):
@@ -906,7 +909,8 @@ def create_group_in_plane(transform1, transform2, transform3):
 
     pole_group = maya.cmds.group(empty=True)
     match_translation_rotation(target=pole_group, source=transform1)
-    maya.cmds.aimConstraint(transform3, pole_group, offset=[0, 0, 0], weight=1, aimVector=[1, 0, 0], upVector=[0, 1, 0], worldUpType='object', worldUpObject=transform2)
+    maya.cmds.aimConstraint(transform3, pole_group, offset=[0, 0, 0], weight=1, aimVector=[1, 0, 0], upVector=[0, 1, 0],
+                            worldUpType='object', worldUpObject=transform2)
 
     pole_group_2 = maya.cmds.group(empty=True, n='pole_{}'.format(transform1))
     match_translation_rotation(target=pole_group_2, source=transform2)
@@ -939,7 +943,8 @@ def get_pole_vector(transform1, transform2, transform3, offset=1):
     return final_pos
 
 
-def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_missing=False, transforms=None, left_to_right=True):
+def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_missing=False, transforms=None,
+                     left_to_right=True):
     """
     Mirrors the position of all transforms that match the given search strings
     :param prefix:str, prefix to search for
@@ -1052,16 +1057,19 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
                     var = attribute.NumericAttribute('radius')
                     var.set_node(other)
                     var.set_value(radius)
-                if not maya.cmds.getAttr('{}.radius'.format(other), l=True):
+                if not maya.cmds.getAttr('{}.radius'.format(other), long=True):
                     maya.cmds.setAttr('{}.radius'.format(other), radius)
-                maya.cmds.move(new_xform[0]*-1, new_xform[1], new_xform[2], '{}.scalePivot'.format(other), '{}.rotatePivot'.format(other), a=True)
+                maya.cmds.move(
+                    new_xform[0] * -1, new_xform[1], new_xform[2],
+                    '{}.scalePivot'.format(other), '{}.rotatePivot'.format(other), a=True)
 
             # Mirror Transform
             if maya.cmds.nodeType(other) == 'transform':
-                pos = (new_xform[0]*-1, new_xform[1], new_xform[2])
+                pos = (new_xform[0] * -1, new_xform[1], new_xform[2])
                 maya.cmds.xform(other, ws=True, t=pos)
                 pivot = maya.cmds.xform(xform, query=True, ws=True, rp=True)
-                maya.cmds.move((pivot[0]*-1), pivot[1], pivot[2], '{}.scalePivot'.format(other), '{}.rotatePivot'.format(other), a=True)
+                maya.cmds.move((pivot[0] * -1), pivot[1], pivot[2], '{}.scalePivot'.format(other),
+                               '{}.rotatePivot'.format(other), a=True)
                 if maya.cmds.objExists('{}.localPosition'.format(xform)):
                     fix_locator_shape_position(xform)
                 if maya.cmds.objExists('{}.localPosition'.format(other)):
@@ -1227,7 +1235,7 @@ def parent_in_hierarchy(transform, parent):
     :return: bool
     """
 
-    long_xform = maya.cmds.ls(transform, l=True)
+    long_xform = maya.cmds.ls(transform, long=True)
     if not long_xform:
         return
 
@@ -1332,7 +1340,8 @@ def create_buffer_group(node_name, suffix='buffer', use_duplicate=False, copy_sc
             pass
 
     if use_duplicate:
-        buffer_grp = maya.cmds.duplicate(node_name, po=True)[0]      # TODO: Sometimes Maya does not duplicate with proper values
+        buffer_grp = maya.cmds.duplicate(node_name, po=True)[
+            0]  # TODO: Sometimes Maya does not duplicate with proper values
         attribute.remove_user_defined_attributes(buffer_grp)
         buffer_grp = maya.cmds.rename(buffer_grp, name_utils.find_unique_name(full_name))
     else:
@@ -1409,17 +1418,17 @@ def get_vector_axis_letter(vector):
     :return: str
     """
 
-    if vector == [1,0,0]:
+    if vector == [1, 0, 0]:
         return 'X'
-    if vector == [0,1,0]:
+    if vector == [0, 1, 0]:
         return 'Y'
-    if vector == [0,0,1]:
+    if vector == [0, 0, 1]:
         return 'Z'
-    if vector == [-1,0,0]:
+    if vector == [-1, 0, 0]:
         return '-X'
-    if vector == [0,-1,0]:
+    if vector == [0, -1, 0]:
         return '-Y'
-    if vector == [0,0,-1]:
+    if vector == [0, 0, -1]:
         return '-Z'
 
 
@@ -1434,8 +1443,8 @@ def get_axis_aimed_at_child(transform):
     if not children:
         return
 
-    all_axis = [[1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]]
-    aim_axis = [0,0,0]
+    all_axis = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+    aim_axis = [0, 0, 0]
     current_result = 0
 
     pos_1 = maya.cmds.xfomr(transform, q=True, ws=True, t=True)
@@ -1446,11 +1455,11 @@ def get_axis_aimed_at_child(transform):
         axis_vector = get_axis_vector(transform, axis_vector=axis)
         axis_vector = mathlib.vector_sub(axis_vector, pos_1)
         vector_1 = mathlib.Vector(axis_vector)
-        vector_2 = mathlib.Vector(pos2)
+        vector_2 = mathlib.Vector(pos_2)
         result = mathlib.get_dot_product(vector_1, vector_2)
         if result > current_result:
             aim_axis = axis
-            current_result = reuslt
+            current_result = result
 
     return aim_axis
 
@@ -1488,7 +1497,8 @@ def get_closest_transform(source_xform, targets):
 
 def get_middle_transform(transform_list):
     """
-    Given a list of transforms, find the middle index. If the list is even, then find the midpoint between the middle two indices
+    Given a list of transforms, find the middle index. If the list is even, then find the midpoint between the middle
+    two indices
     :param transform_list: list<str>, list of transforms in order. Transforms should make a hierarchy or a sequence,
     where the order of the list matches the order in space
     :return: list<x, y, z>, midpoint
@@ -1501,7 +1511,7 @@ def get_middle_transform(transform_list):
         return
 
     if (division + division) == count:
-        mid_point = mathlib.get_mid_point(transform_list[division-1], transform_list[division])
+        mid_point = mathlib.get_mid_point(transform_list[division - 1], transform_list[division])
     else:
         mid_point = maya.cmds.xform(transform_list[division], q=True, t=True, ws=True)
 

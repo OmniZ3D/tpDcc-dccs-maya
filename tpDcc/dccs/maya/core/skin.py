@@ -89,7 +89,8 @@ class ShowJointInfluence(object):
 
         for skin_cluster in connections:
             skin_cluster_set = None
-            tree_connections = maya.cmds.listConnections(skin_cluster, destination=True, source=False, plugs=False, connections=False)
+            tree_connections = maya.cmds.listConnections(
+                skin_cluster, destination=True, source=False, plugs=False, connections=False)
             for branch in tree_connections:
                 node_type = maya.cmds.nodeType(branch)
                 if node_type == 'objectSet':
@@ -97,14 +98,17 @@ class ShowJointInfluence(object):
                     break
 
             if skin_cluster_set <= 0:
-                LOGGER.warning('Wrapped joint "{}" with skinCluster "{}" has no valid SkinClusterSet'.format(self.joint, skin_cluster))
+                LOGGER.warning(
+                    'Wrapped joint "{}" with skinCluster "{}" has no valid SkinClusterSet'.format(
+                        self.joint, skin_cluster))
                 return
 
-            obj = maya.cmds.listConnections(skin_cluster_set, destination=True, source=False, plugs=False, connections=False)
+            obj = maya.cmds.listConnections(
+                skin_cluster_set, destination=True, source=False, plugs=False, connections=False)
             vertex_num = maya.cmds.polyEvaluate(obj, vertex=True)
             for vtx in range(vertex_num):
                 self._display_weighted_verts.step()
-                vtx_name =  '{0}.vtx[{1}]'.format(obj[0], str(vtx))
+                vtx_name = '{0}.vtx[{1}]'.format(obj[0], str(vtx))
                 weights = maya.cmds.skinPercent(skin_cluster, vtx_name, query=True, value=True)
                 influences = maya.cmds.skinPercent(skin_cluster, vtx_name, query=True, transform=None)
                 for i in range(len(influences)):
@@ -271,19 +275,24 @@ class StoreSkinWeight(object):
             add_nodes += [mesh_path_name]
             selection_list_iter.next()
 
-        add_nodes = [maya.cmds.listRelatives(node, p=True, f=True)[0] if maya.cmds.nodeType(node) == 'mesh' else node for node in add_nodes]
+        add_nodes = [maya.cmds.listRelatives(
+            node, p=True, f=True)[0] if maya.cmds.nodeType(node) == 'mesh' else node for node in add_nodes]
 
         if maya.cmds.selectMode(query=True, component=True):
             self._hilite_nodes = maya.cmds.ls(hilite=True, long=True)
-            self._hilite_nodes = mesh_utils.get_meshes_from_nodes(nodes=self._hilite_nodes, full_path=True, search_child_node=True)
-            add_node = mesh_utils.get_meshes_from_nodes(maya.cmds.ls(sl=True, l=True, tr=True), full_path=True, search_child_node=True)
+            self._hilite_nodes = mesh_utils.get_meshes_from_nodes(
+                nodes=self._hilite_nodes, full_path=True, search_child_node=True)
+            add_node = mesh_utils.get_meshes_from_nodes(
+                maya.cmds.ls(slong=True, long=True, tr=True), full_path=True, search_child_node=True)
             if add_node:
                 self._hilite_nodes += add_node
             if add_nodes:
                 self._hilite_nodes += add_nodes
         else:
-            self._hilite_nodes = maya.cmds.ls(sl=True ,l=True, tr=True) + maya.cmds.ls(hl=True, l=True, tr=True)
-            self._hilite_nodes = mesh_utils.get_meshes_from_nodes(nodes=self._hilite_nodes, full_path=True, search_child_node=True)
+            self._hilite_nodes = maya.cmds.ls(
+                slong=True, long=True, tr=True) + maya.cmds.ls(hlong=True, long=True, tr=True)
+            self._hilite_nodes = mesh_utils.get_meshes_from_nodes(
+                nodes=self._hilite_nodes, full_path=True, search_child_node=True)
             if add_nodes:
                 self._hilite_nodes += add_nodes
 
@@ -467,7 +476,7 @@ class StoreSkinWeight(object):
         :return:
         """
 
-        return [[weights[i+j*shape] for i in range(shape)] for j in range(int(len(weights)/shape))]
+        return [[weights[i + j * shape] for i in range(shape)] for j in range(int(len(weights) / shape))]
 
 
 def check_skin(skin_cluster):
@@ -568,7 +577,8 @@ def average_vertex(selection, use_distance):
             temp_vertex_weights = list()
             for pnt in point_list:
                 for jnt in range(influence_size):
-                    point_weights = maya.cmds.skinPercent(skin_cluster_name, pnt, transform=list_joint_influences[jnt], query=True, value=True)
+                    point_weights = maya.cmds.skinPercent(
+                        skin_cluster_name, pnt, transform=list_joint_influences[jnt], query=True, value=True)
                     if point_weights < 0.000001:
                         continue
                     temp_vertex_joints.append(list_joint_influences[jnt])
@@ -622,11 +632,11 @@ def apply_smooth_bind(geo=None, show_options=True):
     """
 
     if not geo:
-        geo = maya.cmds.ls(sl=True)
+        geo = maya.cmds.ls(slong=True)
     if not geo:
         return
 
     if show_options:
         maya.cmds.SmoothBindSkinOptions()
     else:
-        print('Applying skskskssk')
+        print('Applying smooth skin')

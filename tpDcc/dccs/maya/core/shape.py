@@ -262,16 +262,16 @@ def rename(geo):
         shape_type = maya.cmds.objectType(shapes[i])
 
         # Rename temporary shapes so hash index (#) is accurate
-        shapes[i] = maya.cmds.rename(shapes[i], geo+'ShapeTMP')
+        shapes[i] = maya.cmds.rename(shapes[i], geo + 'ShapeTMP')
 
         if shape_type == 'nurbsCurve':
-            shapes[i] = maya.cmds.rename(shapes[i], geo+'CrvShape#')
+            shapes[i] = maya.cmds.rename(shapes[i], geo + 'CrvShape#')
         elif shape_type == 'nurbsSurface':
-            shapes[i] = maya.cmds.rename(shapes[i], geo+'SrfShape#')
+            shapes[i] = maya.cmds.rename(shapes[i], geo + 'SrfShape#')
         elif shape_type == 'mesh':
-            shapes[i] = maya.cmds.rename(shapes[i], geo+'MeshShape#')
+            shapes[i] = maya.cmds.rename(shapes[i], geo + 'MeshShape#')
         else:
-            shapes[i] = maya.cmds.rename(shapes[i], geo+'Shape#')
+            shapes[i] = maya.cmds.rename(shapes[i], geo + 'Shape#')
 
     return shapes
 
@@ -343,7 +343,7 @@ def shape_input_source(shape):
     # Determine shape input plug and shape input source plug
     shape_in_attr = shape_input_attr(shape)
     shape_in_plug = ''
-    shape_in_source = maya.cmds.listConnections(shape+'.'+shape_in_attr, source=True, destination=False, plugs=True)
+    shape_in_source = maya.cmds.listConnections(shape + '.' + shape_in_attr, source=True, destination=False, plugs=True)
     if shape_in_source:
         shape_in_plug = shape_in_source[0]
 

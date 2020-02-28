@@ -294,7 +294,9 @@ def add_button_to_current_shelf(enable=True,
                 doc_tag = maya.cmds.control(shelf_btn, query=True, docTag=True)
                 if doc_tag == name:
                     return
-    maya.cmds.shelfButton(parent=gui.get_current_shelf(), enable=True, width=34, height=34, manage=True, visible=True, annotation=annotation, label=label, image1=image1, style=style, command=command)
+    maya.cmds.shelfButton(
+        parent=gui.get_current_shelf(), enable=True, width=34, height=34, manage=True,
+        visible=True, annotation=annotation, label=label, image1=image1, style=style, command=command)
 
 
 def set_tool(name):
@@ -304,9 +306,9 @@ def set_tool(name):
     """
 
     context_lookup = {
-        'move' : "$gMove",
-        'rotate' : "$gRotate",
-        'scale' : "$gSacle"
+        'move': "$gMove",
+        'rotate': "$gRotate",
+        'scale': "$gSacle"
     }
     tool_context = get_global_variable(context_lookup[name])
     maya.cmds.setToolTo(tool_context)
@@ -415,7 +417,7 @@ def clean_student_line(filename=None):
 
     with open(filename, 'r') as f:
         lines = f.readlines()
-    step = len(lines)/4
+    step = len(lines) / 4
 
     no_student_filename = filename[:-3] + '.no_student.ma'
     with open(no_student_filename, 'w') as f:
@@ -428,7 +430,7 @@ def clean_student_line(filename=None):
                     continue
             f.write(line)
             if step_count > step:
-                LOGGER.debug('Updating File: {}% ...'.format(100/(len(lines)/step_count)))
+                LOGGER.debug('Updating File: {}% ...'.format(100 / (len(lines)/step_count)))
                 step += step
 
     if changed:
@@ -467,6 +469,7 @@ def get_project_rule(rule):
     workspace = maya.cmds.workspace(query=True, rootDirectory=True)
     workspace_folder = maya.cmds.workspace(fileRuleEntry=rule)
     if not workspace_folder:
-        LOGGER.warning('File Rule Entry "{}" has no value, please check if the rule name is typed correctly!'.format(rule))
+        LOGGER.warning(
+            'File Rule Entry "{}" has no value, please check if the rule name is typed correctly!'.format(rule))
 
     return os.path.join(workspace, workspace_folder)

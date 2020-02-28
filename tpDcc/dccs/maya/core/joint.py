@@ -239,7 +239,8 @@ class OrientJointAttributes(object):
                     cls.add_orient_attributes(obj)
                 else:
                     if relatives:
-                        cls.orient_with_attributes(objects_to_orient=relatives, force_orient_attributes=force_orient_attributes)
+                        cls.orient_with_attributes(
+                            objects_to_orient=relatives, force_orient_attributes=force_orient_attributes)
                         oriented = True
                     continue
 
@@ -247,7 +248,8 @@ class OrientJointAttributes(object):
                 orient = OrientJoint(joint_name=obj)
                 orient.run()
                 if relatives:
-                    cls.orient_with_attributes(objects_to_orient=relatives, force_orient_attributes=force_orient_attributes)
+                    cls.orient_with_attributes(
+                        objects_to_orient=relatives, force_orient_attributes=force_orient_attributes)
                     oriented = True
 
         return oriented
@@ -279,7 +281,8 @@ class OrientJointAttributes(object):
 
     def set_values(self, value_dict):
         """
-        Set joint orient attributes by the values stored in the given dictionary (get_values() function generates that dict)
+        Set joint orient attributes by the values stored in the given dictionary (get_values()
+        function generates that dict)
         :param value_dict: dict
         """
 
@@ -865,7 +868,7 @@ def duplicate_joint(joint, name=None):
 
     check_joint(joint)
     if not name:
-        name = joint+'_dup'
+        name = joint + '_dup'
     if maya.cmds.objExists(str(name)):
         raise Exception('Joint "{}" already exists!'.format(name))
 
@@ -875,7 +878,7 @@ def duplicate_joint(joint, name=None):
 
     # Unlock transforms
     for attr in ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz', 'v', 'radius']:
-        maya.cmds.setAttr(dup_joint+'.'+attr, l=False, cb=True)
+        maya.cmds.setAttr(dup_joint + '.' + attr, long=False, cb=True)
 
     return dup_joint
 
@@ -915,10 +918,10 @@ def duplicate_chain(start_jnt, end_jnt=None, parent=None, skip_jnt=None, prefix=
 
         name = None
         if prefix:
-            jnt_index = strings.get_alpha(i, capital=True)
-            if i == (len(joints)-1):
+            jnt_index = strings.get_alpha(i, capitalong=True)
+            if i == (len(joints) - 1):
                 jnt_index = 'End'
-            name = prefix+jnt_index+'_jnt'
+            name = prefix + jnt_index + '_jnt'
 
         jnt = duplicate_joint(joint=joints[i], name=name)
 
@@ -937,8 +940,8 @@ def duplicate_chain(start_jnt, end_jnt=None, parent=None, skip_jnt=None, prefix=
         else:
             try:
                 maya.cmds.parent(jnt, dup_chain[-1])
-                if not maya.cmds.isConnected(dup_chain[-1]+'.scale', jnt+'.inverseScale'):
-                    maya.cmds.connectAttr(dup_chain[-1]+'.scale', jnt+'.inverseScale', f=True)
+                if not maya.cmds.isConnected(dup_chain[-1]+'.scale', jnt + '.inverseScale'):
+                    maya.cmds.connectAttr(dup_chain[-1] + '.scale', jnt + '.inverseScale', f=True)
             except Exception as e:
                 raise Exception('Error while duplicating joint chain! - {}'.format(str(e)))
 
@@ -977,22 +980,22 @@ def joint_buffer(joint, index_str=0):
 
         # Get joint prefix and create joint buffer group
         prefix = strings.strip_suffix(joint)
-        grp = maya.cmds.duplicate(joint, po=True, n=prefix+'Buffer'+index_str+'_jnt')[0]
+        grp = maya.cmds.duplicate(joint, po=True, n=prefix + 'Buffer'+index_str+'_jnt')[0]
         maya.cmds.parent(joint, grp)
 
-        if maya.cmds.getAttr(grp+'.radius', se=True):
+        if maya.cmds.getAttr(grp + '.radius', se=True):
             try:
-                maya.cmds.setAttr(grp+'.radius', 0)
+                maya.cmds.setAttr(grp + '.radius', 0)
             except Exception:
                 pass
 
         # Connect inverse scale
-        inverse_scale_cnt = maya.cmds.listConnections(joint+'.inverseScale', s=True, d=False)
+        inverse_scale_cnt = maya.cmds.listConnections(joint + '.inverseScale', s=True, d=False)
         if not inverse_scale_cnt:
             inverse_scale_cnt = list()
         if not inverse_scale_cnt.count(grp):
             try:
-                maya.cmds.connectAttr(grp+'.scale', joint+'.inverseScale', f=True)
+                maya.cmds.connectAttr(grp + '.scale', joint + '.inverseScale', f=True)
             except Exception:
                 pass
 
@@ -1000,9 +1003,9 @@ def joint_buffer(joint, index_str=0):
         user_attrs = maya.cmds.listAttr(grp, ud=True)
         if user_attrs:
             for attr in user_attrs:
-                if maya.cmds.objExists(grp+'.'+attr):
-                    maya.cmds.setAttr(grp+'.'+attr, l=False)
-                    maya.cmds.deleteAttr(grp+'.'+attr)
+                if maya.cmds.objExists(grp + '.' + attr):
+                    maya.cmds.setAttr(grp + '.' + attr, long=False)
+                    maya.cmds.deleteAttr(grp + '.' + attr)
 
         node.display_override(obj=joint, override_enabled=True, override_lod=0)
         node.display_override(obj=grp, override_enabled=True, override_display=2, override_lod=1)
@@ -1050,7 +1053,7 @@ def create_from_point_list(point_list, orient=False, side='c', part='chain', suf
     :return: list<str>, list of new created joints
     """
 
-    maya.cmds.select(cl=True)
+    maya.cmds.select(clong=True)
 
     joint_list = list()
     for i in range(len(point_list)):
@@ -1085,8 +1088,10 @@ def start_joint_tool():
 def set_joint_local_rotation_axis_visibility(joints=None, bool_value=None):
     """
     Sets the joint visibility of the given node or given nodes
-    :param joints: list<str>, list of joints to set axis visibility of. If None, given, all joints of the scene will be used
-    :param bool_value: bool, value of the local rotation axis visibility. If None given, current joint visibility will be toggled
+    :param joints: list<str>, list of joints to set axis visibility of. If None, given, all joints of the scene
+        will be used
+    :param bool_value: bool, value of the local rotation axis visibility. If None given, current joint visibility
+        will be toggled
     :return:
     """
 

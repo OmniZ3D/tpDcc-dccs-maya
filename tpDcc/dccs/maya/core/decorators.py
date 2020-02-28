@@ -198,11 +198,11 @@ def TryExcept(fn):
             print("=================== HELP ===================")
             print(fn.__doc__, 'n')
             print("=================== ERROR ===================")
-            maya.cmds.inViewMessage\
-                (amg='<span style=\"color:#F05A5'
-                     'A;\">Error: </span>' + str(e) + ' <span style=\"color:#FAA300;\">Look at the script '
-                                                      'editor for more info about the error.</span>',
-                 pos='topCenter', fade=True, fst=4000, dk=True)
+            maya.cmds.inViewMessage(
+                amg='<span style=\"color:#F05A5A;'
+                    '\">Error: </span>' + str(e) + ' <span style=\"color:#FAA300;\">Look at the script '
+                                                   'editor for more info about the error.</span>',
+                pos='topCenter', fade=True, fst=4000, dk=True)
             raise Exception(e, tb)
 
     return wrapper

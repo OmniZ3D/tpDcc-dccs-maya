@@ -109,7 +109,7 @@ def playblast(filename, model_panel, start_frame, end_frame, width, height, step
     if start_frame == end_frame and os.path.exists(filename):
         os.remove(filename)
 
-    frame = [i for i in range(start_frame, end_frame+1, step)]
+    frame = [i for i in range(start_frame, end_frame + 1, step)]
 
     model_panel = model_panel or gui.current_model_panel()
     if maya.cmds.modelPanel(model_panel, query=True, exists=True):

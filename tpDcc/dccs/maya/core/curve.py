@@ -94,7 +94,7 @@ def create_from_point_list(point_list, degree=3, prefix=''):
     cv_list = [transform.get_position(i) for i in point_list]
 
     crv = maya.cmds.curve(p=cv_list, k=range(len(cv_list)), d=1)
-    crv = maya.cmds.rename(crv, prefix+'_crv')
+    crv = maya.cmds.rename(crv, prefix + '_crv')
 
     if degree > 1:
         crv = maya.cmds.rebuildCurve(crv, d=degree, kcp=True, kr=0, ch=False, rpo=True)[0]
@@ -123,7 +123,9 @@ def transforms_to_curve(transforms, spans=None, description='from_transforms'):
 
     curve = maya.cmds.curve(p=transform_positions, degree=1)
     if spans:
-        maya.cmds.rebuildCurve(curve, ch=False, rpo=True, rt=0, end=1, kr=False, kcp=False, kep=True, kt=False, spans=spans, degree=3, tol=0.01)
+        maya.cmds.rebuildCurve(
+            curve, ch=False, rpo=True, rt=0, end=1, kr=False, kcp=False, kep=True,
+            kt=False, spans=spans, degree=3, tol=0.01)
     curve = maya.cmds.rename(curve, name_utils.find_unique_name('curve_{}'.format(description)))
     maya.cmds.setAttr('{}.inheritsTransform'.format(curve), False)
 

@@ -720,7 +720,7 @@ class AttributeValidator(object):
                 else:
                     LOGGER.warning(
                         'Attribute Validator | Maya Shape | invalid type: {0} | {1} | shape: {2}'.format(
-                            maya_type,types, s))
+                            maya_type, types, s))
 
         if not result:
             return False
@@ -1056,7 +1056,7 @@ class Connection(object):
                 lock_state = maya.cmds.getAttr(self.connections[i + 1], long=True)
                 if lock_state:
                     maya.cmds.setAttr(self.connections[i + 1], long=False)
-                    maya.cmds.disconnectAttr(self.connections[i], self.connections[i+1])
+                    maya.cmds.disconnectAttr(self.connections[i], self.connections[i + 1])
                 if lock_state:
                     maya.cmds.setAttr(self.connections[i + 1], long=True)
 
@@ -1095,7 +1095,7 @@ class Connection(object):
         for i in range(0, len(outputs), 2):
             split = outputs[i].split('.')
             output_attr = string.join(split[1:], '.')
-            split_output = outputs[i+1].split('.')
+            split_output = outputs[i + 1].split('.')
             node = split_output[0]
             node_attr = string.join(split_output[1:], '.')
             output_values.append([output_attr, node, node_attr])
@@ -1860,7 +1860,7 @@ class RemapAttributesToAttribute(object):
             input_max = i + 1
             if input_min < 0:
                 input_min = 0
-            if input_max > (length-1):
+            if input_max > (length - 1):
                 input_max = length - 1
 
             input_node = get_attribute_input(attr)
@@ -1916,31 +1916,31 @@ class RemapAttributesToAttribute(object):
             maya.cmds.connectAttr(self.node_attr, '{}.inputValue'.format(remap))
 
     def _create_attribute(self):
-            """
-            Internal function sued to create proper variable
-            """
+        """
+        Internal function sued to create proper variable
+        """
 
-            attr_count = len(self.attrs)
-            if attr_count is None:
-                attr_count = 1
-            if attr_count == 1:
-                attr_count += 1
+        attr_count = len(self.attrs)
+        if attr_count is None:
+            attr_count = 1
+        if attr_count == 1:
+            attr_count += 1
 
-            if maya.cmds.objExists(self.node_attr):
-                var = NumericAttribute(self.attr)
-                var.set_node(self.node)
-                var.set_min_value(0)
-                var.set_max_value(attr_count-1)
-                var.create()
-                return
-
+        if maya.cmds.objExists(self.node_attr):
             var = NumericAttribute(self.attr)
-            var.set_variable_type(AttributeTypes.Double)
             var.set_node(self.node)
             var.set_min_value(0)
-            var.set_max_value(attr_count-1)
-            var.set_keyable(self.keyable)
+            var.set_max_value(attr_count - 1)
             var.create()
+            return
+
+        var = NumericAttribute(self.attr)
+        var.set_variable_type(AttributeTypes.Double)
+        var.set_node(self.node)
+        var.set_min_value(0)
+        var.set_max_value(attr_count - 1)
+        var.set_keyable(self.keyable)
+        var.create()
 
 
 class TransferAttributes(object):
@@ -1993,7 +1993,7 @@ class TransferConnections(object):
 
         for i in range(len(outputs), 2):
             out_attr = outputs[i]
-            in_attr = outputs[i+1]
+            in_attr = outputs[i + 1]
 
             if not maya.cmds.getAttr(in_attr, k=True):
                 continue
@@ -2224,7 +2224,7 @@ def validate_attribute_data_type(value):
     :return: str, type string
     """
 
-    python_types = [str,       unicode,   bool,   int,   float,   dict,      list,      tuple]
+    python_types = [str, unicode, bool, int, float, dict, list, tuple]
     valid_types = ['string', 'unicode', 'bool', 'int', 'float', 'complex', 'complex', 'complex']
     for py_type, valid_type in zip(python_types, valid_types):
         if issubclass(type(value), py_type):
@@ -2476,7 +2476,8 @@ def get_attribute_input(node_and_attribute, node_only=False):
     """
 
     if maya.cmds.objExists(node_and_attribute):
-        connections = maya.cmds.listConnections(node_and_attribute, plugs=True, connections=False, destination=False, source=True, skipConversionNodes=True)
+        connections = maya.cmds.listConnections(
+            node_and_attribute, plugs=True, connections=False, destination=False, source=True, skipConversionNodes=True)
         if connections:
             if not node_only:
                 return connections[0]
@@ -2632,7 +2633,6 @@ def multi_index_list(attr):
         ex_index_list = maya.OpenMaya.MIntArray()
         attr_mplug.getExistingArrayAttributeIndices(ex_index_list)
 
-
     return list(ex_index_list)
 
 
@@ -2707,7 +2707,7 @@ def get_indices(attribute):
         return indices
 
     for multi_attr in multi_attrs:
-        index = re.findall('\d+', multi_attr)
+        index = re.findall(r'\d+', multi_attr)
         if index:
             index = int(index[-1])
             indices[index] = None
@@ -2731,7 +2731,7 @@ def get_slots(attribute):
         return found_slots
 
     for slot in slots:
-        index = re.findall('\d+', slot)
+        index = re.findall(r'\d+', slot)
         if index:
             found_slots.append(index[-1])
 
@@ -2777,7 +2777,7 @@ def default(attr):
 
     # Get object from attribute
     obj = maya.cmds.ls(attr, o=True)[0]
-    at = attr.replace(obj+'.', '')
+    at = attr.replace(obj + '.', '')
 
     # Build default attribute list
     xform_attr_list = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ']
@@ -2813,7 +2813,7 @@ def distribute_attr_value(target_list, target_attr, range_start=0.0, range_end=1
     for i in range(len(target_list)):
         if not maya.cmds.objExists(target_list[i]):
             raise Exception('Object "{}" does not exists!'.format(target_list[i]))
-        if not maya.cmds.objExists(target_list[i]+'.'+target_attr):
+        if not maya.cmds.objExists(target_list[i] + '.' + target_attr):
             raise Exception('Object "{}" has no ".{}" attribute!'.format(target_list[i], target_attr))
 
     value_list = mathutils.distribute_value(
@@ -3291,7 +3291,7 @@ def repair_message_to_reference_target(obj, attr):
     :return: bool
     """
 
-    target_attr = '{0}.{1}'.format(obj ,attr)
+    target_attr = '{0}.{1}'.format(obj, attr)
     assert maya.cmds.attributeQuery(attr, node=obj, msg=True), '"{}" is not a message attribute!'.format(target_attr)
 
     obj_test = maya.cmds.listConnections(target_attr, p=1)
@@ -3311,7 +3311,7 @@ def repair_message_to_reference_target(obj, attr):
 
                 if len(message_connections_out) > 1:
                     LOGGER.warning(
-                        "Found more than one possible connection. Candidates are:'%s'"%"','".join(
+                        "Found more than one possible connection. Candidates are:'%s'" % "','".join(
                             message_connections_out))
                     return False
                 return match_obj
@@ -3689,8 +3689,8 @@ def transfer_output_connections(source_node, target_node):
 
     for i in range(len(outs), 2):
         new_attr = outs[i].replace(source_node, target_node)
-        maya.cmds.disconnectAttr(outs[i], outs[i+1])
-        maya.cmds.connectAttr(new_attr, outs[i+1], f=True)
+        maya.cmds.disconnectAttr(outs[i], outs[i + 1])
+        maya.cmds.connectAttr(new_attr, outs[i + 1], f=True)
 
 
 def hide_attributes(node, attributes):

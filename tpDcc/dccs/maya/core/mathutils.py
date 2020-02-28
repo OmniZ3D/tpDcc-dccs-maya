@@ -167,7 +167,7 @@ def smooth_step(value, range_start=0.0, range_end=1.0, smooth=1.0):
 
     # Get smooth value
     smooth_val = pow(normalized_val, 2) * (3 - (normalized_val * 2))
-    smooth_val = normalized_val + ((smooth_val-normalized_val) * smooth)
+    smooth_val = normalized_val + ((smooth_val - normalized_val) * smooth)
     value = range_start + (range_val * smooth_val)
 
     return value
@@ -265,7 +265,7 @@ def inverse_distance_weight_3d(point_array, sample_point):
             dst = 0.00001
 
         dst_array.append(dst)
-        total_inv_dst += 1.0/dst
+        total_inv_dst += 1.0 / dst
 
     # Normalize value weights
     weight_array = [(1.0 / d) / total_inv_dst for d in dst_array]

@@ -49,16 +49,18 @@ def is_camera(node):
 def get_all_cameras(exclude_standard_cameras=True, return_transforms=True, full_path=True):
     """
     Returns all cameras in current scene
-    :param exclude_standard_cameras: bool, Whether standard cameras (persp, top, front, and side) cameras should be excluded or not
+    :param exclude_standard_cameras: bool, Whether standard cameras (persp, top, front, and side) cameras
+        should be excluded or not
     :param return_transforms: bool, Whether tor return camera shapes or transform nodes
     :param full_path: bool, Whether tor return full path to camera nodes or short ones
     :return: list(str)
     """
 
     if exclude_standard_cameras:
-        cameras = [c for c in maya.cmds.ls(type='camera', l=full_path) if not maya.cmds.camera(c, query=True, sc=True)]
+        cameras = [c for c in maya.cmds.ls(
+            type='camera', long=full_path) if not maya.cmds.camera(c, query=True, sc=True)]
     else:
-        cameras = maya.cmds.ls(type='camera', l=full_path) or list()
+        cameras = maya.cmds.ls(type='camera', long=full_path) or list()
 
     if return_transforms:
         return [maya.cmds.listRelatives(c, p=True, fullPath=full_path)[0] for c in cameras]
