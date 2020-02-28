@@ -176,8 +176,8 @@ def init_dcc(do_reload=False):
     register.register_class('resource', tpMayaLibResource)
     register.register_class('logger', logger)
 
-    maya_importer.import_modules()
-    maya_importer.import_packages(only_packages=True)
+    maya_importer.import_modules(skip_modules=['tpDcc.dccs.maya.ui'])
+    maya_importer.import_packages(only_packages=True, skip_modules=['tpDcc.dccs.maya.ui'])
     if do_reload:
         maya_importer.reload_all()
 
@@ -189,12 +189,10 @@ def init_ui(do_reload=False):
     maya_importer.update_paths()
     use_new_api()
 
-    # tpmayalib_importer.import_modules(skip_modules=['tpMayaLib.core', 'tpMayaLib.data',
-    # 'tpMayaLib.managers', 'tpMayaLib.meta'])
-    # tpmayalib_importer.import_packages(only_packages=True, skip_modules=['tpMayaLib.core',
-    # 'tpMayaLib.data', 'tpMayaLib.managers', 'tpMayaLib.meta'])
-    maya_importer.import_modules()
-    maya_importer.import_packages(only_packages=True)
+    maya_importer.import_modules(skip_modules=[
+        'tpDcc.dccs.maya.core', 'tpDcc.dccs.maya.data', 'tpDcc.dccs.maya.managers', 'tpDcc.dccs.maya.meta'])
+    maya_importer.import_packages(only_packages=True, skip_modules=[
+        'tpDcc.dccs.maya.core', 'tpDcc.dccs.maya.data', 'tpDcc.dccs.maya.managers', 'tpDcc.dccs.maya.meta'])
     if do_reload:
         maya_importer.reload_all()
 
