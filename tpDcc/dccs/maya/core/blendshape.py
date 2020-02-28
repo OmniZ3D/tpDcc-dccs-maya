@@ -182,7 +182,7 @@ def get_target_geo(blend_shape, target, base_geo=''):
     # TODO: Instead, we should check all existing multi indexes
     weight_index = 6000
 
-    target_geo_attr = blend_shape+'.inputTarget['+str(geo_index) + '].inputTargetGroup[' + str(
+    target_geo_attr = blend_shape + '.inputTarget[' + str(geo_index) + '].inputTargetGroup[' + str(
         target_index) + '].inputTargetItem[' + str(weight_index) + '].inputGeomTarget'
     target_geo_cnt = maya.cmds.listConnections(target_geo_attr, s=True, d=False)
     if not target_geo_cnt:
@@ -257,7 +257,7 @@ def get_target_name(blend_shape, target_geo):
 
     # Get target index and alias
     target_index = int(target_cnt_plug.split('.')[2].split('[')[1].split(']')[0])
-    target_alias = maya.cmds.aliasAttr(blend_shape+'.weight[' + str(target_index) + ']', query=True)
+    target_alias = maya.cmds.aliasAttr(blend_shape + '.weight[' + str(target_index) + ']', query=True)
 
     return target_alias
 
@@ -296,7 +296,7 @@ def add_empty_target(blend_shape, target_alias='', input_target_items=None):
 
     check_blendshape(blend_shape)
     next_index = next_available_target_index(blend_shape)
-    out_geo = maya.cmds.getAttr(blend_shape+'.outputGeometry', multiIndices=True)
+    out_geo = maya.cmds.getAttr(blend_shape + '.outputGeometry', multiIndices=True)
     for i in out_geo:
         maya.cmds.setAttr(
             '{}.inputTarget[{}].inputTargetGroup[{}].inputTargetItem[6000].inputPointsTarget'.format(
@@ -310,7 +310,7 @@ def add_empty_target(blend_shape, target_alias='', input_target_items=None):
     maya.cmds.aliasAttr(target_name, '{}.w[{}]'.format(blend_shape, next_index))
     maya.cmds.refresh()
 
-    return blend_shape+'.'+target_name
+    return blend_shape + '.' + target_name
 
 
 def add_target(blend_shape, target, base='', target_index=-1, target_alias='', target_weight=0.0, topology_check=True):
@@ -342,13 +342,13 @@ def add_target(blend_shape, target, base='', target_index=-1, target_alias='', t
     target_name = get_target_name(blend_shape, target)
     if target_alias:
         target_index = get_target_index(blend_shape, target_name)
-        maya.cmds.aliasAttr(target_alias, blend_shape+'.weight['+str(target_index)+']')
+        maya.cmds.aliasAttr(target_alias, blend_shape + '.weight[' + str(target_index) + ']')
         target_name = target_alias
 
     if target_weight:
-        maya.cmds.setAttr(blend_shape+'.'+target_name, target_weight)
+        maya.cmds.setAttr(blend_shape + '.' + target_name, target_weight)
 
-    return blend_shape+'.'+target_name
+    return blend_shape + '.' + target_name
 
 
 def create(base_geo, target_geo=None, origin='local', deform_order=None, prefix=None):
@@ -418,7 +418,7 @@ def add_target_in_between(blend_shape, target_geo, target_name, base='', target_
     target_index = get_target_index(blend_shape, target_name)
     maya.cmds.blendShape(blend_shape, e=True, t=(base, target_index, target_geo, target_weight))
 
-    return blend_shape+'.'+target_name
+    return blend_shape + '.' + target_name
 
 
 def get_target_weights(blend_shape, target, geometry=''):
@@ -433,25 +433,25 @@ def get_target_weights(blend_shape, target, geometry=''):
     from tpDcc.dccs.maya.core import deformer
 
     check_blendshape(blend_shape)
-    if not maya.cmds.objExists(blend_shape+'.'+target):
+    if not maya.cmds.objExists(blend_shape + '.' + target):
         raise Exception('BlendShape "{}" has no "{}" target attribute!'.format(blend_shape, target))
     if geometry and not maya.cmds.objExists(geometry):
         raise Exception('Object "{}" does not exists!'.format(geometry))
 
     alias_list = maya.cmds.aliasAttr(blend_shape, query=True)
-    alias_target = alias_list[(alias_list.index(target)+1)]
+    alias_target = alias_list[(alias_list.index(target) + 1)]
     target_index = int(alias_target.split('[')[-1].split(']')[0])
 
     geo_index = 0
     if geometry:
         geo_index = deformer.get_geo_index(geometry, blend_shape)
 
-    wt = maya.cmds.getAttr(blend_shape+'.it['+str(geo_index)+'].itg['+str(target_index)+'].tw')[0]
+    wt = maya.cmds.getAttr(blend_shape + '.it[' + str(geo_index) + '].itg[' + str(target_index) + '].tw')[0]
 
     return list(wt)
 
 
-def set_target_weights(blend_shape, target ,wt, geometry=''):
+def set_target_weights(blend_shape, target, wt, geometry=''):
     """
     Set per vertex target weights for the given blendshape target
     :param blend_shape: str, name of blendshape to set target weights for
@@ -463,7 +463,7 @@ def set_target_weights(blend_shape, target ,wt, geometry=''):
     from tpDcc.dccs.maya.core import deformer, component
 
     check_blendshape(blend_shape)
-    if not maya.cmds.objExists(blend_shape+'.'+target):
+    if not maya.cmds.objExists(blend_shape + '.' + target):
         raise Exception('BlendShape "{}" has no "{}" target attribute!'.format(blend_shape, target))
     if geometry and not maya.cmds.objExists(geometry):
         raise Exception('Object "{}" does not exists!'.format(geometry))
@@ -478,7 +478,9 @@ def set_target_weights(blend_shape, target ,wt, geometry=''):
 
     comp_count = component.get_component_count(geometry)
 
-    maya.cmds.setAttr(blend_shape+'.it['+str(geo_index)+'].itg['+str(target_index)+'].tw[0:'+str(comp_count-1)+']', *wt)
+    maya.cmds.setAttr(
+        blend_shape + '.it[' + str(geo_index) + '].itg[' + str(target_index) + '].tw[0:' + str(comp_count - 1) + ']',
+        *wt)
 
 
 def connect_to_target(blend_shape, target_geo, target_name, base_geo, weight=1.0, force=False):
@@ -512,9 +514,9 @@ def connect_to_target(blend_shape, target_geo, target_name, base_geo, weight=1.0
             geo_shape = target_geo
             geo_type = 'none'
 
-        #Get geometry type output attribute
-        geo_dict = {'mesh':'.worldMesh[0]','nurbsSurface':'.worldSpace[0]','nurbsCurve':'.worldSpace[0]'}
-        if geo_dict.has_key(geo_type):
+        # Get geometry type output attribute
+        geo_dict = {'mesh': '.worldMesh[0]', 'nurbsSurface': '.worldSpace[0]', 'nurbsCurve': '.worldSpace[0]'}
+        if geo_type in geo_dict:
             geo_attr = geo_dict[geo_type]
         else:
             geo_attr = ''
@@ -547,7 +549,7 @@ def rename_target(blend_shape, target, new_name):
     if not has_target(blend_shape, target):
         raise exceptions.BlendShapeTargetException(blend_shape, target)
 
-    maya.cmds.aliasAttr(new_name, blend_shape+'.'+target)
+    maya.cmds.aliasAttr(new_name, blend_shape + '.' + target)
 
     return new_name
 
@@ -570,9 +572,9 @@ def remove_target(blend_shape, target, base_geo):
         target_geo = target_geo[0]
 
     if not target_geo:
-        maya.cmds.setAttr(blend_shape+'.envelope', 0.0)
+        maya.cmds.setAttr(blend_shape + '.envelope', 0.0)
         target_geo = maya.cmds.duplicate(base_geo)[0]
-        maya.cmds.setAttr(blend_shape+'.envelope', 1.0)
+        maya.cmds.setAttr(blend_shape + '.envelope', 1.0)
         connect_to_target(blend_shape, target_geo, target, base_geo, 1.0, force=True)
 
     maya.cmds.blendShape(blend_shape, e=True, rm=True, t=[base_geo, target_index, target_geo, 1.0])
@@ -591,7 +593,7 @@ def remove_unconnected_targets(blend_shape, base):
     target_list = get_target_list(blend_shape)
     deleted_target_list = list()
     for target in target_list:
-        target_cnt = maya.cmds.listConnections(blend_shape+'.'+target, s=True, d=False)
+        target_cnt = maya.cmds.listConnections(blend_shape + '.' + target, s=True, d=False)
         if not target_cnt:
             try:
                 remove_target(blend_shape, target, base)

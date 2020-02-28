@@ -430,7 +430,7 @@ def clean_student_line(filename=None):
                     continue
             f.write(line)
             if step_count > step:
-                LOGGER.debug('Updating File: {}% ...'.format(100 / (len(lines)/step_count)))
+                LOGGER.debug('Updating File: {}% ...'.format(100 / (len(lines) / step_count)))
                 step += step
 
     if changed:

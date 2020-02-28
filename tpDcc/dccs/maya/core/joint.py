@@ -11,7 +11,8 @@ import logging
 
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.python import strings, python
-from tpDcc.dccs.maya.core import exceptions, decorators, mathutils, scene, attribute, transform, node, transform as xform_utils, constraint as cns_utils
+from tpDcc.dccs.maya.core import exceptions, decorators, mathutils, scene, attribute, transform, node
+from tpDcc.dccs.maya.core import transform as xform_utils, constraint as cns_utils
 
 LOGGER = logging.getLogger()
 
@@ -109,6 +110,7 @@ class AttachJoints(object):
 
     def set_attach_type(self, attach_type):
         self._attach_type = attach_type
+
     # endregion
 
     # region Private Functions
@@ -940,7 +942,7 @@ def duplicate_chain(start_jnt, end_jnt=None, parent=None, skip_jnt=None, prefix=
         else:
             try:
                 maya.cmds.parent(jnt, dup_chain[-1])
-                if not maya.cmds.isConnected(dup_chain[-1]+'.scale', jnt + '.inverseScale'):
+                if not maya.cmds.isConnected(dup_chain[-1] + '.scale', jnt + '.inverseScale'):
                     maya.cmds.connectAttr(dup_chain[-1] + '.scale', jnt + '.inverseScale', f=True)
             except Exception as e:
                 raise Exception('Error while duplicating joint chain! - {}'.format(str(e)))
@@ -980,7 +982,7 @@ def joint_buffer(joint, index_str=0):
 
         # Get joint prefix and create joint buffer group
         prefix = strings.strip_suffix(joint)
-        grp = maya.cmds.duplicate(joint, po=True, n=prefix + 'Buffer'+index_str+'_jnt')[0]
+        grp = maya.cmds.duplicate(joint, po=True, n=prefix + 'Buffer' + index_str + '_jnt')[0]
         maya.cmds.parent(joint, grp)
 
         if maya.cmds.getAttr(grp + '.radius', se=True):
@@ -1023,7 +1025,7 @@ def set_draw_style(joints, draw_style='bone'):
         raise Exception('No joints given!')
 
     draw_style = draw_style.lower()
-    if not draw_style in ['bone', 'box', 'none']:
+    if draw_style not in ['bone', 'box', 'none']:
         raise Exception('Invalid draw style ("{}")! Accepted values are "bone", "box", "none"'.format(draw_style))
 
     if type(joints) not in [list, tuple]:
@@ -1057,7 +1059,7 @@ def create_from_point_list(point_list, orient=False, side='c', part='chain', suf
 
     joint_list = list()
     for i in range(len(point_list)):
-        jnt = maya.cmds.joint(p=point_list[i], n='{}_{}{}_{}'.format(side, part, str(i+1), suffix))
+        jnt = maya.cmds.joint(p=point_list[i], n='{}_{}{}_{}'.format(side, part, str(i + 1), suffix))
         if i and orient:
             maya.cmds.joint(joint_list[-1], e=True, zso=True, oj='xyz', sao='yup')
         joint_list.append(jnt)
@@ -1065,7 +1067,7 @@ def create_from_point_list(point_list, orient=False, side='c', part='chain', suf
     return joint_list
 
 
-def orient(joint, aim_axis='x', up_axis='y', up_vec=(0,1,0)):
+def orient(joint, aim_axis='x', up_axis='y', up_vec=(0, 1, 0)):
     """
     Orient joints based on user defined vectors
     :param joint: str, joints to orient

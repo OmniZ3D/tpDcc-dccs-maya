@@ -443,7 +443,7 @@ class DuplicateHierarchy(object):
         if children:
             duplicates = list()
             for child in children:
-                if self._only_these_transform and not child in self._only_these_transform:
+                if self._only_these_transform and child not in self._only_these_transform:
                     continue
                 if self._only_joints:
                     if not maya.cmds.nodeType(child) == 'joint':
@@ -547,7 +547,7 @@ def snap(transform, target, snap_pivot=False):
         rp_a = maya.cmds.xform(target, query=True, rotatePivot=True)
         rp_b = maya.cmds.xform(transform, query=True, rotatePivot=True)
         maya.cmds.xform(transform, worldSpace=True, translation=(
-        pos[0] + rp_a[0] - rp_b[0], pos[1] + rp_a[1] - rp_b[1], pos[2] + rp_a[2] - rp_b[2]))
+            pos[0] + rp_a[0] - rp_b[0], pos[1] + rp_a[1] - rp_b[1], pos[2] + rp_a[2] - rp_b[2]))
 
 
 def get_position(point):
@@ -574,7 +574,7 @@ def get_position(point):
         if not pos:
             try:
                 pos = maya.cmds.pointPosition(point)
-            except:
+            except Exception:
                 pass
         if not pos:
             LOGGER.exception(

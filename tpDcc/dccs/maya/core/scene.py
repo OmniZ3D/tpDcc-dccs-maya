@@ -472,7 +472,7 @@ def delete_unknown_nodes():
     unknown = maya.cmds.ls(type='unknown')
     deleted = list()
     for n in unknown:
-        if maya.cmds.objExists(n) :
+        if maya.cmds.objExists(n):
             maya.cmds.lockNode(n, lock=False)
             maya.cmds.delete(n)
             deleted.append(n)

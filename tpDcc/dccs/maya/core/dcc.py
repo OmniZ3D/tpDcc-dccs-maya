@@ -17,9 +17,9 @@ import tpDcc
 from tpDcc import register
 import tpDcc.dccs.maya as maya
 from tpDcc.abstract import dcc as abstract_dcc, progressbar
-from tpDcc.dccs.maya.core import gui, helpers, name, namespace, scene, playblast, transform, attribute, shape as shape_utils
+from tpDcc.dccs.maya.core import gui, helpers, name, namespace, scene, playblast, transform, attribute
 from tpDcc.dccs.maya.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
-from tpDcc.dccs.maya.core import sequencer, animation, qtutils, decorators as maya_decorators
+from tpDcc.dccs.maya.core import sequencer, animation, qtutils, decorators as maya_decorators, shape as shape_utils
 
 LOGGER = logging.getLogger()
 
@@ -63,7 +63,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: float
         """
 
-        maya_scale = 1.0 if not hasattr(maya.cmds, "mayaDpiSetting") else maya.cmds.mayaDpiSetting(query=True, realScaleValue=True)
+        maya_scale = 1.0 if not hasattr(
+            maya.cmds, "mayaDpiSetting") else maya.cmds.mayaDpiSetting(query=True, realScaleValue=True)
 
         return maya_scale * value
 
@@ -167,7 +168,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         groups = helpers.create_group(name=name, parent=parent, world=True)
         if groups:
             return groups[0]
-    
+
     @staticmethod
     def create_node(node_type, node_name):
         """
@@ -301,7 +302,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list<str>
         """
 
-        return maya.cmds.ls(l=full_path)
+        return maya.cmds.ls(long=full_path)
 
     @staticmethod
     def rename_node(node, new_name):
@@ -394,7 +395,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list<str>
         """
 
-        return maya.cmds.ls(sl=True, l=full_path)
+        return maya.cmds.ls(slong=True, long=full_path)
 
     @staticmethod
     def selected_nodes_of_type(node_type, full_path=True):
@@ -405,7 +406,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list(str)
         """
 
-        return maya.cmds.ls(sl=True, type=node_type, l=full_path)
+        return maya.cmds.ls(slong=True, type=node_type, long=full_path)
 
     @staticmethod
     def all_shapes_nodes(full_path=True):
@@ -415,7 +416,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list<str>
         """
 
-        return maya.cmds.ls(shapes=True, l=full_path)
+        return maya.cmds.ls(shapes=True, long=full_path)
 
     @staticmethod
     def default_scene_nodes(full_path=True):
@@ -635,7 +636,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: bool
         """
 
-        return maya.cmds.lockNode(node, q=True, l=True)
+        return maya.cmds.lockNode(node, q=True, long=True)
 
     @staticmethod
     def node_children(node, all_hierarchy=True, full_path=True):
@@ -647,7 +648,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list<str>
         """
 
-        return maya.cmds.listRelatives(node, children=True, allDescendents=all_hierarchy, shapes=False, fullPath=full_path)
+        return maya.cmds.listRelatives(
+            node, children=True, allDescendents=all_hierarchy, shapes=False, fullPath=full_path)
 
     @staticmethod
     def node_parent(node, full_path=True):
@@ -780,12 +782,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         if children_type:
-            return maya.cmds.listRelatives(node, children=True, allDescendents=all_hierarchy, fullPath=full_path, type=children_type)
+            return maya.cmds.listRelatives(
+                node, children=True, allDescendents=all_hierarchy, fullPath=full_path, type=children_type)
         else:
             return maya.cmds.listRelatives(node, children=True, allDescendents=all_hierarchy, fullPath=full_path)
 
     @staticmethod
-    def list_relatives(node, all_hierarchy=True, full_path=True, relative_type=None, shapes=False, intermediate_shapes=False):
+    def list_relatives(
+            node, all_hierarchy=True, full_path=True, relative_type=None, shapes=False, intermediate_shapes=False):
         """
         Returns a list of relative nodes of the given node
         :param node:
@@ -798,9 +802,13 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         if relative_type:
-            return maya.cmds.listRelatives(node, allDescendents=all_hierarchy, fullPath=full_path, type=relative_type, shapes=shapes, noIntermediate=not intermediate_shapes)
+            return maya.cmds.listRelatives(
+                node, allDescendents=all_hierarchy, fullPath=full_path, type=relative_type,
+                shapes=shapes, noIntermediate=not intermediate_shapes)
         else:
-            return maya.cmds.listRelatives(node, allDescendents=all_hierarchy, fullPath=full_path, shapes=shapes, noIntermediate=not intermediate_shapes)
+            return maya.cmds.listRelatives(
+                node, allDescendents=all_hierarchy, fullPath=full_path, shapes=shapes,
+                noIntermediate=not intermediate_shapes)
 
     @staticmethod
     def list_shapes(node, full_path=True, intermediate_shapes=False):
@@ -812,7 +820,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list<str>
         """
 
-        return maya.cmds.listRelatives(node, shapes=True, fullPath=full_path, children=True, noIntermediate=not intermediate_shapes)
+        return maya.cmds.listRelatives(
+            node, shapes=True, fullPath=full_path, children=True, noIntermediate=not intermediate_shapes)
 
     @staticmethod
     def list_children_shapes(node, all_hierarchy=True, full_path=True, intermediate_shapes=False):
@@ -828,7 +837,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return shape_utils.get_shapes_in_hierarchy(
             transform_node=node, full_path=full_path, intermediate_shapes=intermediate_shapes)
 
-        # return maya.cmds.listRelatives(node, shapes=True, fullPath=full_path, children=True, allDescendents=all_hierarchy, noIntermediate=not intermediate_shapes)
+        # return maya.cmds.listRelatives(node, shapes=True, fullPath=full_path, children=True,
+        # allDescendents=all_hierarchy, noIntermediate=not intermediate_shapes)
 
     @staticmethod
     def shape_transform(shape_node, full_path=True):
@@ -1193,7 +1203,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param attribute_value: str
         """
 
-        return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), float(attribute_value[0]), float(attribute_value[1]), float(attribute_value[2]), type='double3')
+        return maya.cmds.setAttr(
+            '{}.{}'.format(node, attribute_name),
+            float(attribute_value[0]), float(attribute_value[1]), float(attribute_value[2]), type='double3')
 
     @staticmethod
     def delete_attribute(node, attribute_name):
@@ -1227,7 +1239,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param force: bool
         """
 
-        return maya.cmds.connectAttr('{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), force=force)
+        return maya.cmds.connectAttr(
+            '{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), force=force)
 
     @staticmethod
     def connect_message_attribute(source_node, target_node, message_attribute):
@@ -1337,7 +1350,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             if unique_namespace:
                 return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True, namespace=namespace)
             else:
-                return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True, mergeNamespacesOnClash=True, namespace=namespace)
+                return maya.cmds.file(
+                    file_path, i=True, f=force, returnNewNodes=True, mergeNamespacesOnClash=True, namespace=namespace)
         else:
             return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True)
 
@@ -1357,7 +1371,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             if unique_namespace:
                 return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True, namespace=namespace)
             else:
-                return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True, mergeNamespacesOnClash=True, namespace=namespace)
+                return maya.cmds.file(
+                    file_path, reference=True, f=force, returnNewNodes=True,
+                    mergeNamespacesOnClash=True, namespace=namespace)
 
         else:
             return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True)
@@ -1469,7 +1485,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         if button and cancel_button and dismiss_string and default_button:
-            return maya.cmds.confirmDialog(title=title, message=message, button=button, cancelButton=cancel_button, defaultButton=default_button, dismissString=dismiss_string)
+            return maya.cmds.confirmDialog(
+                title=title, message=message, button=button, cancelButton=cancel_button,
+                defaultButton=default_button, dismissString=dismiss_string)
 
         if button:
             return maya.cmds.confirmDialog(title=title, message=message)
@@ -1523,7 +1541,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return:
         """
 
-        return maya.cmds.menuItem(parent=parent, label=label, command=command, image=icon or '')
+        return maya.cmds.menuItem(parent=parent, labelong=label, command=command, image=icon or '')
 
     @staticmethod
     def add_shelf_sub_menu_item(parent, label, icon=''):
@@ -1535,7 +1553,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return:
         """
 
-        return maya.cmds.menuItem(parent=parent, label=label, icon=icon or '', subMenu=True)
+        return maya.cmds.menuItem(parent=parent, labelong=label, icon=icon or '', subMenu=True)
 
     @staticmethod
     def add_shelf_separator(shelf_name):
@@ -1544,7 +1562,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param shelf_name: str
         """
 
-        return maya.cmds.separator(parent=shelf_name, manage=True, visible=True, horizontal=False, style='shelf', enableBackground=False, preventOverride=False)
+        return maya.cmds.separator(
+            parent=shelf_name, manage=True, visible=True, horizontalong=False,
+            style='shelf', enableBackground=False, preventOverride=False)
 
     @staticmethod
     def shelf_exists(shelf_name):
@@ -1557,7 +1577,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return gui.shelf_exists(shelf_name=shelf_name)
 
     @staticmethod
-    def create_shelf(shelf_name, shelf_label=None):
+    def create_shelf(shelf_name, shelf_labelong=None):
         """
         Creates a new shelf with the given name
         :param shelf_name: str
@@ -1754,7 +1774,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param duration: float
         """
 
-        return maya.cmds.keyframe('{}.{}'.format(node, attribute_name), relative=True, time=(start_time, end_time), timeChange=duration)
+        return maya.cmds.keyframe(
+            '{}.{}'.format(node, attribute_name), relative=True, time=(start_time, end_time), timeChange=duration)
 
     @staticmethod
     def find_next_key_frame(node, attribute_name, start_time, end_time):
@@ -1877,7 +1898,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         letters = kwargs.get('letters', False)
         capital = kwargs.get('capital', False)
 
-        return name.find_available_name(name=node_name, suffix=suffix, index=index, padding=padding, letters=letters, capital=capital)
+        return name.find_available_name(
+            name=node_name, suffix=suffix, index=index, padding=padding, letters=letters, capitalong=capital)
 
     @staticmethod
     def clean_scene():
@@ -2465,7 +2487,8 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
             if not count:
                 count = maya.cmds.progressBar(self.progress_ui, query=True, maxValue=True)
 
-            maya.cmds.progressBar(self.progress_ui, edit=True, beginProgress=begin, isInterruptable=True, status=title, maxValue=count)
+            maya.cmds.progressBar(
+                self.progress_ui, edit=True, beginProgress=begin, isInterruptable=True, status=title, maxValue=count)
 
     def set_count(self, count_number):
         maya.cmds.progressBar(self.progress_ui, edit=True, maxValue=int(count_number))
@@ -2564,7 +2587,7 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
 #                 dock_name = dock_name.replace('-', '_')
 #                 # dock_name = 'MayaWindow|%s' % dock_name       # TODO: Check if we need this
 #                 if maya.cmds.dockControl(dock_name, exists=True):
-#                     maya.cmds.deleteUI(dock_name, control=True)
+#                     maya.cmds.deleteUI(dock_name, controlong=True)
 #
 #             self.setAttribute(Qt.WA_DeleteOnClose, True)
 #

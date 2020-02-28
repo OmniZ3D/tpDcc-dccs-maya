@@ -3909,7 +3909,7 @@ def get_attribute_values(node, keyable_only=True):
     :param keyable_only: bool, Whether to get only keyables attributes or not
     :return: dict<str, variant>
     """
-    
+
     attrs = maya.cmds.listAttr(node, k=keyable_only, v=True)
     values = dict()
     for attr in attrs:

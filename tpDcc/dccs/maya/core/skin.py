@@ -11,7 +11,8 @@ import logging
 import cStringIO
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import decorators, exceptions, api, node as node_utils, mesh as mesh_utils, joint as jnt_utils, transform as xform_utils
+from tpDcc.dccs.maya.core import decorators, exceptions, api, node as node_utils, mesh as mesh_utils
+from tpDcc.dccs.maya.core import joint as jnt_utils, transform as xform_utils
 
 LOGGER = logging.getLogger()
 
