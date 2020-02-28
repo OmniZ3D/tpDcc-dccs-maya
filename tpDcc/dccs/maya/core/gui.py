@@ -14,11 +14,8 @@ import contextlib
 from collections import OrderedDict
 
 from Qt.QtWidgets import *
-try:
-    from shiboken2 import wrapInstance
-except ImportError:
-    from shiboken import wrapInstance
 
+import tpDcc
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.qt.core import qtutils
 
@@ -82,18 +79,33 @@ def get_maya_api_version():
     return int(maya.cmds.about(api=True))
 
 
-def get_maya_window():
+def get_maya_window(window_name=None, wrap_instance=True):
     """
     Return the Maya main window widget as a Python object
     :return: Maya Window
     """
 
-    import maya.OpenMayaUI as OpenMayaUI
-    ptr = OpenMayaUI.MQtUtil.mainWindow()
-    if ptr is not None:
-        return wrapInstance(long(ptr), QMainWindow)
+    if wrap_instance:
+        if window_name is not None:
+            if '|' in str(window_name):
+                # qt_obj = pm.uitypes.toQtObject(window_id)
+                qt_obj = qtutils.to_qt_object(window_name)
+                if qt_obj is not None:
+                    return qt_obj
+            ptr = maya.OpenMayaUI.MQtUtil.findControl(window_name)
+            if ptr is not None:
+                return qtutils.wrapinstance(ptr, QWidget)
+        else:
+            ptr = maya.OpenMayaUI.MQtUtil.mainWindow()
+            if ptr is not None:
+                return qtutils.wrapinstance(ptr, QMainWindow)
 
-    return None
+    if isinstance(window_name, QWidget):
+        return window_name
+    search = window_name or 'MayaWindow'
+    for obj in QApplication.topLevelWidgets():
+        if obj.objectName() == search:
+            return obj
 
 
 def get_main_shelf():
@@ -494,9 +506,6 @@ def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right'
     path = 'MayaWindow|{}'.format(dock_name)
     if maya.cmds.dockControl(path, exists=True):
         maya.cmds.deleteUI(dock_name, control=True)
-        # if hasattr(window, '_has_exit_prompt'):
-        #     window._has_exit_prompt = False
-        # window.close()
     maya.mel.eval('updateRendererUI;')
 
     try:
@@ -511,6 +520,21 @@ def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right'
     except Exception:
         LOGGER.warning('{} window failed to load. Maya may need to finish loading'.format(ui_name))
         LOGGER.error(traceback.format_exc())
+
+
+def is_window_floating(window_name):
+    """
+    Returns whether or not given window is floating
+    :param window_name: str
+    :return: bool
+    """
+
+    if tpDcc.Dcc.get_version() < 2017:
+        floating = maya.cmds.dockControl(window_name, floating=True, query=True)
+    else:
+        floating = maya.cmds.workspaceControl(window_name, floating=True, query=True)
+
+    return floating
 
 
 def get_progress_bar():
@@ -536,50 +560,6 @@ def get_node_editors():
 
     return found
 
-
-class DockWrapper(object):
-    def __init__(self, settings=None):
-        self._dock_area = 'right'
-        self._dock_name = 'dock'
-        self._allowed_areas = ['right', 'left']
-        self._label = ''
-        self._settings = None
-        self._name = ''
-
-    # region Public Functions
-    def create(self):
-        floating = False
-
-        if self._exists():
-            maya.cmds.dockControl(self._dock_name, visible=True)
-        else:
-            maya.cmds.dockControl(self._dock_name, aa=self._allowed_areas, a=self._dock_area, content=self._name, label=self._label, fl=floating, visible=True, fcc=self._floating_changed)
-
-    def set_name(self, name):
-        self._name = name
-
-    def set_dock_area(self, dock_area):
-        self._dock_area = dock_area
-
-    def set_dock_name(self, dock_name):
-        self._dock_name = dock_name
-
-    def set_label(self, label):
-        self._label = label
-
-    def set_allowed_areas(self, areas):
-        self._allowed_areas = areas
-    # endregion
-
-    # region Private Functions
-    def _floating_changed(self):
-        if self._settings:
-            floating = maya.cmds.dockControl(self._dock_name, floating=True, query=True)
-            self._settings.set('floating', floating)
-
-    def _exists(self):
-        return maya.cmds.dockControl(self._dock_name, exists=True)
-    # endregion
 
 def add_maya_widget(layout, layout_parent, maya_fn, *args, **kwargs):
     if not maya.cmds.window('tempAttrWidgetWin', exists=True):
@@ -661,3 +641,98 @@ def open_render_settings_window():
     """
 
     maya.mel.eval('unifiedRenderGlobalsWindow')
+
+
+def delete_dock_control(control_name):
+    """
+    Handles the deletion of a dock control with a specific name
+    :param control_name: str
+    :return: bool
+    """
+
+    if maya.cmds.dockControl(control_name, query=True, exists=True):
+        floating = maya.cmds.dockControl(control_name, query=True, floating=True)
+        maya.cmds.dockControl(control_name, edit=True, r=True)
+        maya.cmds.dockControl(control_name, edit=True, floating=False)
+    else:
+        floating = False
+
+    window_wrap = get_maya_window(window_name=control_name)
+    if window_wrap:
+        if window_wrap.parent().parent() is not None:
+            get_maya_window(window_name=control_name).parent().close()
+
+    if floating is not None:
+        try:
+            maya.cmds.dockControl(control_name, edit=True, floating=floating)
+        except RuntimeError:
+            pass
+
+    return floating
+
+
+def delete_workspace_control(control_name, reset_floating=True):
+    """
+    Handles the deletion of a workspace control with a specific name
+    :param control_name: str
+    :param reset_floating: bool
+    :return: bool
+    """
+
+    if not tpDcc.Dcc.get_version() > 2017:
+        return None
+
+    if maya.cmds.workspaceControl(control_name, query=True, exists=True):
+        floating = maya.cmds.workspaceControl(control_name, query=True, floating=True)
+        maya.cmds.deleteUI(control_name)
+    else:
+        floating = None
+
+    # If the window is not currently floating, we remove stored preferences
+    if maya.cmds.workspaceControlState(
+            control_name, query=True, exists=True) and not (floating or floating and reset_floating):
+        maya.cmds.workspaceControlState(control_name, remove=True)
+
+    return floating
+
+
+class DockWrapper(object):
+    def __init__(self, settings=None):
+        self._dock_area = 'right'
+        self._dock_name = 'dock'
+        self._allowed_areas = ['right', 'left']
+        self._label = ''
+        self._settings = settings
+        self._name = ''
+
+    # region Public Functions
+    def create(self):
+        floating = False
+
+        if self._exists():
+            maya.cmds.dockControl(self._dock_name, visible=True)
+        else:
+            maya.cmds.dockControl(self._dock_name, aa=self._allowed_areas, a=self._dock_area, content=self._name, label=self._label, fl=floating, visible=True, fcc=self._floating_changed)
+
+    def set_name(self, name):
+        self._name = name
+
+    def set_dock_area(self, dock_area):
+        self._dock_area = dock_area
+
+    def set_dock_name(self, dock_name):
+        self._dock_name = dock_name
+
+    def set_label(self, label):
+        self._label = label
+
+    def set_allowed_areas(self, areas):
+        self._allowed_areas = areas
+
+    def _floating_changed(self):
+        if self._settings:
+            floating = is_window_floating(window_name=self._dock_name)
+            self._settings.set('floating', floating)
+
+    def _exists(self):
+        return maya.cmds.dockControl(self._dock_name, exists=True)

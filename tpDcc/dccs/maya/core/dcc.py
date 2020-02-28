@@ -19,7 +19,7 @@ import tpDcc.dccs.maya as maya
 from tpDcc.abstract import dcc as abstract_dcc, progressbar
 from tpDcc.dccs.maya.core import gui, helpers, name, namespace, scene, playblast, transform, attribute, shape as shape_utils
 from tpDcc.dccs.maya.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
-from tpDcc.dccs.maya.core import sequencer, animation, decorators as maya_decorators
+from tpDcc.dccs.maya.core import sequencer, animation, qtutils, decorators as maya_decorators
 
 LOGGER = logging.getLogger()
 
@@ -102,6 +102,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return gui.get_maya_window()
+
+    @staticmethod
+    def is_window_floating(window_name):
+        """
+        Returns whether or not DCC window is floating
+        :param window_name: str
+        :return: bool
+        """
+
+        return gui.is_window_floating(window_name=window_name)
 
     @staticmethod
     def execute_deferred(fn):
@@ -2378,6 +2388,29 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.xform(node, rotateAxis=[x, y, z], relative=True, objectSpace=True)
+
+    @staticmethod
+    def dock_widget(widget, *args, **kwargs):
+        """
+        Docks given widget into current DCC UI
+        :param widget: QWidget
+        :param args:
+        :param kwargs:
+        :return:
+        """
+
+        return qtutils.dock_widget(widget, *args, **kwargs)
+
+    @staticmethod
+    def deferred_function(fn, *args, **kwargs):
+        """
+        Calls given function with given arguments in a deferred way
+        :param fn:
+        :param args: list
+        :param kwargs: dict
+        """
+
+        return maya.cmds.evalDeferred(fn, *args, **kwargs)
 
     # =================================================================================================================
 
