@@ -5,6 +5,8 @@
 Module that contains utils functions to work with Qt in Maya
 """
 
+import sys
+
 from Qt.QtCore import *
 from Qt.QtWidgets import *
 
@@ -12,48 +14,52 @@ import tpDcc.dccs.maya as maya
 from tpDcc.libs.qt.core import qtutils as qt
 from tpDcc.dccs.maya.core import gui
 
+if sys.version_info > (3,):
+    long = int
 
-def dock_widget(widget_class):
+
+def add_widget_to_maya_layout(widget):
+    """
+    Adds given QWidget to maya layout
+    :param widget: QWidget
+    """
+
+    parent = maya.OpenMayaUI.MQtUtil.getCurrentParent()
+    mixin_ptr = maya.OpenMayaUI.MQtUtil.findControl(widget.objectName())
+    maya.OpenMayaUI.MQtUtil.addWidgetToMayaLayout(long(mixin_ptr), long(parent))
+
+    return True
+
+
+def dock_widget(widget, label, retain=False, show=True):
     """
     Creates an instance of the class and dock into Maya UI
     :param widget_class:
     """
 
-    workspace_control = widget_class.__name__ + '_workspace_control'
+    workspace_control = widget.objectName() + '_workspace_control'
+
+    initial_width = maya.cmds.optionVar(query='workspacesWidePanelInitialWidth') * 0.75
 
     try:
         maya.cmds.deleteUI(workspace_control)
+        maya.cmds.workspaceControlState(workspace_control, remove=True)
         maya.debug('Removing workspace {0}'.format(workspace_control))
     except Exception:
         pass
 
     if gui.get_maya_api_version() >= 201700:
-
-        main_control = maya.cmds.workspaceControl(workspace_control, ttc=["AttributeEditor", -1], iw=425, mw=True, wp='preferred', label='{0} - {1}'.format(widget_class.title, widget_class.version))
+        main_control = maya.cmds.workspaceControl(
+            workspace_control, ttc=["AttributeEditor", -1], iw=25, mw=False,
+            wp='free', label=label, retain=retain)
         control_widget = maya.OpenMayaUI.MQtUtil.findControl(workspace_control)
         control_wrap = qt.wrapinstance(long(control_widget), QWidget)
         control_wrap.setAttribute(Qt.WA_DeleteOnClose)
-        win = widget_class(name=workspace_control, parent=control_wrap, layout=control_wrap.layout())
-        maya.cmds.evalDeferred(lambda *args: maya.cmds.workspaceControl(main_control, e=True, rs=True))
+        widget.setParent(control_wrap)
+        control_wrap.layout().addWidget(widget)
+        if show:
+            maya.cmds.evalDeferred(lambda *args: maya.cmds.workspaceControl(main_control, e=True, rs=True, fl=True))
     else:
-        win = None
+        control_wrap = None
 
-    return win
-
-
-def dock_window(window_class):
-    try:
-        maya.cmds.deleteUI(window_class.name)
-    except Exception:
-        pass
-
-    main_control = maya.cmds.workspaceControl(window_class.name, ttc=["AttributeEditor", -1], iw=300, mw=True, wp='preferred', label=window_class.title)
-
-    control_widget = maya.OpenMayaUI.MQtUtil.findControl(window_class.name)
-    control_wrap = qt.wrapinstance(long(control_widget), QWidget)
-    control_wrap.setAttribute(Qt.WA_DeleteOnClose)
-    win = window_class(control_wrap)
-
-    maya.cmds.evalDeferred(lambda *args: maya.cmds.workspaceControl(main_control, e=True, rs=True))
-
-    return win.run()
+    return control_wrap
