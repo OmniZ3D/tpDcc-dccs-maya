@@ -53,7 +53,8 @@ def create_follow_group(source_transform, target_transform, prefix='follow', fol
     return follow_group
 
 
-def create_local_follow_group(source_transform, target_transform, prefix='followLocal', orient_only=False, connect_scale=False):
+def create_local_follow_group(
+        source_transform, target_transform, prefix='followLocal', orient_only=False, connect_scale=False):
     """
     Creates a group above a target transform that is local constrained to the source transform
     This help when setting up controls that need to be parented but only affect what they constrain when the actual
@@ -89,7 +90,8 @@ def create_local_follow_group(source_transform, target_transform, prefix='follow
     return follow_group
 
 
-def create_multi_follow_direct(source_list, target_transform, node, constraint_type='parentConstraint', attribute_name='follow', value=None):
+def create_multi_follow_direct(
+        source_list, target_transform, node, constraint_type='parentConstraint', attribute_name='follow', value=None):
     """
     Creates a group above the target that is constrained to multiple transforms. A switch attribute switches their
     state on/off. Constraints will be "directly" added on the target transform
@@ -137,7 +139,9 @@ def create_multi_follow_direct(source_list, target_transform, node, constraint_t
     return target_transform
 
 
-def create_multi_follow(source_list, target_transform, node=None, constraint_type='parentConstraint', attribute_name='follow', value=None, create_title=True):
+def create_multi_follow(
+        source_list, target_transform, node=None, constraint_type='parentConstraint',
+        attribute_name='follow', value=None, create_title=True):
     """
     Creates a group above the target that is constrained to multiple transforms. A switch attribute switches their
     state on/off. Constraints will be "directly" added on the target transform

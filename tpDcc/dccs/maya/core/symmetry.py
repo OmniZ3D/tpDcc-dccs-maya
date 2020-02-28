@@ -56,14 +56,14 @@ class SymmetryTable(object):
             if maya.cmds.objectType(mesh_parent) != 'transform':
                 mesh_parent = maya.cmds.listRelatives(mesh, p=True)[0]
             bounding_box = maya.cmds.xform(mesh_parent, q=True, ws=True, boundingBox=True)
-            mid = bounding_box[axis_ind] + ((bounding_box[axis_ind+3] - bounding_box[axis_ind])/2)
+            mid = bounding_box[axis_ind] + ((bounding_box[axis_ind + 3] - bounding_box[axis_ind]) / 2)
 
         total_vertices = maya.cmds.polyEvaluate(mesh, v=True)
         sym_table = range(int(total_vertices))
 
         # Retrieve positive and negative vertices
         for i in range(total_vertices):
-            vtx = mesh+'.vtx[{}]'.format(i)
+            vtx = mesh + '.vtx[{}]'.format(i)
             vertex_xform = maya.cmds.xform(vtx, q=True, ws=True, translation=True)
             mid_offset = vertex_xform[axis_ind] - mid
             if mid_offset >= mid_offset_tolerance:
@@ -147,7 +147,7 @@ def get_side_vertices(obj, axis=0, sel_negative=True, tolerance=0.001, use_pivot
     if sel_negative is None:
         all_vtx = list()
         for i in range(total_vertices):
-            vtx = obj+'.vtx[{}]'.format(i)
+            vtx = obj + '.vtx[{}]'.format(i)
             all_vtx.append(vtx)
         return all_vtx
 
@@ -191,15 +191,17 @@ def get_symmetric_vertex(vertex_index, sym_table_list):
     for i in range(len(sym_table_list)):
         if int(vertex_index) == int(sym_table_list[i]):
             if i % 2 == 0:
-                sym_vtx = sym_table_list[i+1]
+                sym_vtx = sym_table_list[i + 1]
             else:
-                sym_vtx = sym_table_list[i-1]
+                sym_vtx = sym_table_list[i - 1]
             break
 
     return sym_vtx
 
+
 @decorators.undo_chunk
-def mirror_vertices(obj, selected_vertices=None, axis=0, neg_to_pos=False, tolerance=0.001, use_pivot=False, flip=False, base_obj=None, sym_table_list=None):
+def mirror_vertices(obj, selected_vertices=None, axis=0, neg_to_pos=False, tolerance=0.001, use_pivot=False,
+                    flip=False, base_obj=None, sym_table_list=None):
     zero_vertices_int = list()
     pos_vertices_int = list()
     neg_vertices_int = list()
@@ -220,7 +222,7 @@ def mirror_vertices(obj, selected_vertices=None, axis=0, neg_to_pos=False, toler
         selected_vertices = maya.cmds.ls(sl=True)
 
     for vtx in selected_vertices:
-        vtx_index = re.search('\[(.*?)\]', vtx).group(1)
+        vtx_index = re.search(r'\[(.*?)\]', vtx).group(1)
         vtx_xform = maya.cmds.xform(vtx, q=True, ws=True, t=True)
         mid_offset = vtx_xform[axis_ind] - mid
         if abs(mid_offset) < tolerance:
@@ -238,8 +240,8 @@ def mirror_vertices(obj, selected_vertices=None, axis=0, neg_to_pos=False, toler
 
     for i in range(len(pos_vertices_int)):
         vtx_num = get_symmetric_vertex(pos_vertices_int[i], sym_table_list)
-        vtx = obj+'.vtx[{}]'.format(pos_vertices_int[i])
-        vtx_sym = obj+'.vtx[{}]'.format(vtx_num)
+        vtx = obj + '.vtx[{}]'.format(pos_vertices_int[i])
+        vtx_sym = obj + '.vtx[{}]'.format(vtx_num)
         if vtx_num != -1:
             if not flip:
                 vtx_xform = maya.cmds.xform(vtx, q=True, ws=True, t=True)
@@ -255,7 +257,7 @@ def mirror_vertices(obj, selected_vertices=None, axis=0, neg_to_pos=False, toler
 
     # Middle verts
     for i in range(len(zero_vertices_int)):
-        vtx = obj+'.vtx[{}]'.format(zero_vertices_int[i])
+        vtx = obj + '.vtx[{}]'.format(zero_vertices_int[i])
         vtx_xform = maya.cmds.xform(vtx, q=True, ws=True, t=True)
         if flip:
             vtx_xform[axis_ind] = 2 * mid - vtx_xform[axis_ind]

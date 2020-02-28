@@ -320,7 +320,7 @@ class ClusterCurve(ClusterSurface, object):
 
         last_cluster, last_handle = self._create_cluster(
             '{}.cv[{}:{}]'.format(self._geo, self._cv_count - 2, self._cv_count - 1))
-        pos = maya.cmds.xform('{}.cv[{}]'.format(self._geo, self._cv_count-1), q=True, ws=True, t=True)
+        pos = maya.cmds.xform('{}.cv[{}]'.format(self._geo, self._cv_count - 1), q=True, ws=True, t=True)
         maya.cmds.xform(last_handle, ws=True, rp=pos, sp=pos)
 
         return last_cluster, last_handle
@@ -627,7 +627,7 @@ def get_affected_geometry(deformer, return_shapes=False, full_path_names=False):
     geo_filter_fn = maya.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
 
     if maya.is_new_api():
-       output_object_array = geo_filter_fn.getOutputGeometry()
+        output_object_array = geo_filter_fn.getOutputGeometry()
     else:
         output_object_array = maya.OpenMaya.MObjectArray()
         geo_filter_fn.getOutputGeometry(output_object_array)
@@ -807,7 +807,7 @@ def bind_pre_matrix(deformer, bind_pre_matrix='', parent=True):
             bind_pre_matrix = maya.cmds.createNode('transform', n=bind_pre_matrix)
     else:
         prefix = deformer_handle.replace(deformer_handle.split('_')[-1], '')
-        bind_pre_matrix = maya.cmds.createNode('transform', n=prefix+'bindPreMatrix')
+        bind_pre_matrix = maya.cmds.createNode('transform', n=prefix + 'bindPreMatrix')
 
     # Match transform and pivot
     maya.cmds.xform(bind_pre_matrix, ws=True, matrix=maya.cmds.xform(deformer_handle, query=True, ws=True, matrix=True))
@@ -940,15 +940,15 @@ def check_multiple_outputs(deformer, print_result=True):
     return_dict = dict()
     for i in range(num_index):
         plug_cnt = maya.cmds.listConnections(
-            deformer+'.outputGeometry['+str(index_list[i])+']', s=False, d=True, p=True)
+            deformer + '.outputGeometry[' + str(index_list[i]) + ']', s=False, d=True, p=True)
         if len(plug_cnt) > 1:
-            return_dict[deformer+'.outputGeometry['+str(index_list[i])+']'] = plug_cnt
+            return_dict[deformer+'.outputGeometry[' + str(index_list[i]) + ']'] = plug_cnt
             if print_result:
                 LOGGER.debug(
                     'Deformer output "' + deformer + '.outputGeometry[' + str(
                         index_list[i]) + ']" has ' + str(len(plug_cnt)) + ' outgoing connections:')
                 for cnt in plug_cnt:
-                    LOGGER.debug('\t- '+cnt)
+                    LOGGER.debug('\t- ' + cnt)
 
     return return_dict
 

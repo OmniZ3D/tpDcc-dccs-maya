@@ -90,7 +90,6 @@ class MeshTopologyCheck(object):
         :return: bool
         """
 
-
         if not self.check_face_count():
             return False
 
@@ -267,15 +266,15 @@ def replace(source_geometry, target_geometry):
         source_shape = source_shapes[0]
         if source_int_shapes:
             if source_geo_type == 'mesh':
-                if maya.cmds.listConnections(source_shapes[0]+'.inMesh', s=True, d=False):
+                if maya.cmds.listConnections(source_shapes[0] + '.inMesh', s=True, d=False):
                     for int_shape in source_int_shapes:
-                        if maya.cmds.listConnections(int_shape+'.outMesh', s=False, d=True):
+                        if maya.cmds.listConnections(int_shape + '.outMesh', s=False, d=True):
                             source_shape = int_shape
                             break
             elif (source_geo_type == 'nurbsSurface') or (source_geo_type == 'nurbsCurve'):
-                if maya.cmds.listConnections(source_shapes[0]+'.create', s=True, d=False):
+                if maya.cmds.listConnections(source_shapes[0] + '.create', s=True, d=False):
                     for int_shape in source_int_shapes:
-                        if maya.cmds.listConnections(int_shape+'.local', s=False, d=True):
+                        if maya.cmds.listConnections(int_shape + '.local', s=False, d=True):
                             source_shape = int_shape
                             break
             else:
@@ -292,13 +291,13 @@ def replace(source_geometry, target_geometry):
             if target_geo_type == 'mesh':
                 if maya.cmds.listConnections(target_shapes[0]+'.inMesh', s=True, d=False):
                     for int_shape in target_int_shapes:
-                        if maya.cmds.listConnections(int_shape+'.outMesh', s=False, d=True):
+                        if maya.cmds.listConnections(int_shape + '.outMesh', s=False, d=True):
                             target_shape = int_shape
                             break
             elif (target_geo_type == 'nurbsSurface') or (target_geo_type == 'nurbsCurve'):
-                if maya.cmds.listConnections(target_shapes[0]+'.create', s=True, d=False):
+                if maya.cmds.listConnections(target_shapes[0] + '.create', s=True, d=False):
                     for int_shape in target_int_shapes:
-                        if maya.cmds.listConnections(int_shape+'.local', s=False, d=True):
+                        if maya.cmds.listConnections(int_shape + '.local', s=False, d=True):
                             target_shape = int_shape
                             break
             else:
@@ -499,8 +498,10 @@ def transforms_to_nurbs_surface(transforms, name, spans=-1, offset_axis='Y', off
         xform_utils.MatchTransform(xform, xform_1).translation_rotation()
         xform_utils.MatchTransform(xform, xform_2).translation_rotation()
         vct = mathlib.get_axis_vector(offset_axis)
-        maya.cmds.move(vct[0]*offset_amount, vct[1]*offset_amount, vct[2]*offset_amount, xform_1, relative=True, os=True)
-        maya.cmds.move(vct[0]*-offset_amount, vct[1]*-offset_amount, vct[2]*-offset_amount, xform_2, relative=True, os=True)
+        maya.cmds.move(
+            vct[0] * offset_amount, vct[1] * offset_amount, vct[2] * offset_amount, xform_1, relative=True, os=True)
+        maya.cmds.move(
+            vct[0] * -offset_amount, vct[1] * -offset_amount, vct[2] * -offset_amount, xform_2, relative=True, os=True)
         pos_1 = maya.cmds.xform(xform_1, q=True, ws=True, t=True)
         pos_2 = maya.cmds.xform(xform_2, q=True, ws=True, t=True)
         transform_positions_1.append(pos_1)
@@ -512,10 +513,13 @@ def transforms_to_nurbs_surface(transforms, name, spans=-1, offset_axis='Y', off
     crvs = [crv_1, crv_2]
     if not spans == -1:
         for crv in crvs:
-            maya.cmds.rebuildCurve(crv, ch=False, rpo=True, rt=0, end=1, kr=False, kcp=False, kep=True, kt=False, spans=spans, degree=3, tol=0.01)
+            maya.cmds.rebuildCurve(
+                crv, ch=False, rpo=True, rt=0, end=1, kr=False, kcp=False, kep=True, kt=False,
+                spans=spans, degree=3, tol=0.01)
 
     loft = maya.cmds.loft(crv_1, crv_2, n=name_utils.find_unique_name(name), ss=1, degree=1, ch=False)
-    #maya.cmds.rebuildSurface(loft, ch=True, rpo=1, rt=0, end=1, kr=0, kcp=0, kc=0, su=1, du=1, sv=spans, dv=3, fr=0, dir=2)
+    # maya.cmds.rebuildSurface(
+    # loft, ch=True, rpo=1, rt=0, end=1, kr=0, kcp=0, kc=0, su=1, du=1, sv=spans, dv=3, fr=0, dir=2)
 
     maya.cmds.delete(crv_1, crv_2)
 
@@ -600,7 +604,7 @@ def get_vertex_indices(list_of_vertex_names):
     list_of_vertex_names = python.force_list(list_of_vertex_names)
     vertex_indices = list()
     for vertex in list_of_vertex_names:
-        index = int(vertex[vertex.find('[')+1:vertex.find(']')])
+        index = int(vertex[vertex.find('[') + 1:vertex.find(']')])
         vertex_indices.append(index)
 
     return vertex_indices
@@ -621,7 +625,7 @@ def faces_to_vertices(faces):
         info = maya.cmds.polyInfo(face, faceToVertex=True)[0].split()
         sub_verts = info[2:]
         for sub_vert in sub_verts:
-            if not sub_vert in verts:
+            if sub_vert not in verts:
                 verts.append('{}.vtx[{}]'.format(mesh, sub_vert))
 
     return verts

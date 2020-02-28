@@ -1,5 +1,7 @@
-'''
-Exposes the MayaPyManager class, which is used to run instances of MayaPy with explict control over paths and environment variables. A Manager can run scripts, modules, or command strings in a separate MayaPy environment; results and errors are captured and returned.
+"""
+Exposes the MayaPyManager class, which is used to run instances of MayaPy with explict control over paths and
+environment variables. A Manager can run scripts, modules, or command strings in a separate MayaPy environment;
+results and errors are captured and returned.
 Typical uses might be:
 - running unit tests
 - running a copy of Maya.standalone as a headless RPC server with StandaloneRPC https://github.com/theodox/standaloneRPC
@@ -10,8 +12,10 @@ Basic usage is simply to create a MayaPyManager and then call run_script, run_mo
     output, errors = example.run_command("print 'hello world'")
     print output
     > hello world
-To control the PYTHONPATH of the created instance, pass the paths you want as a string array to the MayaPyManager. These paths will override the default system paths inside the interpreter.
-    example = MayaPyManager( '/path/to/Maya2014/bin/mayapy.exe', None, 'path/to/modules', 'another/path/to/modules', 'etc/etc')
+To control the PYTHONPATH of the created instance, pass the paths you want as a string array to the MayaPyManager.
+ These paths will override the default system paths inside the interpreter.
+    example = MayaPyManager( '/path/to/Maya2014/bin/mayapy.exe', None, 'path/to/modules',
+    'another/path/to/modules', 'etc/etc')
 You can also control the environment variables in the interpreter by providing a dictionary:
     custom_env = os.environ.copy()
     custom_env['MAYA_DEBUG'] = 'False'
@@ -34,13 +38,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-'''
+"""
+
 import os
 import subprocess
 
 
 class MayaPyManager(object):
-    '''
+    """
     For running a maya python interpreter* under controlled conditions:
 
         - Override default paths
@@ -63,11 +68,12 @@ class MayaPyManager(object):
         -v     : verbose (trace import statements); also PYTHONVERBOSE=x
                     can be supplied multiple times to increase verbosity
         -W arg : warning control; arg is action:message:category:module:lineno
-    '''
+    """
+
     DEFAULT_FLAGS = []
 
     def __init__(self, interpreter, environ, *paths, **flags):
-        '''
+        """
         Create a MayaPyManager for ths supplied interpreter and paths
         Arguments:
 
@@ -81,7 +87,8 @@ class MayaPyManager(object):
         will produce a command line like:
             path/to/mayapy.exe -v <script.py>
         when run.
-        '''
+        """
+
         self.interpreter = interpreter
         assert os.path.isfile(interpreter) and os.path.exists(
             interpreter), "'%s' is not a valid interpreter path" % interpreter
@@ -90,7 +97,7 @@ class MayaPyManager(object):
         self.environ = environ
 
     def run_script(self, pyFile, *args):
-        '''
+        """
         Run the supplied script file in the interpreter.  Returns a tuple (results, errors) which contain,
         respectively, the output and error printouts produced by the script. Note that if errors is not
         None, the script did not complete successfully
@@ -107,15 +114,16 @@ class MayaPyManager(object):
         will be produce a command line like:
 
            c:/path/to/maya2014/mayapy.exe  test/script.py  -g greeting
-        '''
+        """
+
         rt_env = self._runtime_environment(self.paths)
         arg_string = ""
         if len(args):
             arg_string = " ".join(map(str, *args))
 
-        flagstring = self._flag_string()
+        flag_string = self._flag_string()
 
-        cmdstring = '''"%s" %s "%s" %s''' % (self.interpreter, flagstring, pyFile, arg_string)
+        cmd_string = '''"%s" %s "%s" %s''' % (self.interpreter, flag_string, pyFile, arg_string)
 
         # print(rt_env)
         # fixed_env = dict()
@@ -130,66 +138,69 @@ class MayaPyManager(object):
         #     except Exception:
         #         pass
 
-        runner = subprocess.Popen(cmdstring, env=rt_env,
+        runner = subprocess.Popen(cmd_string, env=rt_env,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
-
-
 
         return runner.communicate()
 
     def run_module(self, module):
-        '''
+        """
         Run the supplied moudle file in the interpreter ('running' here is 'importing').
         Returns a tuple (results, errors) which contain, respectively, the output and
         error printouts produced by the module. Note that if errors is not None, the
         module did not import correctly
 
         The module must in the PYTHONPATH used by the intepreter.
-        '''
+        """
 
         rt_env = self._runtime_environment(self.paths)
-        flagstring = self._flag_string()
+        flag_string = self._flag_string()
 
-        cmdstring = '''"%s" %s -m %s''' % (self.interpreter, flagstring, module)
-        runner = subprocess.Popen(cmdstring, env=rt_env,
+        cmd_string = '''"%s" %s -m %s''' % (self.interpreter, flag_string, module)
+        runner = subprocess.Popen(cmd_string, env=rt_env,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
         return runner.communicate()
 
     def run_command(self, cmd, ):
-        '''
+        """
         Run the supplied command string in the intepreter.
         Returns a tuple (results, errors) which contain, respectively, the output and
         error printouts produced by the command string. Note that if errors is not None,
         the commands did not execute correctly.
-        '''
-        rt_env = self._runtime_environment(self.paths)
-        flagstring = self._flag_string()
+        """
 
-        cmdstring = '''"%s" %s -c "%s"''' % (self.interpreter, flagstring, cmd)
-        runner = subprocess.Popen(cmdstring, env=rt_env,
+        rt_env = self._runtime_environment(self.paths)
+        flag_string = self._flag_string()
+
+        cmd_string = '''"%s" %s -c "%s"''' % (self.interpreter, flag_string, cmd)
+        runner = subprocess.Popen(cmd_string, env=rt_env,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
         return runner.communicate()
 
     def _flag_string(self):
-        '''
+        """
         generate correctly formatted flag strings
-        '''
-        flagged = lambda x, y: "-" + x
-        flaggedOpt = lambda x, y: "-" + x + " " + str(y)
+        """
+
+        def flagged(x, y):
+            return "-" + x
+
+        def flagged_opt(x, y):
+            return "-" + x + " " + str(y)
 
         default_flags = [flagged(f, v) for f, v in self.flags.items() if v and not f in ('W', 'Q')] or ['']
-        special_flags = [flaggedOpt(f, v) for f, v in self.flags.items() if v and f in ('W', 'Q')] or ['']
+        special_flags = [flagged_opt(f, v) for f, v in self.flags.items() if v and f in ('W', 'Q')] or ['']
         return " ".join(default_flags + special_flags)
 
     def _runtime_environment(self, *new_paths):
-        '''
+        """
         Returns a new environment dictionary for this intepreter, with only the supplied paths
         (and the required maya paths).  Dictionary is independent of machine level settings;
         non maya/python related values are preserved.
-        '''
+        """
         runtime_env = os.environ.copy()
         if self.environ:
             runtime_env = self.environ.copy()

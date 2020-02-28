@@ -17,7 +17,7 @@ try:
     from shiboken import wrapInstance
 except ImportError:
     from shiboken2 import wrapInstance
-    
+
 import tpDcc.dccs.maya as maya
 
 
@@ -79,7 +79,8 @@ def get_shader_swatch(shader_name, render_size=100, swatch_width=100, swatch_hei
 
     tempwin = maya.cmds.window()
     maya.cmds.columnLayout()
-    swatch_port = maya.cmds.swatchDisplayPort(renderSize=render_size, widthHeight=(swatch_width, swatch_height), shadingNode=shader_name)
+    swatch_port = maya.cmds.swatchDisplayPort(
+        renderSize=render_size, widthHeight=(swatch_width, swatch_height), shadingNode=shader_name)
     if not swatch_port:
         return None
 
@@ -90,7 +91,9 @@ def get_shader_swatch(shader_name, render_size=100, swatch_width=100, swatch_hei
     return swatch
 
 
-def export_shader_swatch_as_image(shader_name, export_path=None, render_size=100, swatch_width=100, swatch_height=100, format='png', get_pixmap=False):
+def export_shader_swatch_as_image(
+        shader_name, export_path=None, render_size=100, swatch_width=100, swatch_height=100,
+        format='png', get_pixmap=False):
     """
     Export shader swatch as image
     :param shader_name: str
@@ -102,10 +105,11 @@ def export_shader_swatch_as_image(shader_name, export_path=None, render_size=100
     :return: variant, None || str
     """
 
-    swatch = get_shader_swatch(shader_name=shader_name, render_size=render_size, swatch_width=swatch_width, swatch_height=swatch_height)
+    swatch = get_shader_swatch(
+        shader_name=shader_name, render_size=render_size, swatch_width=swatch_width, swatch_height=swatch_height)
     swatch_pixmap = QPixmap(swatch.size())
     swatch.render(swatch_pixmap)
-    export_path = os.path.join(export_path, shader_name+'.'+format)
+    export_path = os.path.join(export_path, shader_name + '.' + format)
     swatch_pixmap.save(export_path)
 
     if get_pixmap:
@@ -117,7 +121,7 @@ def export_shader_swatch_as_image(shader_name, export_path=None, render_size=100
         return None
     if not os.path.exists(export_path):
         return None
-    export_path = os.path.join(export_path, shader_name+'.'+format)
+    export_path = os.path.join(export_path, shader_name + '.' + format)
     swatch_pixmap.save(export_path)
     # swatch.deleteLater()
     # swatch = None

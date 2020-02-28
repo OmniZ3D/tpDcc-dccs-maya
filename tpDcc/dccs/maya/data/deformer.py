@@ -102,7 +102,7 @@ class MayaDeformerData(object):
                     deformer + '.' + attr, s=True, d=False):
                 self._data['attrConnectionList'].append(attr)
             else:
-                self._data['attrValueDict'][attr] = cmds.getAttr(deformer+'.' + attr)
+                self._data['attrValueDict'][attr] = cmds.getAttr(deformer + '.' + attr)
 
     def get_deformer_attr_connections(self):
         """
@@ -112,7 +112,7 @@ class MayaDeformerData(object):
         deformer = self._data['name']
         for attr in self._data['attrConnectionList']:
             attr_cnt = cmds.listConnections(
-                deformer+'.' + attr, s=True, d=False, p=True, sh=True, skipConversionNodes=True)
+                deformer + '.' + attr, s=True, d=False, p=True, sh=True, skipConversionNodes=True)
             if attr_cnt:
                 self._data['attrConnectionDict'][attr] = attr_cnt[0]
 

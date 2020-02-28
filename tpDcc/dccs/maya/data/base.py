@@ -289,6 +289,7 @@ class MayaFileData(MayaCustomData, object):
 class MayaBinaryFileData(MayaFileData):
     def __init__(self, name=None, path=None):
         super(MayaBinaryFileData, self).__init__(name=name, path=path)
+
     @staticmethod
     def get_data_type():
         return 'maya.binary'

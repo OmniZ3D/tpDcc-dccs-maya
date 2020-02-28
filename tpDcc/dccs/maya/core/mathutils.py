@@ -91,7 +91,7 @@ def distance_between(point1=[0.0, 0.0, 0.0], point2=[0.0, 0.0, 0.0]):
     pnt1 = maya.OpenMaya.MVector(point1[0], point1[1], point1[2])
     pnt2 = maya.OpenMaya.MVector(point2[0], point2[1], point2[2])
 
-    return maya.OpenMaya.MVector(pnt1-pnt2).length()
+    return maya.OpenMaya.MVector(pnt1 - pnt2).length()
 
 
 def offset_vector(point1=[0.0, 0.0, 0.0], point2=[0.0, 0.0, 0.0]):
@@ -118,7 +118,11 @@ def average_position(pos1=(0.0, 0.0, 0.0), pos2=(0.0, 0.0, 0.0), weight=0.5):
     :return: tuple
     """
 
-    return (pos1[0] + ((pos2[0] - pos1[0]) * weight), pos1[1] + ((pos2[1] - pos1[1]) * weight), pos1[2] + ((pos2[2] - pos1[2]) * weight))
+    return (
+        pos1[0] + ((pos2[0] - pos1[0]) * weight),
+        pos1[1] + ((pos2[1] - pos1[1]) * weight),
+        pos1[2] + ((pos2[2] - pos1[2]) * weight)
+    )
 
 
 def closest_point_on_line(pnt, line1, line2, clamp_segment=False):
@@ -162,7 +166,7 @@ def smooth_step(value, range_start=0.0, range_end=1.0, smooth=1.0):
     normalized_val = value / range_val
 
     # Get smooth value
-    smooth_val = pow(normalized_val, 2) * (3-(normalized_val*2))
+    smooth_val = pow(normalized_val, 2) * (3 - (normalized_val * 2))
     smooth_val = normalized_val + ((smooth_val-normalized_val) * smooth)
     value = range_start + (range_val * smooth_val)
 
@@ -186,16 +190,16 @@ def distribute_value(samples, spacing=1.0, range_start=0.0, range_end=1.0):
 
     # Find unit distance
     factor = 1.0
-    for i in range(samples-2):
+    for i in range(samples - 2):
         unit += factor * spacing
         factor *= spacing
     unit = value_dst / unit
     total_unit = unit
 
     # Build Sample list
-    for i in range(samples-2):
+    for i in range(samples - 2):
         mult_factor = total_unit / value_dst
-        value_list.append(range_start-((range_start - range_end) * mult_factor))
+        value_list.append(range_start - ((range_start - range_end) * mult_factor))
         unit *= spacing
         total_unit += unit
 
@@ -205,7 +209,7 @@ def distribute_value(samples, spacing=1.0, range_start=0.0, range_end=1.0):
     return value_list
 
 
-def inverse_distance_weight_1D(value_array, sample_value, value_domain=(0,1), cycle_value=False):
+def inverse_distance_weight_1d(value_array, sample_value, value_domain=(0, 1), cycle_value=False):
     """
     Returns the inverse distance weight for a given sample point given an array of scalar values
     :param value_array: list<float>, value array to calculate weights from
@@ -235,10 +239,10 @@ def inverse_distance_weight_1D(value_array, sample_value, value_domain=(0,1), cy
             dst = 0.00001
 
         dst_array.append(dst)
-        total_inv_dst += 1.0/dst
+        total_inv_dst += 1.0 / dst
 
     # Normalize value weights
-    weight_array = [(1.0/d)/total_inv_dst for d in dst_array]
+    weight_array = [(1.0 / d) / total_inv_dst for d in dst_array]
 
     return weight_array
 

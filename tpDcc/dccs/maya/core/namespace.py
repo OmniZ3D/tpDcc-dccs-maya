@@ -59,7 +59,7 @@ def get_namespace_from_list(objs_list, check_obj=True, top_only=True):
         obj_list = [str(objs_list)]
     for obj in objs_list:
         namespace = get_namespace(obj, check_obj=check_obj, top_only=top_only)
-        if not namespace in namespaces:
+        if namespace not in namespaces:
             namespaces.append(namespace)
 
     return namespaces
@@ -247,8 +247,11 @@ def find_unique_namespace(namespace, increment_fn=None):
     if not namespace_exists(namespace):
         return namespace
 
+    def _increment(b, i):
+        return "%s%02i" % (b, i)
+
     if not increment_fn:
-        increment_fn = lambda b, i: "%s%02i" % (b, i)
+        increment_fn = _increment
 
     index = 1
     while True:

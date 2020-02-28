@@ -123,9 +123,12 @@ def get_mirror_rig_color_by_color(cl):
 
     for rig_type, side_colors in rig_colors.items():
         for side, rig_color in side_colors.items():
-            if side == 'left': mirror_side = 'right'
-            elif side == 'right': mirror_side = 'left'
-            else: mirror_side = side
+            if side == 'left':
+                mirror_side = 'right'
+            elif side == 'right':
+                mirror_side = 'left'
+            else:
+                mirror_side = side
             if cl == rig_color:
                 return rig_colors[rig_type][mirror_side]
             elif cl == rig_color.lighter():

@@ -173,7 +173,8 @@ class MetaDataManager(window.MainWindow, object):
             METANODE_CLASSES_REGISTER[meta_class.__name__] = meta_class
             METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__] = dict()
             METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__]['full'] = list(inspect.getmro(meta_class))
-            METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__]['short'] = [n.__name__ for n in inspect.getmro(meta_class)]
+            METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__]['short'] = [
+                n.__name__ for n in inspect.getmro(meta_class)]
 
     @staticmethod
     def register_meta_types(node_types=None):

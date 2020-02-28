@@ -23,8 +23,10 @@ LOGGER = logging.getLogger()
 
 # ===================================================================================
 
-_DPI_SCALE = 1.0 if not hasattr(maya.cmds, "mayaDpiSetting") else maya.cmds.mayaDpiSetting(query=True, realScaleValue=True)
+_DPI_SCALE = 1.0 if not hasattr(
+    maya.cmds, "mayaDpiSetting") else maya.cmds.mayaDpiSetting(query=True, realScaleValue=True)
 current_progress_bar = None
+
 
 # ===================================================================================
 
@@ -56,6 +58,7 @@ def maya_undo(fn):
             maya.cmds.undoInfo(closeChunk=True)
 
     return lambda *args, **kwargs: maya.utils.executeDeferred(wrapper, *args, **kwargs)
+
 
 @contextlib.contextmanager
 def maya_no_undo():
@@ -135,7 +138,8 @@ def get_script_editor(source_type='python', command_completion=False, show_toolt
 
     maya.cmds.window()
     maya.cmds.columnLayout()
-    executer = maya.cmds.cmdScrollFieldExecuter(sourceType=source_type, commandCompletion=command_completion, showTooltipHelp=show_tooltip_help)
+    executer = maya.cmds.cmdScrollFieldExecuter(
+        sourceType=source_type, commandCompletion=command_completion, showTooltipHelp=show_tooltip_help)
     qtobj = to_qt_object(executer, QTextEdit)
     return executer, qtobj
 
@@ -242,10 +246,10 @@ def get_playblack_slider():
 def get_time_slider_range(highlighted=True, within_highlighted=True, highlighted_only=False):
     """
     Return the time range from Maya time slider
-    :param highlighted: bool, If True it will return a selected frame range (if there is any selection of more than one frame) else
-    it will return min and max playblack time
-    :param within_highlighted: bool, Maya returns the highlighted range end as a plus one value by default. If True, this is fixed by
-    removing one from the last frame number
+    :param highlighted: bool, If True it will return a selected frame range (if there is any selection of
+        more than one frame) else it will return min and max playblack time
+    :param within_highlighted: bool, Maya returns the highlighted range end as a plus one value by default.
+        If True, this is fixed by removing one from the last frame number
     :param highlighted_only: bool, If True, it wil return only highlighted frame range
     :return: list<float, float>, [start_frame, end_frame]
     """
@@ -259,7 +263,8 @@ def get_time_slider_range(highlighted=True, within_highlighted=True, highlighted
             return highlighted_range
 
     if not highlighted_only:
-        return [maya.cmds.playbackOptions(query=True, minTime=True), maya.cmds.playbackOptions(query=True, maxTime=True)]
+        return [maya.cmds.playbackOptions(
+            query=True, minTime=True), maya.cmds.playbackOptions(query=True, maxTime=True)]
 
 
 def get_is_standalone():
@@ -346,8 +351,10 @@ def create_independent_panel(width, height, off_screen=False):
     """
 
     screen_width, screen_height = get_available_screen_size()
-    top_left = [int((screen_height-height)*0.5), int((screen_width-width)*0.5)]
-    window = maya.cmds.window(width=width, height=height, topLeftCorner=top_left, menuBarVisible=False, titleBar=False, visible=not off_screen)
+    top_left = [int((screen_height - height) * 0.5), int((screen_width - width) * 0.5)]
+    window = maya.cmds.window(
+        width=width, height=height, topLeftCorner=top_left,
+        menuBarVisible=False, titleBar=False, visible=not off_screen)
     maya.cmds.paneLayout()
     panel = maya.cmds.modelPanel(menuBarVisible=False, label='CapturePanel')
     # Hide icons under panel menus
@@ -482,7 +489,7 @@ def get_ui_gvars():
                 raise TypeError
             target_widget = to_qt_object(maya_name=tmp)
             widget_type = type(target_widget)
-            if widget_type == type(None):
+            if widget_type is None:
                 raise ValueError
         except Exception:
             continue
@@ -578,8 +585,8 @@ def add_maya_widget(layout, layout_parent, maya_fn, *args, **kwargs):
     return qtobj, maya_ui
 
 
-def add_attribute_widget(layout, layout_parent, lbl, attr=None, attr_type='cbx', size=[10, 60, 40, 80], attr_changed_fn=None):
-
+def add_attribute_widget(layout, layout_parent, lbl, attr=None, attr_type='cbx', size=[10, 60, 40, 80],
+                         attr_changed_fn=None):
     if attr and not maya.cmds.objExists(attr):
         return False
 
@@ -595,16 +602,17 @@ def add_attribute_widget(layout, layout_parent, lbl, attr=None, attr_type='cbx',
             maya.cmds.connectControl(ui_item, attr)
 
         if attr_type == 'color':
-            ui_item = maya.cmds.attrColorSliderGrp(label=lbl, attribute=attr, cl4=['left', 'left', 'left', 'left'], cw4=[10, 15, 50, 80])
+            ui_item = maya.cmds.attrColorSliderGrp(
+                label=lbl, attribute=attr, cl4=['left', 'left', 'left', 'left'], cw4=[10, 15, 50, 80])
 
         if attr_type == 'floatSlider':
-            ui_item = maya.cmds.attrFieldSliderGrp(label=lbl, attribute=attr,
-                                              cl4=['left', 'left', 'left', 'left'], cw4=size, pre=2)
+            ui_item = maya.cmds.attrFieldSliderGrp(
+                label=lbl, attribute=attr, cl4=['left', 'left', 'left', 'left'], cw4=size, pre=2)
             maya.cmds.attrFieldSliderGrp(ui_item, changeCommand=lambda *args: attr_changed_fn(attr), edit=True)
 
         if attr_type == 'floatSliderMesh':
-            ui_item = maya.cmds.attrFieldSliderGrp(label=lbl, attribute=attr,
-                                              cl3=["left", "left", "left"], cw3=size, pre=2)
+            ui_item = maya.cmds.attrFieldSliderGrp(
+                label=lbl, attribute=attr, cl3=["left", "left", "left"], cw3=size, pre=2)
             maya.cmds.attrFieldSliderGrp(ui_item, changeCommand=lambda *args: attr_changed_fn(attr), edit=True)
 
         if attr_type == 'float2Col':
@@ -712,7 +720,8 @@ class DockWrapper(object):
         if self._exists():
             maya.cmds.dockControl(self._dock_name, visible=True)
         else:
-            maya.cmds.dockControl(self._dock_name, aa=self._allowed_areas, a=self._dock_area, content=self._name, label=self._label, fl=floating, visible=True, fcc=self._floating_changed)
+            maya.cmds.dockControl(self._dock_name, aa=self._allowed_areas, a=self._dock_area, content=self._name,
+                                  label=self._label, fl=floating, visible=True, fcc=self._floating_changed)
 
     def set_name(self, name):
         self._name = name

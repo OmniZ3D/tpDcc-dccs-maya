@@ -44,7 +44,8 @@ def toggle_color_management():
     Toggles color management enable/disable status
     """
 
-    return maya.cmds.colorManagementPrefs(cmEnabled=not maya.cmds.colorManagementPrefs(cmEnabled=True, query=True), edit=True)
+    return maya.cmds.colorManagementPrefs(
+        cmEnabled=not maya.cmds.colorManagementPrefs(cmEnabled=True, query=True), edit=True)
 
 
 def get_all_rendering_space_names():
@@ -66,7 +67,7 @@ def set_rendering_space(rendering_space):
     if type(rendering_space) is int:
         rendering_space = all_rendering_space_names[rendering_space]
     else:
-        if not rendering_space in all_rendering_space_names:
+        if rendering_space not in all_rendering_space_names:
             LOGGER.warning('Color Management Rendering Space "{}" is not valid!'.format(rendering_space))
             return
 
@@ -92,7 +93,7 @@ def set_view_transform(view_transform):
     if type(view_transform) is int:
         view_transform = get_all_view_transform_names[view_transform]
     else:
-        if not view_transform in all_available_view_transforms:
+        if view_transform not in all_available_view_transforms:
             LOGGER.warning('Color Management View Transform "{}" is not valid!'.format(view_transform))
             return
 

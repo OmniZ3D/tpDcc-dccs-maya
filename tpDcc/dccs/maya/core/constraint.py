@@ -11,7 +11,8 @@ import tpDcc as tp
 from tpDcc.libs.python import python
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import attribute, mathutils, name as name_utils, transform as transform_utils, shape as shape_utils
+from tpDcc.dccs.maya.core import attribute, mathutils, name as name_utils, transform as transform_utils
+from tpDcc.dccs.maya.core import shape as shape_utils
 
 
 class Constraints(object):
@@ -185,7 +186,7 @@ class Constraint(object):
         remap.create()
 
         if self._set_to_last:
-            maya.cmds.setAttr('{}.{}'.format(node, attribute), (len(attrs)-1))
+            maya.cmds.setAttr('{}.{}'.format(node, attribute), (len(attrs) - 1))
 
     def delete_constraints(self, xform, constraint_type=None):
         """
@@ -294,27 +295,34 @@ class MatrixConstraintNodes(object):
 
         maya.cmds.connectAttr(matrix_attribute, '{}.inputMatrix'.format(self._node_decompose_matrix))
         if self._connect_translate:
-            maya.cmds.connectAttr('{}.outputTranslate'.format(self._node_decompose_matrix), '{}.translate'.format(self._target))
+            maya.cmds.connectAttr(
+                '{}.outputTranslate'.format(self._node_decompose_matrix), '{}.translate'.format(self._target))
         if self._connect_rotate:
             if maya.cmds.nodeType(self._target) == 'joint':
-                maya.cmds.connectAttr('{}.outputTranslate'.format(self._node_decompose_matrix, '{}.jointOrient'.format(self._target)))
+                maya.cmds.connectAttr(
+                    '{}.outputTranslate'.format(self._node_decompose_matrix, '{}.jointOrient'.format(self._target)))
             else:
-                maya.cmds.connectAttr('{}.outputRotate'.format(self._node_decompose_matrix), '{}.rotate'.format(self._target))
+                maya.cmds.connectAttr(
+                    '{}.outputRotate'.format(self._node_decompose_matrix), '{}.rotate'.format(self._target))
         if self._connect_scale:
-            maya.cmds.connectAttr('{}.outputScale'.format(self._node_decompose_matrix), '{}.scale'.format(self._target))
+            maya.cmds.connectAttr(
+                '{}.outputScale'.format(self._node_decompose_matrix), '{}.scale'.format(self._target))
 
     def _create_joint_offset(self):
         euler_to_quat = maya.cmds.createNode('eulerToQuat', name_utils.find_unique_name(self.description))
         quat_invert = maya.cmds.createNode('quatInvert', name_utils.find_unique_name(self.description))
         quat_prod = maya.cmds.createNode('quatProd', name_utils.find_unique_name(self.description))
-        self._joint_orient_quat_to_euler = maya.cmds.createNode('quatToEuler', name_utils.find_unique_name(self.description))
+        self._joint_orient_quat_to_euler = maya.cmds.createNode(
+            'quatToEuler', name_utils.find_unique_name(self.description))
 
         maya.cmds.connectAttr('{}.jointOrient'.format(self._target), '{}.inputRotate'.format(euler_to_quat))
         maya.cmds.connectAttr('{}.outputQuat'.format(euler_to_quat), '{}.inputQuat'.format(quat_invert))
         maya.cmds.connectAttr('{}.outputQuat'.format(self._node_decompose_matrix), '{}.input1Quat'.format(quat_prod))
         maya.cmds.connectAttr('{}.outputQuat'.format(quat_invert), '{}.input2Quat'.format(quat_prod))
-        maya.cmds.connectAttr('{}.outputQuat'.format(quat_prod), '{}.inputQuat'.format(self._joint_orient_quat_to_euler))
-        maya.cmds.connectAttr('{}.outputRotate'.format(self._joint_orient_quat_to_euler), '{}.rotate'.format(self._target))
+        maya.cmds.connectAttr(
+            '{}.outputQuat'.format(quat_prod), '{}.inputQuat'.format(self._joint_orient_quat_to_euler))
+        maya.cmds.connectAttr(
+            '{}.outputRotate'.format(self._joint_orient_quat_to_euler), '{}.rotate'.format(self._target))
 
 
 class MatrixConstraint(MatrixConstraintNodes, object):
@@ -497,7 +505,7 @@ class SpaceSwitch(MatrixConstraintNodes):
             var.create(node)
             var.set_enum_names(switch_names)
             var.set_locked(False)
-            var.set_value(len(switch_names)-1)
+            var.set_value(len(switch_names) - 1)
             var.connect_out('{}.selector'.format(switch_node))
         elif maya.cmds.nodeType(switch_node) == 'wtAddMatrix':
             indices = attribute.get_indices('{}.wtMatrix'.format(switch_node))
@@ -510,7 +518,7 @@ class SpaceSwitch(MatrixConstraintNodes):
 
             if len(attrs) > 1:
                 try:
-                    maya.cmds.setAttr('{}.{}'.format(node, attr), (len(attrs)-1))
+                    maya.cmds.setAttr('{}.{}'.format(node, attr), (len(attrs) - 1))
                 except Exception:
                     pass
             elif len(attrs) == 1:
@@ -526,7 +534,8 @@ class SpaceSwitch(MatrixConstraintNodes):
             matrix.set_description('{}_{}'.format(slot_index + 1, self.description))
             matrix.create()
             matrix_node = matrix.node_multiply_matrix
-            maya.cmds.connectAttr('{}.matrixSum'.format(matrix_node), '{}.wtMatrix[{}].matrixIn'.format(switch_node, slot_index))
+            maya.cmds.connectAttr(
+                '{}.matrixSum'.format(matrix_node), '{}.wtMatrix[{}].matrixIn'.format(switch_node, slot_index))
             weight_attr = 'wtMatrix[{}].weightIn'.format(slot_index)
             self._weight_attributes.append(weight_attr)
         if node_type == 'choice':
@@ -534,7 +543,8 @@ class SpaceSwitch(MatrixConstraintNodes):
             matrix.set_description('{}_{}'.format(slot_index + 1, self.description))
             matrix.create()
             matrix_node = matrix.node_multiply_matrix
-            maya.cmds.connectAttr('{}.matrixSum'.format(matrix_node), '{}.input[{}]'.format(self._node_choice, slot_index))
+            maya.cmds.connectAttr(
+                '{}.matrixSum'.format(matrix_node), '{}.input[{}]'.format(self._node_choice, slot_index))
 
     def _create_space_switch(self):
         if self._use_weight:
@@ -604,14 +614,17 @@ def scale_constraint_to_world(scale_constraint):
     weight_count = cns.get_weight_count(scale_constraint)
     node = attribute.get_attribute_outputs('{}.constraintScaleX'.format(scale_constraint), node_only=True)
     if node:
-        maya.cmds.connectAttr('{}.parentInverseMatrix'.format(node[0]), '{}.constraintParentInverseMatrix'.format(scale_constraint))
+        maya.cmds.connectAttr(
+            '{}.parentInverseMatrix'.format(node[0]), '{}.constraintParentInverseMatrix'.format(scale_constraint))
 
     for i in range(weight_count):
         target = attribute.get_attribute_input('{}.target[{}].targetScale'.format(scale_constraint, i), True)
-        maya.cmds.connectAttr('{}.parentInverseMatrix'.format(target), '{}.target[{}].targetParentMatrix'.format(scale_constraint, i))
+        maya.cmds.connectAttr(
+            '{}.parentInverseMatrix'.format(target), '{}.target[{}].targetParentMatrix'.format(scale_constraint, i))
 
 
-def constraint_local(source_transform, target_transform, parent=False, scale_connect=False, constraint='parentConstraint', use_duplicate=False):
+def constraint_local(source_transform, target_transform, parent=False, scale_connect=False,
+                     constraint='parentConstraint', use_duplicate=False):
     """
     Constraints a target transform to a source one in a way that allows for setups to remain local to the origin.
     Useful whe na control needs to move with a rig, but move something at the origin only when the control moves

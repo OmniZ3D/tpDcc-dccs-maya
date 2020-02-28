@@ -11,7 +11,8 @@ import tpDcc as tp
 from tpDcc.libs.python import mathlib, python, name as name_utils
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import api, geometry, attribute, transform as transform_utils, mesh as mesh_utils, constraint as constraint_utils
+from tpDcc.dccs.maya.core import api, geometry, attribute, transform as transform_utils
+from tpDcc.dccs.maya.core import mesh as mesh_utils, constraint as constraint_utils
 
 
 class Rivet(object):
@@ -70,7 +71,8 @@ class Rivet(object):
         edge_index_2 = name_utils.get_last_number(self._edges[1])
         vert_iterator = api.IterateEdges(shape)
         vert_ids = vert_iterator.get_connected_vertices(edge_index_1)
-        edge_to_curve_1 = maya.cmds.createNode('polyEdgeToCurve', n=tp.Dcc.find_unique_name('rivetCurve1_{}'.format(self._name)))
+        edge_to_curve_1 = maya.cmds.createNode(
+            'polyEdgeToCurve', n=tp.Dcc.find_unique_name('rivetCurve1_{}'.format(self._name)))
         maya.cmds.setAttr(
             '{}.inputComponents'.format(edge_to_curve_1), 2,
             'vtx[{}]'.format(vert_ids[0]), 'vtx[{}]'.format(vert_ids[1]), type='componentList')
@@ -120,7 +122,8 @@ class Rivet(object):
     def _connect(self):
         if maya.cmds.objExists('{}.worldSpace'.format(self._surface)):
             if self._local:
-                maya.cmds.connectAttr('{}.local'.format(self._surface), '{}.inputSurface'.format(self._point_on_surface))
+                maya.cmds.connectAttr(
+                    '{}.local'.format(self._surface), '{}.inputSurface'.format(self._point_on_surface))
             else:
                 maya.cmds.connectAttr(
                     '{}.worldSpace'.format(self._surface_created), '{}.inputSurface'.format(self._point_on_surface))

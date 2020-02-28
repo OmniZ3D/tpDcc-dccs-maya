@@ -177,7 +177,7 @@ class AttributeValidator(object):
         if not isinstance(lhs, (int, float)) or not isinstance(rhs, (int, float)):
             raise TypeError('Arguments must be "int" or "float"')
 
-        return abs(lhs-rhs) <= sys.float_info.epsilon
+        return abs(lhs - rhs) <= sys.float_info.epsilon
 
     @staticmethod
     def is_string_equivalent(str1, str2):
@@ -329,8 +329,8 @@ class AttributeValidator(object):
     @staticmethod
     def is_list_arg(arg=None, types=None):
         """
-        Returns True if the given arg is a list and all items in that list are instances of given types ele returns False
-        If types is None (default), the type of each item is not tested
+        Returns True if the given arg is a list and all items in that list are instances of given
+        types ele returns False. If types is None (default), the type of each item is not tested
         :param arg: variant, value to validate as a list
         :param types: class or list of types and/or classes
         :return: bool
@@ -399,14 +399,18 @@ class AttributeValidator(object):
             if shapes_len == 1:
                 return maya.cmds.objectType(shapes_list[0])
             elif shapes_len > 1:
-                LOGGER.debug('|{}| >> node: {} has multiple shapes. Returning type for {}. Remaining shapes: {}'.format(fn_name,node,shapes_list[0],shapes_list[1:]))
+                LOGGER.debug(
+                    '|{}| >> node: {} has multiple shapes. Returning type for {}. Remaining shapes: {}'.format(
+                        fn_name, node, shapes_list[0], shapes_list[1:]))
                 shape_type = False
                 for s in shapes_list:
                     s_type = maya.cmds.objectType(s)
                     if not shape_type:
                         shape_type = s_type
                     elif shape_type != s_type:
-                        LOGGER.warning('|{}| >> node: {} has multiple shapes and all do not match. {} != {}'.format(fn_name, node,shape_type,s_type))
+                        LOGGER.warning(
+                            '|{}| >> node: {} has multiple shapes and all do not match. {} != {}'.format(
+                                fn_name, node, shape_type, s_type))
                         return 'transform'
                 return maya.cmds.objectType(shapes_list[0])
             else:
@@ -549,7 +553,7 @@ class AttributeValidator(object):
         if AttributeValidator.is_component(arg):
             LOGGER.debug('|{}| >> component mode ...'.format(fn_name))
             split = arg.split('[')
-            split_join = '['+'['.join(split[1:])
+            split_join = '[' + '['.join(split[1:])
             root_split = split[0].split('.')
             root = root_split[0]
             comp_type = root_split[1]
@@ -561,10 +565,11 @@ class AttributeValidator(object):
     @staticmethod
     def obj_string(arg=None, maya_type=None, is_transform=None, none_valid=False, called_from=None, **kwargs):
         """
-        Returns arg if arg is an existing uniquely named Myaa object, meeting the given arguments of maya_type and
+        Returns arg if arg is an existing uniquely named Maya object, meeting the given arguments of maya_type and
         is_transforms. Otherwise return False if none_valid or raise an exception
         :param arg: str, name of the Maya object to be validated
-        :param maya_type: variant, str || list<str>, one or more Maya types (arg must be in this list for the test to pass)
+        :param maya_type: variant, str || list<str>, one or more Maya types (arg must be in this list for
+            the test to pass)
         :param is_transform: bool, test whether arg is a transform or not
         :param none_valid: bool, Returns False if arg does not pass rather than raise an exception
         :param called_from:
@@ -611,7 +616,7 @@ class AttributeValidator(object):
             if isinstance(maya_type, (basestring)):
                 maya_types_list = [maya_type]
             arg_maya_type_str = AttributeValidator.get_maya_type(arg)
-            if not arg_maya_type_str in maya_types_list:
+            if arg_maya_type_str not in maya_types_list:
                 if none_valid:
                     result = False
                 else:
@@ -671,7 +676,8 @@ class AttributeValidator(object):
             except Exception:
                 pass
 
-            tmp = AttributeValidator.obj_string(arg=arg, maya_type=maya_type, is_transform=is_transform,none_valid=none_valid)
+            tmp = AttributeValidator.obj_string(
+                arg=arg, maya_type=maya_type, is_transform=is_transform, none_valid=none_valid)
             if tmp:
                 result.append(tmp)
             else:
@@ -712,14 +718,18 @@ class AttributeValidator(object):
                 if maya_type in types:
                     result.append(s)
                 else:
-                    LOGGER.warning('Attribute Validator | Maya Shape | invalid type: {0} | {1} | shape: {2}'.format(maya_type,types, s))
+                    LOGGER.warning(
+                        'Attribute Validator | Maya Shape | invalid type: {0} | {1} | shape: {2}'.format(
+                            maya_type,types, s))
 
         if not result:
             return False
 
         if single_return:
             if len(result) > 1:
-                LOGGER.warning('Attribute Validator | Maya Shape | >> Too many shapes ({0}). Using first: {1}'.format(len(result), result))
+                LOGGER.warning(
+                    'Attribute Validator | Maya Shape | >> Too many shapes ({0}). Using first: {1}'.format(
+                        len(result), result))
             return result[0]
 
         return result
@@ -828,8 +838,8 @@ class AttributeValidator(object):
         if file_path is None:
             if start_dir is None:
                 start_dir = maya.cmds.workspace(query=True, rootDirectory=True)
-            file_path = maya.cmds.fileDialog2(dialogStyle=2, fileMode=file_mode, startingDirectory=start_dir,
-                                         fileFilter=file_filter)
+            file_path = maya.cmds.fileDialog2(
+                dialogStyle=2, fileMode=file_mode, startingDirectory=start_dir, fileFilter=file_filter)
             if file_path:
                 file_path = file_path[0]
 
@@ -1042,13 +1052,13 @@ class Connection(object):
         """
 
         for i in range(0, len(self.connections), 2):
-            if maya.cmds.isConnected(self.connections[i], self.connections[i+1], ignoreUnitConversion=True):
-                lock_state = maya.cmds.getAttr(self.connections[i+1], l=True)
+            if maya.cmds.isConnected(self.connections[i], self.connections[i + 1], ignoreUnitConversion=True):
+                lock_state = maya.cmds.getAttr(self.connections[i + 1], long=True)
                 if lock_state:
-                    maya.cmds.setAttr(self.connections[i+1], l=False)
+                    maya.cmds.setAttr(self.connections[i + 1], long=False)
                     maya.cmds.disconnectAttr(self.connections[i], self.connections[i+1])
                 if lock_state:
-                    maya.cmds.setAttr(self.connections[i+1], l=True)
+                    maya.cmds.setAttr(self.connections[i + 1], long=True)
 
     def connect(self):
         """
@@ -1056,16 +1066,16 @@ class Connection(object):
         """
 
         for i in range(0, len(self.connections), 2):
-            if not maya.cmds.objExists(self.connections[i]) or not maya.cmds.objExists(self.connections[i+1]):
+            if not maya.cmds.objExists(self.connections[i]) or not maya.cmds.objExists(self.connections[i + 1]):
                 continue
 
-            if not maya.cmds.isConnected(self.connections[i], self.connections[i+1], ignoreUnitConversion=True):
-                lock_state = maya.cmds.getAttr(self.connections[i+1], l=True)
+            if not maya.cmds.isConnected(self.connections[i], self.connections[i + 1], ignoreUnitConversion=True):
+                lock_state = maya.cmds.getAttr(self.connections[i + 1], long=True)
                 if lock_state:
-                    maya.cmds.setAttr(self.connections[i+1], l=False)
-                maya.cmds.connectAttr(self.connections[i], self.connections[i+1])
+                    maya.cmds.setAttr(self.connections[i + 1], long=False)
+                maya.cmds.connectAttr(self.connections[i], self.connections[i + 1])
                 if lock_state:
-                    maya.cmds.setAttr(self.connections[i+1], l=True)
+                    maya.cmds.setAttr(self.connections[i + 1], long=True)
 
     def refresh(self):
         """
@@ -1447,7 +1457,7 @@ class Attribute(object):
         if not self.exists():
             return
 
-        maya.cmds.setAttr(self.get_full_name(), l=self.locked)
+        maya.cmds.setAttr(self.get_full_name(), long=self.locked)
 
     def _set_keyable(self):
         """
@@ -1505,7 +1515,8 @@ class NumericAttribute(Attribute, object):
     def __init__(self, attribute_name, node=None, **kwargs):
         if kwargs.get('value') is None:
             kwargs['value'] = 0
-        super(NumericAttribute, self).__init__(attribute_name, node=node, attribute_type=AttributeTypes.Double, **kwargs)
+        super(NumericAttribute, self).__init__(
+            attribute_name, node=node, attribute_type=AttributeTypes.Double, **kwargs)
 
         self.min_value = None
         self.max_value = None
@@ -1704,7 +1715,7 @@ class LockState(object):
     """
 
     def __init__(self, attr):
-        self.lock_state = maya.cmds.getAttr(attr, l=True)
+        self.lock_state = maya.cmds.getAttr(attr, long=True)
         self.attribute = attr
 
     def unlock(self):
@@ -1712,21 +1723,21 @@ class LockState(object):
         Unlock the attribute
         """
 
-        maya.cmds.setAttr(self.attribute, l=False)
+        maya.cmds.setAttr(self.attribute, long=False)
 
     def lock(self):
         """
         Lock the attribute
         """
 
-        maya.cmds.setAttr(self.attribute, l=True)
+        maya.cmds.setAttr(self.attribute, long=True)
 
     def restore_initial(self):
         """
         Restore the initial lock state
         """
 
-        maya.cmds.setAttr(self.attribute, l=self.lock_state)
+        maya.cmds.setAttr(self.attribute, long=self.lock_state)
 
 
 class LockAttributesState(LockState, object):
@@ -1742,7 +1753,7 @@ class LockAttributesState(LockState, object):
 
         for attr in self.attributes:
             try:
-                self.lock_state[attr] = maya.cmds.getAttr('{}.{}'.format(node, attr), l=True)
+                self.lock_state[attr] = maya.cmds.getAttr('{}.{}'.format(node, attr), long=True)
             except Exception:
                 pass
 
@@ -1754,7 +1765,7 @@ class LockAttributesState(LockState, object):
         for attr in self.attributes:
             try:
                 attr_name = '{}.{}'.format(self.node, attr)
-                maya.cmds.setAttr(attr_name, l=False)
+                maya.cmds.setAttr(attr_name, long=False)
             except Exception:
                 pass
 
@@ -1766,7 +1777,7 @@ class LockAttributesState(LockState, object):
         for attr in self.attributes:
             try:
                 attr_name = '{}.{}'.format(self.node, attr)
-                maya.cmds.setAttr(attr_name, l=True)
+                maya.cmds.setAttr(attr_name, long=True)
             except Exception:
                 pass
 
@@ -1778,7 +1789,7 @@ class LockAttributesState(LockState, object):
         for attr in self.attributes:
             try:
                 attr_name = '{}.{}'.format(self.node, attr)
-                maya.cmds.setAttr(attr_name, l=self.lock_state[attr])
+                maya.cmds.setAttr(attr_name, long=self.lock_state[attr])
             except Exception:
                 pass
 
@@ -2259,7 +2270,7 @@ def is_locked(attr):
 
     check_attribute(attr)
 
-    return maya.cmds.getAttr(attr, l=True)
+    return maya.cmds.getAttr(attr, long=True)
 
 
 def is_connected(attr):
@@ -2486,7 +2497,8 @@ def get_attribute_outputs(node_and_attribute, node_only=False):
         if node_only:
             plug = False
 
-        return maya.cmds.listConnections(node_and_attribute, plugs=plug, connections=False, destination=True, source=False, skipConversionNodes=True)
+        return maya.cmds.listConnections(
+            node_and_attribute, plugs=plug, connections=False, destination=True, source=False, skipConversionNodes=True)
 
 
 def add_attribute(node, attr, value=None, attr_type=None, hidden=False, **kwargs):
@@ -2530,7 +2542,8 @@ def add_attribute(node, attr, value=None, attr_type=None, hidden=False, **kwargs
                             maya.cmds.setAttr('{0}.{1}'.format(node, attr), **set_kwargs_to_edit)
                             LOGGER.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
                     except Exception:
-                        LOGGER.debug('node is referenced and the setEditFlags are therefore invalid (lock, keyable, channelBox)')
+                        LOGGER.debug(
+                            'node is referenced and the setEditFlags are therefore invalid (lock, keyable, channelBox)')
         except Exception:
             if node_utils.is_referenced(node_name=node):
                 LOGGER.debug('{0} : Trying to modify an attr on a reference node'.format(attr))
@@ -2540,7 +2553,8 @@ def add_attribute(node, attr, value=None, attr_type=None, hidden=False, **kwargs
                 attr_type = validate_attribute_data_type(value)
 
             if 'dt'in attr_mapping[attr_type]:
-                maya.cmds.setAttr('{0}.{1}'.format(node, attr), value, edit=True, **{'typ': attr_mapping[attr_type]['dt']})
+                maya.cmds.setAttr(
+                    '{0}.{1}'.format(node, attr), value, edit=True, **{'typ': attr_mapping[attr_type]['dt']})
             else:
                 maya.cmds.setAttr('{0}.{1}'.format(node, attr), value, edit=True)
 
@@ -2558,7 +2572,9 @@ def add_attribute(node, attr, value=None, attr_type=None, hidden=False, **kwargs
                 add_kwargs_to_edit.pop('dv')
             attr_mapping[attr_type].update(add_kwargs_to_edit)
 
-            LOGGER.debug('addAttr : {0} : value_type : {1} > data_type keywords: {2}'.format(attr, attr_type, attr_mapping[str(attr_type)]))
+            LOGGER.debug(
+                'addAttr : {0} : value_type : {1} > data_type keywords: {2}'.format(
+                    attr, attr_type, attr_mapping[str(attr_type)]))
 
             maya.cmds.addAttr(node, longName=attr, **attr_mapping[str(attr_type)])
 
@@ -2654,7 +2670,8 @@ def next_available_multi_index(attr, start=0, use_connected_only=True, max_index
     Returns the index of the first available index (no incoming connection) element of the given attribute
     :param attr: str, attribute to find next available index for
     :param start: int, multi index to start the connection check from
-    :param use_connected_only: bool, Whether the existing indices are based in incoming connection only. Otherwise, any existing indices will be considered unavailable
+    :param use_connected_only: bool, Whether the existing indices are based in incoming connection only.
+        Otherwise, any existing indices will be considered unavailable
     :param max_index: int, maximum index search value
     :return: int
     """
@@ -2799,7 +2816,8 @@ def distribute_attr_value(target_list, target_attr, range_start=0.0, range_end=1
         if not maya.cmds.objExists(target_list[i]+'.'+target_attr):
             raise Exception('Object "{}" has no ".{}" attribute!'.format(target_list[i], target_attr))
 
-    value_list = mathutils.distribute_value(samples=len(target_list), spacing=1.0, range_start=range_start, range_end=range_end)
+    value_list = mathutils.distribute_value(
+        samples=len(target_list), spacing=1.0, range_start=range_start, range_end=range_end)
 
     for i in range(len(target_list)):
         val = value_list[i]
@@ -2855,10 +2873,11 @@ def delete_user_attrs(obj, attrs_list=None, keep_if_connected=False):
                     continue
 
             try:
-                maya.cmds.setAttr('{}.{}'.format(obj, attr), l=False)
+                maya.cmds.setAttr('{}.{}'.format(obj, attr), long=False)
                 maya.cmds.deleteAttr(obj, at=attr)
             except Exception:
-                LOGGER.warning('Problem removing attribute "{}.{}". Skipping to he next attribute ...'.format(obj, attr))
+                LOGGER.warning(
+                    'Problem removing attribute "{}.{}". Skipping to he next attribute ...'.format(obj, attr))
 
     return attr_list
 
@@ -2900,7 +2919,8 @@ def break_connection(obj, attr=None):
     family = dict()
 
     if maya.cmds.connectionInfo(combine, isDestination=True):
-        source_connections = maya.cmds.listConnections(combine, skipConversionNodes=False, destination=False, source=True, plugs=False)
+        source_connections = maya.cmds.listConnections(
+            combine, skipConversionNodes=False, destination=False, source=True, plugs=False)
         if not source_connections:
             family = return_family_dict(obj, attr)
             source_connections = maya.cmds.connectionInfo(combine, sourceFromDestination=True)
@@ -3105,7 +3125,7 @@ def return_message_data(storage_object, message_attr, long_names=True):
         if msg_links:
             for msg in msg_links:
                 if long_names:
-                    return_list.append(str(maya.cmds.ls(msg, l=True)[0]))
+                    return_list.append(str(maya.cmds.ls(msg, long=True)[0]))
                 else:
                     return_list.append(str(maya.cmds.ls(msg, shortNames=True)[0]))
             return return_list
@@ -3170,7 +3190,8 @@ def store_object_to_message(obj, storage_obj, message_name):
 
     try:
         if maya.cmds.objExists(combined):
-            if maya.cmds.attributeQuery(message_name, node=storage_obj, msg=True) and not maya.cmds.addAttr(combined, query=True, m=True):
+            if maya.cmds.attributeQuery(
+                    message_name, node=storage_obj, msg=True) and not maya.cmds.addAttr(combined, query=True, m=True):
                 if return_message_object(storage_object=storage_obj, message_attr=message_name) != obj:
                     LOGGER.debug('{} already exists. Adding it to existing message node'.format(combined))
                     break_connection(combined)
@@ -3225,13 +3246,15 @@ def store_objects_to_message(objects, storage_obj, message_name):
             delete_attribute(storage_obj, message_name)
             maya.cmds.addAttr(storage_obj, ln=message_name, at='message', m=True, im=False)
             for obj in objects:
-                maya.cmds.connectAttr('{}.message'.format(obj), '{0}.{1}'.format(storage_obj, message_name), nextAvailable=True)
+                maya.cmds.connectAttr(
+                    '{}.message'.format(obj), '{0}.{1}'.format(storage_obj, message_name), nextAvailable=True)
             maya.cmds.setAttr(combined, lock=True)
             return True
         else:
             maya.cmds.addAttr(storage_obj, ln=message_name, at='message', m=True, im=False)
             for obj in objects:
-                maya.cmds.connectAttr('{}.message'.format(obj), '{0}.{1}'.format(storage_obj, message_name), nextAvailable=True)
+                maya.cmds.connectAttr(
+                    '{}.message'.format(obj), '{0}.{1}'.format(storage_obj, message_name), nextAvailable=True)
             maya.cmds.setAttr(combined, lock=True)
             return True
     except Exception:
@@ -3251,10 +3274,10 @@ def store_world_matrix_to_attribute(transform, attribute_name='origMatrix', skip
     if maya.cmds.objExists('{}.{}'.format(transform, attribute_name)):
         if skip_if_exists:
             return
-        maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), l=False)
+        maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), long=False)
         maya.cmds.deleteAttr('{}.{}'.format(transform, attribute_name))
     maya.cmds.addAttr(transform, ln=attribute_name, at='matrix')
-    maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), *world_matrix, type='matrix', l=True)
+    maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), *world_matrix, type='matrix', long=True)
 
 
 def repair_message_to_reference_target(obj, attr):
@@ -3287,7 +3310,9 @@ def repair_message_to_reference_target(obj, attr):
                 LOGGER.info('"{0}" restored to "{1}"'.format(target_attr, match_obj))
 
                 if len(message_connections_out) > 1:
-                    LOGGER.warning("Found more than one possible connection. Candidates are:'%s'"%"','".join(message_connections_out))
+                    LOGGER.warning(
+                        "Found more than one possible connection. Candidates are:'%s'"%"','".join(
+                            message_connections_out))
                     return False
                 return match_obj
 
@@ -3373,12 +3398,13 @@ def return_driver_attribute(attr, skip_conversion_nodes=False, long_names=True):
     """
 
     if maya.cmds.connectionInfo(attr, isDestination=True):
-        source_connections = maya.cmds.listConnections(attr, skipConversionNodes=skip_conversion_nodes, destination=False, source=True, plugs=True)
+        source_connections = maya.cmds.listConnections(
+            attr, skipConversionNodes=skip_conversion_nodes, destination=False, source=True, plugs=True)
         if not source_connections:
             source_connections = [maya.cmds.connectionInfo(attr, sourceFromDestination=True)]
         if source_connections:
             if long_names:
-                return str(maya.cmds.ls(source_connections[0], l=True)[0])
+                return str(maya.cmds.ls(source_connections[0], long=True)[0])
             else:
                 return str(maya.cmds.ls(source_connections[0], shortNames=True)[0])
         return False
@@ -3395,12 +3421,13 @@ def return_driver_object(attr, skip_conversion_nodes=False, long_names=True):
     :return: str
     """
 
-    source_objects = maya.cmds.listConnections(attr, skipConversionNodes=skip_conversion_nodes, destination=False, source=True, plugs=False)
+    source_objects = maya.cmds.listConnections(
+        attr, skipConversionNodes=skip_conversion_nodes, destination=False, source=True, plugs=False)
     if not source_objects:
         return False
 
     if long_names:
-        return str(maya.cmds.ls(source_objects[0], l=True)[0])
+        return str(maya.cmds.ls(source_objects[0], long=True)[0])
     else:
         return str(maya.cmds.ls(source_objects[0], shortNames=True)[0])
 
@@ -3415,14 +3442,15 @@ def return_driven_attribute(attr, skip_conversion_nodes=False, long_names=True):
     """
 
     if maya.cmds.connectionInfo(attr, isSource=True):
-        dst_connections = maya.cmds.listConnections(attr, skipConversionNodes=skip_conversion_nodes, destination=True, source=False, plugs=True)
+        dst_connections = maya.cmds.listConnections(
+            attr, skipConversionNodes=skip_conversion_nodes, destination=True, source=False, plugs=True)
         if not dst_connections:
             dst_connections = maya.cmds.connectionInfo(attr, destinationFromSource=True)
         if dst_connections:
             return_list = list()
             for dst in dst_connections:
                 if long_names:
-                    return_list.append(str(maya.cmds.ls(dst, l=True)[0]))
+                    return_list.append(str(maya.cmds.ls(dst, long=True)[0]))
                 else:
                     return_list.append(str(maya.cmds.ls(dst, shortNames=True)[0]))
             return return_list
@@ -3440,7 +3468,8 @@ def return_driven_object(attr, skip_conversion_nodes=False, long_names=True):
     :return: str
     """
 
-    dst_connections = maya.cmds.listConnections(attr, skipConversionNodes=skip_conversion_nodes, destination=True, source=False, plugs=False)
+    dst_connections = maya.cmds.listConnections(
+        attr, skipConversionNodes=skip_conversion_nodes, destination=True, source=False, plugs=False)
     if not dst_connections:
         return False
     if attr in dst_connections:
@@ -3449,7 +3478,7 @@ def return_driven_object(attr, skip_conversion_nodes=False, long_names=True):
     return_list = list()
     for dst in dst_connections:
         if long_names:
-            return_list.append(str(maya.cmds.ls(dst, l=True)[0]))
+            return_list.append(str(maya.cmds.ls(dst, long=True)[0]))
         else:
             return_list.append(str(maya.cmds.ls(dst, shortNames=True)[0]))
 
@@ -3629,7 +3658,8 @@ def get_inputs(node, node_only=True):
 
     plugs = not node_only
 
-    return maya.cmds.listConnections(node, connections=False, destination=False, source=True, plugs=plugs, skipConversionNodes=True)
+    return maya.cmds.listConnections(
+        node, connections=False, destination=False, source=True, plugs=plugs, skipConversionNodes=True)
 
 
 def get_outputs(node, node_only=True):
@@ -3642,7 +3672,8 @@ def get_outputs(node, node_only=True):
 
     plugs = not node_only
 
-    return maya.cmds.listConnections(node, connections=plugs, destination=TransferAttributes, source=False, plugs=plugs, skipConversionNodes=True)
+    return maya.cmds.listConnections(
+        node, connections=plugs, destination=TransferAttributes, source=False, plugs=plugs, skipConversionNodes=True)
 
 
 def transfer_output_connections(source_node, target_node):
@@ -3667,7 +3698,8 @@ def hide_attributes(node, attributes):
     Lock and hide the attributes given
     NOTE: Only should work in individual attributes (such as translateX, not translate)
     :param node: str, name of a node
-    :param attributes: list<str>, list of attributes on node to lock and hide (just name of the attribute, such as translateX
+    :param attributes: list<str>, list of attributes on node to lock and hide
+        (just name of the attribute, such as translateX
     """
 
     attrs = python.force_list(attributes)
@@ -3681,7 +3713,7 @@ def hide_attributes(node, attributes):
             for axis in 'XYZ':
                 attrs.append('{}{}'.format(attr, axis))
 
-        maya.cmds.setAttr(current_attr, l=True, k=False)
+        maya.cmds.setAttr(current_attr, long=True, k=False)
 
 
 def hide_keyable_attributes(node):
@@ -3754,7 +3786,8 @@ def get_color(shape_node):
     if not maya.cmds.objExists('{}.overrideColor'.format(shape_node)):
         return 0
 
-    if not maya.cmds.getAttr('{}.overrideRGBColors'.format(shape_node)) or not maya.cmds.objExists('{}.overrideRGBColors'.format(shape_node)):
+    if not maya.cmds.getAttr('{}.overrideRGBColors'.format(
+            shape_node)) or not maya.cmds.objExists('{}.overrideRGBColors'.format(shape_node)):
         color = maya.cmds.getAttr('{}.overrideColor'.format(shape_node))
 
         return color
@@ -3808,7 +3841,8 @@ def set_color(nodes, color, color_transform=False, short_range=False):
     :param nodes: list<str>, list of nodes to change the override color
     :param color: variant, list || int, color index to set override color to or color RGB list
     :param color_transform: bool, whether to override the shapes of the color or the transform itself
-    :param short_range: bool, Whether color calculations are made using short range (values between 0 and 1) or long range (values betten 0 and 255)
+    :param short_range: bool, Whether color calculations are made using short range (values between 0 and 1)
+        or long range (values betten 0 and 255)
     """
 
     nodes = python.force_list(nodes)
@@ -3842,7 +3876,8 @@ def set_color(nodes, color, color_transform=False, short_range=False):
                     if maya.cmds.attributeQuery('overrideRGBColors', node=node, exists=True):
                         maya.cmds.setAttr(node + '.overrideRGBColors', True)
                         if maya.cmds.attributeQuery('overrideColorRGB', node=node, exists=True):
-                            maya.cmds.setAttr(node + '.overrideColorRGB', color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0)
+                            maya.cmds.setAttr(node + '.overrideColorRGB',
+                                              color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0)
     else:
         for node in nodes:
             shapes = list()
@@ -3863,7 +3898,8 @@ def set_color(nodes, color, color_transform=False, short_range=False):
                             if maya.cmds.attributeQuery('overrideRGBColors', node=shape, exists=True):
                                 maya.cmds.setAttr(shape + '.overrideRGBColors', True)
                                 if maya.cmds.attributeQuery('overrideColorRGB', node=shape, exists=True):
-                                    maya.cmds.setAttr(shape + '.overrideColorRGB', color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0)
+                                    maya.cmds.setAttr(shape + '.overrideColorRGB',
+                                                      color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0)
 
 
 def get_attribute_values(node, keyable_only=True):
@@ -3962,7 +3998,7 @@ def unlock_attributes(node, attributes=None, only_keyable=False):
     if attributes:
         attributes = python.force_list(attributes)
         for attr in attributes:
-            maya.cmds.setAttr('{}.{}'.format(node, attr), l=False, k=True, cb=True)
+            maya.cmds.setAttr('{}.{}'.format(node, attr), long=False, k=True, cb=True)
             maya.cmds.setAttr('{}.{}'.format(node, attr), k=True)
 
 
@@ -4231,7 +4267,8 @@ def connect_multiply(source_attr, target_attr, value=0.1, skip_attach=False, plu
     :param source_attr: str, node.attribute name of an attribute
     :param target_attr: str, node.attribute name of an attribute
     :param value: float, value of the mulitplyDivide
-    :param skip_attach: bool, Whether to attach the input into target attribute (if there is one) into input2X of multiplyDivide
+    :param skip_attach: bool, Whether to attach the input into target attribute
+        (if there is one) into input2X of multiplyDivide
     :param plus: bool, Whether to fix input connections in target_attr to plug into a plusMinusAverage. This allow us
     not loosing their influence on that attribute while still multiplying by the source_attr
     :return: str, name of the multiplyDivide node

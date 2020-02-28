@@ -154,7 +154,8 @@ class IkHandle(object):
     # endregion
 
 
-def create_spline_ik_stretch(curve, joints, node_for_attribute=None, create_stretch_on_off=False, create_bulge=True, scale_axis='X'):
+def create_spline_ik_stretch(
+        curve, joints, node_for_attribute=None, create_stretch_on_off=False, create_bulge=True, scale_axis='X'):
     """
     Makes the joints stretch on the curve
     :param curve: str, name of the curve that joints are attached via Spline IK
@@ -190,7 +191,7 @@ def create_spline_ik_stretch(curve, joints, node_for_attribute=None, create_stre
     maya.cmds.setAttr('{}.operation'.format(multiply), 2)
 
     joint_count = len(joints)
-    segment = 1.00/joint_count
+    segment = 1.00 / joint_count
     percent = 0
 
     for jnt in joints:
@@ -272,9 +273,11 @@ def create_simple_spline_ik_stretch(curve, joints, stretch_axis='Y'):
     arclen_node = maya.cmds.arclen(curve, ch=True, n=tp.Dcc.find_unique_name('curveInfo_{}'.format(curve)))
     arclen_node = maya.cmds.rename(arclen_node, tp.Dcc.find_unique_name('curveInfo_{}'.format(curve)))
 
-    multiply_scale_offset = maya.cmds.createNode('multiplyDivide', n=tp.Dcc.find_unique_name('multiplyDivide_offset_{}'.format(arclen_node)))
+    multiply_scale_offset = maya.cmds.createNode(
+        'multiplyDivide', n=tp.Dcc.find_unique_name('multiplyDivide_offset_{}'.format(arclen_node)))
     maya.cmds.setAttr('{}.operation'.format(multiply_scale_offset), 2)
-    multiply = maya.cmds.createNode('multiplyDivide', n=tp.Dcc.find_unique_name('multiplyDivide_{}'.format(arclen_node)))
+    multiply = maya.cmds.createNode(
+        'multiplyDivide', n=tp.Dcc.find_unique_name('multiplyDivide_{}'.format(arclen_node)))
     maya.cmds.connectAttr('{}.arcLength'.format(arclen_node), '{}.input1X'.format(multiply_scale_offset))
     maya.cmds.connectAttr('{}.outputX'.format(multiply_scale_offset), '{}.input1X'.format(multiply))
     maya.cmds.setAttr('{}.input2X'.format(multiply), maya.cmds.getAttr('{}.arcLength'.format(arclen_node)))

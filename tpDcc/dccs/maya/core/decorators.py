@@ -198,7 +198,11 @@ def TryExcept(fn):
             print("=================== HELP ===================")
             print(fn.__doc__, 'n')
             print("=================== ERROR ===================")
-            maya.cmds.inViewMessage(amg='<span style=\"color:#F05A5A;\">Error: </span>' + str(e) + ' <span style=\"color:#FAA300;\">Look at the script editor for more info about the error.</span>', pos='topCenter', fade=True, fst=4000, dk=True)
+            maya.cmds.inViewMessage\
+                (amg='<span style=\"color:#F05A5'
+                     'A;\">Error: </span>' + str(e) + ' <span style=\"color:#FAA300;\">Look at the script '
+                                                      'editor for more info about the error.</span>',
+                 pos='topCenter', fade=True, fst=4000, dk=True)
             raise Exception(e, tb)
 
     return wrapper
@@ -359,7 +363,7 @@ def repeat_static_command(class_name):
                 for k, v in kwargs.items():
                     arg_str += str(k) + '=' + str(v) + ', '
 
-            cmd = 'python("' + class_name + '.' + fn.__name__+'(' + arg_str + ')")'
+            cmd = 'python("' + class_name + '.' + fn.__name__ + '(' + arg_str + ')")'
             fn_return = fn(*args, **kwargs)
             try:
                 maya.cmds.repeatLast(ac=cmd, acl=fn.__name__)

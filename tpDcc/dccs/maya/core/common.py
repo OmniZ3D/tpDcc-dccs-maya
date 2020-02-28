@@ -13,4 +13,3 @@ PIVOT_ARGS = dict(rp=['rp', 'r', 'rotate', 'rotatePivot', 'pivot'], sp=['scale',
                   closestPoint=['cpos', 'closest', 'closestPoint'])
 
 SPACE_ARGS = {'object': ['os', 'objectSpace', 'o'], 'world': ['w', 'worldSpace', 'ws'], 'local': ['l', 'translate']}
-
