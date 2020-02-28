@@ -86,9 +86,12 @@ class MetaAttribute(object):
 
         if maya.cmds.objExists('{0}.{1}'.format(self.obj.meta_node, attr_name)):
             current_type = maya.cmds.getAttr('{0}.{1}'.format(self.obj.meta_node, attr_name), type=True)
-            if not metautils.MetaAttributeUtils.validate_attr_type_match(self.attr_type, current_type) and self.attr_type is not False:
+            if not metautils.MetaAttributeUtils.validate_attr_type_match(self.attr_type,
+                                                                         current_type) and self.attr_type is not False:
                 if self.obj.is_referenced():
-                    LOGGER.error('"{0}" is referenced. Cannot convert "{1}" to "{2}"!'.format(self.obj.meta_node, attr_name, attr_type))
+                    LOGGER.error(
+                        '"{0}" is referenced. Cannot convert "{1}" to "{2}"!'.format(self.obj.meta_node, attr_name,
+                                                                                     attr_type))
                 self.convert(self.attr_type)
             else:
                 self.attr = attr_name
@@ -100,7 +103,10 @@ class MetaAttribute(object):
                     _type = 'string'
                 metautils.MetaAttributeUtils.add(self.obj.meta_node, attr_name, _type)
             except StandardError as e:
-                LOGGER.error('|Attribute Add| >> Failed" "{0}" failed to add "{1}" | type: {2}'.format(self.obj.meta_node, attr_name, self.attr_type))
+                LOGGER.error(
+                    '|Attribute Add| >> Failed" "{0}" failed to add "{1}" | type: {2}'.format(self.obj.meta_node,
+                                                                                              attr_name,
+                                                                                              self.attr_type))
                 raise StandardError(e)
 
         if enum:
@@ -241,7 +247,8 @@ class MetaAttribute(object):
                             if type(value) is list and len(self.get_children()) == len(value):
                                 child_attr.value = value[i]
                             else:
-                                metautils.MetaAttributeUtils.set(child_attr.obj.meta_node, child_attr.attr, value, *args, **kwargs)
+                                metautils.MetaAttributeUtils.set(child_attr.obj.meta_node, child_attr.attr, value,
+                                                                 *args, **kwargs)
                         except Exception as e:
                             fmt_args = [c, e]
                             LOGGER.error('On child: {0} | error: {1}'.format(*fmt_args))
@@ -272,7 +279,7 @@ class MetaAttribute(object):
         try:
             metautils.MetaAttributeUtils.delete(self.obj.meta_node, self.attr)
             LOGGER.warning('{} deleted!'.format(self.combined_name))
-            del(self)
+            del (self)
         except Exception:
             LOGGER.error('{} failed to delete!'.format(self.obj.meta_node, self.attr))
 
@@ -298,17 +305,17 @@ class MetaAttribute(object):
                     for c in self.get_children():
                         child_attr = MetaAttribute(self.obj.meta_node, c)
                         if not child_attr.locked:
-                            maya.cmds.setAttr(child_attr.obj.meta_node+'.'+child_attr.attr, edit=True, lock=True)
+                            maya.cmds.setAttr(child_attr.obj.meta_node + '.' + child_attr.attr, edit=True, lock=True)
                 elif not self.locked:
-                    maya.cmds.setAttr(self.obj.meta_node+'.'+self.attr, edit=True, lock=True)
+                    maya.cmds.setAttr(self.obj.meta_node + '.' + self.attr, edit=True, lock=True)
             else:
                 if self.get_children():
                     for c in self.get_children():
                         child_attr = MetaAttribute(self.obj.meta_node, c)
                         if child_attr.locked:
-                            maya.cmds.setAttr(child_attr.obj.meta_node+'.'+child_attr.attr, edit=True, lock=False)
+                            maya.cmds.setAttr(child_attr.obj.meta_node + '.' + child_attr.attr, edit=True, lock=False)
                 elif self.locked:
-                    maya.cmds.setAttr(self.obj.meta_node+'.'+self.attr, edit=True, lock=False)
+                    maya.cmds.setAttr(self.obj.meta_node + '.' + self.attr, edit=True, lock=False)
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, lock, e]
             LOGGER.error('{0}.{1}.set_locked() | arg: {2} | error: {3}'.format(*fmt_args))
@@ -327,7 +334,7 @@ class MetaAttribute(object):
         :param keyable: bool
         """
 
-        keyable_types = ['long','float','bool','double','enum','double3','doubleAngle','doubleLinear']
+        keyable_types = ['long', 'float', 'bool', 'double', 'enum', 'double3', 'doubleAngle', 'doubleLinear']
 
         try:
             keyable = metautils.MetaAttributeValidator.bool_arg(keyable)
@@ -338,21 +345,23 @@ class MetaAttribute(object):
                         for c in self.get_children():
                             child_attr = MetaAttribute(self.obj.meta_node, c)
                             if not child_attr.keyable:
-                                maya.cmds.setAttr(child_attr.obj.meta_node+'.'+child_attr.attr, edit=True, keyable=True)
+                                maya.cmds.setAttr(child_attr.obj.meta_node + '.' + child_attr.attr, edit=True,
+                                                  keyable=True)
                                 self.hidden = False
                     elif not self.keyale:
-                        maya.cmds.setAttr(self.obj.meta_node+'.'+self.attr, edit=True, keyable=True)
+                        maya.cmds.setAttr(self.obj.meta_node + '.' + self.attr, edit=True, keyable=True)
                         self.hidden = False
                 else:
                     if self.get_children():
                         for c in self.get_children():
                             child_attr = MetaAttribute(self.obj.meta_node, c)
                             if child_attr.keyable:
-                                maya.cmds.setAttr(child_attr.obj.meta_node+'.'+child_attr.attr, edit=True, keyable=False)
+                                maya.cmds.setAttr(child_attr.obj.meta_node + '.' + child_attr.attr, edit=True,
+                                                  keyable=False)
                                 if not maya.cmds.getAttr(child_attr.combined_name, channelBox=True):
                                     child_attr.set_hidden(False)
                     elif self.keyable:
-                        maya.cmds.setAttr(self.obj.meta_node+'.'+self.attr, edit=True, keyable=False)
+                        maya.cmds.setAttr(self.obj.meta_node + '.' + self.attr, edit=True, keyable=False)
                         if not maya.cmds.getAttr(self.combined_name, channelBox=True):
                             self.set_hidden(False)
         except Exception as e:
@@ -386,19 +395,21 @@ class MetaAttribute(object):
                         if not child_attr.hidden:
                             if child_attr.keyable:
                                 child_attr.set_keyable(False)
-                            maya.cmds.setAttr(child_attr.obj.meta_node+'.'+child_attr.attr, edit=True, channelBox=False)
+                            maya.cmds.setAttr(child_attr.obj.meta_node + '.' + child_attr.attr, edit=True,
+                                              channelBox=False)
                 elif not self.hidden:
                     if self.keyable:
                         self.set_keyable(False)
-                    maya.cmds.setAttr(self.obj.meta_node+'.'+self.attr, edit=True, channelBox=False)
+                    maya.cmds.setAttr(self.obj.meta_node + '.' + self.attr, edit=True, channelBox=False)
             else:
                 if self.get_children():
                     for c in self.get_children():
                         child_attr = MetaAttribute(self.obj.meta_node, c)
                         if child_attr.hidden:
-                            maya.cmds.setAttr(child_attr.obj.meta_node+'.'+child_attr.attr, edit=True, channelBox=True)
+                            maya.cmds.setAttr(child_attr.obj.meta_node + '.' + child_attr.attr, edit=True,
+                                              channelBox=True)
                 elif self.hidden:
-                    maya.cmds.setAttr(self.obj.meta_node+'.'+self.attr, edit=True, channelBox=True)
+                    maya.cmds.setAttr(self.obj.meta_node + '.' + self.attr, edit=True, channelBox=True)
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, hide, e]
             LOGGER.error('{0}.{1}.set_hidden() | arg: {2} | error: {3}'.format(*fmt_args))
@@ -434,12 +445,13 @@ class MetaAttribute(object):
                         for c in self.get_children():
                             child_attr = MetaAttribute(self.obj.meta_node, c)
                             try:
-                                maya.cmds.addAttr(child_attr.obj.meta_node+'.'+child_attr.attr, edit=True, defaultValue=value)
+                                maya.cmds.addAttr(child_attr.obj.meta_node + '.' + child_attr.attr, edit=True,
+                                                  defaultValue=value)
                             except StandardError:
                                 LOGGER.debug('"{}" failed to set a default value'.format(child_attr.combined_name))
                     else:
                         try:
-                            maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, defaultValue=value)
+                            maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, defaultValue=value)
                         except StandardError:
                             LOGGER.debug('"{}" failed to set a default value'.format(self.combined_name))
         except Exception as e:
@@ -474,13 +486,13 @@ class MetaAttribute(object):
             if self.is_numeric() and not self.get_children():
                 if value is False or None:
                     try:
-                        maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, hasMinValue=False)
+                        maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, hasMinValue=False)
                         LOGGER.warning('{} had its minimum value cleared'.format(self.combined_name))
                     except Exception:
                         LOGGER.error('{} failed to clear a minimum value'.format(self.combined_name))
                 elif value is not None:
                     try:
-                        maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, minValue=value)
+                        maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, minValue=value)
                     except Exception:
                         LOGGER.error('{} failed to set a minimum value'.format(self.combined_name))
 
@@ -521,13 +533,13 @@ class MetaAttribute(object):
             if self.is_numeric() and not self.get_children():
                 if value is False or None:
                     try:
-                        maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, hasMaxValue=False)
+                        maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, hasMaxValue=False)
                         LOGGER.warning('{} had its maximum value cleared'.format(self.combined_name))
                     except Exception:
                         LOGGER.error('{} failed to clear a maximum value'.format(self.combined_name))
                 elif value is not None:
                     try:
-                        maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, minValue=value)
+                        maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, minValue=value)
                     except Exception:
                         LOGGER.error('{} failed to set a maximum value'.format(self.combined_name))
 
@@ -568,13 +580,13 @@ class MetaAttribute(object):
             if self.is_numeric() and not self.get_children():
                 if value is False:
                     try:
-                        maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, hasSoftMinValue=False)
+                        maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, hasSoftMinValue=False)
                         LOGGER.warning('{} had its minimum value cleared'.format(self.combined_name))
                     except Exception:
                         LOGGER.error('{} failed to clear a soft minimum value'.format(self.combined_name))
                 elif value is not None:
                     try:
-                        maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, softMinValue=value)
+                        maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, softMinValue=value)
                     except Exception:
                         LOGGER.error('{} failed to set a soft minimum value'.format(self.combined_name))
             else:
@@ -611,13 +623,13 @@ class MetaAttribute(object):
             if self.is_numeric() and not self.get_children():
                 if value is False:
                     try:
-                        maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, hasSoftMaxValue=False)
+                        maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, hasSoftMaxValue=False)
                         LOGGER.warning('{} had its maximum value cleared'.format(self.combined_name))
                     except Exception:
                         LOGGER.error('{} failed to clear a soft maximum value'.format(self.combined_name))
                 elif value is not None:
                     try:
-                        maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, softMaxValue=value)
+                        maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, softMaxValue=value)
                     except Exception:
                         LOGGER.error('{} failed to set a soft maximum value'.format(self.combined_name))
             else:
@@ -644,7 +656,7 @@ class MetaAttribute(object):
         try:
             if self.attr_type == 'enum':
                 if ':'.join(self.enum) != metautils.MetaAttributeValidator.string_list_arg(enums):
-                    maya.cmds.addAttr(self.obj.meta_node+'.'+self.attr, edit=True, at='enum', en=enums)
+                    maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, at='enum', en=enums)
                 else:
                     LOGGER.info('{} | already set'.format(base_msg))
             else:
@@ -788,7 +800,9 @@ class MetaAttribute(object):
 
         try:
             if self.obj.is_referenced():
-                LOGGER.error('"{0}" is referenced. Cannot convert "{1}" to "{2}"!'.format(self.obj.meta_node, self.nice_name, attr_type))
+                LOGGER.error(
+                    '"{0}" is referenced. Cannot convert "{1}" to "{2}"!'.format(self.obj.meta_node, self.nice_name,
+                                                                                 attr_type))
             if self.get_children():
                 LOGGER.error('"{}" has children, cannot convert'.format(self.combined_name))
 

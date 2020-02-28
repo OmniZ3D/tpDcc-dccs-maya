@@ -24,13 +24,16 @@ class MetaObject(metanode.MetaNode, object):
         if kwargs.get('node_type') is None:
             kwargs['node_type'] = 'transform'
 
-        super(MetaObject, self).__init__(node=node, name=name, name_args=name_args, name_kwargs=name_kwargs, *args, **kwargs)
+        super(MetaObject, self).__init__\
+            (node=node, name=name, name_args=name_args, name_kwargs=name_kwargs, *args, **kwargs)
 
         if self.cached:
             return
 
         if not metautils.MetaAttributeValidator.is_transform(node=self.meta_node):
-            raise ValueError('[{}] not a transform! The MetaObject class only work with objects that have transforms!'.format(self.meta_node))
+            raise ValueError(
+                '[{}] not a transform! The MetaObject class only work with objects that have transforms!'.format(
+                    self.meta_node))
 
     # =============================================================================================
     # HIERARCHY
@@ -81,7 +84,8 @@ class MetaObject(metanode.MetaNode, object):
 
     def hide_attributes(self, attributes=None):
         """
-        Lock and hide the given attributes on the control. If no attributes given, hide translate, rotate, scale and visibility
+        Lock and hide the given attributes on the control. If no attributes given, hide translate, rotate, 
+        scale and visibility
         :param attributes: list<str>, list of attributes to hide and lock (['translateX', 'translateY'])
         """
 
@@ -142,7 +146,7 @@ class MetaObject(metanode.MetaNode, object):
         """
 
         for axis in 'XYZ':
-            maya.cmds.setAttr('{}.translate{}'.format(self.meta_node, axis), l=False, k=True)
+            maya.cmds.setAttr('{}.translate{}'.format(self.meta_node, axis), long=False, k=True)
 
     def show_rotate_attributes(self):
         """
@@ -150,7 +154,7 @@ class MetaObject(metanode.MetaNode, object):
         """
 
         for axis in 'XYZ':
-            maya.cmds.setAttr('{}.rotate{}'.format(self.meta_node, axis), l=False, k=True)
+            maya.cmds.setAttr('{}.rotate{}'.format(self.meta_node, axis), long=False, k=True)
 
     def show_scale_attributes(self):
         """
@@ -158,7 +162,7 @@ class MetaObject(metanode.MetaNode, object):
         """
 
         for axis in 'XYZ':
-            maya.cmds.setAttr('{}.scale{}'.format(self.meta_node, axis), l=False, k=True)
+            maya.cmds.setAttr('{}.scale{}'.format(self.meta_node, axis), long=False, k=True)
 
     # =============================================================================================
     # SHAPES
@@ -174,7 +178,8 @@ class MetaObject(metanode.MetaNode, object):
         :return: variant, list<str> || list<Meta>
         """
 
-        result = metautils.MetaTransformUtils.get_shapes(node=self, full_path=full_path, intermediates=intermediates, non_intermediates=non_intermediates)
+        result = metautils.MetaTransformUtils.get_shapes(
+            node=self, full_path=full_path, intermediates=intermediates, non_intermediates=non_intermediates)
         if result and as_meta:
             return metanode.validate_obj_list_arg(result)
 

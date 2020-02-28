@@ -84,6 +84,7 @@ class MetaAttributeValidator(attr_utils.AttributeValidator):
         arg = MetaAttributeValidator.meta_node_string(arg)
         return attr_utils.AttributeValidator.is_component(arg)
 
+
 class MetaAttributeUtils(object):
     """
     Utility class that contains functions to work with meta nodes attributes
@@ -130,6 +131,7 @@ class MetaAttributeUtils(object):
                 return True
 
         return False
+
     # endregion
 
     # region Abstract Functions
@@ -210,7 +212,9 @@ class MetaAttributeUtils(object):
         _attr_type = MetaAttributeUtils.validate_attr_type_name(_attr_type)
         _type_current = MetaAttributeUtils.validate_attr_type_name(MetaAttributeUtils.get_type(attr_dict))
 
-        LOGGER.debug('|Convert Attribute Type| >> attr: {0} | type: {1} | target_type: {2}'.format(combined, _type_current,_attr_type))
+        LOGGER.debug(
+            '|Convert Attribute Type| >> attr: {0} | type: {1} | target_type: {2}'.format(
+                combined, _type_current, _attr_type))
 
         if _attr_type == _type_current:
             LOGGER.debug('|Convert Attribute Type| >> {} already target type'.format(combined))
@@ -262,21 +266,24 @@ class MetaAttributeUtils(object):
                 elif _attr_type == 'long':
                     _data = int(_data)
             except Exception as e:
-                LOGGER.error('|Convert Attribute Type| >> Failed to convert data: {0} | type: {1} | err: {2}'.format(_data,
-                                                                                                            _attr_type,
-                                                                                                            e))
+                LOGGER.error(
+                    '|Convert Attribute Type| >> Failed to convert data: {0} | type: {1} | err: {2}'.format(
+                        _data, _attr_type, e))
 
             try:
                 MetaAttributeUtils.set(attr_dict, value=_data)
             except Exception as e:
-                LOGGER.error('|Convert Attribute Type| >> Failed to set back data buffer {0} | data: {1} | err: {2}'.format(combined, _data, e))
+                LOGGER.error(
+                    '|Convert Attribute Type| >> Failed to set back data buffer {0} | data: {1} | err: {2}'.format(
+                        combined, _data, e))
 
         if _driver and _type_current != 'message':
             LOGGER.debug('|Convert Attribute Type| >> Driver: {}'.format(_driver))
             try:
                 MetaAttributeUtils.connect(_driver, combined)
             except Exception as e:
-                LOGGER.debug('|Convert Attribute Type| >> Failed to connect {0} >> {1} | err: {2}'.format(_driver, combined, e))
+                LOGGER.debug(
+                    '|Convert Attribute Type| >> Failed to connect {0} >> {1} | err: {2}'.format(_driver, combined, e))
 
         if _driven:
             LOGGER.debug('|Convert Attribute Type| >> Driven: {}'.format(_driven))
@@ -285,7 +292,8 @@ class MetaAttributeUtils(object):
                 try:
                     MetaAttributeUtils.connect(combined, c)
                 except Exception as e:
-                    LOGGER.debug('|Convert Attribute Type| >> Failed to connect {0} >> {1} | err: {2}'.format(combined, c, e))
+                    LOGGER.debug(
+                        '|Convert Attribute Type| >> Failed to connect {0} >> {1} | err: {2}'.format(combined, c, e))
 
         if lock:
             maya.cmds.setAttr(combined, lock=True)
@@ -322,8 +330,9 @@ class MetaAttributeUtils(object):
         try:
             attr_type = maya.cmds.getAttr(combined, type=True)
         except Exception as e:
-            LOGGER.debug('|Attribute Getter| >> {0} failed to return type. Exists: {1}'.format(combined, maya.cmds.objExists(
-                combined)))
+            LOGGER.debug(
+                '|Attribute Getter| >> {0} failed to return type. Exists: {1}'.format(combined, maya.cmds.objExists(
+                    combined)))
             return None
 
         if attr_type in ['TdataCompound']:
@@ -332,7 +341,8 @@ class MetaAttributeUtils(object):
         if maya.cmds.attributeQuery(attr, node=obj, msg=True):
             return MetaAttributeUtils.get_message(message_attr=attr_dict)
         elif attr_type == 'double3':
-            return [maya.cmds.getAttr(obj + '.' + arg) for arg in maya.cmds.attributeQuery(attr, node=obj, listChildren=True)]
+            return [maya.cmds.getAttr(obj + '.' + arg) for arg in
+                    maya.cmds.attributeQuery(attr, node=obj, listChildren=True)]
         else:
             return maya.cmds.getAttr(combined, **kwargs)
 
@@ -359,12 +369,15 @@ class MetaAttributeUtils(object):
             return False
 
         if get_node:
-            connections = maya.cmds.listConnections(combined, skipConversionNodes=skip_conversion_nodes, destination=False, source=True, plugs=False)
+            connections = maya.cmds.listConnections(combined, skipConversionNodes=skip_conversion_nodes,
+                                                    destination=False, source=True, plugs=False)
             if not connections:
                 parent = MetaAttributeUtils.get_parent(attr_dict)
                 if parent:
                     LOGGER.debug('|Driver Attribute Getter| >> Parent Attribute Check: {}'.format(parent))
-                    return MetaAttributeUtils.get_driver(attr_dict['node'], parent, get_node=get_node, skip_conversion_nodes=skip_conversion_nodes, long_names=long_names)
+                    return MetaAttributeUtils.get_driver(attr_dict['node'], parent, get_node=get_node,
+                                                         skip_conversion_nodes=skip_conversion_nodes,
+                                                         long_names=long_names)
                 return False
             if long_names:
                 return name_utils.get_long_name(obj=connections[0])
@@ -372,15 +385,19 @@ class MetaAttributeUtils(object):
                 return name_utils.get_short_name(obj=connections[0])
         else:
             if maya.cmds.connectionInfo(combined, isDestination=True):
-                connections = maya.cmds.listConnections(combined, skipConversionNodes=skip_conversion_nodes, destination=False, source=True, plugs=True)
+                connections = maya.cmds.listConnections(combined, skipConversionNodes=skip_conversion_nodes,
+                                                        destination=False, source=True, plugs=True)
                 if not connections:
                     connections = [maya.cmds.connectionInfo(combined, sourceFromDestination=True)]
                 if connections:
-                    if skip_conversion_nodes and MetaAttributeValidator.get_maya_type(node=connections) == 'unitConversion':
+                    if skip_conversion_nodes and MetaAttributeValidator.get_maya_type(
+                            node=connections) == 'unitConversion':
                         parent = MetaAttributeUtils.get_parent(attr_dict)
                         if parent:
                             LOGGER.debug('|Driver Attribute Getter| >> Parent Attribute Check: {}'.format(parent))
-                            return MetaAttributeUtils.get_driver(attr_dict['node'], parent, get_node=get_node, skip_conversion_nodes=skip_conversion_nodes, long_names=long)
+                            return MetaAttributeUtils.get_driver(attr_dict['node'], parent, get_node=get_node,
+                                                                 skip_conversion_nodes=skip_conversion_nodes,
+                                                                 long_names=long)
                     if long_names:
                         return name_utils.get_long_name(obj=connections[0])
                     else:
@@ -409,7 +426,8 @@ class MetaAttributeUtils(object):
         combined = attr_dict['combined']
 
         if get_node:
-            connections = maya.cmds.listConnections(combined, skipConversionNodes=skip_conversion_nodes, destination=True, source=False, plugs=False)
+            connections = maya.cmds.listConnections(combined, skipConversionNodes=skip_conversion_nodes,
+                                                    destination=True, source=False, plugs=False)
             if not connections:
                 return False
             if long_names:
@@ -418,7 +436,8 @@ class MetaAttributeUtils(object):
                 return [name_utils.get_short_name(o) for o in connections]
         else:
             if maya.cmds.connectionInfo(combined, isSource=True):
-                connections = maya.cmds.listConnections(combined, skipConversionNodes=skip_conversion_nodes, destination=True, source=False, plugs=True)
+                connections = maya.cmds.listConnections(combined, skipConversionNodes=skip_conversion_nodes,
+                                                        destination=True, source=False, plugs=True)
                 if not connections:
                     connections = maya.cmds.connectionInfo(combined, destinationFromSource=True)
                 if connections:
@@ -482,7 +501,7 @@ class MetaAttributeUtils(object):
                 maya.cmds.setAttr((node + '.' + attr_name), e=True, keyable=True)
             elif _type == 'bool':
                 maya.cmds.addAttr(node, ln=attr_name, at='bool', *args, **kwargs)
-                maya.cmds.setAttr((node+'.'+attr_name), edit=True, channelBox=True)
+                maya.cmds.setAttr((node + '.' + attr_name), edit=True, channelBox=True)
             elif _type == 'message':
                 maya.cmds.addAttr(node, ln=attr_name, at='message', *args, **kwargs)
             elif _type == 'float3':
@@ -547,7 +566,9 @@ class MetaAttributeUtils(object):
         if children:
             if MetaAttributeValidator.is_list_arg(value):
                 if len(children) != len(value):
-                    raise ValueError('Must have matching len for value and children. Children: {0} | Value: {1}'.format(children, value))
+                    raise ValueError(
+                        'Must have matching len for value and children. Children: {0} | Value: {1}'.format(
+                            children, value))
             else:
                 value = [value for i in range(len(children))]
 
@@ -594,7 +615,8 @@ class MetaAttributeUtils(object):
         try:
             if maya.cmds.objExists(combined):
                 if MetaAttributeUtils.get_parent(attr_dict):
-                    raise ValueError('{0} is a child attribute, try deleting parent attr first: {1}'.format(combined, MetaAttributeUtils.get_parent(attr_dict)))
+                    raise ValueError('{0} is a child attribute, try deleting parent attr first: {1}'.format(
+                        combined, MetaAttributeUtils.get_parent(attr_dict)))
                 try:
                     maya.cmds.setAttr(combined, lock=False)
                 except Exception:
@@ -812,7 +834,9 @@ class MetaAttributeUtils(object):
 
     @staticmethod
     @decorators.abstractmethod
-    def copy_to(from_object, from_attr, to_object=None, to_attr=None, convert_to_match=True, values=True, in_connection=False, out_connections=False, keep_source_connections=True, copy_settings=True, driven=None):
+    def copy_to(from_object, from_attr, to_object=None, to_attr=None, convert_to_match=True, values=True,
+                in_connection=False, out_connections=False, keep_source_connections=True, copy_settings=True,
+                driven=None):
         """
         Copy attributes from one object to another. If the attribute already exists, it'll cpy the values
         If it does not, it will be created.
@@ -854,7 +878,10 @@ class MetaAttributeUtils(object):
         dict_source_flags = MetaAttributeUtils.get_attribute_state(attr_dict)
 
         if values and not MetaAttributeUtils.validate_attr_type_name(dict_source_flags['type']):
-            LOGGER.warning('|Attributes Copy| >> {0} is a {1} attribute and not valid for copying'.format(attr_dict['combined'], dict_source_flags['type']))
+            LOGGER.warning(
+                '|Attributes Copy| >> {0} is a {1} attribute and not valid for copying'.format(attr_dict['combined'],
+                                                                                               dict_source_flags[
+                                                                                                   'type']))
             return False
 
         _driver = MetaAttributeUtils.get_driver(attr_dict, skip_conversion_nodes=True)
@@ -869,14 +896,19 @@ class MetaAttributeUtils(object):
             dict_target_flags = MetaAttributeUtils.get_attribute_state(attr_dict_target)
 
             if not MetaAttributeUtils.validate_attr_type_name(dict_target_flags['type']):
-                LOGGER.warning('|Attributes Copy| >> {0} may not copy correctly. Type did not validate'.format(attr_dict_target['combined']))
+                LOGGER.warning('|Attributes Copy| >> {0} may not copy correctly. Type did not validate'.format(
+                    attr_dict_target['combined']))
 
             if not MetaAttributeUtils.validate_attr_type_match(dict_source_flags['type'], dict_target_flags['type']):
                 if dict_target_flags['dynamic'] and convert_to_match:
-                    LOGGER.debug('Attributes Copy| >> {} not the correct type, trying to convert it'.format(attr_dict_target['combined']))
+                    LOGGER.debug('Attributes Copy| >> {} not the correct type, trying to convert it'.format(
+                        attr_dict_target['combined']))
                     MetaAttributeUtils.convert_type(attr_dict_target, dict_source_flags['type'])
                 else:
-                    raise Exception('|Attributes Copy| >> {} not the correct type. Conversion is necessary and convert_to_match is disabled'.format(attr_dict_target['combined']))
+                    raise Exception(
+                        '|Attributes Copy| >> {} not the correct type. Conversion is necessary '
+                        'and convert_to_match is disabled'.format(
+                            attr_dict_target['combined']))
         else:
             MetaAttributeUtils.add(attr_dict_target, dict_source_flags['type'])
 
@@ -884,7 +916,8 @@ class MetaAttributeUtils(object):
             try:
                 MetaAttributeUtils.set(attr_dict_target, value=_data)
             except Exception as e:
-                LOGGER.debug('|Attributes Copy| >> Failed to set back data buffer {0} | data: {1} | err: {2}'.format(attr_dict_target['combined'], _data, e))
+                LOGGER.debug('|Attributes Copy| >> Failed to set back data buffer {0} | data: {1} | err: {2}'.format(
+                    attr_dict_target['combined'], _data, e))
 
         if _driver and in_connection:
             if dict_source_flags['type'] != 'message':
@@ -892,7 +925,10 @@ class MetaAttributeUtils(object):
                 try:
                     MetaAttributeUtils.connect(_driver, attr_dict_target['combined'])
                 except Exception as e:
-                    LOGGER.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driver, attr_dict_target['combined'], e))
+                    LOGGER.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driver,
+                                                                                                       attr_dict_target[
+                                                                                                           'combined'],
+                                                                                                       e))
 
         if _driven and out_connections:
             LOGGER.debug('|Attributes Copy| >> Current Driven: {}'.format(_driven))
@@ -903,7 +939,10 @@ class MetaAttributeUtils(object):
                     try:
                         MetaAttributeUtils.connect(attr_dict_target['combined'], c)
                     except Exception as e:
-                        LOGGER.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driven, attr_dict_target['combined'], e))
+                        LOGGER.error('|Attributes Copy| >> Failed to connect {0} >> {1} | err: {2}'.format(_driven,
+                                                                                                           attr_dict_target[
+                                                                                                               'combined'],
+                                                                                                           e))
 
         if copy_settings:
             if dict_source_flags.get('enum'):
@@ -932,9 +971,11 @@ class MetaAttributeUtils(object):
                     if dict_source_flags['min']:
                         maya.cmds.addAttr(attr_dict_target['combined'], edit=True, minValue=dict_source_flags['min'])
                     if dict_source_flags['softMax']:
-                        maya.cmds.addAttr(attr_dict_target['combined'], edit=True, softMaxValue=dict_source_flags['softMax'])
+                        maya.cmds.addAttr(attr_dict_target['combined'], edit=True,
+                                          softMaxValue=dict_source_flags['softMax'])
                     if dict_source_flags['softMin']:
-                        maya.cmds.addAttr(attr_dict_target['combined'], edit=True, softMinValue=dict_source_flags['softMin'])
+                        maya.cmds.addAttr(attr_dict_target['combined'], edit=True,
+                                          softMinValue=dict_source_flags['softMin'])
 
             maya.cmds.setAttr(attr_dict_target['combined'], edit=True, channelBox=not dict_source_flags['hidden'])
             maya.cmds.setAttr(attr_dict_target['combined'], edit=True, keyable=dict_source_flags['keyable'])
@@ -944,12 +985,17 @@ class MetaAttributeUtils(object):
             try:
                 MetaAttributeUtils.connect(attr_dict, attr_dict_target)
             except Exception as e:
-                LOGGER.error('|Attributes Copy| >> Failed to connect source to target {0} >> {1} | err: {2}'.format(combined, attr_dict_target['combined'], e))
+                LOGGER.error(
+                    '|Attributes Copy| >> Failed to connect source to target {0} >> {1} | err: {2}'.format(combined,
+                                                                                                           attr_dict_target[
+                                                                                                               'combined'],
+                                                                                                           e))
         elif driven == 'source':
             try:
                 MetaAttributeUtils.connect(attr_dict_target, attr_dict)
             except Exception as e:
-                LOGGER.error('|Attributes Copy| >> Failed to connect target to source {0} >> {1} | err: {2}'.format(attr_dict_target['combined'], combined, e))
+                LOGGER.error('|Attributes Copy| >> Failed to connect target to source {0} >> {1} | err: {2}'.format(
+                    attr_dict_target['combined'], combined, e))
 
         if dict_source_flags['locked']:
             maya.cmds.setAttr(attr_dict_target['combined'], lock=True)
@@ -1060,7 +1106,8 @@ class MetaAttributeUtils(object):
 
         if MetaAttributeUtils.get_type(attr_dict) == 'message':
             LOGGER.debug('|Attribute Break Connection| >> message')
-            dst = maya.cmds.listConnections(combined, skipConversionNodes=False, destination=True, source=False, plugs=True)
+            dst = maya.cmds.listConnections(combined, skipConversionNodes=False, destination=True, source=False,
+                                            plugs=True)
             if dst:
                 for child_attr in dst:
                     LOGGER.debug('|Attribute Break Connection| >> Disconnecting attr {}'.format(child_attr))
@@ -1068,7 +1115,7 @@ class MetaAttributeUtils(object):
 
         if maya.cmds.connectionInfo(combined, isDestination=True):
             source_connections = maya.cmds.listConnections(combined, skipConversionNodes=False, destination=False,
-                                                      source=True, plugs=True)
+                                                           source=True, plugs=True)
             if not source_connections:
                 family = MetaAttributeUtils.get_family_dict(attr_dict)
                 source_connections = maya.cmds.connectionInfo(combined, sourceFromDestination=True)
@@ -1084,7 +1131,8 @@ class MetaAttributeUtils(object):
                 LOGGER.debug('|Attribute Break Connection| >> Attribute Family: {}'.format(family))
                 driven_attr = '{0}.{1}'.format(obj, family.get('parent'))
 
-            LOGGER.debug('|Attribute Break Connection| >> Breaking {0} >>> to >>> {1}'.format(source_connections, driven_attr))
+            LOGGER.debug(
+                '|Attribute Break Connection| >> Breaking {0} >>> to >>> {1}'.format(source_connections, driven_attr))
             MetaAttributeUtils.disconnect(from_attr=source_connections, to_attr=driven_attr)
 
             return source_connections
@@ -1171,7 +1219,7 @@ class MetaAttributeUtils(object):
 
         children = MetaAttributeUtils.get_children(attr_dict)
         if children:
-            for i,child in enumerate(children):
+            for i, child in enumerate(children):
                 maya.cmds.setAttr('{0}.{1}'.format(obj, child), lock=arg)
         else:
             maya.cmds.setAttr(combined, lock=arg)
@@ -1734,7 +1782,8 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    def set_message(message_holder, message_attr, message, data_attr=None, data_key=None, simple=False, connect_back=None):
+    def set_message(message_holder, message_attr, message, data_attr=None, data_key=None, simple=False,
+                    connect_back=None):
         """
         :param message_holder:
         :param message_attr:
@@ -1859,9 +1908,14 @@ class MetaAttributeUtils(object):
             else:
                 data_key = unicode(data_key)
 
-            LOGGER.debug('|Message Setter| >> mode: {0} | data_attr: {1} | data_key: {2}'.format(mode, _data_attr, data_key))
-            LOGGER.debug('|Message Setter| >> message_holder: {0} | message_attr: {1}'.format(message_holder, message_attr))
-            LOGGER.debug('|Message Setter| >> messaged_node: {0} | messaged_extra: {1} | message_long: {2}'.format(messaged_node, messaged_extra, message_long))
+            LOGGER.debug(
+                '|Message Setter| >> mode: {0} | data_attr: {1} | data_key: {2}'.format(mode, _data_attr, data_key))
+            LOGGER.debug(
+                '|Message Setter| >> message_holder: {0} | message_attr: {1}'.format(message_holder, message_attr))
+            LOGGER.debug(
+                '|Message Setter| >> messaged_node: {0} | messaged_extra: {1} | message_long: {2}'.format(messaged_node,
+                                                                                                          messaged_extra,
+                                                                                                          message_long))
 
             if messaged_extra:
                 if '.' in _data_attr:
@@ -1874,13 +1928,17 @@ class MetaAttributeUtils(object):
                     MetaAttributeUtils.connect((msg_node + '.message'), holder_dict['combined'])
 
                 if msg_extra:
-                    LOGGER.debug('|Message Setter| >> {0}.{1} stored to: {2}'.format(msg_node, msg_extra, holder_dict['combined']))
+                    LOGGER.debug('|Message Setter| >> {0}.{1} stored to: {2}'.format(msg_node, msg_extra,
+                                                                                     holder_dict['combined']))
 
                     if not maya.cmds.objExists(data_attr_dict['combined']):
                         MetaAttributeUtils.add(data_attr_dict['node'], data_attr_dict['attr'], 'string')
 
                     if MetaAttributeUtils.get_type(data_attr_dict['combined']) != 'string':
-                        raise ValueError('DataAttr must be string. {0} is type {1}'.format(data_attr_dict['combined'], MetaAttributeUtils.get_type(data_attr_dict['combined'])))
+                        raise ValueError('DataAttr must be string. {0} is type {1}'.format(data_attr_dict['combined'],
+                                                                                           MetaAttributeUtils.get_type(
+                                                                                               data_attr_dict[
+                                                                                                   'combined'])))
 
                     meta_node = metanode.MetaNode(attr_dict['node'])
                     dict_buffer = meta_node.__getattribute__(data_attr_dict['attr']) or {}
@@ -1961,7 +2019,8 @@ class MetaDataListUtils(object):
                     try:
                         result[int(split_index)] = a
                     except Exception:
-                        LOGGER.debug('|get_sequential_attr_dict| >> {}.{} failed to int | int: {}'.format(name_utils.get_short_name(node), attr, split_index))
+                        LOGGER.debug('|get_sequential_attr_dict| >> {}.{} failed to int | int: {}'.format(
+                            name_utils.get_short_name(node), attr, split_index))
 
         return result
 
@@ -2095,7 +2154,9 @@ class MetaDataListUtils(object):
                         try:
                             MetaAttributeUtils.connect('{}.{}'.format(node, attr_str), p)
                         except Exception as e:
-                            LOGGER.warning("|{0}| >> Failed to reconnect {1} | driven: {2} | err: {3}".format(fn_name, attr_str, p, e))
+                            LOGGER.warning(
+                                "|{0}| >> Failed to reconnect {1} | driven: {2} | err: {3}".format(fn_name, attr_str, p,
+                                                                                                   e))
 
         return True
 
@@ -2205,7 +2266,9 @@ class MetaDataListUtils(object):
                 index = data_list.index(data)
 
         if index is None:
-            LOGGER.info('|{}| >> Data not found! node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data, mode))
+            LOGGER.info(
+                '|{}| >> Data not found! node: {} | attr: {} | data: {} | mode: {}'.format(fn_name, node, attr, data,
+                                                                                           mode))
             LOGGER.info('|{}| >> values ....'.format(fn_name))
             for i, v in enumerate(data_list):
                 LOGGER.info('idx: {} | {}'.format(i, v))
@@ -2273,7 +2336,8 @@ class MetaDataListUtils(object):
             for i in attrs_dict.keys():
                 o_msg = MetaAttributeUtils.get_message(node, attrs_dict[i], '{}_datdict'.format(attr), data_key=i)
                 if o_msg and name_utils.get_long_name(o_msg) in data_long_list:
-                    LOGGER.debug('|{}| >> removing | idx: {} | attr: {} | value: {}'.format(fn_name, i, attrs_dict[i], o_msg))
+                    LOGGER.debug(
+                        '|{}| >> removing | idx: {} | attr: {} | value: {}'.format(fn_name, i, attrs_dict[i], o_msg))
                     MetaAttributeUtils.delete(node, attrs_dict[i])
                     action = True
         else:
@@ -2281,7 +2345,8 @@ class MetaDataListUtils(object):
             for i in attrs_dict.keys():
                 value = MetaAttributeUtils.get(node, attrs_dict[i])
                 if value in data:
-                    LOGGER.debug('|{}| >> removing | idx: {} | attr: {} | value: {}'.format(fn_name, i, attrs_dict[i], value))
+                    LOGGER.debug(
+                        '|{}| >> removing | idx: {} | attr: {} | value: {}'.format(fn_name, i, attrs_dict[i], value))
                     MetaAttributeUtils.delete(node, attrs_dict[i])
                     action = True
 
@@ -2333,7 +2398,8 @@ class MetaDataListUtils(object):
         if mode == 'message':
             return MetaMessageListUtils.message_list_connect(node=node, attr=attr, data=data_list, data_attr=data_attr)
         else:
-            return MetaDataListUtils.data_list_connect(node=node, attr=attr, data=data_list, mode=mode, data_attr=data_attr)
+            return MetaDataListUtils.data_list_connect(node=node, attr=attr, data=data_list, mode=mode,
+                                                       data_attr=data_attr)
 
     @staticmethod
     def store_info(node=None, attr=None, data=None, attr_type=None, lock=True):
@@ -2368,10 +2434,11 @@ class MetaDataListUtils(object):
                     elif len(data) > 3:
                         attr_type = 'doubleArray'
 
-            LOGGER.debug("|{}| >> node: {} | attr: {} | data: {} | attrType: {}".format(fn_name,node,attr, data, attr_type))
+            LOGGER.debug(
+                "|{}| >> node: {} | attr: {} | data: {} | attrType: {}".format(fn_name, node, attr, data, attr_type))
 
             # STORE DATA
-            if attr_type == ['message','msg','messageSimple']:
+            if attr_type == ['message', 'msg', 'messageSimple']:
                 LOGGER.debug('|{}| >> message...'.format(fn_name))
                 MetaAttributeUtils.set_message(message_holder=node, message_attr=attr, message=data)
             elif attr_type in ['double3']:
@@ -2381,7 +2448,10 @@ class MetaDataListUtils(object):
                     try:
                         MetaAttributeUtils.set(node=node, attr=attr, value=data)
                     except Exception:
-                        LOGGER.warning('|{}| >> removing... | node: {} | attr: {} | value: {}'.format(fn_name, node, attr, meta_node.__getattribute__(attr)))
+                        LOGGER.warning(
+                            '|{}| >> removing... | node: {} | attr: {} | value: {}'.format(fn_name, node, attr,
+                                                                                           meta_node.__getattribute__(
+                                                                                               attr)))
                         MetaAttributeUtils.delete(node=node, attr=attr)
                         meta_node.add_attribute(attr=attr, value=data, attr_type=attr_type)
                 else:
@@ -2393,7 +2463,10 @@ class MetaDataListUtils(object):
                     try:
                         MetaAttributeUtils.set(node=node, attr=attr, value=data[0])
                     except Exception:
-                        LOGGER.warning('|{}| >> removing... | node: {} | attr: {} | value: {}'.format(fn_name, node, attr, meta_node.__getattribute__(attr)))
+                        LOGGER.warning(
+                            '|{}| >> removing... | node: {} | attr: {} | value: {}'.format(fn_name, node, attr,
+                                                                                           meta_node.__getattribute__(
+                                                                                               attr)))
                         MetaAttributeUtils.delete(node=node, attr=attr)
                         meta_node.add_attribute(attr=attr, value=data[0], attr_type=attr_type)
                 else:
@@ -2444,7 +2517,8 @@ class MetaMessageListUtils(object):
         :return:
         """
 
-        return MetaDataListUtils.data_list_get(node=node, attr=attr, mode='message', data_attr=data_attr, cull=cull, as_meta=as_meta)
+        return MetaDataListUtils.data_list_get(node=node, attr=attr, mode='message', data_attr=data_attr, cull=cull,
+                                               as_meta=as_meta)
 
     @staticmethod
     def message_list_connect(node=None, attr=None, data=None, connect_back=None, data_attr=None):
@@ -2467,7 +2541,9 @@ class MetaMessageListUtils(object):
         if data_attr is None:
             data_attr = '{}_datdict'.format(attr)
 
-        LOGGER.debug('|{}| >> node: {} | attr: {} | connect_back: {} | data_attr: {}'.format(fn_name, node, attr, connect_back, data_attr))
+        LOGGER.debug(
+            '|{}| >> node: {} | attr: {} | connect_back: {} | data_attr: {}'.format(fn_name, node, attr, connect_back,
+                                                                                    data_attr))
         LOGGER.debug('|{}| >> data | len: {} | list: {}'.format(fn_name, len(data), data))
 
         MetaMessageListUtils.message_list_purge(node, attr)
@@ -2490,7 +2566,8 @@ class MetaMessageListUtils(object):
 
     @staticmethod
     def message_list_set(node=None, attr=None, data=None, connect_back=None, data_attr=None):
-        return MetaMessageListUtils.message_list_connect(node=node, attr=attr, data=data, connect_back=connect_back, data_attr=data_attr)
+        return MetaMessageListUtils.message_list_connect(node=node, attr=attr, data=data, connect_back=connect_back,
+                                                         data_attr=data_attr)
 
     @staticmethod
     def message_list_get_attrs(node=None, attr=None):
@@ -2498,12 +2575,15 @@ class MetaMessageListUtils(object):
 
     @staticmethod
     def message_list_index(node=None, attr=None, data=None, data_attr=None):
-        return MetaDataListUtils.data_list_index(node=node, attr=attr, data=MetaAttributeValidator.meta_node_string(data), mode='message', data_attr=data_attr)
+        return MetaDataListUtils.data_list_index(node=node, attr=attr,
+                                                 data=MetaAttributeValidator.meta_node_string(data), mode='message',
+                                                 data_attr=data_attr)
 
     @staticmethod
     def message_list_append(node=None, attr=None, data=None, connect_back=None, data_attr=None):
         data = MetaAttributeValidator.meta_node_string(data)
-        result = MetaDataListUtils.data_list_append(node=node, attr=attr, data=data, mode='message', data_attr=data_attr)
+        result = MetaDataListUtils.data_list_append(node=node, attr=attr, data=data, mode='message',
+                                                    data_attr=data_attr)
         if connect_back is not None:
             MetaAttributeUtils.set_message(data, connect_back, node, data_attr)
 
@@ -2511,7 +2591,9 @@ class MetaMessageListUtils(object):
 
     @staticmethod
     def message_list_remove(node=None, attr=None, data=None, data_attr=None):
-        return MetaDataListUtils.data_list_remove(node=node, attr=attr, data=MetaAttributeValidator.meta_node_string(data), mode='message', data_attr=data_attr)
+        return MetaDataListUtils.data_list_remove(node=node, attr=attr,
+                                                  data=MetaAttributeValidator.meta_node_string(data), mode='message',
+                                                  data_attr=data_attr)
 
     @staticmethod
     def message_list_remove_by_index(node=None, attr=None, indices=None):
@@ -2625,7 +2707,8 @@ class MetaTransformUtils(object):
             tmp_parent = maya.cmds.listRelatives(tmp_obj, allParents=True, fullPath=True)
             if tmp_parent:
                 if len(tmp_parent) > 1:
-                    raise ValueError('Do not know what to do with multiple parents ... {0} | {1}'.format(node, tmp_parent))
+                    raise ValueError(
+                        'Do not know what to do with multiple parents ... {0} | {1}'.format(node, tmp_parent))
                 list_parents.append(tmp_parent[0])
                 tmp_obj = tmp_parent[0]
             else:
@@ -2675,9 +2758,11 @@ class MetaTransformUtils(object):
 
         node = MetaAttributeValidator.meta_node_string(node)
 
-        return shape_utils.get_shapes(node, intermediates=intermediates, non_intermediates=non_intermediates, full_path=full_path) or []
+        return shape_utils.get_shapes(node, intermediates=intermediates, non_intermediates=non_intermediates,
+                                      full_path=full_path) or []
 
-    def snap(self, node=None, target=None, position=True, rotation=True, rotate_axis=False, rotate_order=False, scale_pivot=False, pivot='rp', space='w', mode='xform'):
+    def snap(self, node=None, target=None, position=True, rotation=True, rotate_axis=False, rotate_order=False,
+             scale_pivot=False, pivot='rp', space='w', mode='xform'):
         """
         Function that snaps source object to target
         :param source:
@@ -2699,10 +2784,17 @@ class MetaTransformUtils(object):
         node = MetaAttributeValidator.meta_node_string(node)
         target = MetaAttributeValidator.meta_node_string(target)
 
-        pivot = MetaAttributeValidator.kwargs_from_dict(pivot, common.PIVOT_ARGS, none_valid=False, called_from=__name__+fn_name + '>> validate pivot')
-        space = MetaAttributeValidator.kwargs_from_dict(space, common.SPACE_ARGS, none_valid=False, called_from=__name__+fn_name+'>> validate space')
-        LOGGER.debug('|{}| >> obj: {} | target: {} | pivot: {} | space: {} | mode: {}'.format(fn_name, node, target, pivot, space, mode))
-        LOGGER.debug('|{}| >> position: {} | rotation: {} | rotate_axis: {} | rotate_order: {}'.format(fn_name, position, rotation, rotate_axis, rotate_order))
+        pivot = MetaAttributeValidator.kwargs_from_dict(pivot, common.PIVOT_ARGS, none_valid=False,
+                                                        called_from=__name__ + fn_name + '>> validate pivot')
+        space = MetaAttributeValidator.kwargs_from_dict(space, common.SPACE_ARGS, none_valid=False,
+                                                        called_from=__name__ + fn_name + '>> validate space')
+        LOGGER.debug(
+            '|{}| >> obj: {} | target: {} | pivot: {} | space: {} | mode: {}'.format(fn_name, node, target, pivot,
+                                                                                     space, mode))
+        LOGGER.debug(
+            '|{}| >> position: {} | rotation: {} | rotate_axis: {} | rotate_order: {}'.format(fn_name, position,
+                                                                                              rotation, rotate_axis,
+                                                                                              rotate_order))
 
         kwargs = {'ws': False, 'os': False}
         if space == 'world':
@@ -2719,6 +2811,5 @@ class MetaTransformUtils(object):
 
             if pivot == 'closestPoint':
                 LOGGER.debug('|{}| <<< closestPoint >>>'.format(fn_name))
-                target_type = MetaAttributeValidator.get_Maya_type(target)
+                target_type = MetaAttributeValidator.get_maya_type(target)
                 dst = None
-
