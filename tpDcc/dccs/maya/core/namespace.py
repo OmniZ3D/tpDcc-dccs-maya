@@ -8,6 +8,7 @@ Module that contains functions and classes related with namespaces
 import types
 
 import tpDcc.dccs.maya as maya
+from tpDcc.dccs.maya.core import name as naming
 
 
 def namespace_exists(namespace):
@@ -78,6 +79,34 @@ def remove_namespace_from_string(name):
         new_name = sub_name[-1]
 
     return new_name
+
+
+def remove_empty_namespaces():
+    """
+    Removes all namespaces that are empty recursively starting from the bottom namespaces until the top one
+    :return: list(str), list of deleted namespaces
+    """
+
+    delete_namespaces = list()
+
+    def _namespace_chldren_count(ns):
+        return ns.count(':')
+
+    # Retrieve namespaces and sort them in a way that namespaces with more children are located af the front
+    namespace_list = maya.cmds.namespaceInfo(listOnlyNamespaces=True, recurse=True)
+    namespace_list.sort(key=_namespace_chldren_count, reverse=True)
+
+    for namespace in namespace_list:
+        try:
+            maya.cmds.namespace(removeNamespace=namespace)
+            delete_namespaces.append(namespace)
+        except RuntimeError:
+            pass
+
+    if delete_namespaces:
+        maya.logger.info('Namespaces removed: {}'.format(delete_namespaces))
+
+    return delete_namespaces
 
 
 def get_all_namespaces(exclude_list=None):
@@ -259,3 +288,137 @@ def find_unique_namespace(namespace, increment_fn=None):
         index += 1
         if not namespace_exists(test_namespace):
             return test_namespace
+
+
+def assign_namespace_to_object(obj_names, namespace, force_create=True, uuid=None, rename_shape=True):
+    """
+    Assigns a namespace to given Maya node names
+    :param obj_names: str, names of the node to assign namespace to
+    :param namespace: str, name of namespace to assign
+    :param force_create: bool, Whether to force the creation of the namespace if it does not exists
+    :param uuid: str, optional UUID that can be used instead of the object name.
+    :param rename_shape: bool, Whether to rename shapes node or not
+    :return:str, new name of the object
+    """
+
+    def _assign_namespace(obj_name, obj_uuid=None):
+        long_prefix, obj_namespace, base_name = naming.get_node_name_parts(obj_name)
+        if namespace == obj_namespace:
+            return obj_name
+
+        new_name = naming.join_node_name_parts(long_prefix, namespace, base_name)
+
+        return naming.rename(obj_name, new_name, uuid=obj_uuid, rename_shape=rename_shape)
+
+    if not obj_names:
+        obj_names = maya.cmds.ls(sl=True, long=True)
+    
+    if not maya.cmds.namespace(exists=namespace):
+        if force_create:
+            maya.cmds.namespace(set=':')
+            maya.cmds.namespace(add=namespace)
+        else:
+            return obj_names
+    
+    if isinstance(obj_names, (tuple, list)):
+        uuid_list = maya.cmds.ls(obj_names, uuid=True)
+        for i, obj in enumerate(obj_names):
+            _assign_namespace(obj, uuid_list[i])
+        maya.cmds.namespace(set=':')
+        return maya.cmds.ls(uuid_list, long=True)
+    else:
+        return _assign_namespace(obj_names, uuid)
+
+
+def remove_namespace_from_object(obj_names, namespace, uuid=None, rename_shape=True):
+    """
+    Removes a namespace to given Maya node names
+    :param obj_names: str, names of the node to remove namespace from
+    :param namespace: str, name of namespace to remove
+    :param uuid: str, optional UUID that can be used instead of the object name.
+    :param rename_shape: bool, Whether to rename shapes node or not
+    :return:str, new name of the object
+    """
+
+    def _remove_namespace(obj_name, obj_uuid=None):
+        long_prefix, obj_namespace, base_name = naming.get_node_name_parts(obj_name)
+        new_name = naming.join_node_name_parts(long_prefix, '', base_name)
+
+        return naming.rename(obj_name, new_name, uuid=obj_uuid, rename_shape=rename_shape)
+
+    if not obj_names:
+        obj_names = maya.cmds.ls(sl=True, long=True)
+
+    if not maya.cmds.namespace(exists=namespace):
+        return obj_names
+
+    if isinstance(obj_names, (tuple, list)):
+        uuid_list = maya.cmds.ls(obj_names, uuid=True)
+        for i, obj in enumerate(obj_names):
+            _remove_namespace(obj, uuid_list[i])
+        maya.cmds.namespace(set=':')
+        remove_empty_namespaces()
+        return maya.cmds.ls(uuid_list, long=True)
+    else:
+        removed_namespaces = _remove_namespace(obj_names, uuid)
+        remove_empty_namespaces()
+        return removed_namespaces
+
+
+def assign_namespace_to_object_by_filter(namespace, filter_type, force_create=True, rename_shape=True,
+                                         search_hierarchy=False, selection_only=True, dag=False,
+                                         remove_maya_defaults=True, transforms_only=True):
+    """
+    Assigns a namespace to given Maya node names filtered by given type
+    :param namespace: str, name of namespace to assign
+    :param filter_type: str, filter used to filter nodes to edit index of
+    :param force_create: bool, Whether to force the creation of the namespace if it does not exists
+    :param rename_shape: bool, Whether to rename shapes node or not
+    :param search_hierarchy: bool, Whether to search objects in hierarchies
+    :param selection_only: bool, Whether to search all scene objects or only selected ones
+    :param dag: bool, Whether to return only DAG nodes
+    :param remove_maya_defaults: Whether to ignore Maya default nodes or not
+    :param transforms_only: bool, Whether to return only transform nodes or not
+    :return:str, new name of the object
+    """
+
+    from tpDcc.dccs.maya.core import filtertypes
+
+    filtered_obj_list = filtertypes.filter_by_type(
+        filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
+        remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
+    if not filtered_obj_list:
+        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        return
+
+    return assign_namespace_to_object(
+        filtered_obj_list, namespace=namespace, force_create=force_create, rename_shape=rename_shape)
+
+
+def remove_namespace_from_object_by_filter(namespace, filter_type, rename_shape=True, search_hierarchy=False,
+                                           selection_only=True, dag=False, remove_maya_defaults=True,
+                                           transforms_only=True):
+    """
+    Removes namespace from given Maya node names filtered by given type
+    :param namespace: str, name of namespace to remove
+    :param filter_type: str, filter used to filter nodes to edit index of
+    :param rename_shape: bool, Whether to rename shapes node or not
+    :param search_hierarchy: bool, Whether to search objects in hierarchies
+    :param selection_only: bool, Whether to search all scene objects or only selected ones
+    :param dag: bool, Whether to return only DAG nodes
+    :param remove_maya_defaults: Whether to ignore Maya default nodes or not
+    :param transforms_only: bool, Whether to return only transform nodes or not
+    :return:str, new name of the object
+    """
+
+    from tpDcc.dccs.maya.core import filtertypes
+
+    filtered_obj_list = filtertypes.filter_by_type(
+        filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
+        remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
+    if not filtered_obj_list:
+        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        return
+
+    return remove_namespace_from_object(
+        filtered_obj_list, namespace=namespace, rename_shape=rename_shape)
