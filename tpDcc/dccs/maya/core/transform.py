@@ -1216,6 +1216,23 @@ def zero_transform_channels(xform):
             pass
 
 
+def get_transforms(shapes_list, full_path=True):
+    """
+    Returns all transforms from a list of shape ndoes
+    :param shapes_list: list(str), list of shape nodes to retrieve transform nodes from
+    :param full_path: bool, Whether to return full path of shape nodes or not
+    :return: list(str)
+    """
+
+    transform_list = list()
+    for shape_node in shapes_list:
+        parent = maya.cmds.listRelatives(shape_node, parent=True, fullPath=full_path)[0]
+        if maya.cmds.objectType(parent, isType='transform'):
+            transform_list.append(parent)
+
+    return list(set(transform_list))
+
+
 def fix_locator_shape_position(locator_name):
     """
     Function used to fix the position shape location when doing mirror operations
@@ -1631,3 +1648,67 @@ def get_transform_list_from_distance(source_transform, transform_list):
         found.append(distance_dict[dst][0])
 
     return found
+
+
+def delete_history(node):
+    """
+    Deletes the construction history of the given node
+    :param node: str
+    """
+
+    return maya.cmds.DeleteHistory(node)
+
+
+def freeze_transforms(node, translate=True, rotate=True, scale=True, normal=False, preserve_normals=True):
+    """
+    Freezes the transformations of the given node and its children
+    :param node: bool
+    :param translate: bool
+    :param rotate: bool
+    :param scale: bool
+    :param normal: bool
+    :param preserve_normals: bool
+    """
+
+    # TODO: When applying to transforms with history, a transformGeometry node is created in history
+    # TODO: Add argument to clean this node if necessary
+
+    return maya.cmds.makeIdentity(
+        node, apply=True,
+        translate=translate, rotate=rotate, scale=scale, normal=normal, pn=preserve_normals
+    )
+
+
+def inverse_transform(source_node, target_node, translate=True, rotate=True, scale=True):
+    """
+    Applies the inverse of a given transform to another target transform
+    :param source_node: str, source transform
+    :param target_node: str, target transform that in which we are going to apply the inverse transformation
+    :param translate: bool, apply inverse translation to target transform
+    :param rotate: bool, apply inverse rotation to target transform
+    :param scale: bool, apply inverse scale to target transform
+    :return:
+    """
+
+    if not maya.cmds.objExists(source_node):
+        raise Exception('Transform "{}" does not exists!'.format(source_node))
+    if not maya.cmds.objExists(target_node):
+        raise Exception('Transform "{}" does not exists!'.format(target_node))
+
+    # Load decomposeMatrix plugin if necessary
+    if not maya.cmds.pluginInfo('decomposeMatrix', query=True, l=True):
+        try:
+            maya.cmds.loadPlugin('decomposeMatrix')
+        except Exception:
+            raise Exception('Unable to laod "decomposeMatrix" Maya plugin!')
+
+    decompose_node = maya.cmds.createNode('decomposeMatrix', n='{}_decomposeMatrix'.format(source_node))
+    maya.cmds.connectAttr('{}.invsereMatrix'.format(source_node), '{}.inputMatrix'.format(decompose_node), f=True)
+    if translate:
+        maya.cmds.connectAttr('{}.outputTranslate'.format(decompose_node), '{}.translate'.format(target_node), f=True)
+    if rotate:
+        maya.cmds.connectAttr('{}.outputRotate'.format(decompose_node), '{}.rotate'.format(target_node), f=True)
+    if scale:
+        maya.cmds.connectAttr('{}.outputScale'.format(decompose_node), '{}.scale'.format(target_node), f=True)
+    
+    return decompose_node
