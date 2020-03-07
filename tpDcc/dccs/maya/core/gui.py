@@ -60,6 +60,49 @@ def maya_undo(fn):
     return lambda *args, **kwargs: maya.utils.executeDeferred(wrapper, *args, **kwargs)
 
 
+class DockWrapper(object):
+    def __init__(self, settings=None):
+        self._dock_area = 'right'
+        self._dock_name = 'dock'
+        self._allowed_areas = ['right', 'left']
+        self._label = ''
+        self._settings = settings
+        self._name = ''
+
+    # region Public Functions
+    def create(self):
+        floating = False
+
+        if self._exists():
+            maya.cmds.dockControl(self._dock_name, visible=True)
+        else:
+            maya.cmds.dockControl(self._dock_name, aa=self._allowed_areas, a=self._dock_area, content=self._name,
+                                  label=self._label, fl=floating, visible=True, fcc=self._floating_changed)
+
+    def set_name(self, name):
+        self._name = name
+
+    def set_dock_area(self, dock_area):
+        self._dock_area = dock_area
+
+    def set_dock_name(self, dock_name):
+        self._dock_name = dock_name
+
+    def set_label(self, label):
+        self._label = label
+
+    def set_allowed_areas(self, areas):
+        self._allowed_areas = areas
+
+    def _floating_changed(self):
+        if self._settings:
+            floating = is_window_floating(window_name=self._dock_name)
+            self._settings.set('floating', floating)
+
+    def _exists(self):
+        return maya.cmds.dockControl(self._dock_name, exists=True)
+
+
 @contextlib.contextmanager
 def maya_no_undo():
     """
@@ -704,44 +747,17 @@ def delete_workspace_control(control_name, reset_floating=True):
     return floating
 
 
-class DockWrapper(object):
-    def __init__(self, settings=None):
-        self._dock_area = 'right'
-        self._dock_name = 'dock'
-        self._allowed_areas = ['right', 'left']
-        self._label = ''
-        self._settings = settings
-        self._name = ''
+def open_namespace_editor():
+    """
+    Opens Maya Namespace Editor GUI
+    """
 
-    # region Public Functions
-    def create(self):
-        floating = False
+    maya.mel.eval('namespaceEditor')
 
-        if self._exists():
-            maya.cmds.dockControl(self._dock_name, visible=True)
-        else:
-            maya.cmds.dockControl(self._dock_name, aa=self._allowed_areas, a=self._dock_area, content=self._name,
-                                  label=self._label, fl=floating, visible=True, fcc=self._floating_changed)
 
-    def set_name(self, name):
-        self._name = name
+def open_reference_editor():
+    """
+    Opens Maya Reference Editor GUI
+    """
 
-    def set_dock_area(self, dock_area):
-        self._dock_area = dock_area
-
-    def set_dock_name(self, dock_name):
-        self._dock_name = dock_name
-
-    def set_label(self, label):
-        self._label = label
-
-    def set_allowed_areas(self, areas):
-        self._allowed_areas = areas
-
-    def _floating_changed(self):
-        if self._settings:
-            floating = is_window_floating(window_name=self._dock_name)
-            self._settings.set('floating', floating)
-
-    def _exists(self):
-        return maya.cmds.dockControl(self._dock_name, exists=True)
+    maya.mel.eval('tearOffRestorePanel "Reference Editor" referenceEditor true')

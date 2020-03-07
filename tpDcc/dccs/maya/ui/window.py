@@ -81,13 +81,15 @@ class BootStrapWidget(MayaQWidgetDockableMixin, QWidget):
     PREFERRED_SIZE = QSize(width, 420)
     MINIMUM_SIZE = QSize((width * 0.95), 220)
 
-    def __init__(self, widget, title, uid=None, parent=None):
+    def __init__(self, widget, title, icon=None, uid=None, parent=None):
         super(BootStrapWidget, self).__init__(parent=parent)
 
         global BOOTSTRAP_WIDGETS
         BOOTSTRAP_WIDGETS[uid] = self
 
         self.setWindowTitle(title)
+        if icon:
+            self.setWindowIcon(icon)
         self._docking_frame = QMainWindow(self)
         self._docking_frame.layout().setContentsMargins(0, 0, 0, 0)
         self._docking_frame.setWindowFlags(Qt.Widget)
