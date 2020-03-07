@@ -174,34 +174,6 @@
             
   <div class="section" id="module-tpDcc.dccs.maya.core.distance">
 <span id="tpdcc-dccs-maya-core-distance-module"></span><h1>tpDcc.dccs.maya.core.distance module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.distance" title="Permalink to this headline">¶</a></h1>
-<p>Module that contains functions and classes related with attributes</p>
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.distance.get_closest_distance_info">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.distance.</code><code class="sig-name descname">get_closest_distance_info</code><span class="sig-paren">(</span><em class="sig-param">source=None</em>, <em class="sig-param">targets=None</em>, <em class="sig-param">mode='close'</em>, <em class="sig-param">res_mode='point'</em>, <em class="sig-param">source_pivot='rp'</em>, <em class="sig-param">target_pivot='rp'</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.distance.get_closest_distance_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the closest return based on a source and target and given modes
-:param source: str, base object to measure from
-:param targets: list&lt;stt&gt;, list of object types
-:param mode: str, what mode we are checking dat from (close or far)
-:param res_mode: str</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>object: return the [closest] target</p></li>
-<li><p>point: retur the [closest] point</p></li>
-<li><p>component: resturn the [closest] base component</p></li>
-<li><p>pointOnSurface: [closest] point on the target shape(s)</p></li>
-<li><p>pointOnSurfaceLoc: [closest] point on target shape(s) loc’d</p></li>
-<li><p>shape: gets closest point on every shape, returns closest</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>source_pivot</strong> – str</p>
-</dd>
-</dl>
-<p>:param target_pivot:str
-:return: tuple(res, distance)</p>
-</dd></dl>
-
 </div>
 
 

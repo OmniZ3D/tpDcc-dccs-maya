@@ -174,61 +174,6 @@
             
   <div class="section" id="module-tpDcc.dccs.maya.core.space">
 <span id="tpdcc-dccs-maya-core-space-module"></span><h1>tpDcc.dccs.maya.core.space module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.space" title="Permalink to this headline">¶</a></h1>
-<p>Module that contains functions and classes related with spaces</p>
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.space.create_follow_group">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.space.</code><code class="sig-name descname">create_follow_group</code><span class="sig-paren">(</span><em class="sig-param">source_transform</em>, <em class="sig-param">target_transform</em>, <em class="sig-param">prefix='follow'</em>, <em class="sig-param">follow_scale=False</em>, <em class="sig-param">use_duplicate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.space.create_follow_group" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a group above a target transform that is constrained to the source transform
-:param source_transform: str, name of the transform to follow
-:param target_transform: str, name of the transform make follow
-:param prefix: str, prefix to add to the follow group
-:param follow_scale: bool, Whether to ad a scale constraint or not
-:param use_duplicate: bool, Whether to use a duplicate or not
-:return: str, name of the follow group</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.space.create_local_follow_group">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.space.</code><code class="sig-name descname">create_local_follow_group</code><span class="sig-paren">(</span><em class="sig-param">source_transform</em>, <em class="sig-param">target_transform</em>, <em class="sig-param">prefix='followLocal'</em>, <em class="sig-param">orient_only=False</em>, <em class="sig-param">connect_scale=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.space.create_local_follow_group" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a group above a target transform that is local constrained to the source transform
-This help when setting up controls that need to be parented but only affect what they constrain when the actual
-control is moved
-:param source_transform: str, transform to follow
-:param target_transform: str, transform to make follow
-:param prefix: str, prefix to add to the follow group
-:param orient_only: bool, Whether the local constraint should just be an orient constraint
-:param connect_scale: bool, Whether local constraint should constraint also scale or not</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.space.create_multi_follow">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.space.</code><code class="sig-name descname">create_multi_follow</code><span class="sig-paren">(</span><em class="sig-param">source_list</em>, <em class="sig-param">target_transform</em>, <em class="sig-param">node=None</em>, <em class="sig-param">constraint_type='parentConstraint'</em>, <em class="sig-param">attribute_name='follow'</em>, <em class="sig-param">value=None</em>, <em class="sig-param">create_title=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.space.create_multi_follow" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a group above the target that is constrained to multiple transforms. A switch attribute switches their
-state on/off. Constraints will be “directly” added on the target transform
-:param source_list: list(str), list of transforms that the target should be constrained by
-:param target_transform: str, name of a transform node that should follow the transforms in source_list
-:param node: str, name of the node to add the swtich attribute to
-:param constraint_type: str, Maya constraint type (‘parentConstraint’, ‘pointConstraint’ or ‘orientConstraint’)
-:param attribute_name: str, name of the swtich attribute t oadd to the the node
-:param value: float, value to give the switch attribute on the node
-:param create_title: bool
-:return: str, name of the new group</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.space.create_multi_follow_direct">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.space.</code><code class="sig-name descname">create_multi_follow_direct</code><span class="sig-paren">(</span><em class="sig-param">source_list</em>, <em class="sig-param">target_transform</em>, <em class="sig-param">node</em>, <em class="sig-param">constraint_type='parentConstraint'</em>, <em class="sig-param">attribute_name='follow'</em>, <em class="sig-param">value=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.space.create_multi_follow_direct" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a group above the target that is constrained to multiple transforms. A switch attribute switches their
-state on/off. Constraints will be “directly” added on the target transform
-:param source_list: list(str), list of transforms that the target should be constrained by
-:param target_transform: str, name of a transform node that should follow the transforms in source_list
-:param node: str, name of the node to add the swtich attribute to
-:param constraint_type: str, Maya constraint type (‘parentConstraint’, ‘pointConstraint’ or ‘orientConstraint’)
-:param attribute_name: str, name of the swtich attribute t oadd to the the node
-:param value: float, value to give the switch attribute on the node
-:return: str, name of the new group</p>
-</dd></dl>
-
 </div>
 
 

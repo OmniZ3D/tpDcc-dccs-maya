@@ -174,62 +174,6 @@
             
   <div class="section" id="module-tpDcc.dccs.maya.core.shader">
 <span id="tpdcc-dccs-maya-core-shader-module"></span><h1>tpDcc.dccs.maya.core.shader module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.shader" title="Permalink to this headline">¶</a></h1>
-<p>Module that contains functions and classes related with shaders</p>
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.shader.export_shader_swatch_as_image">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.shader.</code><code class="sig-name descname">export_shader_swatch_as_image</code><span class="sig-paren">(</span><em class="sig-param">shader_name</em>, <em class="sig-param">export_path=None</em>, <em class="sig-param">render_size=100</em>, <em class="sig-param">swatch_width=100</em>, <em class="sig-param">swatch_height=100</em>, <em class="sig-param">format='png'</em>, <em class="sig-param">get_pixmap=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.shader.export_shader_swatch_as_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>Export shader swatch as image
-:param shader_name: str
-:param export_path: str
-:param render_size: int
-:param swatch_width: int
-:param swatch_height: int
-:param format: str
-:return: variant, None || str</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.shader.get_default_shaders">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.shader.</code><code class="sig-name descname">get_default_shaders</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.shader.get_default_shaders" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of default Maya shaders
-:return: list(str)</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.shader.get_shader_swatch">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.shader.</code><code class="sig-name descname">get_shader_swatch</code><span class="sig-paren">(</span><em class="sig-param">shader_name</em>, <em class="sig-param">render_size=100</em>, <em class="sig-param">swatch_width=100</em>, <em class="sig-param">swatch_height=100</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.shader.get_shader_swatch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a Shader watch as QWidget
-:param shader_name: str
-:param render_size: int
-:param swatch_width: int
-:param swatch_height: int
-:return: QWidget</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.shader.get_shading_group">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.shader.</code><code class="sig-name descname">get_shading_group</code><span class="sig-paren">(</span><em class="sig-param">geometry</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.shader.get_shading_group" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get shading group assigned to the given geometry
-:param geometry: str, geometry to get shading group from
-:return: list&lt;str&gt;</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.shader.get_shading_node_type">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.shader.</code><code class="sig-name descname">get_shading_node_type</code><span class="sig-paren">(</span><em class="sig-param">shader_node</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.shader.get_shading_node_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the type of shading node depending of the given shader node connections
-:param shader_node: str
-:return: str</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.shader.set_shading_group">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.shader.</code><code class="sig-name descname">set_shading_group</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">shading_group</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.shader.set_shading_group" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets shading group to the given geometry
-:param geometry: str, geometry to ste shading group to
-:param shading_group: str, shading group to set to geometry</p>
-</dd></dl>
-
 </div>
 
 

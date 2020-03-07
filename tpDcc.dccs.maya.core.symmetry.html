@@ -174,43 +174,6 @@
             
   <div class="section" id="module-tpDcc.dccs.maya.core.symmetry">
 <span id="tpdcc-dccs-maya-core-symmetry-module"></span><h1>tpDcc.dccs.maya.core.symmetry module<a class="headerlink" href="#module-tpDcc.dccs.maya.core.symmetry" title="Permalink to this headline">¶</a></h1>
-<p>Module that contains functions and classes related with symmetry</p>
-<dl class="class">
-<dt id="tpDcc.dccs.maya.core.symmetry.SymmetryTable">
-<em class="property">class </em><code class="sig-prename descclassname">tpDcc.dccs.maya.core.symmetry.</code><code class="sig-name descname">SymmetryTable</code><a class="headerlink" href="#tpDcc.dccs.maya.core.symmetry.SymmetryTable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="method">
-<dt id="tpDcc.dccs.maya.core.symmetry.SymmetryTable.build_symmetry_table">
-<code class="sig-name descname">build_symmetry_table</code><span class="sig-paren">(</span><em class="sig-param">mesh</em>, <em class="sig-param">axis=0</em>, <em class="sig-param">tolerance=0.001</em>, <em class="sig-param">use_pivot=True</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.symmetry.SymmetryTable.build_symmetry_table" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds a symmetry table for the given mesh
-:param mesh: str, mesh to build symmetry table for
-:param axis: int, axis to check for symmetry across
-:param tolerance: float, distance tolerance for finding symmetry pairs
-:param use_pivot: bool, Whether to use object pivot or world pivot</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.symmetry.get_side_vertices">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.symmetry.</code><code class="sig-name descname">get_side_vertices</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">axis=0</em>, <em class="sig-param">sel_negative=True</em>, <em class="sig-param">tolerance=0.001</em>, <em class="sig-param">use_pivot=False</em>, <em class="sig-param">base_obj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.symmetry.get_side_vertices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Select a side of the object
-:param obj:
-:param axis:
-:param sel_negative: 0: select negative side; 1: 1: select positive side; None: select all vertices
-:param tolerance:
-:param use_pivot:
-:param base_obj:
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tpDcc.dccs.maya.core.symmetry.get_symmetric_vertex">
-<code class="sig-prename descclassname">tpDcc.dccs.maya.core.symmetry.</code><code class="sig-name descname">get_symmetric_vertex</code><span class="sig-paren">(</span><em class="sig-param">vertex_index</em>, <em class="sig-param">sym_table_list</em><span class="sig-paren">)</span><a class="headerlink" href="#tpDcc.dccs.maya.core.symmetry.get_symmetric_vertex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns symmetric vertex or -1 if not symmetric vertex found
-:param vertex_index: int</p>
-</dd></dl>
-
 </div>
 
 
