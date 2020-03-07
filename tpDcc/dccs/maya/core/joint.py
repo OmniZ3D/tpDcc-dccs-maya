@@ -7,12 +7,14 @@ Module that contains functions and classes related with joints
 
 from __future__ import print_function, division, absolute_import
 
+import math
 import logging
 
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.python import strings, python
 from tpDcc.dccs.maya.core import exceptions, decorators, mathutils, scene, attribute, transform, node
-from tpDcc.dccs.maya.core import transform as xform_utils, constraint as cns_utils
+from tpDcc.dccs.maya.core import transform as xform_utils, constraint as cns_utils, matrix as matrix_utils
+from tpDcc.dccs.maya.core import name as name_utils, curve as curve_utils
 
 LOGGER = logging.getLogger()
 
@@ -194,8 +196,7 @@ class OrientJointAttributes(object):
         :param joint: str, name of valid joint node
         """
 
-        if type(joint) is not list:
-            joint = [joint]
+        joint = python.force_list(joint)
 
         for jnt in joint:
             if not is_joint(jnt):
@@ -1067,16 +1068,155 @@ def create_from_point_list(point_list, orient=False, side='c', part='chain', suf
     return joint_list
 
 
-def orient(joint, aim_axis='x', up_axis='y', up_vec=(0, 1, 0)):
+def orient(joint, aim_axis='x', up_axis='y', up_vector=(0, 1, 0)):
     """
     Orient joints based on user defined vectors
     :param joint: str, joints to orient
     :param aim_axis: str, axis to be aligned down the length of the joint
     :param up_axis: str, axis to be aligned with the world vector given by up vector
-    :param up_vec: tuple<int>, world vector to align up axis to
+    :param up_vector: tuple<int>, world vector to align up axis to
     """
 
-    pass
+    check_joint(joint)
+    
+    child_list = maya.cmds.listRelatives(joint, c=True)
+    child_joint_list = maya.cmds.listRelatives(joint, c=True, type='joint', pa=True)
+    
+    if child_list:
+        child_list = maya.cmds.parent(child_list, world=True)
+
+    if not child_joint_list:
+        maya.cmds.setAttr('{}.jo'.format(joint), 0, 0, 0)
+    else:
+        parent_matrix = maya.OpenMaya.MMatrix()
+        parent_joint = maya.cmds.listRelatives(joint, p=True, pa=True)
+        if parent_joint:
+            parent_matrix = transform.get_matrix(parent_joint[0])
+
+        # Aim Vector
+        aim_point_1 = transform.get_position(joint)
+        aim_point_2 = transform.get_position(child_joint_list[0])
+        aim_vector = mathutils.offset_vector(aim_point_1, aim_point_2)
+
+        target_matrix = matrix_utils.build_rotation(aim_vector, up_vector, aim_axis, up_axis)
+        orient_matrix = target_matrix * parent_matrix.inverse()
+
+        # Extract joint orient values
+        rotation_order = maya.cmds.getAttr('{}.ro'.format(joint))
+        orient_rotation = matrix_utils.get_rotation(orient_matrix, rotation_order=rotation_order)
+
+        # Reset joint rotation and orientation
+        maya.cmds.setAttr('{}.r'.format(joint), 0, 0, 0)
+        maya.cmds.setAttr('{}.jo'.format(orient_rotation[0], orient_rotation[1], orient_rotation[2]))
+
+    # Reparent children
+    if child_list:
+        maya.cmds.aprent(child_list, joint)
+
+
+def orient_to(joint, target):
+    """
+    Matches given joint orientation to given transform
+    :param joint: str, joint to set orientation for
+    :param target: str, transform to match joint orientation to
+    """
+
+    if not maya.cmds.objExists(joint):
+        raise Exception('Joint "{}" does not exist!'.format(joint))
+    if not maya.cmds.objExists(target):
+        raise Exception('Target "{}" does not exist!'.format(target))
+    if not transform.is_transform(target):
+        raise Exception('Target "{}" is not a valid transform!'.format(target))
+
+    # Unparent children
+    child_list = maya.cmds.listRelatives(joint, c=True, type=['joint', 'transform'])
+    if child_list:
+        child_list = maya.cmds.parent(child_list, world=True)
+
+    # Get parent joint matrix
+    parent_matrix = maya.OpenMaya.MMatrix()
+    parent_joint = maya.cmds.listRelatives(joint, p=True, pa=True)
+    if parent_joint:
+        parent_matrix = transform.get_matrix(parent_joint[0])
+
+    target_matrix = transform.get_matrix(target)
+    orient_matrix = target_matrix * parent_matrix.inverse()
+
+    # Extract joint orient values
+    rotation_order = maya.cmds.getAttr('{}.ro'.format(joint))
+    orient_rotation = matrix_utils.get_rotation(orient_matrix, rotation_order=rotation_order)
+
+    # Reset joint rotation and orientation
+    maya.cmds.setAttr('{}.r'.format(joint), 0, 0, 0)
+    maya.cmds.setAttr('{}.jo'.format(orient_rotation[0], orient_rotation[1], orient_rotation[2]))
+
+    # Reparent children
+    if child_list:
+        maya.cmds.aprent(child_list, joint)
+
+
+def flip_orient(joint, target=None, axis='x'):
+    """
+    Flips the given joint orient across the given axis
+    Flipped orientation will be applied to target joint or to original one if target is not specified
+    :param joint: str, joint to flip orientation of
+    :param target: str or None, joint to apply flipped orientation to
+    :param axis: str, axis to flip orientation across
+    """
+
+    check_joint(joint)
+
+    rad_to_deg = 100.0 / math.pi
+
+    if not target:
+        target = joint
+
+    joint_matrix = transform.get_matrix(joint)
+
+    # Build flip matrix
+    flip_matrix = None
+    if axis == 'x':
+        flip_matrix = matrix_utils.build_matrix(x_axis=(-1, 0, 0))
+    if axis == 'y':
+        flip_matrix = matrix_utils.build_matrix(x_axis=('', -1, 0))
+    if axis == 'z':
+        flip_matrix = matrix_utils.build_matrix(x_axis=(0, 0, -1))
+
+    target_matrix = maya.OpenMaya.MTransformationMatrix(joint_matrix * flip_matrix.inverse())
+    flip_rotation = target_matrix.eulerRotation()
+    flip_rotation_list = (flip_rotation.x * rad_to_deg, flip_rotation.y * rad_to_deg, flip_rotation.z * rad_to_deg)
+    maya.cmds.setAttr('{}.jo'.format(target), *flip_rotation_list)
+
+    return flip_rotation_list
+
+
+def mirror_orient(joint, roll_axis):
+    """
+    Reorients joint to replicate mirrored behaviour
+    :param joint: str, joint to mirror orientation for
+    :param roll_axis: str, axis to maintain orientation for
+    """
+
+    check_joint(joint)
+
+    if not ['x', 'y', 'z'].count(roll_axis):
+        raise Exception('Invalid roll axis "{}"!'.format(roll_axis))
+
+    # Unparent children
+    child_list = maya.cmds.listRelatives(joint, c=True)
+    if child_list:
+        maya.cmds.parent(child_list, world=True)
+
+    # Reorient joint
+    rotation_list = [0, 0, 0]
+    axis_dict = {'x': 0, 'y': 1, 'z': 2}
+    rotation_list[axis_dict[roll_axis]] = 180
+    maya.cmds.setAttr('{}.r'.format(joint), *rotation_list)
+    maya.cmds.makeIdentity(joint, apply=True, t=True, r=True, s=True)
+
+    # Reparent children
+    if child_list:
+        maya.cmds.parent(child_list, joint)
 
 
 def start_joint_tool():
@@ -1110,3 +1250,195 @@ def set_joint_local_rotation_axis_visibility(joints=None, bool_value=None):
         maya.cmds.setAttr('{}.displayLocalAxis'.format(jnt), new_value)
 
     return True
+
+
+def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
+    """
+    Connects joints inverseScale attribute
+    :param joint: str, joint to connect inverseScale for
+    :param inverse_scale_object: str, object to connect to joint inverseScale attribute. If None, joint parent is use.
+    :param force: bool, Whether to force the connection or not
+    """
+
+    check_joint(joint)
+
+    # Get inverse scale object if not given
+    if not inverse_scale_object or not maya.cmds.objExists(inverse_scale_object):
+        parent = maya.cmds.listRelatives(joint, p=True) or list()
+        if parent and force:
+            parent = maya.cmd.sls(parent, type='joint') or list()
+        if not parent:
+            LOGGER.warning(
+                'No source object specified and no parent joint found for joint "{}". Skipping connection ...'.format(
+                    joint))
+            return None
+        inverse_scale_object = parent[0]
+
+    # Connect inverse scale
+    inverse_scale_connections = maya.cmds.listConnections('{}.inverseScale'.format(joint), s=True, d=False ) or list()
+    if inverse_scale_object not in inverse_scale_connections:
+        try:
+            maya.cmds.connectAttr('{}.scale'.format(inverse_scale_object), '{}.inverseScale'.format(joint), f=True)
+        except Exception as exc:
+            LOGGER.error('Error connection "{}.scale" to "{}.inverseScale! {}'.format(inverse_scale_object, joint, exc))
+            return None
+
+    return '{}.scale'.format(inverse_scale_object)
+
+
+@decorators.undo_chunk
+def create_joints_along_curve(curve, joint_count, joint_description='new', attach=True, create_controls=False):
+    """
+    Create joints on curve that do not aim at child
+    :param curve: str, name of a curve
+    :param joint_count: int, number of joints to create
+    :param joint_description: str, description for the new created joints
+    :param attach: bool, Whether to attach the joints to the curve or not
+    :param create_controls: bool, Whether to create new controls on the joints
+    :return: list(joint, group, control_group)
+        joints: list of joints
+        group: main group for the joints
+        control_group: main group above the controls (None if controls are not created)
+    """
+
+    group = maya.cmds.group(empty=True, n=name_utils.find_unique_name('{}_joints_grp'.format(curve)))
+
+    control_group = None
+    if create_controls:
+        control_group = maya.cmds.group(empty=True, n=name_utils.find_unique_name('{}_controls_grp'.format(curve)))
+        maya.cmds.addAttr(control_group, ln='twist', k=True)
+        maya.cmds.addAttr(control_group, ln='offsetScale', min=-1, dv=0, k=True)
+
+    maya.cmds.select(clear=True)
+
+    total_length = maya.cmds.arclen(curve)
+    part_length = total_length / (joint_count - 1)
+
+    joints = list()
+    current_length = 0
+    percent = 0
+    segment = 1.0 / joint_count
+    for i in range(joint_count):
+        param = curve_utils.get_parameter_from_curve_length(curve, current_length)
+        position = curve_utils.get_point_from_curve_parameter(curve, param)
+        if attach:
+            maya.cmds.select(clear=True)
+        new_joint = maya.cmds.joint(p=position, n=name_utils.find_unique_name('{}_jnt'.format(joint_description)))
+        maya.cmds.addAttr(new_joint, ln='param', at='double', dv=param, k=True)
+        if joints:
+            maya.cmds.joint(joints[-1], e=True, zso=True, oj='xyz', sao='yup')
+        if attach:
+            attach_node = curve_utils.attach_to_curve(new_joint, curve, parameter=param)
+            maya.cmds.parent(new_joint, group)
+            maya.cmds.connectAttr('{}.param'.format(new_joint), '{}.parameter'.format(attach_node))
+        current_length += part_length
+        if create_controls:
+            raise NotImplementedError('create controls functionality not implemented yet!')
+
+        joints.append(new_joint)
+        percent += segment
+
+    if not attach:
+        maya.cmds.parent(joints[0], group)
+
+    return joints, group, control_group
+
+
+def create_joint_along_curve_in_intersection_curves(curve, intersect_curves_list, joint_at_base=True,
+                                                       joint_at_tip=True, use_direction=False,
+                                                       intersect_direction=(0, 0, 0), prefix=''):
+    """
+    Creates joints along a curves at the point of intersection with a list of secondary curves
+    :param curve: str, curve to create joint along
+    :param intersect_curves_list: list, list of intersection curves
+    :param joint_at_base: bool, creates a joint at the base of the curve
+    :param joint_at_tip: bool, creates a joint at the tip of the curve
+    :param use_direction: bool, project the curves in a given direction before intersecting
+    :param intersect_direction: tuple or list, the direction to project the curves before intersecting
+    :param prefix: str, name prefix for newly created joints
+    :return: list(str), list of new created joints
+    """
+
+    if not maya.cmds.objExists(curve):
+        raise Exception('Curve object "{}" does not exist!'.format(curve))
+    for i in range(len(intersect_curves_list)):
+        if not maya.cmds.objExists(intersect_curves_list[i]):
+            raise Exception('Object "{}" does not exist!'.format(intersect_curves_list[i]))
+
+    if not prefix:
+        prefix = strings.strip_suffix(curve)
+
+    # Get curve range
+    min_u = maya.cmds.getAttr('{}.minValue'.format(curve))
+    max_u = maya.cmds.getAttr('{}.maxValue'.format(curve))
+
+    maya.cmds.select(clear=True)
+    joint_list = list()
+
+    # TODO: We should use nameit library to rename new joints
+    joint_name_format = '{}_new{}_jnt'
+
+    # Create base joint if necessary
+    if joint_at_base:
+        pos = maya.cmds.pointOnCurve(curve, pr=min_u, p=True)
+        joint_index = '01'
+        new_joint_name = joint_name_format.format(prefix, joint_index)
+        new_joint = maya.cmds.joint(p=pos, n=new_joint_name)
+        joint_list.append(new_joint)
+
+    # Create joints at curve intersections
+    for n in range(len(intersect_curves_list)):
+        joint_index = str(n + 1 + int(joint_at_base))
+        if i < (9 - int(joint_at_base)):
+            joint_index = '0{}'.format(joint_index)
+        u_list = maya.cmds.curveIntersect(curve, intersect_curves_list[n], ud=use_direction, d=intersect_direction)
+        if not u_list:
+            continue
+        u_list = u_list.split(' ')
+        for u in range(int(len(u_list) / 2)):
+            pos = maya.cmds.pointOnCurve(curve, pr=float(u_list[u * 2]), p=True)
+            new_joint_name = joint_name_format.format(prefix, joint_index)
+            new_joint = maya.cmds.joint(p=pos, n=new_joint_name)
+            joint_list.append(new_joint)
+
+    # Create tip joint
+    if joint_at_tip:
+        joint_index = str(len(intersect_curves_list) + int(joint_at_base) + 1)
+        if len(intersect_curves_list) < (9 - int(joint_at_base)):
+            joint_index = '0{}'.format(joint_index)
+
+        pos = maya.cmds.pointOnCurve(curve, pr=max_u, p=True)
+        new_joint_name = joint_name_format.format(prefix, joint_index)
+        new_joint = maya.cmds.joint(p=pos, n=new_joint_name)
+        joint_list.append(new_joint)
+
+    return joint_list
+
+
+def create_joint_buffer(joint, connect_inverse=True):
+    """
+    Creates a joint buffer on top of the given joint
+    :param joint: str
+    :param connect_inverse: bool, Whether to connect new buffer joint inverseScale to source joint parent node
+    """
+
+    maya.cmds.select(clear=True)
+
+    # Create buffer joint and make sure that it has same translation and rotation than the source joint
+    buffer_joint = maya.cmds.joint(n='{}_bufferJoint'.format(joint))
+    maya.cmds.setAttr('{}.drawStyle'.format(buffer_joint), 2)
+    transform.MatchTransform(joint, buffer_joint).translation_rotation()
+
+    # Parent buffer joint to source joint parent node (if exists)
+    parent = maya.cmds.listRelatives(joint, p=True, f=True)
+    if parent:
+        parent = parent[0]
+        maya.cmds.parent(buffer_joint, parent)
+        if connect_inverse:
+            if not maya.cmds.isConnected('{}.scale'.format(parent), '{}.inverseScale'.format(buffer_joint)):
+                maya.cmds.connectAttr('{}.scale'.format(parent), '{}.inverseScale'.format(buffer_joint))
+
+    # Parent source joint to new created buffer joint
+    maya.cmds.parent(joint, buffer_joint)
+
+    return buffer_joint

@@ -11,6 +11,12 @@ import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import node, transform, mathutils
 
 
+class CameraTypes(object):
+    ALL = 'all'
+    PERSP = 'perspective'
+    ORTHO = 'ortographic'
+
+
 def check_camera(node):
     """
     Checks if given node is a camera. If not, exception is raised
@@ -46,6 +52,124 @@ def is_camera(node):
     return False
 
 
+def filter_camera_type(cam_shapes_list=None, camera_type=CameraTypes.ALL):
+    """
+    Returns all camera shapes of the given type
+    :param cam_shapes_list: list(str), list of camera shapes nodes. If not given, all scene cameras will be use
+    :param camera_type: str, which camera type to filter ('all', 'perspective', 'orthographic')
+    :return: list(str), list of filtered camera shape nodes
+    """
+
+    if cam_shapes_list is None:
+        cam_shapes_list = get_all_camera_shapes(full_path=True)
+
+    if camera_type == CameraTypes.ALL:
+        return cam_shapes_list
+
+    cam_filter_list = list()
+    for cam_shape in cam_shapes_list:
+        if maya.cmds.getAttr('{}.orthographic'.format(cam_shape)):
+            if camera_type == CameraTypes.ORTHO:
+                cam_filter_list.append(cam_shape)
+        else:
+            if camera_type == CameraTypes.PERSP:
+                cam_filter_list.append(cam_shape)
+
+    return cam_filter_list
+
+
+def get_startup_camera_shapes(include_left_back_bottom=True):
+    """
+    Returns all the cameras shape nodes available when a new scene is created (long names)
+    :param include_left_back_bottom: bool, Whether to include or not default bottom, left, and back camera shapes
+    :return: list(str)
+    """
+
+    cam_shape_list = get_all_camera_shapes(full_path=True)
+    startup_camera_shape_list = list()
+    for cam_shape in cam_shape_list:
+        if maya.cmds.camera(maya.cmds.listRelatives(cam_shape, parent=True)[0], startupCamera=True, query=True):
+            startup_camera_shape_list.append(cam_shape)
+    if not include_left_back_bottom:
+        return startup_camera_shape_list
+
+    for cam in ["bottom", "left", "back"]:
+        cam_shape = '{}Shape'.format(cam)
+        if maya.cmds.objExists(cam_shape):
+            startup_camera_shape_list.append(cam_shape)
+
+    return startup_camera_shape_list
+
+
+def get_startup_camera_transforms(full_path=True):
+    """
+    Returns all the cameras transform nodes available when a new scene is created (long names)
+    :param full_path: bool, Whether to return full path to camera nodes or short ones
+    :return: list(str)
+    """
+
+    startup_camera_shapes = get_startup_camera_shapes()
+    if not startup_camera_shapes:
+        return list()
+
+    return transform.get_transforms(startup_camera_shapes)
+
+
+def get_all_camera_shapes(full_path=True):
+    """
+    Returns all cameras shapes available in the current scene
+    :param full_path: bool, Whether tor return full path to camera nodes or short ones
+    :return: list(str)
+    """
+
+    return maya.cmds.ls(type='camera', long=full_path) or list()
+
+
+def get_all_camera_transforms(camera_type=CameraTypes.ALL, full_path=True):
+    """
+    Returns all camera transforms in the current scnee
+    :param camera_type: str. type of camera to return transforms of
+    :param full_path: bool, Whether tor return full path to camera nodes or short ones
+    :return: list(str)
+    """
+
+    all_camera_shapes = get_all_camera_shapes(full_path=True)
+    if not all_camera_shapes:
+        return list()
+
+    camera_shape_list = filter_camera_type(all_camera_shapes, camera_type=camera_type)
+
+    return transform.get_transforms(camera_shape_list, full_path=full_path)
+
+
+def get_user_camera_shapes():
+    """
+    Returns all the camera shape nodes in current scene except the default ones
+    :return: list(str)
+    """
+
+    cam_shape_list = get_all_camera_shapes(full_path=True)
+    startup_camera_shape_list = get_startup_camera_shapes()
+
+    return list(set(cam_shape_list) - set(startup_camera_shape_list))
+
+
+def get_user_camera_transforms(camera_type=CameraTypes.ALL):
+    """
+    Returns all the camera transforms node in the current scene except the default ones
+    :param camera_type: str, camera type to filter by ('all', 'perspective', 'orthographic')
+    :return: ist(str), filtered camera transforms
+    """
+
+    user_camera_shapes = get_user_camera_shapes()
+    if not user_camera_shapes:
+        return list()
+
+    cam_shape_list = filter_camera_type(user_camera_shapes, camera_type=camera_type)
+
+    return transform.get_transfroms(cam_shape_list)
+
+
 def get_all_cameras(exclude_standard_cameras=True, return_transforms=True, full_path=True):
     """
     Returns all cameras in current scene
@@ -60,7 +184,7 @@ def get_all_cameras(exclude_standard_cameras=True, return_transforms=True, full_
         cameras = [c for c in maya.cmds.ls(
             type='camera', long=full_path) if not maya.cmds.camera(c, query=True, sc=True)]
     else:
-        cameras = maya.cmds.ls(type='camera', long=full_path) or list()
+        cameras = get_all_camera_shapes(full_path=full_path)
 
     if return_transforms:
         return [maya.cmds.listRelatives(c, p=True, fullPath=full_path)[0] for c in cameras]
