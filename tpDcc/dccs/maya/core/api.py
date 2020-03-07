@@ -852,6 +852,114 @@ class MeshFunction(MayaFunction, object):
         else:
             return [new_point.x, new_point.y, new_point.z]
 
+    def get_closest_intersection(self, source_vector, direction_vector):
+        """
+        Returns the closest intersection between source vector and direction vector
+        :param source_vector:
+        :param direction_vector:
+        :return:
+        """
+
+        # TODO: Implement to support both OpenMaya and OpenMaya2
+
+        point_base = maya.OpenMaya.MFloatPoint()
+        point_base.x = source_vector[0]
+        point_base.y = source_vector[1]
+        point_base.z = source_vector[2]
+
+        float_base = maya.OpenMaya.MFloatVector()
+        float_base.x = source_vector[0]
+        float_base.y = source_vector[1]
+        float_base.z = source_vector[2]
+
+        point_direction = maya.OpenMaya.MFloatVector()
+        point_direction.x = direction_vector[0]
+        point_direction.y = direction_vector[1]
+        point_direction.z = direction_vector[2]
+
+        point_direction = point_direction - float_base
+
+        accelerator = self.api_object.autoUniformGridParams()
+        space = maya.OpenMaya.MSpace.kWorld
+
+        hit_point = maya.OpenMaya.MFloatPoint()
+
+        hit_double = maya.OpenMaya.MScriptUtil()
+        hit_param_ptr = hit_double.asFloatPtr()
+
+        hit_face = maya.OpenMaya.MScriptUtil()
+        hit_face_ptr = hit_face.asIntPtr()
+
+        hit_triangle = maya.OpenMaya.MScriptUtil()
+        hit_triangle_ptr = hit_triangle.asIntPtr()
+
+        hit_bary1 = maya.OpenMaya.MScriptUtil()
+        hit_bary1_ptr = hit_bary1.asFloatPtr()
+
+        hit_bary2 = maya.OpenMaya.MScriptUtil()
+        hit_bary2_ptr = hit_bary2.asFloatPtr()
+
+        self.obj.closestIntersection(
+            point_base, point_direction, None, None, False, space, 100000, False, accelerator, hit_point,
+            hit_param_ptr, hit_face_ptr, hit_triangle_ptr, hit_bary1_ptr, hit_bary2_ptr)
+
+        return [hit_point.x, hit_point.y, hit_point.z]
+
+    def get_closest_intersection_face(self, source_vector, direction_vector, max_distance=10000):
+        """
+        Returns the closest face intersection between source vector and direction vector
+        :param source_vector:
+        :param direction_vector:
+        :return: int, intersected face index
+        """
+
+        # TODO: Implement to support both OpenMaya and OpenMaya2
+
+        point_base = maya.OpenMaya.MFloatPoint()
+        point_base.x = source_vector[0]
+        point_base.y = source_vector[1]
+        point_base.z = source_vector[2]
+
+        float_base = maya.OpenMaya.MFloatVector()
+        float_base.x = source_vector[0]
+        float_base.y = source_vector[1]
+        float_base.z = source_vector[2]
+
+        point_direction = maya.OpenMaya.MFloatVector()
+        point_direction.x = direction_vector[0]
+        point_direction.y = direction_vector[1]
+        point_direction.z = direction_vector[2]
+
+        point_direction = point_direction - float_base
+
+        accelerator = self.obj.autoUniformGridParams()
+        space = maya.OpenMaya.MSpace.kWorld
+
+        hit_point = maya.OpenMaya.MFloatPoint()
+
+        hit_double = maya.OpenMaya.MScriptUtil()
+        hit_param_ptr = hit_double.asFloatPtr()
+
+        hit_face = maya.OpenMaya.MScriptUtil()
+        hit_face_ptr = hit_face.asIntPtr()
+
+        hit_triangle = maya.OpenMaya.MScriptUtil()
+        hit_triangle_ptr = hit_triangle.asIntPtr()
+
+        hit_bary1 = maya.OpenMaya.MScriptUtil()
+        hit_bary1_ptr = hit_bary1.asFloatPtr()
+
+        hit_bary2 = maya.OpenMaya.MScriptUtil()
+        hit_bary2_ptr = hit_bary2.asFloatPtr()
+
+        self.obj.closestIntersection(
+            point_base, point_direction, None, None, False, space, max_distance, False, accelerator, hit_point,
+            hit_param_ptr, hit_face_ptr, hit_triangle_ptr, hit_bary1_ptr, hit_bary2_ptr)
+
+        face_index = maya.OpenMaya.MScriptUtil.getInt(hit_face_ptr)
+
+        return face_index
+
 
 class NurbsSurfaceFunction(MayaFunction, object):
     def _set_api_object(self, mobj):

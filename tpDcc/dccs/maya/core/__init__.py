@@ -6,15 +6,18 @@ order = [
     'tpDcc.dccs.maya.core.api',
     'tpDcc.dccs.maya.core.helpers',
     'tpDcc.dccs.maya.core.mathutils',
+    'tpDcc.dccs.maya.core.matrix',
     'tpDcc.dccs.maya.core.modelpanel',
     'tpDcc.dccs.maya.core.playblast',
     'tpDcc.dccs.maya.core.node',
     'tpDcc.dccs.maya.core.shape',
     'tpDcc.dccs.maya.core.attribute',
     'tpDcc.dccs.maya.core.transform'
+    'tpDcc.dccs.maya.core.camera',
     'tpDcc.dccs.maya.core.geometry',
     'tpDcc.dccs.maya.core.mesh',
     'tpDcc.dccs.maya.core.constraint',
     'tpDcc.dccs.maya.core.component'
     'tpDcc.dccs.maya.core.ik'
+    'tpDcc.dccs.maya.core.curve'
 ]
