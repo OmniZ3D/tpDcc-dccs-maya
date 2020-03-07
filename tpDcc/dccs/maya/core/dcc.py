@@ -8,10 +8,9 @@ Module that contains DCC functionality for Maya
 from __future__ import print_function, division, absolute_import
 
 import logging
+from collections import OrderedDict
 
 from Qt.QtWidgets import *
-
-# from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 import tpDcc
 from tpDcc import register
@@ -20,11 +19,31 @@ from tpDcc.abstract import dcc as abstract_dcc, progressbar
 from tpDcc.dccs.maya.core import gui, helpers, name, namespace, scene, playblast, transform, attribute
 from tpDcc.dccs.maya.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
 from tpDcc.dccs.maya.core import sequencer, animation, qtutils, decorators as maya_decorators, shape as shape_utils
+from tpDcc.dccs.maya.core import filtertypes
 
 LOGGER = logging.getLogger()
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
+
+    TYPE_FILTERS = OrderedDict([
+        ('All Node Types', filtertypes.ALL_FILTER_TYPE),
+        ('Group', filtertypes.GROUP_FILTER_TYPE),
+        ('Geometry', ['mesh', 'nurbsSurface']),
+        ('Polygon', ['Polygon']),
+        ('Nurbs', ['nurbsSurface']),
+        ('Joint', ['joint']),
+        ('Curve', ['nurbsCurve']),
+        ('Locator', ['locator']),
+        ('Light', ['light']),
+        ('Camera', ['camera']),
+        ('Cluster', ['cluster']),
+        ('Follicle', ['follicle']),
+        ('Deformer', ['clusterHandle', 'baseLattice', 'lattice', 'softMod', 'deformBend',
+                     'sculpt', 'deformTwist', 'deformWave', 'deformFlare']),
+        ('Transform', ['transform']),
+        ('Controllers', ['control'])
+    ])
 
     @staticmethod
     def get_name():
@@ -305,7 +324,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.ls(long=full_path)
 
     @staticmethod
-    def rename_node(node, new_name):
+    def rename_node(node, new_name, **kwargs):
         """
         Renames given node with new given name
         :param node: str
@@ -313,7 +332,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: str
         """
 
-        return maya.cmds.rename(node, new_name)
+        rename_shape = kwargs.get('rename_shape', True)
+
+        return name.rename(node, new_name, rename_shape=rename_shape)
 
     @staticmethod
     def show_object(node):
@@ -395,7 +416,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list<str>
         """
 
-        return maya.cmds.ls(slong=True, long=full_path)
+        return maya.cmds.ls(sl=True, long=full_path)
 
     @staticmethod
     def selected_nodes_of_type(node_type, full_path=True):
@@ -406,7 +427,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list(str)
         """
 
-        return maya.cmds.ls(slong=True, type=node_type, long=full_path)
+        return maya.cmds.ls(sl=True, type=node_type, long=full_path)
 
     @staticmethod
     def all_shapes_nodes(full_path=True):
@@ -1873,15 +1894,31 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         maya.cmds.setFocus(object_to_focus)
 
     @staticmethod
-    def find_unique_name(node_name, include_last_number=True):
+    def find_unique_name(
+            obj_names=None, filter_type=None, include_last_number=True, do_rename=False,
+            search_hierarchy=False, selection_only=True, **kwargs):
         """
         Returns a unique node name by adding a number to the end of the node name
-        :param node_name: str, name fo find unique name from
+        :param obj_names: str, name or list of names to find unique name from
+        :param filter_type: str, find unique name on nodes that matches given filter criteria
         :param include_last_number: bool
+        :param do_rename: bool
+       :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search only selected objects or all scene object
         :return: str
         """
 
-        return name.find_unique_name(name=node_name, include_last_number=include_last_number)
+        rename_shape = kwargs.get('rename_shape', True)
+
+        if filter_type:
+            return name.find_unique_name_by_filter(
+                filter_type=filter_type, include_last_number=include_last_number, do_rename=do_rename,
+                rename_shape=rename_shape, search_hierarchy=search_hierarchy, selection_only=selection_only,
+                dag=False, remove_maya_defaults=True, transforms_only=True)
+        else:
+            return name.find_unique_name(
+                obj_names=obj_names, include_last_number=include_last_number, do_rename=do_rename,
+                rename_shape=rename_shape)
 
     @staticmethod
     def find_available_name(node_name, **kwargs):
@@ -2389,15 +2426,39 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.joint(jnt, edit=True, zeroScaleOrient=True)
 
     @staticmethod
+    def delete_history(node):
+        """
+        Removes the history of the given node
+        """
+
+        return transform.delete_history(node=node)
+
+    @staticmethod
+    def freeze_transforms(node, **kwargs):
+        """
+        Freezes the transformations of the given node and its children
+        :param node: str
+        """
+
+        translate = kwargs.get('translate', True)
+        rotate = kwargs.get('rotate', True)
+        scale = kwargs.get('scale', True)
+        normal = kwargs.get('normal', False)
+        preserve_normals = kwargs.get('preserve_normals', True)
+
+        return transform.freeze_transforms(node=node, translate=translate, rotate=rotate, scale=scale,
+                                           normal=normal, preserve_normals=preserve_normals)
+
+    @staticmethod
     def reset_node_transforms(node, **kwargs):
         """
         Reset the transformations of the given node and its children
         :param node: str
         """
 
-        preserve_pivot_transforms = kwargs.get('apply', False)
+        # TODO: We should call freze transforms passing apply as False?
 
-        return maya.cmds.makeIdentity(node, apply=preserve_pivot_transforms)
+        return maya.cmds.ResetTransformations()
 
     @staticmethod
     def set_node_rotation_axis_in_object_space(node, x, y, z):
@@ -2410,6 +2471,234 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.xform(node, rotateAxis=[x, y, z], relative=True, objectSpace=True)
+    
+    @staticmethod
+    def filter_nodes_by_type(filter_type, search_hierarchy=False, selection_only=True, **kwargs):
+        """
+        Returns list of nodes in current scene filtered by given filter
+        :param filter_type: str, filter used to filter nodes to edit index of
+        :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search all scene objects or only selected ones
+        :param kwargs:
+        :return: list(str), list of filtered nodes
+        """
+
+        dag = kwargs.get('dag', False)
+        remove_maya_defaults = kwargs.get('remove_maya_defaults', True)
+        transforms_only = kwargs.get('transforms_only', True)
+
+        return filtertypes.filter_by_type(
+            filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
+            remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
+
+    @staticmethod
+    def add_name_prefix(
+            prefix, obj_names=None, filter_type=None, add_underscore=False, search_hierarchy=False,
+            selection_only=True, **kwargs):
+        """
+        Add prefix to node name
+        :param prefix: str, string to add to the start of the current node
+        :param obj_names: str or list(str), name of list of node names to rename
+        :param filter_type: str, name of object type to filter the objects to apply changes ('Group, 'Joint', etc)
+        :param add_underscore: bool, Whether or not to add underscore before the suffix
+        :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search only selected objects or all scene objects
+        :param kwargs:
+        """
+
+        rename_shape = kwargs.get('rename_shape', True)
+
+        if filter_type:
+            return name.add_prefix_by_filter(
+                prefix=prefix, filter_type=filter_type, rename_shape=rename_shape, add_underscore=add_underscore,
+                search_hierarchy=search_hierarchy, selection_only=selection_only, dag=False, remove_maya_defaults=True,
+                transforms_only=True)
+        else:
+            return name.add_prefix(
+                prefix=prefix, obj_names=obj_names, add_underscore=add_underscore, rename_shape=rename_shape)
+
+    @staticmethod
+    def add_name_suffix(
+            suffix, obj_names=None, filter_type=None, add_underscore=False, search_hierarchy=False,
+            selection_only=True, **kwargs):
+        """
+        Add prefix to node name
+        :param suffix: str, string to add to the end of the current node
+        :param obj_names: str or list(str), name of list of node names to rename
+        :param filter_type: str, name of object type to filter the objects to apply changes ('Group, 'Joint', etc)
+        :param add_underscore: bool, Whether or not to add underscore before the suffix
+        :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search only selected objects or all scene objects
+        :param kwargs:
+        """
+
+        rename_shape = kwargs.get('rename_shape', True)
+
+        if filter_type:
+            return name.add_suffix_by_filter(
+                suffix=suffix, filter_type=filter_type, add_underscore=add_underscore, rename_shape=rename_shape,
+                search_hierarchy=search_hierarchy, selection_only=selection_only, dag=False, remove_maya_defaults=True,
+                transforms_only=True)
+        else:
+            return name.add_suffix(
+                suffix=suffix, obj_names=obj_names, add_underscore=add_underscore, rename_shape=rename_shape)
+
+    @staticmethod
+    def remove_name_prefix(
+            obj_names=None, filter_type=None, separator='_', search_hierarchy=False, selection_only=True, **kwargs):
+        """
+        Removes prefix from node name
+        :param obj_names: str or list(str), name of list of node names to rename
+        :param filter_type: str, name of object type to filter the objects to apply changes ('Group, 'Joint', etc)
+        :param separator: str, separator character for the prefix
+        :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search only selected objects or all scene objects
+        :param kwargs:
+        """
+
+        rename_shape = kwargs.get('rename_shape', True)
+
+        if filter_type:
+            return name.edit_item_index_by_filter(
+                index=0, filter_type=filter_type, text='', mode=name.EditIndexModes.REMOVE, separator=separator,
+                rename_shape=rename_shape, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=False,
+                remove_maya_defaults=True, transforms_only=True)
+        else:
+            return name.edit_item_index(
+                obj_names=obj_names, index=0, mode=name.EditIndexModes.REMOVE, separator=separator,
+                rename_shape=rename_shape)
+        
+    @staticmethod
+    def remove_name_suffix(
+            obj_names=None, filter_type=None, separator='_', search_hierarchy=False, selection_only=True, **kwargs):
+        """
+        Removes suffix from node name
+        :param obj_names: str or list(str), name of list of node names to rename
+        :param filter_type: str, name of object type to filter the objects to apply changes ('Group, 'Joint', etc)
+        :param separator: str, separator character for the suffix
+        :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search only selected objects or all scene objects
+        :param kwargs:
+        """
+
+        rename_shape = kwargs.get('rename_shape', True)
+
+        if filter_type:
+            return name.edit_item_index_by_filter(
+                index=-1, filter_type=filter_type, text='', mode=name.EditIndexModes.REMOVE, separator=separator,
+                rename_shape=rename_shape, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=False,
+                remove_maya_defaults=True, transforms_only=True)
+        else:
+            return name.edit_item_index(
+                obj_names=obj_names, index=-1, mode=name.EditIndexModes.REMOVE, separator=separator,
+                rename_shape=rename_shape)
+
+    @staticmethod
+    def auto_name_suffix(obj_names=None, filter_type=None, search_hierarchy=False, selection_only=True, **kwargs):
+        """
+        Automatically add a sufix to node names
+        :param obj_names: str or list(str), name of list of node names to rename
+        :param filter_type: str, name of object type to filter the objects to apply changes ('Group, 'Joint', etc)
+        :param separator: str, separator character for the suffix
+        :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search only selected objects or all scene objects
+        :param kwargs:
+        """
+
+        rename_shape = kwargs.get('rename_shape', True)
+        
+        if filter_type:
+            return name.auto_suffix_object_by_type(
+                filter_type=filter_type, rename_shape=rename_shape, search_hierarchy=search_hierarchy,
+                selection_only=selection_only, dag=False, remove_maya_defaults=True, transforms_only=True)
+        else:
+            return name.auto_suffix_object(obj_names=obj_names, rename_shape=rename_shape)
+
+    @staticmethod
+    def remove_name_numbers(
+            obj_names=None, filter_type=None, search_hierarchy=False, selection_only=True, remove_underscores=True,
+            trailing_only=False, **kwargs):
+        """
+        Removes numbers from node names
+        :param obj_names: str or list(str), name of list of node names to rename
+        :param filter_type: str, name of object type to filter the objects to apply changes ('Group, 'Joint', etc)
+        :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search only selected objects or all scene objects
+        :param remove_underscores: bool, Whether or not to remove unwanted underscores
+        :param trailing_only: bool, Whether or not to remove only numbers at the ned of the name
+        :param kwargs:
+        :return:
+        """
+
+        rename_shape = kwargs.get('rename_shape', True)
+
+        if filter_type:
+            return name.remove_numbers_from_object_by_filter(
+                filter_type=filter_type, rename_shape=rename_shape, remove_underscores=remove_underscores,
+                trailing_only=trailing_only, search_hierarchy=search_hierarchy, selection_only=selection_only,
+                dag=False, remove_maya_defaults=True, transforms_only=True)
+        else:
+            return name.remove_numbers_from_object(
+                obj_names=obj_names, trailing_only=trailing_only, rename_shape=rename_shape,
+                remove_underscores=remove_underscores)
+
+    @staticmethod
+    def renumber_objects(
+            obj_names=None, filter_type=None, remove_trailing_numbers=True, add_underscore=True, padding=2,
+            search_hierarchy=False, selection_only=True, **kwargs):
+        """
+        Removes numbers from node names
+        :param obj_names: str or list(str), name of list of node names to rename
+        :param filter_type: str, name of object type to filter the objects to apply changes ('Group, 'Joint', etc)
+        :param remove_trailing_numbers: bool, Whether to remove trailing numbers before doing the renumber
+        :param add_underscore: bool, Whether or not to remove underscore between name and new number
+        :param padding: int, amount of numerical padding (2=01, 3=001, etc). Only used if given names has no numbers.
+        :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search only selected objects or all scene objects
+        :param kwargs:
+        :return:
+        """
+
+        rename_shape = kwargs.get('rename_shape', True)
+
+        if filter_type:
+            return name.renumber_objects_by_filter(
+                filter_type=filter_type, remove_trailing_numbers=remove_trailing_numbers,
+                add_underscore=add_underscore, padding=padding, rename_shape=rename_shape,
+                search_hierarchy=search_hierarchy, selection_only=selection_only, dag=False, remove_maya_defaults=True,
+                transforms_only=True
+            )
+        else:
+            return name.renumber_objects(
+                obj_names=obj_names, remove_trailing_numbers=remove_trailing_numbers,
+                add_underscore=add_underscore, padding=padding)
+
+    @staticmethod
+    def change_suffix_padding(
+            obj_names=None, filter_type=None, add_underscore=True, padding=2,
+            search_hierarchy=False, selection_only=True, **kwargs):
+        """
+        Removes numbers from node names
+        :param obj_names: str or list(str), name of list of node names to rename
+        :param filter_type: str, name of object type to filter the objects to apply changes ('Group, 'Joint', etc)
+        :param add_underscore: bool, Whether or not to remove underscore between name and new number
+        :param padding: int, amount of numerical padding (2=01, 3=001, etc). Only used if given names has no numbers.
+        :param search_hierarchy: bool, Whether to search objects in hierarchies
+        :param selection_only: bool, Whether to search only selected objects or all scene objects
+        :param kwargs:
+        :return:
+        """
+
+        rename_shape = kwargs.get('rename_shape', True)
+
+        if filter_type:
+            return name.change_suffix_padding_by_filter(
+                filter_type=filter_type, add_underscore=add_underscore, padding=padding, rename_shape=rename_shape,
+                search_hierarchy=search_hierarchy, selection_only=selection_only, dag=False, remove_maya_defaults=True,
+                transforms_only=True
+            )
+        else:
+            return name.change_suffix_padding(obj_names=obj_names, add_underscore=add_underscore, padding=padding)
 
     @staticmethod
     def dock_widget(widget, *args, **kwargs):
@@ -2435,7 +2724,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.evalDeferred(fn, *args, **kwargs)
 
     # =================================================================================================================
-
+    
     @staticmethod
     def get_dockable_window_class():
         return MayaDockedWindow
