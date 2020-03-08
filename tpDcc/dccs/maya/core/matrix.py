@@ -236,10 +236,10 @@ def print_matrix(matrix):
     """
 
     print('%.3f' % matrix(0, 0)) + ', ' + ('%.3f' % matrix(0, 1)) + ', ' + ('%.3f' % matrix(0, 2)) + ', ' + (
-            '%.3f' % matrix(0, 3))
+        '%.3f' % matrix(0, 3))
     print('%.3f' % matrix(1, 0)) + ', ' + ('%.3f' % matrix(1, 1)) + ', ' + ('%.3f' % matrix(1, 2)) + ', ' + (
-            '%.3f' % matrix(1, 3))
+        '%.3f' % matrix(1, 3))
     print('%.3f' % matrix(2, 0)) + ', ' + ('%.3f' % matrix(2, 1)) + ', ' + ('%.3f' % matrix(2, 2)) + ', ' + (
-            '%.3f' % matrix(2, 3))
+        '%.3f' % matrix(2, 3))
     print('%.3f' % matrix(3, 0)) + ', ' + ('%.3f' % matrix(3, 1)) + ', ' + ('%.3f' % matrix(3, 2)) + ', ' + (
-            '%.3f' % matrix(3, 3))
+        '%.3f' % matrix(3, 3))

@@ -1710,5 +1710,5 @@ def inverse_transform(source_node, target_node, translate=True, rotate=True, sca
         maya.cmds.connectAttr('{}.outputRotate'.format(decompose_node), '{}.rotate'.format(target_node), f=True)
     if scale:
         maya.cmds.connectAttr('{}.outputScale'.format(decompose_node), '{}.scale'.format(target_node), f=True)
-    
+
     return decompose_node

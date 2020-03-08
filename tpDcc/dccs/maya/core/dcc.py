@@ -2725,7 +2725,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.evalDeferred(fn, *args, **kwargs)
 
     # =================================================================================================================
-    
+
     @staticmethod
     def get_dockable_window_class():
         return MayaDockedWindow
