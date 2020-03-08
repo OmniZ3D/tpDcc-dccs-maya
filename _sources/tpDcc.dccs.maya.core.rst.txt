@@ -27,6 +27,7 @@ Submodules
    tpDcc.dccs.maya.core.distance
    tpDcc.dccs.maya.core.exceptions
    tpDcc.dccs.maya.core.executor
+   tpDcc.dccs.maya.core.filtertypes
    tpDcc.dccs.maya.core.follicle
    tpDcc.dccs.maya.core.geometry
    tpDcc.dccs.maya.core.geometrycache

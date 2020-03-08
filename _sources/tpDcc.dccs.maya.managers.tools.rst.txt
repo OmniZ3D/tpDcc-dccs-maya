@@ -1,7 +1,0 @@
-tpDcc.dccs.maya.managers.tools module
-=====================================
-
-.. automodule:: tpDcc.dccs.maya.managers.tools
-   :members:
-   :undoc-members:
-   :show-inheritance:

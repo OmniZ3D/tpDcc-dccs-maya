@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.filtertypes module
+=======================================
+
+.. automodule:: tpDcc.dccs.maya.core.filtertypes
+   :members:
+   :undoc-members:
+   :show-inheritance:
