@@ -96,8 +96,8 @@ def get_rotation(matrix, rotation_order='xyz'):
 
     if isinstance(rotation_order, str):
         rotation_order = rotation_order.lower()
-        rotate_order = {'xyz': 0, 'yzx': 1, 'zxy': 2, 'xyz': 3, 'yxz': 4, 'zyx': 5}
-        if not rotation_order in rotate_order:
+        rotate_order = {'xyz': 0, 'yzx': 1, 'zxy': 2, 'xzy': 3, 'yxz': 4, 'zyx': 5}
+        if rotation_order not in rotate_order:
             raise Exception('Invalid given rotation order!')
         rotation_order = rotate_order[rotation_order]
     else:
@@ -236,10 +236,10 @@ def print_matrix(matrix):
     """
 
     print('%.3f' % matrix(0, 0)) + ', ' + ('%.3f' % matrix(0, 1)) + ', ' + ('%.3f' % matrix(0, 2)) + ', ' + (
-                '%.3f' % matrix(0, 3))
+            '%.3f' % matrix(0, 3))
     print('%.3f' % matrix(1, 0)) + ', ' + ('%.3f' % matrix(1, 1)) + ', ' + ('%.3f' % matrix(1, 2)) + ', ' + (
-                '%.3f' % matrix(1, 3))
+            '%.3f' % matrix(1, 3))
     print('%.3f' % matrix(2, 0)) + ', ' + ('%.3f' % matrix(2, 1)) + ', ' + ('%.3f' % matrix(2, 2)) + ', ' + (
-                '%.3f' % matrix(2, 3))
+            '%.3f' % matrix(2, 3))
     print('%.3f' % matrix(3, 0)) + ', ' + ('%.3f' % matrix(3, 1)) + ', ' + ('%.3f' % matrix(3, 2)) + ', ' + (
-                '%.3f' % matrix(3, 3))
+            '%.3f' % matrix(3, 3))

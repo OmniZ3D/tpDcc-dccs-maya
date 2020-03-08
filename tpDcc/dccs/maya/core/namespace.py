@@ -312,14 +312,14 @@ def assign_namespace_to_object(obj_names, namespace, force_create=True, uuid=Non
 
     if not obj_names:
         obj_names = maya.cmds.ls(sl=True, long=True)
-    
+
     if not maya.cmds.namespace(exists=namespace):
         if force_create:
             maya.cmds.namespace(set=':')
             maya.cmds.namespace(add=namespace)
         else:
             return obj_names
-    
+
     if isinstance(obj_names, (tuple, list)):
         uuid_list = maya.cmds.ls(obj_names, uuid=True)
         for i, obj in enumerate(obj_names):

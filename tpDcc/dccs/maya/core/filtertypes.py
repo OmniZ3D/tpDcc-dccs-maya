@@ -21,7 +21,8 @@ PROTECTED_NODES = [
 ]
 
 
-def filter_all_node_types(selection_only=True, search_hierarchy=False, dag=False, transforms_only=False, remove_maya_defaults=True):
+def filter_all_node_types(
+        selection_only=True, search_hierarchy=False, dag=False, transforms_only=False, remove_maya_defaults=True):
     """
     Function that filters current scene objects by node types
     :param selection_only:
@@ -79,7 +80,7 @@ def filter_transforms_from_shapes_list(objs_list, allow_joints=True, allow_dg=Tr
         elif allow_joints and maya.cmds.objectType(obj, isType='joint'):
             transform_list.append(obj)
         else:
-            if 'dagNode' in maya.cmds.nodeType(obj ,inherited=True):
+            if 'dagNode' in maya.cmds.nodeType(obj, inherited=True):
                 transform_list.append(maya.cmds.listRelatives(obj, parent=True, fullPath=True)[0])
             elif allow_dg:
                 # Not DAG nodes do not have transform nodes, we add them directly
@@ -157,23 +158,23 @@ def filter_by_type(
         transforms_only=True):
     """
     Returns a list of objects that match the given node type
-    :param filter_type: 
+    :param filter_type: str
     :param search_hierarchy: bool, Whether to search objects in hierarchies
     :param selection_only: bool, Whether to search all scene objects or only selected ones
     :param dag: bool, Whether to return only DAG nodes
     :param remove_maya_defaults: Whether to ignore Maya default nodes or not
     :param transforms_only: bool, Whether to return only transform nodes or not
-    :return: 
+    :return:
     """
-    
+
     if not selection_only:
         search_hierarchy = False
-        
+
     obj_type_list = tpDcc.Dcc.TYPE_FILTERS.get(filter_type, None)
     if not obj_type_list:
         maya.logger.warning('Filter Type "{}" is not supported in Maya!'.format(filter_type))
         return None
-    
+
     if obj_type_list == ALL_FILTER_TYPE:
         return filter_all_node_types(
             selection_only=selection_only, search_hierarchy=search_hierarchy, transforms_only=transforms_only,

@@ -578,7 +578,7 @@ def add_prefix_by_filter(prefix, filter_type, add_underscore=False, rename_shape
         prefix=prefix, obj_names=filtered_obj_list, add_underscore=add_underscore, rename_shape=rename_shape)
 
 
-def add_suffix_by_filter(suffix, filter_type, add_underscore=False, rename_shape=True, search_hierarchy=False, 
+def add_suffix_by_filter(suffix, filter_type, add_underscore=False, rename_shape=True, search_hierarchy=False,
                          selection_only=True, dag=False, remove_maya_defaults=True, transforms_only=True):
     """
     Adds a prefix to filtered by types nodes.
@@ -811,7 +811,7 @@ def auto_suffix_object(obj_names, uuid=None, rename_shape=True):
     :param obj_names: str, name of the node we want to rename
     :param uuid: str, optional unique has id
     :param rename_shape: bool, Whether to rename shape nodes automatically to match transform nodes
-    :return: 
+    :return:
     """
 
     def _auto_suffix_obj(obj_name, obj_uuid=None):
@@ -898,7 +898,8 @@ def auto_suffix_object_by_type(
     return auto_suffix_object(obj_names=filtered_obj_list, rename_shape=rename_shape)
 
 
-def remove_numbers_from_object(obj_names=None, uuid=None, trailing_only=False, rename_shape=True, remove_underscores=True):
+def remove_numbers_from_object(
+        obj_names=None, uuid=None, trailing_only=False, rename_shape=True, remove_underscores=True):
     """
     Removes all numbers from given node names
     You can pass an UUID instead of an object name to avoid problems with hierarchies or when

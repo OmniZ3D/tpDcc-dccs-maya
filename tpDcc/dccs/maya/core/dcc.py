@@ -39,8 +39,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         ('Camera', ['camera']),
         ('Cluster', ['cluster']),
         ('Follicle', ['follicle']),
-        ('Deformer', ['clusterHandle', 'baseLattice', 'lattice', 'softMod', 'deformBend',
-                     'sculpt', 'deformTwist', 'deformWave', 'deformFlare']),
+        ('Deformer', [
+            'clusterHandle', 'baseLattice', 'lattice', 'softMod', 'deformBend', 'sculpt',
+            'deformTwist', 'deformWave', 'deformFlare']),
         ('Transform', ['transform']),
         ('Controllers', ['control'])
     ])
@@ -2471,7 +2472,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.xform(node, rotateAxis=[x, y, z], relative=True, objectSpace=True)
-    
+
     @staticmethod
     def filter_nodes_by_type(filter_type, search_hierarchy=False, selection_only=True, **kwargs):
         """
@@ -2567,7 +2568,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             return name.edit_item_index(
                 obj_names=obj_names, index=0, mode=name.EditIndexModes.REMOVE, separator=separator,
                 rename_shape=rename_shape)
-        
+
     @staticmethod
     def remove_name_suffix(
             obj_names=None, filter_type=None, separator='_', search_hierarchy=False, selection_only=True, **kwargs):
@@ -2606,7 +2607,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         rename_shape = kwargs.get('rename_shape', True)
-        
+
         if filter_type:
             return name.auto_suffix_object_by_type(
                 filter_type=filter_type, rename_shape=rename_shape, search_hierarchy=search_hierarchy,

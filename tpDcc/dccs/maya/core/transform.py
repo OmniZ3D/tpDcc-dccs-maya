@@ -1696,7 +1696,7 @@ def inverse_transform(source_node, target_node, translate=True, rotate=True, sca
         raise Exception('Transform "{}" does not exists!'.format(target_node))
 
     # Load decomposeMatrix plugin if necessary
-    if not maya.cmds.pluginInfo('decomposeMatrix', query=True, l=True):
+    if not maya.cmds.pluginInfo('decomposeMatrix', query=True, loaded=True):
         try:
             maya.cmds.loadPlugin('decomposeMatrix')
         except Exception:

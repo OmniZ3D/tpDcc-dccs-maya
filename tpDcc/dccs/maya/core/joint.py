@@ -1078,10 +1078,10 @@ def orient(joint, aim_axis='x', up_axis='y', up_vector=(0, 1, 0)):
     """
 
     check_joint(joint)
-    
+
     child_list = maya.cmds.listRelatives(joint, c=True)
     child_joint_list = maya.cmds.listRelatives(joint, c=True, type='joint', pa=True)
-    
+
     if child_list:
         child_list = maya.cmds.parent(child_list, world=True)
 
@@ -1275,7 +1275,7 @@ def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
         inverse_scale_object = parent[0]
 
     # Connect inverse scale
-    inverse_scale_connections = maya.cmds.listConnections('{}.inverseScale'.format(joint), s=True, d=False ) or list()
+    inverse_scale_connections = maya.cmds.listConnections('{}.inverseScale'.format(joint), s=True, d=False) or list()
     if inverse_scale_object not in inverse_scale_connections:
         try:
             maya.cmds.connectAttr('{}.scale'.format(inverse_scale_object), '{}.inverseScale'.format(joint), f=True)
@@ -1344,9 +1344,9 @@ def create_joints_along_curve(curve, joint_count, joint_description='new', attac
     return joints, group, control_group
 
 
-def create_joint_along_curve_in_intersection_curves(curve, intersect_curves_list, joint_at_base=True,
-                                                       joint_at_tip=True, use_direction=False,
-                                                       intersect_direction=(0, 0, 0), prefix=''):
+def create_joint_along_curve_in_intersection_curves(
+        curve, intersect_curves_list, joint_at_base=True, joint_at_tip=True, use_direction=False,
+        intersect_direction=(0, 0, 0), prefix=''):
     """
     Creates joints along a curves at the point of intersection with a list of secondary curves
     :param curve: str, curve to create joint along

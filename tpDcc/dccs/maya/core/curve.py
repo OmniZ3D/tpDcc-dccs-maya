@@ -367,7 +367,8 @@ def attach_to_curve(transform, curve, maintain_offset=False, parameter=None):
                 plus_node, axis.lower()))
             maya.cmds.setAttr('{}.input3D[1].input3D{}'.format(plus_node, axis.lower()), -value)
             maya.cmds.setAttr('{}.input3D[2].input3D{}'.format(plus_node, axis.lower()), value_orig)
-            maya.cmds.connectAttr('{}.output3D{}'.format(plus_node, axis.lower()), '{}.translate{}'.format(transform, axis))
+            maya.cmds.connectAttr(
+                '{}.output3D{}'.format(plus_node, axis.lower()), '{}.translate{}'.format(transform, axis))
     else:
         for axis in 'XYZ':
             maya.cmds.connectAttr(
@@ -399,7 +400,7 @@ def snap_curve_to_surface(curve, surface, offset=1, project=False):
                     closest_point = mesh_fn.get_closest_intersection(pos, center)
                 else:
                     closest_point = mesh_fn.get_closest_position(pos)
-                maya.cmds.xform(cv, ws=True ,t=closest_point)
+                maya.cmds.xform(cv, ws=True, t=closest_point)
         maya.cmds.scale(offset, offset, offset, cvs, r=True)
 
 
