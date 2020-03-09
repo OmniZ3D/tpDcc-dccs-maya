@@ -333,9 +333,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: str
         """
 
+        uuid = kwargs.get('uuid', None)
         rename_shape = kwargs.get('rename_shape', True)
 
-        return name.rename(node, new_name, rename_shape=rename_shape)
+        return name.rename(node, new_name, uuid=uuid, rename_shape=rename_shape)
 
     @staticmethod
     def show_object(node):
@@ -2446,9 +2447,11 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         scale = kwargs.get('scale', True)
         normal = kwargs.get('normal', False)
         preserve_normals = kwargs.get('preserve_normals', True)
+        clean_history = kwargs.get('clean_history', False)
 
-        return transform.freeze_transforms(node=node, translate=translate, rotate=rotate, scale=scale,
-                                           normal=normal, preserve_normals=preserve_normals)
+        return transform.freeze_transforms(
+            node=node, translate=translate, rotate=rotate, scale=scale, normal=normal,
+            preserve_normals=preserve_normals, clean_history=clean_history)
 
     @staticmethod
     def reset_node_transforms(node, **kwargs):
