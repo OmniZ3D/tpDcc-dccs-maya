@@ -539,6 +539,8 @@ def delete_garbage():
     straight_delete_types = list()
     if helpers.get_maya_version() > 2014:
         straight_delete_types += ['hyperLayout', 'hyperView']       # Maya 2014 crashes when tyring to remove those
+        if 'hyperGraphLayout' in straight_delete_types:
+            straight_delete_types.remove('hyperGraphLayout')
 
     deleted_nodes = node.delete_nodes_of_type(straight_delete_types)
     check_connection_node_type = ['shadingEngine', 'partition', 'objectSet']
@@ -551,8 +553,12 @@ def delete_garbage():
     if deleted_nodes:
         garbage_nodes = deleted_nodes
 
+    nodes_to_skip = ['characterPartition']
+
     for n in check_connection_nodes:
         if not n or not maya.cmds.objExists(n):
+            continue
+        if n in nodes_to_skip:
             continue
         if node.is_empty(n):
             maya.cmds.lockNode(n, lock=False)

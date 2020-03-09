@@ -1656,10 +1656,11 @@ def delete_history(node):
     :param node: str
     """
 
-    return maya.cmds.DeleteHistory(node)
+    return maya.cmds.delete(node, constructionHistory=True)
 
 
-def freeze_transforms(node, translate=True, rotate=True, scale=True, normal=False, preserve_normals=True):
+def freeze_transforms(
+        node, translate=True, rotate=True, scale=True, normal=False, preserve_normals=True, clean_history=False):
     """
     Freezes the transformations of the given node and its children
     :param node: bool
@@ -1668,10 +1669,12 @@ def freeze_transforms(node, translate=True, rotate=True, scale=True, normal=Fals
     :param scale: bool
     :param normal: bool
     :param preserve_normals: bool
+    :param clean_history: bool, When applying to transforms with history, a transformGeometry node is
+        created in history. Pass True, to clean history before applying the freeze transforms
     """
 
-    # TODO: When applying to transforms with history, a transformGeometry node is created in history
-    # TODO: Add argument to clean this node if necessary
+    if clean_history:
+        delete_history(node)
 
     return maya.cmds.makeIdentity(
         node, apply=True,
