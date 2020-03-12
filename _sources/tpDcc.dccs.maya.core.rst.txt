@@ -26,7 +26,6 @@ Submodules
    tpDcc.dccs.maya.core.directory
    tpDcc.dccs.maya.core.distance
    tpDcc.dccs.maya.core.exceptions
-   tpDcc.dccs.maya.core.executor
    tpDcc.dccs.maya.core.filtertypes
    tpDcc.dccs.maya.core.follicle
    tpDcc.dccs.maya.core.geometry
@@ -65,6 +64,7 @@ Submodules
    tpDcc.dccs.maya.core.thumbnail
    tpDcc.dccs.maya.core.time
    tpDcc.dccs.maya.core.transform
+   tpDcc.dccs.maya.core.vertexcolor
    tpDcc.dccs.maya.core.viewport
 
 Module contents

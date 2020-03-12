@@ -1,7 +1,0 @@
-tpDcc.dccs.maya.core.executor module
-====================================
-
-.. automodule:: tpDcc.dccs.maya.core.executor
-   :members:
-   :undoc-members:
-   :show-inheritance:

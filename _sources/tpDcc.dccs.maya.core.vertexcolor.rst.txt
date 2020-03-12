@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.vertexcolor module
+=======================================
+
+.. automodule:: tpDcc.dccs.maya.core.vertexcolor
+   :members:
+   :undoc-members:
+   :show-inheritance:
