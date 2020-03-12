@@ -371,8 +371,14 @@ def get_mdag_path(obj):
 
     check_node(obj)
 
-    selection_list = maya.OpenMaya.MGlobal.getSelectionListByName(obj)
-    dag_path = selection_list.getDagPath(0)
+    if maya.is_new_api():
+        selection_list = maya.OpenMaya.MGlobal.getSelectionListByName(obj)
+        dag_path = selection_list.getDagPath(0)
+    else:
+        selection_list = maya.OpenMaya.MSelectionList()
+        dag_path = maya.OpenMaya.MDagPath()
+        maya.OpenMaya.MGlobal.getSelectionListByName(obj, selection_list)
+        selection_list.getDagPath(0, dag_path)
 
     return dag_path
 
