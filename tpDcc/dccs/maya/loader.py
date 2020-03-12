@@ -248,3 +248,6 @@ def create_metadata_manager():
     metadatamanager.MetaDataManager.register_meta_classes()
     metadatamanager.MetaDataManager.register_meta_types()
     metadatamanager.MetaDataManager.register_meta_nodes()
+
+
+register.register_class('is_new_api', is_new_api)
