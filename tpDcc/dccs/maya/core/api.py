@@ -1194,6 +1194,64 @@ class IterateEdges(MayaIterator, object):
         return connected_edges
 
 
+class IterateVertices(MayaIterator, object):
+    def _set_api_object(self, mobj):
+        return maya.OpenMaya.MItMeshVertex(mobj)
+
+    def is_done(self):
+        return self.obj.isDone()
+
+    def index(self):
+        return self.obj.index()
+
+    def next(self):
+        self.obj.next()
+
+    def count(self):
+        return self.obj.count()
+
+    def has_vertex_colors(self):
+        """
+        Returns whether or not any of the vertices has vertex colors
+        :return: bool
+        """
+        has_vertex_color = False
+        while not self.obj.isDone():
+            has_vertex_color = self.obj.hasColor()
+            if has_vertex_color:
+                break
+            self.obj.next()
+        self.obj.reset()
+
+        return has_vertex_color
+
+    def get_vertex_colors(self, skip_vertices_without_vertex_colors=True):
+        """
+        Returns dictionary which contains vertices indices as keys and its associated vertex color as value (if exists)
+        :param skip_vertices_without_vertex_colors: bool, If True, vertices with no vertex colors are skipped
+        :return: dict(int, maya.OpenMaya.MColor)
+        """
+
+        vertices_color = dict()
+        while not self.obj.isDone():
+            has_vertex_color = self.obj.hasColor()
+            if has_vertex_color:
+                if maya.is_new_api():
+                    vertices_color[self.obj.index()] = self.obj.getColor()
+                else:
+                    vertex_color = maya.OpenMaya.MColor()
+                    self.obj.getColor(vertex_color)
+                    vertices_color[self.obj.index()] = vertex_color
+            else:
+                if not skip_vertices_without_vertex_colors:
+                    vertices_color[self.obj.index()] = None
+            self.obj.next()
+
+        self.obj.reset()
+
+        return vertices_color
+
+
 class IteratePolygonFaces(MayaIterator, object):
     def _set_api_object(self, mobj):
         return maya.OpenMaya.MItMeshPolygon(mobj)
