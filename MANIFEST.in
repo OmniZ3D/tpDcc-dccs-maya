@@ -1,5 +1,2 @@
 include tpDcc/dccs/maya/__logging__.ini
-include tpDcc/dccs/maya/resources/*.*
-include tpDcc/dccs/maya/resources/icons/*.*
-include tpDcc/dccs/maya/resources/icons/default/*.*
-include tpDcc/dccs/maya/resources/icons/color/*.*
+recursive-include tpDcc/dccs/maya/resources/* *.*
