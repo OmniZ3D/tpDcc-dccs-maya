@@ -14,6 +14,7 @@ import traceback
 from tpDcc.libs.python import python
 
 import tpDcc.dccs.maya as maya
+from tpDcc.dccs.maya.core import api, attribute, scene
 
 LOGGER = logging.getLogger()
 
@@ -260,6 +261,81 @@ def valid_anim_curve(anim_curve):
         return False
 
 
+def set_infinity_to_linear(keyframe, pre=False, post=False):
+    """
+    Sets the in and out infinity to linear in the given keyframe
+    :param keyframe: str, name of a keyframe
+    :param pre: bool, Whether to set pre infinity to linear or not
+    :param post: bool, Whether to set post infinity to linear or not
+    :return: str, name of the keyframe
+    """
+
+    fn = api.KeyframeFunction(keyframe)
+    if post:
+        fn.set_post_infinity(fn.LINEAR)
+    if pre:
+        fn.set_pre_infinity(fn.LINEAR)
+
+    return keyframe
+
+
+def get_keyframe(node_and_attr):
+    """
+    Given a full node and attribute name returns its inputs keyframe
+    :param node_and_attr: str
+    :return: str
+    """
+
+    connection = attribute.get_attribute_input(node_and_attr, node_only=True)
+    if connection is None:
+        return None
+
+    node_type = maya.cmds.nodeType(connection)
+    if node_type.find('animCurve') > -1:
+        return connection
+
+
+def get_input_keyframes(node, node_only=True):
+    """
+    Returns all keyframes that input into given node
+    :param node: str, name of a node to check for keyframes
+    :param node_only: bool, Whether to return just the keyframe name or also the keyframe.output attribute
+    :return: list(str), list with all the keyframes connected to the node
+    """
+
+    found = list()
+
+    inputs = attribute.get_inputs(node, node_only=node_only)
+    if not inputs:
+        return found
+
+    for input_value in inputs:
+        if maya.cmds.nodeType(input_value).startswith('animCurve'):
+            found.append(input_value)
+
+    return found
+
+
+def get_output_keyframes(node):
+    """
+    Returns all keyframes that output from the node
+    :param node: str, name of a node to check for keyframes
+    :return: list(str), list of all keyframes that the node connects into
+    """
+
+    found = list()
+
+    outputs = attribute.get_outputs(node)
+    if not outputs:
+        return found
+
+    for output in outputs:
+        if maya.cmds.nodeType(output).startswith('animCurve'):
+            found.append(output)
+
+    return found
+
+
 def get_maya_animation_importer_export_plugin_name():
     """
     Returns the name of the plugin used by Maya to export/import animations
@@ -277,7 +353,7 @@ def load_maya_animation_import_export_plugin():
 
     anim_plugin_name = get_maya_animation_importer_export_plugin_name()
 
-    if not maya.cmds.pluginInfo(anim_plugin_name, query=True, long=True, n=True):
+    if not maya.cmds.pluginInfo(anim_plugin_name, query=True, loaded=True, n=True):
         try:
             maya.cmds.loadPlugin(anim_plugin_name)
             plugin_path = maya.cmds.pluginInfo(anim_plugin_name, query=True, path=True)
@@ -504,6 +580,15 @@ def convert_fraction_keys_to_whole_keys(animation_curves, consider_selected_rang
             LOGGER.warning('\t{}. "{}" : {}'.format(i, crv, failed_fixes[crv]))
 
 
+def get_active_frame_range():
+    """
+    Returns current animation frame range
+    :return: tuple(int, int)
+    """
+
+    return maya.cmds.playbackOptions(query=True, minTime=True), maya.cmds.playbackOptions(query=True, maxTime=True)
+
+
 def set_active_frame_range(start_frame, end_frame):
     """
     Sets current animation frame range
@@ -513,3 +598,64 @@ def set_active_frame_range(start_frame, end_frame):
 
     return maya.cmds.playbackOptions(
         animationStartTime=start_frame, minTime=start_frame, animationEndTime=end_frame, maxTime=end_frame)
+
+
+def bake_animation(nodes, min_time=None, max_time=None):
+    """
+    Bakes animation on given nodes.
+    This function ensures that no flipping happens during animation baking
+    :param nodes: list(str)
+    :param min_time: float
+    :param max_time: float
+    """
+
+    if not min_time or not max_time:
+        min_time, max_time = get_active_frame_range()
+
+    maya.cmds.bakeResults(
+        nodes, simulation=True, t=(min_time, max_time), sampleBy=1, oversamplingRate=1, disableImplicitControl=True,
+        preserveOutsideKeys=True, sparseAnimCurveBake=True, removeBakedAttributeFromLayer=False, shape=False,
+        removeBakedAnimFromLayer=True, bakeOnOverrideLayer=False, minimizeRotation=True, controlPoints=False)
+
+    maya.cmds.filterCurve(nodes)
+
+
+def quick_driven_key(source, target, source_values, target_values, infinite=False, tangent_type='linear'):
+    """
+    Simple function that simplifies the process of creating driven keys
+    :param source: str, node.attribute to drive target wit
+    :param target: node.attribute to be driven by source
+    :param source_values: list, list of values at the source
+    :param target_values: list, list of values at the target
+    :param infinite: bool, Whether to infinite or not anim curves
+    :param tangent_type: str, type of tangent type to create for anim curves
+    """
+
+    track_nodes = scene.TrackNodes()
+    track_nodes.load('animCurve')
+
+    if not type(tangent_type) == list:
+        tangent_type = [tangent_type, tangent_type]
+
+    for i in range(len(source_values)):
+        maya.cmds.setDrivenKeyframe(
+            target, cd=source, driverValue=source_values[i],
+            value=target_values[i], itt=tangent_type[0], ott=tangent_type[1])
+
+    keys = track_nodes.get_delta()
+    if not keys:
+        return
+
+    keyframe = keys[0]
+    fn = api.KeyframeFunction(keyframe)
+    if infinite:
+        fn.set_pre_infinity(fn.LINEAR)
+        fn.set_pre_infinity(fn.LINEAR)
+    if infinite == 'post_only':
+        fn.set_post_infinity(fn.LINEAR)
+        fn.set_pre_infinity(fn.CONSTANT)
+    if infinite == 'pre_only':
+        fn.set_pre_infinity(fn.LINEAR)
+        fn.set_post_infinity(fn.CONSTANT)
+
+    return keyframe
