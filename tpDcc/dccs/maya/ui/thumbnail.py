@@ -13,14 +13,14 @@ import shutil
 from Qt.QtCore import *
 from Qt.QtWidgets import *
 
-from tpDcc.libs.qt.core import qtutils, dialog
-
-from tpDcc.dccs.maya.core import gui, modelpanel, playblast
+import tpDcc
+from tpDcc.libs.qt.core import qtutils
+from tpDcc.dccs.maya.core import modelpanel, playblast, gui
 
 _instance = None
 
 
-class ThumbnailCaptureDialog(dialog.Dialog, object):
+class ThumbnailCaptureDialog(tpDcc.Dialog, object):
 
     DEFAULT_WIDTH = 250
     DEFAULT_HEIGHT = 250
