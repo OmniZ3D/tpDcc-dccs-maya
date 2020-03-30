@@ -18,7 +18,7 @@ except ImportError:
     MASH_AVAILABLE = False
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import gui, name as naming
+from tpDcc.dccs.maya.core import name as naming, gui
 
 
 def get_mash_nodes():

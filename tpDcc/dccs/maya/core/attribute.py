@@ -18,7 +18,6 @@ import traceback
 
 import tpDcc as tp
 from tpDcc.libs.python import python, decorators, name as name_utils
-from tpDcc.libs.qt.core import color as color_utils
 
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import exceptions, mathutils, node as node_utils, shape as shape_utils
@@ -1053,12 +1052,12 @@ class Connection(object):
 
         for i in range(0, len(self.connections), 2):
             if maya.cmds.isConnected(self.connections[i], self.connections[i + 1], ignoreUnitConversion=True):
-                lock_state = maya.cmds.getAttr(self.connections[i + 1], long=True)
+                lock_state = maya.cmds.getAttr(self.connections[i + 1], lock=True)
                 if lock_state:
                     maya.cmds.setAttr(self.connections[i + 1], long=False)
                     maya.cmds.disconnectAttr(self.connections[i], self.connections[i + 1])
                 if lock_state:
-                    maya.cmds.setAttr(self.connections[i + 1], long=True)
+                    maya.cmds.setAttr(self.connections[i + 1], lock=True)
 
     def connect(self):
         """
@@ -1070,12 +1069,12 @@ class Connection(object):
                 continue
 
             if not maya.cmds.isConnected(self.connections[i], self.connections[i + 1], ignoreUnitConversion=True):
-                lock_state = maya.cmds.getAttr(self.connections[i + 1], long=True)
+                lock_state = maya.cmds.getAttr(self.connections[i + 1], lock=True)
                 if lock_state:
                     maya.cmds.setAttr(self.connections[i + 1], long=False)
                 maya.cmds.connectAttr(self.connections[i], self.connections[i + 1])
                 if lock_state:
-                    maya.cmds.setAttr(self.connections[i + 1], long=True)
+                    maya.cmds.setAttr(self.connections[i + 1], lock=True)
 
     def refresh(self):
         """
@@ -1457,7 +1456,7 @@ class Attribute(object):
         if not self.exists():
             return
 
-        maya.cmds.setAttr(self.get_full_name(), long=self.locked)
+        maya.cmds.setAttr(self.get_full_name(), lock=self.locked)
 
     def _set_keyable(self):
         """
@@ -1715,7 +1714,7 @@ class LockState(object):
     """
 
     def __init__(self, attr):
-        self.lock_state = maya.cmds.getAttr(attr, long=True)
+        self.lock_state = maya.cmds.getAttr(attr, lock=True)
         self.attribute = attr
 
     def unlock(self):
@@ -1723,21 +1722,21 @@ class LockState(object):
         Unlock the attribute
         """
 
-        maya.cmds.setAttr(self.attribute, long=False)
+        maya.cmds.setAttr(self.attribute, lock=False)
 
     def lock(self):
         """
         Lock the attribute
         """
 
-        maya.cmds.setAttr(self.attribute, long=True)
+        maya.cmds.setAttr(self.attribute, lock=True)
 
     def restore_initial(self):
         """
         Restore the initial lock state
         """
 
-        maya.cmds.setAttr(self.attribute, long=self.lock_state)
+        maya.cmds.setAttr(self.attribute, lock=self.lock_state)
 
 
 class LockAttributesState(LockState, object):
@@ -1753,7 +1752,7 @@ class LockAttributesState(LockState, object):
 
         for attr in self.attributes:
             try:
-                self.lock_state[attr] = maya.cmds.getAttr('{}.{}'.format(node, attr), long=True)
+                self.lock_state[attr] = maya.cmds.getAttr('{}.{}'.format(node, attr), lock=True)
             except Exception:
                 pass
 
@@ -1777,7 +1776,7 @@ class LockAttributesState(LockState, object):
         for attr in self.attributes:
             try:
                 attr_name = '{}.{}'.format(self.node, attr)
-                maya.cmds.setAttr(attr_name, long=True)
+                maya.cmds.setAttr(attr_name, lock=True)
             except Exception:
                 pass
 
@@ -2020,6 +2019,10 @@ class MayaNode(object):
     def __init__(self, name=None):
         self._node = None
         self._create_node(name)
+
+    @property
+    def node(self):
+        return self._node
 
     @decorators.abstractmethod
     def _create_node(self, name):
@@ -2270,7 +2273,7 @@ def is_locked(attr):
 
     check_attribute(attr)
 
-    return maya.cmds.getAttr(attr, long=True)
+    return maya.cmds.getAttr(attr, lock=True)
 
 
 def is_connected(attr):
@@ -3277,7 +3280,7 @@ def store_world_matrix_to_attribute(transform, attribute_name='origMatrix', skip
         maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), long=False)
         maya.cmds.deleteAttr('{}.{}'.format(transform, attribute_name))
     maya.cmds.addAttr(transform, ln=attribute_name, at='matrix')
-    maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), *world_matrix, type='matrix', long=True)
+    maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), *world_matrix, type='matrix', lock=True)
 
 
 def repair_message_to_reference_target(obj, attr):
@@ -3713,17 +3716,28 @@ def hide_attributes(node, attributes):
             for axis in 'XYZ':
                 attrs.append('{}{}'.format(attr, axis))
 
-        maya.cmds.setAttr(current_attr, long=True, k=False)
+        maya.cmds.setAttr(current_attr, lock=True, k=False)
 
 
 def hide_keyable_attributes(node):
     """
-    lock and hide keyable attributes on given node
+    Hide keyable attributes on given node
     :param node: str, name of a node
     """
 
     attrs = maya.cmds.listAttr(node, k=True)
-    hide_attributes(node, attrs)
+    return hide_attributes(node, attrs)
+
+
+def lock_keyable_attributes(node, hide=True):
+    """
+    Locks attribtes on given node
+    :param node: str
+    :param hide: bool
+    """
+
+    attrs = maya.cmds.listAttr(node, k=True)
+    return lock_attributes(node, attrs, lock=True, hide=hide)
 
 
 def hide_translate(node_name):
@@ -3732,7 +3746,7 @@ def hide_translate(node_name):
     :param node_name: str, name of Maya node
     """
 
-    hide_attributes(node_name, 'translate')
+    return hide_attributes(node_name, 'translate')
 
 
 def hide_rotate(node_name):
@@ -3741,7 +3755,7 @@ def hide_rotate(node_name):
     :param node_name: str, name of Maya node
     """
 
-    hide_attributes(node_name, 'rotate')
+    return hide_attributes(node_name, 'rotate')
 
 
 def hide_scale(node_name):
@@ -3750,7 +3764,7 @@ def hide_scale(node_name):
     :param node_name: str, name of Maya node
     """
 
-    hide_attributes(node_name, 'scale')
+    return hide_attributes(node_name, 'scale')
 
 
 def hide_visibility(node_name):
@@ -3759,7 +3773,7 @@ def hide_visibility(node_name):
     :param node_name: str, name of Maya node
     """
 
-    hide_attributes(node_name, 'visibility')
+    return hide_attributes(node_name, 'visibility')
 
 
 def color_to_rgb(color_index):
@@ -3802,39 +3816,6 @@ def get_color(shape_node):
         return color
 
 
-def get_color_of_side(side='C', sub_color=False):
-    """
-    Returns override color of the given side
-    :param side: str
-    :param sub_color: fool, whether to return a sub color or not
-    :return:
-    """
-
-    if tp.Dcc.name_is_center(side):
-        side = 'C'
-    elif tp.Dcc.name_is_left(side):
-        side = 'L'
-    elif tp.Dcc.name_is_right(side):
-        side = 'R'
-    else:
-        side = 'C'
-
-    if not sub_color:
-        if side == 'L':
-            return 6
-        elif side == 'R':
-            return 13
-        else:
-            return 17
-    else:
-        if side == 'L':
-            return 18
-        elif side == 'R':
-            return 20
-        else:
-            return 21
-
-
 def set_color(nodes, color, color_transform=False, short_range=False):
     """
     Set the override color for the given nodes
@@ -3844,6 +3825,8 @@ def set_color(nodes, color, color_transform=False, short_range=False):
     :param short_range: bool, Whether color calculations are made using short range (values between 0 and 1)
         or long range (values betten 0 and 255)
     """
+
+    from tpDcc.libs.qt.core import color as color_utils
 
     nodes = python.force_list(nodes)
 
@@ -4002,31 +3985,34 @@ def unlock_attributes(node, attributes=None, only_keyable=False):
             maya.cmds.setAttr('{}.{}'.format(node, attr), k=True)
 
 
-def lock_translate_attributes(node):
+def lock_translate_attributes(node, hide=True):
     """
     Lock translate attributes of the given nodes
     :param node: str, name of the node
+    :param hide: bool, whether to hide attributes or not
     """
 
-    lock_attributes(node, attributes=['translateX', 'translateY', 'translateZ'], hide=True)
+    lock_attributes(node, attributes=['translateX', 'translateY', 'translateZ'], hide=hide)
 
 
-def lock_rotate_attributes(node):
+def lock_rotate_attributes(node, hide=True):
     """
     Lock rotate attributes of the given nodes
     :param node: str, name of the node
+    :param hide: bool, whether to hide attributes or not
     """
 
-    lock_attributes(node, attributes=['rotateX', 'rotateY', 'rotateZ'], hide=True)
+    lock_attributes(node, attributes=['rotateX', 'rotateY', 'rotateZ'], hide=hide)
 
 
-def lock_scale_attributes(node):
+def lock_scale_attributes(node, hide=True):
     """
     Lock scale attributes of the given nodes
     :param node: str, name of the node
+    :param hide: bool, whether to hide attributes or not
     """
 
-    lock_attributes(node, attributes=['scaleX', 'scaleY', 'scaleZ'], hide=True)
+    lock_attributes(node, attributes=['scaleX', 'scaleY', 'scaleZ'], hide=hide)
 
 
 def unlock_translate_attributes(node):
