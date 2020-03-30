@@ -190,6 +190,7 @@ class OrientJointAttributes(object):
             ori.set_default_values()
 
     @staticmethod
+    @decorators.undo_chunk
     def zero_orient_joint(joint):
         """
         Move orientation to orient joint attributes and zero out orient attributes from the given joint node
@@ -207,6 +208,7 @@ class OrientJointAttributes(object):
                 maya.cmds.setAttr('{}.jointOrient{}'.format(jnt, axis), rotate_value)
 
     @staticmethod
+    @decorators.undo_chunk
     def remove_orient_attributes(joint):
         """
         Removes orient attributes from the given joint node
@@ -223,6 +225,7 @@ class OrientJointAttributes(object):
             ori.delete()
 
     @classmethod
+    @decorators.undo_chunk
     def orient_with_attributes(cls, objects_to_orient=None, force_orient_attributes=False):
         """
         Orients all joints and transforms with OrientJointAttribute added on them
@@ -1333,6 +1336,8 @@ def create_joints_along_curve(curve, joint_count, joint_description='new', attac
             maya.cmds.connectAttr('{}.param'.format(new_joint), '{}.parameter'.format(attach_node))
         current_length += part_length
         if create_controls:
+
+
             raise NotImplementedError('create controls functionality not implemented yet!')
 
         joints.append(new_joint)
@@ -1442,3 +1447,69 @@ def create_joint_buffer(joint, connect_inverse=True):
     maya.cmds.parent(joint, buffer_joint)
 
     return buffer_joint
+
+
+@decorators.undo_chunk
+def insert_joints(joints=None, joint_count=1):
+    """
+    Inserts joints evenly spaced along a bone
+    :param list(str) joints: list of joints to insert child joints to
+    :param int joint_count: Number of joints to insert
+    :return: List of created joints
+    :rtype: list(str)
+    """
+
+    if joints is None:
+        joints = maya.cmds.ls(sl=True, type='joint')
+        if not joints:
+            LOGGER.warning('No joint selected')
+            return
+    if joint_count < 1:
+        LOGGER.warning('Must insert at least 1 joint')
+        return
+
+    result = list()
+
+    for joint in joints:
+        children = maya.cmds.listRelatives(joint, children=True, type='joint')
+        if not children:
+            LOGGER.warning('Joint "{}" needs at least a child in order to insert joints. Skipping!'.format(joint))
+            continue
+
+        name = joint
+        end_joint = children[0]
+        dst = mathutils.distance_between_nodes(joint, end_joint)
+        increment = dst / (joint_count + 1)
+        direction = mathutils.direction_vector_between_nodes(joint, end_joint)
+        direction.normalize()
+        direction *= increment
+
+        for i in range(joint_count):
+            position = maya.OpenMaya.MPoint(*maya.cmds.xform(joint, query=True, worldSpace=True, translation=True))
+            position += direction
+            joint = maya.cmds.insertJoint(joint)
+            joint = maya.cmds.rename(joint, '{}#'.format(name))
+            maya.cmds.joint(joint, edit=True, component=True, position=(position.x, position.y, position.z))
+            result.append(joint)
+
+    return result
+
+
+def get_joints_chain_length(list_of_joints_in_chain):
+    """
+    Return the total distance of a of joints chain
+    :param list_of_joints_in_chain: list(str)
+    :return: float
+    """
+
+    length = 0
+    joint_count = len(list_of_joints_in_chain)
+    for i in range(joint_count):
+        if i + 1 == joint_count:
+            break
+        current_joint = list_of_joints_in_chain[i]
+        next_joint = list_of_joints_in_chain[i + 1]
+        distance = transform.get_distance(current_joint, next_joint)
+        length += distance
+
+    return length
