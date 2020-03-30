@@ -286,3 +286,45 @@ def multiply_matrix(matrix4x4_list1, matrix4x4_list2):
     mat2 = maya.OpenMaya.MMatrix(matrix4x4_list2)
 
     return mat1 * mat2
+
+
+def distance_between_nodes(source_node=None, target_node=None):
+    """
+    Returns the distance between 2 given nodes
+    :param str source_node: first node to start measuring distance from. If not given, first selected node will be used.
+    :param str target_node: second node to end measuring distance to. If not given, second selected node will be used.
+    :return: distance between 2 nodes.
+    :rtype: float
+    """
+
+    if source_node is None or target_node is None:
+        sel = maya.cmds.ls(sl=True, type='transform')
+        if len(sel) != 2:
+            return 0
+        source_node, target_node = sel
+
+    source_pos = maya.OpenMaya.MPoint(*maya.cmds.xform(source_node, query=True, worldSpace=True, translation=True))
+    target_pos = maya.OpenMaya.MPoint(*maya.cmds.xform(target_node, query=True, worldSpace=True, translation=True))
+
+    return source_pos.distanceTo(target_pos)
+
+
+def direction_vector_between_nodes(source_node=None, target_node=None):
+    """
+    Returns the direction vector between 2 given nodes
+    :param str source_node: first node to start getting direction. If not given, first selected node will be used.
+    :param str target_node: second node to end getting direction. If not given, second selected node will be used.
+    :return: direction vector between 2 nodes.
+    :rtype: OpenMaya.MVector
+    """
+
+    if source_node is None or target_node is None:
+        sel = maya.cmds.ls(sl=True, type='transform')
+        if len(sel) != 2:
+            return 0
+        source_node, target_node = sel
+
+    source_pos = maya.OpenMaya.MPoint(*maya.cmds.xform(source_node, query=True, worldSpace=True, translation=True))
+    target_pos = maya.OpenMaya.MPoint(*maya.cmds.xform(target_node, query=True, worldSpace=True, translation=True))
+
+    return target_pos - source_pos

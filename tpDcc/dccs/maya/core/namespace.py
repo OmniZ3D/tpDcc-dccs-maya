@@ -89,12 +89,12 @@ def remove_empty_namespaces():
 
     delete_namespaces = list()
 
-    def _namespace_chldren_count(ns):
+    def _namespace_children_count(ns):
         return ns.count(':')
 
-    # Retrieve namespaces and sort them in a way that namespaces with more children are located af the front
+    # Retrieve namespaces and sort them in a way that namespaces with more children are located at the front
     namespace_list = maya.cmds.namespaceInfo(listOnlyNamespaces=True, recurse=True)
-    namespace_list.sort(key=_namespace_chldren_count, reverse=True)
+    namespace_list.sort(key=_namespace_children_count, reverse=True)
 
     for namespace in namespace_list:
         try:
