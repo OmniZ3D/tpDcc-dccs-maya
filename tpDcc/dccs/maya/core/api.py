@@ -1396,3 +1396,29 @@ class IteratePolygonFaces(MayaIterator, object):
         tangent = position_vector * normal_vector
 
         return tangent
+
+
+class KeyframeFunction(MayaFunction, object):
+
+    CONSTANT = None
+    LINEAR = None
+    CYCLE = None
+    CYCLE_RELATIVE = None
+    OSCILLATE = None
+
+    def _set_api_object(self, mobj):
+        api_obj = maya.OpenMayaAnim.MFnAnimCurve(mobj)
+        self.CONSTANT = api_obj.kConstant
+        self.LINEAR = api_obj.kLinear
+        self.CYCLE = api_obj.kCycle
+        self.CYCLE_RELATIVE = api_obj.kCycleRelative
+        self.OSCILLATE = api_obj.kOscillate
+
+        return api_obj
+
+    def set_post_infinity(self, infinity_type):
+        self.obj.setPostInfinityType(infinity_type)
+
+    def set_pre_infinity(self, infinity_type):
+        self.obj.setPreInfinityType(infinity_type)
+

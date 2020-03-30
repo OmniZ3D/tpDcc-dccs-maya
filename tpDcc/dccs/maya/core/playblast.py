@@ -12,7 +12,6 @@ import logging
 from tpDcc.libs.python import osplatform
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import gui
 
 LOGGER = logging.getLogger()
 
@@ -101,6 +100,8 @@ def playblast(filename, model_panel, start_frame, end_frame, width, height, step
     :param off_screen: bool
     :return: str
     """
+
+    from tpDcc.dccs.maya.core import gui
 
     if osplatform.is_linux():
         off_screen = True

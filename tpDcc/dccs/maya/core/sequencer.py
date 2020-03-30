@@ -95,7 +95,7 @@ def get_shot_is_muted(shot_node):
     :return: bool
     """
 
-    return maya.cmds.shot(shot_node, query=True, mute=True)
+    return maya.cmds.shot(str(shot_node), query=True, mute=True)
 
 
 def get_shot_track_number(shot_node):

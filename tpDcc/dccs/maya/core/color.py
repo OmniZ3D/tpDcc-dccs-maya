@@ -9,8 +9,6 @@ from __future__ import print_function, division, absolute_import
 
 from Qt.QtGui import *
 
-from tpDcc.libs.qt.core import color as color_utils
-
 
 # ==== Control Colors
 CONTROL_COLORS = []
@@ -114,6 +112,8 @@ def get_mirror_rig_color_by_color(cl):
     the function will return the complementary color of the given color
     :param cl: QColor
     """
+
+    from tpDcc.libs.qt.core import color as color_utils
 
     rig_colors = dict()
     for rig_type in ['fk', 'ik']:
