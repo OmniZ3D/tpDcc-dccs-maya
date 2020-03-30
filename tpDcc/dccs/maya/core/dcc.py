@@ -7,6 +7,8 @@ Module that contains DCC functionality for Maya
 
 from __future__ import print_function, division, absolute_import
 
+import os
+import sys
 import logging
 from collections import OrderedDict
 
@@ -14,12 +16,15 @@ from Qt.QtWidgets import *
 
 import tpDcc
 from tpDcc import register
+from tpDcc.libs.python import python
 import tpDcc.dccs.maya as maya
 from tpDcc.abstract import dcc as abstract_dcc, progressbar
-from tpDcc.dccs.maya.core import gui, helpers, name, namespace, scene, playblast, transform, attribute
+from tpDcc.dccs.maya.core import helpers, name, namespace, scene, playblast, transform, attribute, gui, mathutils
 from tpDcc.dccs.maya.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
 from tpDcc.dccs.maya.core import sequencer, animation, qtutils, decorators as maya_decorators, shape as shape_utils
-from tpDcc.dccs.maya.core import filtertypes
+from tpDcc.dccs.maya.core import filtertypes, joint as joint_utils, space as space_utils, curve as curve_utils
+from tpDcc.dccs.maya.core import geometry as geo_utils, ik as ik_utils, deformer as deform_utils
+from tpDcc.dccs.maya.core import follicle as follicle_utils, rivet as rivet_utils, constraint as constraint_utils
 
 LOGGER = logging.getLogger()
 
@@ -101,7 +106,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
     def get_version_name():
         """
         Returns version of the DCC
-        :return: int
+        :return: str
         """
 
         return str(helpers.get_maya_version())
@@ -114,6 +119,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.about(batch=True)
+
+    @staticmethod
+    def enable_component_selection():
+        """
+        Enables DCC component selection mode
+        """
+
+        return maya.cmds.selectMode(component=True)
 
     @staticmethod
     def get_main_window():
@@ -135,12 +148,48 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return gui.is_window_floating(window_name=window_name)
 
     @staticmethod
+    def focus_ui_panel(panel_name):
+        """
+        Focus UI panel with given name
+        :param panel_name: str
+        """
+
+        return maya.cmds.setFocus(panel_name)
+
+    @staticmethod
+    def enable_wait_cursor():
+        """
+        Enables wait cursor in current DCC
+        """
+
+        return maya.cmds.waitCursor(state=True)
+
+    @staticmethod
+    def disable_wait_cursor():
+        """
+        Enables wait cursor in current DCC
+        """
+
+        return maya.cmds.waitCursor(state=False)
+
+    @staticmethod
     def execute_deferred(fn):
         """
         Executes given function in deferred mode
         """
 
         maya.utils.executeDeferred(fn)
+
+    @staticmethod
+    def new_scene(force=True, do_save=True):
+        """
+        Creates a new DCC scene
+        :param force: bool, True if we want to save the scene without any prompt dialog
+        :param do_save: bool, True if you want to save the current scene before creating new scene
+        :return:
+        """
+
+        return scene.new_scene(force=force, do_save=do_save)
 
     @staticmethod
     def object_exists(node):
@@ -181,6 +230,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
     def create_empty_group(name, parent=None):
         """
         Creates a new empty group node
+        Creates a new empty group node
         :param name: str
         :param parent: str or None
         """
@@ -190,7 +240,45 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             return groups[0]
 
     @staticmethod
-    def create_node(node_type, node_name):
+    def create_buffer_group(node, **kwargs):
+        """
+        Creates a buffer group on top of the given node
+        :param node: str
+        :return: str
+        """
+
+        suffix = kwargs.get('suffix', 'buffer')
+
+        return transform.create_buffer_group(node, suffix=suffix)
+
+    @staticmethod
+    def get_buffer_group(node, **kwargs):
+        """
+        Returns buffer group above given node
+        :param node: str
+        :return: str
+        """
+
+        suffix = kwargs.get('suffix', 'buffer')
+
+        return transform.get_buffer_group(node, suffix='buffer')
+
+    @staticmethod
+    def group_node(node, name, parent=None):
+        """
+        Creates a new group and parent give node to it
+        :param node: str
+        :param name: str
+        :param parent: str
+        :return: str
+        """
+
+        groups = helpers.create_group(name=name, nodes=node, parent=parent, world=True)
+        if groups:
+            return groups[0]
+
+    @staticmethod
+    def create_node(node_type, node_name=None):
         """
         Creates a new node of the given type and with the given name
         :param node_type: str
@@ -255,6 +343,47 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya_node.is_empty(node_name=node, no_user_attributes=no_user_attributes, no_connections=no_connections)
 
     @staticmethod
+    def node_is_transform(node):
+        """
+        Returns whether or not given node is a transform node
+        :param node: str
+        :return: bool
+        """
+
+        return maya.cmds.nodeType(node) == 'transform'
+
+    @staticmethod
+    def node_is_joint(node):
+        """
+        Returns whether or not given node is a joint node
+        :param node: str
+        :return: bool
+        """
+
+        return maya.cmds.nodeType(node) == 'joint'
+
+    @staticmethod
+    def node_is_locator(node):
+        """
+        Returns whether or not given node is a locator node
+        :param node: str
+        :return: bool
+        """
+
+        return maya.cmds.nodeType(node) == 'locator' or shape_utils.get_shape_node_type(node) == 'locator'
+
+    @staticmethod
+    def get_closest_transform(source_transform, targets):
+        """
+        Given the list of target transforms, find the closest to the source transform
+        :param source_transform: str, name of the transform to test distance to
+        :param targets: list<str>, list of targets to test distance against
+        :return: str, name of the target in targets that is closest to source transform
+        """
+
+        return transform.get_closest_transform(source_transform, targets)
+
+    @staticmethod
     def node_world_space_translation(node):
         """
         Returns translation of given node in world space
@@ -265,14 +394,55 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.xform(node, worldSpace=True, q=True, translation=True)
 
     @staticmethod
-    def translate_node_in_world_space(node, translation_list):
+    def node_world_bounding_box(node):
+        """
+        Returns world bounding box of given node
+        :param node: str
+        :return: list(float, float, float, float, float, float)
+        """
+
+        return maya.cmds.xform(node, worldSpace=True, q=True, boundingBox=True)
+
+    @staticmethod
+    def move_node(node, x, y, z, **kwargs):
+        """
+        Moves given node
+        :param node: str
+        :param x: float
+        :param y: float
+        :param z: float
+        :param kwargs:
+        """
+
+        relative = kwargs.get('relative', False)
+        object_space = kwargs.get('object_space', False)
+        world_space_distance = kwargs.get('world_space_distance', False)
+
+        return maya.cmds.move(x, y, z, node, relative=relative, os=object_space, wd=world_space_distance)
+
+    @staticmethod
+    def translate_node_in_world_space(node, translation_list, **kwargs):
         """
         Translates given node in world space with the given translation vector
         :param node: str
         :param translation_list:  list(float, float, float)
         """
 
-        return maya.cmds.xform(node, worldSpace=True, t=translation_list)
+        relative = kwargs.pop('relative', False)
+
+        return maya.cmds.xform(node, worldSpace=True, t=translation_list, relative=relative)
+
+    @staticmethod
+    def translate_node_in_object_space(node, translation_list, **kwargs):
+        """
+        Translates given node with the given translation vector
+        :param node: str
+        :param translation_list:  list(float, float, float)
+        """
+
+        relative = kwargs.pop('relative', False)
+
+        return maya.cmds.xform(node, objectSpace=True, t=translation_list, relative=relative)
 
     @staticmethod
     def node_world_space_rotation(node):
@@ -285,14 +455,43 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.xform(node, worldSpace=True, q=True, rotation=True)
 
     @staticmethod
-    def rotate_node_in_world_space(node, rotation_list):
+    def rotate_node(node, x, y, z, **kwargs):
+        """
+        Rotates given node
+        :param node: str
+        :param x: float
+        :param y: float
+        :param z: float
+        :param kwargs:
+        """
+
+        relative=kwargs.get('relative', False)
+
+        return maya.cmds.rotate(x, y, z, node, relative=relative)
+
+    @staticmethod
+    def rotate_node_in_world_space(node, rotation_list, **kwargs):
         """
         Translates given node with the given translation vector
         :param node: str
         :param rotation_list:  list(float, float, float)
         """
 
-        return maya.cmds.xform(node, worldSpace=True, ro=rotation_list)
+        relative = kwargs.pop('relative', False)
+
+        return maya.cmds.xform(node, worldSpace=True, ro=rotation_list, relative=relative)
+
+    @staticmethod
+    def rotate_node_in_object_space(node, rotation_list, **kwargs):
+        """
+        Translates given node with the given translation vector
+        :param node: str
+        :param rotation_list:  list(float, float, float)
+        """
+
+        relative = kwargs.pop('relative', False)
+
+        return maya.cmds.xform(node, objectSpace=True, ro=rotation_list, relative=relative)
 
     @staticmethod
     def node_world_space_scale(node):
@@ -305,14 +504,54 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.xform(node, worldSpace=True, q=True, scale=True)
 
     @staticmethod
-    def scale_node_in_world_space(node, scale_list):
+    def scale_node(node, x, y, z, **kwargs):
+        """
+        Scales node
+        :param node: str
+        :param x: float
+        :param y: float
+        :param z: float
+        :param kwargs:
+        """
+
+        pivot = kwargs.get('pivot', False)
+        relative = kwargs.get('relative', False)
+
+        return maya.cmds.scale(x, y, z, node, pivot=pivot, relative=relative)
+
+    @staticmethod
+    def scale_node_in_world_space(node, scale_list, **kwargs):
         """
         Scales given node with the given vector list
         :param node: str
         :param scale_list: list(float, float, float)
         """
 
-        return maya.cmds.xform(node, worldSpace=True, s=scale_list)
+        relative = kwargs.pop('relative', False)
+
+        return maya.cmds.xform(node, worldSpace=True, s=scale_list, relative=relative)
+
+    @staticmethod
+    def scale_node_in_object_space(node, scale_list, **kwargs):
+        """
+        Scales given node with the given vector list
+        :param node: str
+        :param scale_list: list(float, float, float)
+        """
+
+        relative = kwargs.pop('relative', False)
+
+        return maya.cmds.xform(node, objectSpace=True, s=scale_list, relative=relative)
+
+    @staticmethod
+    def node_world_space_pivot(node):
+        """
+        Returns node pivot in world space
+        :param node: str
+        :return:
+        """
+
+        return maya.cmds.xform(node, query=True, rp=True, ws=True)
 
     @staticmethod
     def all_scene_objects(full_path=True):
@@ -335,8 +574,18 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         uuid = kwargs.get('uuid', None)
         rename_shape = kwargs.get('rename_shape', True)
+        return_long_name = kwargs.get('return_long_name', False)
 
-        return name.rename(node, new_name, uuid=uuid, rename_shape=rename_shape)
+        return name.rename(node, new_name, uuid=uuid, rename_shape=rename_shape, return_long_name=return_long_name)
+
+    @staticmethod
+    def rename_transform_shape_nodes(node):
+        """
+        Renames all shape nodes of the given transform node
+        :param node: str
+        """
+
+        return shape_utils.rename_shapes(transform_node=node)
 
     @staticmethod
     def show_object(node):
@@ -345,16 +594,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param node: str
         """
 
-        maya.cmds.showHidden(node)
-
-    @staticmethod
-    def hide_object(node):
-        """
-        Hides given object
-        :param node: str
-        """
-
-        maya.cmds.hide(node)
+        return maya.cmds.showHidden(node)
 
     @staticmethod
     def select_object(node, replace_selection=False, **kwargs):
@@ -364,7 +604,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param node: str
         """
 
-        maya.cmds.select(node, replace=replace_selection, **kwargs)
+        return maya.cmds.select(node, replace=replace_selection, **kwargs)
 
     @staticmethod
     def select_hierarchy(root=None, add=False):
@@ -391,7 +631,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param node: str
         """
 
-        maya.cmds.select(node, deselect=True)
+        return maya.cmds.select(node, deselect=True)
 
     @staticmethod
     def clear_selection():
@@ -399,7 +639,19 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         Clears current scene selection
         """
 
-        maya.cmds.select(clear=True)
+        return maya.cmds.select(clear=True)
+
+    @staticmethod
+    def duplicate_object(node, name='', only_parent=False):
+        """
+        Duplicates given object in current scene
+        :param node: str
+        :param name: str
+        :param only_parent: bool, If True, only given node will be duplicated (ignoring its children)
+        :return: str
+        """
+
+        return maya.cmds.duplicate(node, name=name, po=only_parent)[0]
 
     @staticmethod
     def delete_object(node):
@@ -408,17 +660,19 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param node: str
         """
 
-        maya.cmds.delete(node)
+        return maya.cmds.delete(node)
 
     @staticmethod
-    def selected_nodes(full_path=True):
+    def selected_nodes(full_path=True, **kwargs):
         """
         Returns a list of selected nodes
         :param full_path: bool
         :return: list<str>
         """
 
-        return maya.cmds.ls(sl=True, long=full_path)
+        flatten = kwargs.get('flatten', False)
+
+        return maya.cmds.ls(sl=True, long=full_path, flatten=flatten)
 
     @staticmethod
     def selected_nodes_of_type(node_type, full_path=True):
@@ -430,6 +684,65 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.ls(sl=True, type=node_type, long=full_path)
+
+    @staticmethod
+    def selected_hilited_nodes(full_path=True):
+        """
+        Returns a list of selected nodes that are hilited for component selection
+        :param full_path: bool
+        :return: list(str)
+        """
+
+        return maya.cmds.ls(long=full_path, hilite=True)
+
+    @staticmethod
+    def filter_nodes_by_selected_components(filter_type, nodes=None, full_path=False, **kwargs):
+        """
+        Function that filter nodes taking into account specific component filters
+        Maya Components Filter Type Values
+        Handle:                     0
+        Nurbs Curves:               9
+        Nurbs Surfaces:             10
+        Nurbs Curves On Surface:    11
+        Polygon:                    12
+        Locator XYZ:                22
+        Orientation Locator:        23
+        Locator UV:                 24
+        Control Vertices (CVs):     28
+        Edit Points:                30
+        Polygon Vertices:           31
+        Polygon Edges:              32
+        Polygon Face:               34
+        Polygon UVs:                35
+        Subdivision Mesh Points:    36
+        Subdivision Mesh Edges:     37
+        Subdivision Mesh Faces:     38
+        Curve Parameter Points:     39
+        Curve Knot:                 40
+        Surface Parameter Points:   41
+        Surface Knot:               42
+        Surface Range:              43
+        Trim Surface Edge:          44
+        Surface Isoparms:           45
+        Lattice Points:             46
+        Particles:                  47
+        Scale Pivots:               49
+        Rotate Pivots:              50
+        Select Handles:             51
+        Subdivision Surface:        68
+        Polygon Vertex Face:        70
+        NURBS Surface Face:         72
+        Subdivision Mesh UVs:       73
+        :param filter_type: int
+        :param nodes: list(str)
+        :param full_path: bool
+        :param kwargs:
+        :return: list(str)
+        """
+
+        nodes = nodes or MayaDcc.selected_nodes()
+
+        return maya.cmds.filterExpand(nodes, selectionMask=filter_type, fullPath=full_path)
 
     @staticmethod
     def all_shapes_nodes(full_path=True):
@@ -452,14 +765,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.ls(defaultNodes=True)
 
     @staticmethod
-    def node_short_name(node):
+    def node_short_name(node, **kwargs):
         """
         Returns short name of the given node
         :param node: str
         :return: str
         """
 
-        return name.get_basename(node, remove_namespace=False)
+        remove_attribute = kwargs.get('remove_attribute', False)
+
+        return name.get_basename(node, remove_namespace=False, remove_attribute=remove_attribute)
 
     @staticmethod
     def node_long_name(node):
@@ -470,6 +785,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return name.get_long_name(node)
+
+    @staticmethod
+    def node_attribute_name(node_and_attr):
+        """
+        Returns the attribute part of a given node name
+        :param node_and_attr: str
+        :return: str
+        """
+
+        return attribute.get_attribute_name(node_and_attr)
 
     @staticmethod
     def node_object_color(node):
@@ -596,6 +921,36 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya_node.is_visible(node=node)
 
     @staticmethod
+    def node_color(node):
+        """
+        Returns color of the given node
+        :param node: str
+        :return:
+        """
+
+        return attribute.get_color(node)
+
+    @staticmethod
+    def set_node_color(node, color):
+        """
+        Sets the color of the given node
+        :param node: str
+        :param color:
+        """
+
+        return attribute.set_color(node, color)
+
+    @staticmethod
+    def node_components(node):
+        """
+        Returns all components of the given node
+        :param node: str
+        :return: list(str)
+        """
+
+        return shape_utils.get_components_from_shapes(node)
+
+    @staticmethod
     def node_is_referenced(node):
         """
         Returns whether given node is referenced or not
@@ -714,6 +1069,26 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.parent(node, parent)
 
     @staticmethod
+    def set_shape_parent(shape, transform_node):
+        """
+        Sets given shape parent
+        :param shape: str
+        :param transform_node: str
+        """
+
+        return maya.cmds.parent(shape, transform_node, r=True, shape=True)
+
+    @staticmethod
+    def add_node_to_parent(node, parent_node):
+        """
+        Add given object under the given parent preserving its local transformations
+        :param node: str
+        :param parent_node: str
+        """
+
+        return maya.cmds.parent(node, parent_node, add=True, s=True)
+
+    @staticmethod
     def set_parent_to_world(node):
         """
         Parent given node to the root world node
@@ -761,7 +1136,25 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param matrix: variant, MMatrix or list
         """
 
-        maya.cmds.xform(node, matrix=matrix, worldSpace=True)
+        return maya.cmds.xform(node, matrix=matrix, worldSpace=True)
+
+    @staticmethod
+    def show_node(node):
+        """
+        Shows given node
+        :param node: str
+        """
+
+        return maya.cmds.show(node)
+
+    @staticmethod
+    def hide_node(node):
+        """
+        Hides given node
+        :param node: str
+        """
+
+        return maya.cmds.hide(node)
 
     @staticmethod
     def list_node_types(type_string):
@@ -812,7 +1205,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
     @staticmethod
     def list_relatives(
-            node, all_hierarchy=True, full_path=True, relative_type=None, shapes=False, intermediate_shapes=False):
+            node, all_hierarchy=False, full_path=True, relative_type=None, shapes=False, intermediate_shapes=False):
         """
         Returns a list of relative nodes of the given node
         :param node:
@@ -834,6 +1227,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
                 noIntermediate=not intermediate_shapes)
 
     @staticmethod
+    def node_is_a_shape(node):
+        """
+        Returns whether or not given node is a shape one
+        :param node: str
+        :return: bool
+        """
+
+        return shape_utils.is_a_shape(node)
+
+    @staticmethod
     def list_shapes(node, full_path=True, intermediate_shapes=False):
         """
         Returns a list of shapes of the given node
@@ -845,6 +1248,31 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         return maya.cmds.listRelatives(
             node, shapes=True, fullPath=full_path, children=True, noIntermediate=not intermediate_shapes)
+
+    @staticmethod
+    def list_shapes_of_type(node, shape_type=None, full_path=True, intermediate_shapes=False):
+        """
+        Returns a list of shapes of the given node
+        :param node: str
+        :param shape_type: str
+        :param full_path: bool
+        :param intermediate_shapes: bool
+        :return: list<str>
+        """
+
+        return shape_utils.get_shapes_of_type(
+            node_name=node, shape_type=shape_type, full_path=full_path, no_intermediate=not intermediate_shapes)
+
+    @staticmethod
+    def node_has_shape_of_type(node, shape_type):
+        """
+        Returns whether or not given node has a shape of the given type attached to it
+        :param node: str
+        :param shape_type: str
+        :return: bool
+        """
+
+        return shape_utils.has_shape_of_type(node, shape_type=shape_type)
 
     @staticmethod
     def list_children_shapes(node, all_hierarchy=True, full_path=True, intermediate_shapes=False):
@@ -875,6 +1303,35 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.listRelatives(shape_node, parent=True, fullPath=full_path)
 
     @staticmethod
+    def node_bounding_box_pivot(node):
+        """
+        Returns the bounding box pivot center of the given node
+        :param node: str
+        :return: list(float, float, float)
+        """
+
+        shapes = shape_utils.get_shapes_of_type(node, shape_type='nurbsCurve')
+        components = shape_utils.get_components_from_shapes(shapes)
+        bounding = transform.BoundingBox(components)
+        pivot = bounding.get_center()
+
+        return pivot
+
+    @staticmethod
+    def shapes_bounding_box_pivot(shapes):
+        """
+        Returns the bounding box pivot center point of the given meshes
+        :param shapes: list(str)
+        :return: list(float, float, float)
+        """
+
+        components = shape_utils.get_components_from_shapes(shapes)
+        bounding = transform.BoundingBox(components)
+        pivot = bounding.get_center()
+
+        return pivot
+
+    @staticmethod
     def default_shaders():
         """
         Returns a list with all thte default shadres of the current DCC
@@ -882,6 +1339,45 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return shader_utils.get_default_shaders()
+
+    @staticmethod
+    def create_surface_shader(shader_name, **kwargs):
+        """
+        Creates a new basic DCC surface shader
+        :param shader_name: str
+        :return: str
+        """
+
+        return_shading_group = kwargs.get('return_shading_group', False)
+
+        shader = maya.cmds.shadingNode('surfaceShader', name=shader_name, asShader=True)
+        sg = maya.cmds.sets(name='{}SG'.format(shader), renderable=True, noSurfaceShader=True, empty=True)
+        maya.cmds.connectAttr('{}.outColor'.format(shader), '{}.surfaceShader'.format(sg), force=True)
+
+        if return_shading_group:
+            return sg
+
+        return shader
+
+    @staticmethod
+    def apply_shader(material, node):
+        """
+        Applies material to given node
+        :param material: str
+        :param node: str
+        """
+
+        shading_group = None
+        if maya.cmds.nodeType(material) in ['surfaceShader', 'lambert']:
+            shading_groups = maya.cmds.listConnections(material, type='shadingEngine')
+            shading_group = shading_groups[0] if shading_groups else None
+        elif maya.cmds.nodeType(material) == 'shadingEngine':
+            shading_group = material
+        if not shading_group:
+            LOGGER.warning('Impossible to apply material "{}" into "{}"'.format(material, node))
+            return False
+
+        maya.cmds.sets(node, e=True, forceElement=shading_group)
 
     @staticmethod
     def list_materials(skip_default_materials=False, nodes=None):
@@ -982,31 +1478,104 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.listAttr(node, userDefined=True)
 
     @staticmethod
-    def add_bool_attribute(node, attribute_name, keyable=False, default_value=False):
+    def add_bool_attribute(node, attribute_name, default_value=False, **kwargs):
         """
         Adds a new boolean attribute into the given node
         :param node: str
         :param attribute_name: str
-        :param keyable: bool
         :param default_value: bool
         :return:
         """
 
-        return maya.cmds.addAttr(node, ln=attribute_name, at='bool', k=keyable, dv=default_value)
+        lock = kwargs.pop('lock', False)
+        channel_box_display = kwargs.pop('channel_box_display', True)
+        keyable = kwargs.pop('keyable', True)
+
+        maya.cmds.addAttr(node, ln=attribute_name, at='bool', dv=default_value, **kwargs)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
     @staticmethod
-    def add_string_attribute(node, attribute_name, keyable=False):
+    def add_integer_attribute(node, attribute_name, default_value=0, **kwargs):
+        """
+        Adds a new float attribute into the given node
+        :param node: str
+        :param attribute_name: str
+        :param default_value: float
+        :return:
+        """
+
+        lock = kwargs.pop('lock', False)
+        channel_box_display = kwargs.get('channel_box_display', True)
+        keyable = kwargs.pop('keyable', True)
+        min_value = kwargs.pop('min_value', -sys.maxsize - 1)
+        max_value = kwargs.pop('max_value', sys.maxsize + 1)
+
+        maya.cmds.addAttr(node, ln=attribute_name, at='long', dv=default_value, min=min_value, max=max_value, **kwargs)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
+
+    @staticmethod
+    def add_float_attribute(node, attribute_name, default_value=0.0, **kwargs):
+        """
+        Adds a new float attribute into the given node
+        :param node: str
+        :param attribute_name: str
+        :param default_value: float
+        :return:
+        """
+
+        lock = kwargs.pop('lock', False)
+        channel_box_display = kwargs.get('channel_box_display', True)
+        keyable = kwargs.pop('keyable', True)
+        min_value = kwargs.pop('min_value', float(-sys.maxsize - 1))
+        max_value = kwargs.pop('max_value', float(sys.maxsize + 1))
+
+        maya.cmds.addAttr(node, ln=attribute_name, at='float', dv=default_value, min=min_value, max=max_value, **kwargs)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
+
+    @staticmethod
+    def add_double_attribute(node, attribute_name, default_value=0.0, **kwargs):
+        """
+        Adds a new boolean float into the given node
+        :param node: str
+        :param attribute_name: str
+        :param default_value: float
+        :return:
+        """
+
+        lock = kwargs.pop('lock', False)
+        channel_box_display = kwargs.get('channel_box_display', True)
+        keyable = kwargs.pop('keyable', True)
+        min_value = kwargs.pop('min_value', float(-sys.maxsize - 1))
+        max_value = kwargs.pop('max_value', float(sys.maxsize + 1))
+
+        maya.cmds.addAttr(
+            node, ln=attribute_name, at='double', dv=default_value, min=min_value, max=max_value, **kwargs)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
+
+    @staticmethod
+    def add_string_attribute(node, attribute_name, default_value='', **kwargs):
         """
         Adds a new string attribute into the given node
         :param node: str
         :param attribute_name: str
-        :param keyable: bool
+        :param default_value: str
         """
 
-        return maya.cmds.addAttr(node, ln=attribute_name, dt='string', k=keyable)
+        lock = kwargs.pop('lock', False)
+        channel_box_display = kwargs.get('channel_box_display', True)
+        keyable = kwargs.pop('keyable', True)
+
+        maya.cmds.addAttr(node, ln=attribute_name, dt='string', **kwargs)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), default_value, type='string')
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
     @staticmethod
-    def add_string_array_attribute(node, attribute_name, keyable=False):
+    def add_string_array_attribute(node, attribute_name, **kwargs):
         """
         Adds a new string array attribute into the given node
         :param node: str
@@ -1014,18 +1583,41 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param keyable: bool
         """
 
-        return maya.cmds.addAttr(node, ln=attribute_name, dt='stringArray', k=keyable)
+        lock = kwargs.get('lock', False)
+        channel_box_display = kwargs.get('channel_box_display', True)
+        keyable = kwargs.pop('keyable', True)
+
+        maya.cmds.addAttr(node, ln=attribute_name, dt='stringArray', **kwargs)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
     @staticmethod
-    def add_message_attribute(node, attribute_name, keyable=False):
+    def add_title_attribute(node, attribute_name, **kwargs):
+        """
+        Adds a new title attribute into the given node
+        :param node: str
+        :param attribute_name: str
+        :param kwargs:
+        :return:
+        """
+
+        return attribute.create_title(node, attribute_name)
+
+    @staticmethod
+    def add_message_attribute(node, attribute_name, **kwargs):
         """
         Adds a new message attribute into the given node
         :param node: str
         :param attribute_name: str
-        :param keyable: bool
         """
 
-        return maya.cmds.addAttr(node, ln=attribute_name, at='message', k=keyable)
+        lock = kwargs.get('lock', False)
+        channel_box_display = kwargs.get('channel_box_display', True)
+        keyable = kwargs.pop('keyable', True)
+
+        maya.cmds.addAttr(node, ln=attribute_name, at='message', **kwargs)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
     @staticmethod
     def attribute_query(node, attribute_name, **kwargs):
@@ -1053,13 +1645,112 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
     @staticmethod
     def is_attribute_locked(node, attribute_name):
         """
-        Returns whether atribute is locked or not
+        Returns whether given attribute is locked or not
         :param node: str
         :param attribute_name: str
         :return: bool
         """
 
         return maya.cmds.getAttr('{}.{}'.format(node, attribute_name, lock=True))
+
+    @staticmethod
+    def is_attribute_connected(self, node, attribute_name):
+        """
+        Returns whether given attribute is connected or not
+        :param node: str
+        :param attribute_name: str
+        :return: bool
+        """
+
+        return attribute.is_connected('{}.{}'.format(node, attribute_name))
+
+    @staticmethod
+    def get_maximum_integer_attribute_value(node, attribute_name):
+        """
+        Returns the maximum value that a specific integer attribute has set
+        :param node: str
+        :param attribute_name: str
+        :return: float
+        """
+
+        return maya.cmds.attributeQuery(attribute_name, max=True, node=node)[0]
+
+    @staticmethod
+    def set_maximum_integer_attribute_value(node, attribute_name, max_value):
+        """
+        Sets the maximum value that a specific integer attribute has set
+        :param node: str
+        :param attribute_name: str
+        :param max_value: float
+        """
+
+        return maya.cmds.addAttr('{}.{}'.format(node, attribute_name), edit=True, maxValue=max_value, hasMaxValue=True)
+
+    @staticmethod
+    def get_maximum_float_attribute_value(node, attribute_name):
+        """
+        Returns the maximum value that a specific float attribute has set
+        :param node: str
+        :param attribute_name: str
+        :return: float
+        """
+
+        return maya.cmds.attributeQuery(attribute_name, max=True, node=node)[0]
+
+    @staticmethod
+    def set_maximum_float_attribute_value(node, attribute_name, max_value):
+        """
+        Sets the maximum value that a specific float attribute has set
+        :param node: str
+        :param attribute_name: str
+        :param max_value: float
+        """
+
+        return maya.cmds.addAttr('{}.{}'.format(node, attribute_name), edit=True, maxValue=max_value, hasMaxValue=True)
+
+    @staticmethod
+    def get_minimum_integer_attribute_value(node, attribute_name):
+        """
+        Returns the minimum value that a specific integer attribute has set
+        :param node: str
+        :param attribute_name: str
+        :return: float
+        """
+
+        return maya.cmds.attributeQuery(attribute_name, min=True, node=node)[0]
+
+    @staticmethod
+    def set_minimum_integer_attribute_value(node, attribute_name, min_value):
+        """
+        Sets the minimum value that a specific integer attribute has set
+        :param node: str
+        :param attribute_name: str
+        :param min_value: float
+        """
+
+        return maya.cmds.addAttr('{}.{}'.format(node, attribute_name), edit=True, minValue=min_value, hasMinValue=True)
+
+    @staticmethod
+    def get_minimum_float_attribute_value(node, attribute_name):
+        """
+        Returns the minimum value that a specific float attribute has set
+        :param node: str
+        :param attribute_name: str
+        :return: float
+        """
+
+        return maya.cmds.attributeQuery(attribute_name, min=True, node=node)[0]
+
+    @staticmethod
+    def set_minimum_float_attribute_value(node, attribute_name, min_value):
+        """
+        Sets the minimum value that a specific float attribute has set
+        :param node: str
+        :param attribute_name: str
+        :param min_value: float
+        """
+
+        return maya.cmds.addAttr('{}.{}'.format(node, attribute_name), edit=True, minValue=min_value, hasMinValue=True)
 
     @staticmethod
     def show_attribute(node, attribute_name):
@@ -1080,6 +1771,29 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), channelBox=False)
+
+    @staticmethod
+    def hide_attributes(node, attributes_list):
+        """
+        Hides given attributes in DCC UI
+        :param node: str
+        :param attributes_list: list(str)
+        """
+
+        return attribute.hide_attributes(node, attributes_list)
+
+    @staticmethod
+    def lock_attributes(node, attributes_list, **kwargs):
+        """
+        Locks given attributes in DCC UI
+        :param node: str
+        :param attributes_list: list(str)
+        :param kwargs:
+        """
+
+        hide = kwargs.get('hide', False)
+
+        return attribute.lock_attributes(node, attributes_list, hide=hide)
 
     @staticmethod
     def keyable_attribute(node, attribute_name):
@@ -1122,6 +1836,116 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), lock=False)
 
     @staticmethod
+    def hide_translate_attributes(node):
+        """
+        Hides all translate transform attributes of the given node
+        :param node: str
+        """
+
+        return attribute.hide_translate(node)
+
+    @staticmethod
+    def lock_translate_attributes(node):
+        """
+        Locks all translate transform attributes of the given node
+        :param node: str
+        """
+
+        return attribute.lock_translate_attributes(node, hide=False)
+
+    @staticmethod
+    def hide_rotate_attributes(node):
+        """
+        Hides all rotate transform attributes of the given node
+        :param node: str
+        """
+
+        return attribute.hide_rotate(node)
+
+    @staticmethod
+    def lock_rotate_attributes(node):
+        """
+        Locks all rotate transform attributes of the given node
+        :param node: str
+        """
+
+        return attribute.lock_rotate_attributes(node, hide=False)
+
+    @staticmethod
+    def hide_scale_attributes(node):
+        """
+        Hides all scale transform attributes of the given node
+        :param node: str
+        """
+
+        return attribute.hide_scale(node)
+
+    @staticmethod
+    def lock_scale_attributes(node):
+        """
+        Locks all scale transform attributes of the given node
+        :param node: str
+        """
+
+        return attribute.lock_scale_attributes(node, hide=False)
+
+    @staticmethod
+    def hide_visibility_attribute(node):
+        """
+        Hides visibility attribute of the given node
+        :param node: str
+        """
+
+        return attribute.hide_visibility(node)
+
+    @staticmethod
+    def lock_visibility_attribute(node):
+        """
+        Locks visibility attribute of the given node
+        :param node: str
+        """
+
+        return attribute.lock_attributes(node, ['visibility'], hide=False)
+
+    @staticmethod
+    def hide_scale_and_visibility_attributes(node):
+        """
+        Hides scale and visibility attributes of the given node
+        :param node: str
+        """
+
+        MayaDcc.hide_scale_attributes(node)
+        MayaDcc.hide_visibility_attribute(node)
+
+    @staticmethod
+    def lock_scale_and_visibility_attributes(node):
+        """
+        Locks scale and visibility attributes of the given node
+        :param node: str
+        """
+
+        MayaDcc.lock_scale_attributes(node)
+        MayaDcc.lock_visibility_attribute(node)
+
+    @staticmethod
+    def hide_keyable_attributes(node):
+        """
+        Hides all node attributes that are keyable
+        :param node: str
+        """
+
+        return attribute.hide_keyable_attributes(node)
+
+    @staticmethod
+    def lock_keyable_attributes(node):
+        """
+        Locks all node attributes that are keyable
+        :param node: str
+        """
+
+        return attribute.lock_keyable_attributes(node, hide=False)
+
+    @staticmethod
     def get_attribute_value(node, attribute_name):
         """
         Returns the value of the given attribute in the given node
@@ -1153,7 +1977,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param attribute_type: str
         """
 
-        return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), attribute_value, type=attribute_type)
+        if attribute_type == 'string':
+            return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), attribute_value, type=attribute_type)
+        else:
+            return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), attribute_value)
 
     @staticmethod
     def set_boolean_attribute_value(node, attribute_name, attribute_value):
@@ -1231,6 +2058,44 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             float(attribute_value[0]), float(attribute_value[1]), float(attribute_value[2]), type='double3')
 
     @staticmethod
+    def node_inherits_transform(node):
+        """
+        Returns whether or not given node inherits its parent transforms
+        :param node: str
+        :return: bool
+        """
+
+        return maya.cmds.getAttr('{}.inheritsTransform'.format(node))
+
+    @staticmethod
+    def set_node_inherits_transform(node, flag):
+        """
+        Sets whether or not given node inherits parent transforms or not
+        :param node: str
+        :param flag: bool
+        """
+
+        return maya.cmds.setAttr('{}.inheritsTransform'.format(node), flag)
+
+    @staticmethod
+    def reset_transform_attributes(node):
+        """
+        Reset all transform attributes of the given node
+        :param node: str
+        """
+
+        for axis in 'xyz':
+            for xform in 'trs':
+                xform_attr = '{}{}'.format(xform, axis)
+                if xform == 's':
+                    MayaDcc.set_attribute_value(node, xform_attr, 1.0)
+                else:
+                    MayaDcc.set_attribute_value(node, xform_attr, 0.0)
+
+        for shear_attr in ['shearXY', 'shearXZ', 'shearYZ']:
+            MayaDcc.set_attribute_value(node, shear_attr, 0.0)
+
+    @staticmethod
     def delete_attribute(node, attribute_name):
         """
         Deletes given attribute of given node
@@ -1252,6 +2117,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.removeMultiInstance('{}.{}[{}]'.format(node, attribute_name, attribute_index))
 
     @staticmethod
+    def delete_user_defined_attributes(node):
+        """
+        Removes all attributes in the given node that have been created by a user
+        :param node: str
+        """
+
+        return attribute.remove_user_defined_attributes(node)
+
+    @staticmethod
     def connect_attribute(source_node, source_attribute, target_node, target_attribute, force=False):
         """
         Connects source attribute to given target attribute
@@ -1266,6 +2140,39 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             '{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), force=force)
 
     @staticmethod
+    def connect_translate(source_node, target_node):
+        """
+        Connects the translation of the source node into the rotation of the target node
+        :param source_node: str
+        :param target_node: str
+        """
+
+        return attribute.connect_translate(source_node, target_node)
+
+    @staticmethod
+    def connect_rotate(source_node, target_node):
+        """
+        Connets the rotation of the source node into the rotation of the target node
+        :param source_node: str
+        :param target_node: str
+        """
+
+        return attribute.connect_rotate(source_node, target_node)
+
+    @staticmethod
+    def connect_visibility(node, attr, target_node, default_value=True):
+        """
+        Connect the visibility of the target node into an attribute
+        :param node: str, name of a node. If it does not exists, it will ber created
+        :param attr: str, attribute name of a node. If it does not exists, it will ber created
+        :param target_node: str, target node to connect its visibility into the attribute
+        :param default_value: bool, Whether you want the visibility on/off by default
+        """
+
+        return attribute.connect_visibility(
+            '{}.{}'.format(node, attr), target_node, default_value=default_value)
+
+    @staticmethod
     def connect_message_attribute(source_node, target_node, message_attribute):
         """
         Connects the message attribute of the input_node into a custom message attribute on target_node
@@ -1276,6 +2183,55 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         attribute.connect_message(source_node, target_node, message_attribute)
+
+    @staticmethod
+    def get_message_attributes(node, **kwargs):
+        """
+        Returns all message attributes of the give node
+        :param node: str
+        :return: list(str)
+        """
+
+        user_defined = kwargs.get('user_defined', True)
+
+        return attribute.get_message_attributes(node, user_defined=user_defined)
+
+    @staticmethod
+    def get_attribute_input(attribute_node, **kwargs):
+        """
+        Returns the input into given attribute
+        :param attribute_node: str, full node and attribute (node.attribute) attribute we want to retrieve inputs of
+        :param kwargs:
+        :return: str
+        """
+
+        node_only = kwargs.get('node_only', False)
+
+        return attribute.get_attribute_input(attribute_node, node_only=node_only)
+
+    @staticmethod
+    def get_message_input(node, message_attribute):
+        """
+        Get the input value of a message attribute
+        :param node: str
+        :param message_attribute: str
+        :return: object
+        """
+
+        return attribute.get_message_input(node=node, message=message_attribute)
+
+    @staticmethod
+    def store_world_matrix_to_attribute(node, attribute_name='worldMatrix', **kwargs):
+        """
+        Stores world matrix of given transform into an attribute in the same transform
+        :param attribute_name: str
+        :param kwargs:
+        """
+
+        skip_if_exists = kwargs.get('skip_if_exists', False)
+
+        return attribute.store_world_matrix_to_attribute(
+            transform=node, attribute_name=attribute_name, skip_if_exists=skip_if_exists)
 
     @staticmethod
     def list_connections(node, attribute_name):
@@ -1476,23 +2432,38 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.file(query=True, modified=True)
 
     @staticmethod
-    def save_current_scene(force=True):
+    def save_current_scene(force=True, **kwargs):
         """
         Saves current scene
         :param force: bool
         """
 
+        path_to_save = kwargs.get('path_to_save', None)
+        name_to_save = kwargs.get('name_to_save', None)
+        extension_to_save = kwargs.get('extension_to_save', MayaDcc.get_extensions()[0])
         scene_name = MayaDcc.scene_name()
         if scene_name:
-            return maya.cmds.file(save=True, f=force)
-        else:
-            if force:
-                return maya.cmds.SaveScene()
-            else:
-                if MayaDcc.scene_is_modified():
-                    return maya.cmds.SaveScene()
+            extension_to_save = os.path.splitext(scene_name)[-1]
+        if not extension_to_save.startswith('.'):
+            extension_to_save = '.{}'.format(extension_to_save)
+        maya_scene_type = 'mayaAscii' if extension_to_save == '.ma' else 'mayaBinary'
 
-        return False
+        if scene_name:
+            if path_to_save and name_to_save:
+                maya.cmds.file(rename=os.path.join(path_to_save, '{}{}'.format(name_to_save, extension_to_save)))
+            return maya.cmds.file(save=True, type=maya_scene_type, f=force)
+        else:
+            if path_to_save and name_to_save:
+                maya.cmds.file(rename=os.path.join(path_to_save, '{}{}'.format(name_to_save, extension_to_save)))
+                return maya.cmds.file(save=True, type=maya_scene_type, f=force)
+            else:
+                if force:
+                    return maya.cmds.SaveScene()
+                else:
+                    if MayaDcc.scene_is_modified():
+                        return maya.cmds.SaveScene()
+                    else:
+                        return maya.cmds.file(save=True, type=maya_scene_type)
 
     @staticmethod
     def confirm_dialog(title, message, button=None, cancel_button=None, default_button=None, dismiss_string=None):
@@ -2129,6 +3100,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return transform.MatchTransform(source_node, target_node).translation_rotation()
 
     @staticmethod
+    def match_translation_to_rotate_pivot(source_node, target_node):
+        """
+        Matches target translation to the source transform rotate pivot
+        :param source_node: str
+        :param target_node: str
+        :return:
+        """
+
+        return transform.MatchTransform(source_node, target_node).translation_to_rotate_pivot()
+
+    @staticmethod
     def match_transform(source_node, target_node):
         """
         Match the transform (translation, rotation and scale) of the given node to the rotation of the target node
@@ -2401,22 +3383,147 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return animation.set_active_frame_range(start_frame, end_frame)
 
     @staticmethod
+    def create_point_constraint(source, constraint_to, **kwargs):
+        """
+        Creates a new point constraint
+        :param source:
+        :param constraint_to:
+        :param kwargs:
+        :return:
+        """
+
+        maintain_offset = kwargs.get('maintain_offset', False)
+
+        return maya.cmds.pointConstraint(constraint_to, source, mo=maintain_offset)
+
+    @staticmethod
+    def create_orient_constraint(source, constraint_to, **kwargs):
+        """
+        Creates a new orient constraint
+        :param source:
+        :param constraint_to:
+        :param kwargs:
+        :return:
+        """
+
+        maintain_offset = kwargs.get('maintain_offset', False)
+
+        return maya.cmds.orientConstraint(constraint_to, source, mo=maintain_offset)
+
+    @staticmethod
+    def create_scale_constraint(source, constraint_to, **kwargs):
+        """
+        Creates a new scale constraint
+        :param source:
+        :param constraint_to:
+        :param kwargs:
+        :return:
+        """
+
+        maintain_offset = kwargs.get('maintain_offset', False)
+
+        return maya.cmds.scaleConstraint(constraint_to, source, mo=maintain_offset)
+
+    @staticmethod
+    def create_parent_constraint(source, constraint_to, **kwargs):
+        """
+        Creates a new parent constraint
+        :param source:
+        :param constraint_to:
+        :param kwargs:
+        :return:
+        """
+
+        maintain_offset = kwargs.get('maintain_offset', False)
+
+        return maya.cmds.parentConstraint(constraint_to, source, mo=maintain_offset)
+
+    @staticmethod
+    def get_axis_aimed_at_child(transform_node):
+        """
+        Returns the axis that is pointing to the given transform
+        :param transform_node: str, name of a transform node
+        :return:
+        """
+
+        return transform.get_axis_aimed_at_child(transform_node)
+
+    @staticmethod
     def create_aim_constraint(source, point_to, **kwargs):
         """
-        Sets current animation frame range
+        Creates a new aim constraint
         :param source: str
         :param point_to: str
         """
 
-        aim_axis = kwargs.get('aim_axis')
-        up_axis = kwargs.get('up_axis')
-        world_up_axis = kwargs.get('world_up_axis')
-        world_up_type = kwargs.get('world_up_type', 'vector')
-        weight = kwargs.get('weight', 1.0)
+        aim_axis = kwargs.pop('aim_axis', (1.0, 0.0, 0.0))
+        up_axis = kwargs.pop('up_axis', (0.0, 1.0, 0.0))
+        world_up_axis = kwargs.pop('world_up_axis', (0.0, 1.0, 0.0))
+        # World Up type: 0: scene up; 1: object up; 2: object rotation up; 3: vector; 4: None
+        world_up_type = kwargs.pop('world_up_type', 3)
+        world_up_object = kwargs.pop('world_up_object', None)
+        weight = kwargs.pop('weight', 1.0)
+        maintain_offset = kwargs.pop('maintain_offset', False)
+
+        if world_up_object:
+            kwargs['worldUpObject'] = world_up_object
+
         return maya.cmds.aimConstraint(
-            point_to, source, aim=aim_axis, upVector=up_axis,
-            worldUpVector=world_up_axis, worldUpType=world_up_type, weight=weight
-        )
+            point_to, source, aim=aim_axis, upVector=up_axis, worldUpVector=world_up_axis,
+            worldUpType=world_up_type, weight=weight, mo=maintain_offset, **kwargs)
+
+    @staticmethod
+    def get_selection_groups(name=None):
+        """
+        Returns all selection groups (sets) in current DCC scene
+        :return: list(str)
+        """
+
+        if name:
+            return maya.cmds.ls(name, type='objectSet')
+        else:
+            return maya.cmds.ls(type='objectSet')
+
+    @staticmethod
+    def node_is_selection_group(node):
+        """
+        Returns whether or not given node is a selection group (set)
+        :param node: str
+        :return: bool
+        """
+
+        return MayaDcc.node_type(node) == 'objectSet'
+
+    @staticmethod
+    def create_selection_group(name, empty=False):
+        """
+        Creates a new DCC selection group
+        :param name: str
+        :param empty: bool
+        :return: str
+        """
+
+        return maya.cmds.sets(name=name, empty=empty)
+
+    @staticmethod
+    def add_node_to_selection_group(node, selection_group_name):
+        """
+        Adds given node to selection group
+        :param node: str
+        :param selection_group_name: str
+        :return: str
+        """
+
+        return maya.cmds.sets(node, edit=True, forceElement=selection_group_name)
+
+    @staticmethod
+    def zero_transform_attribute_channels(node):
+        """
+        Sets to zero all transform attribute channels of the given node (transform rotate and scale)
+        :param node: str
+        """
+
+        return transform.zero_transform_channels(node)
 
     @staticmethod
     def zero_scale_joint(jnt):
@@ -2426,6 +3533,90 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.joint(jnt, edit=True, zeroScaleOrient=True)
+
+    @staticmethod
+    def set_joint_orient(jnt, orient_axis, secondary_orient_axis=None, **kwargs):
+        """
+        Sets the joint orientation and scale orientation so that the axis indicated by the first letter in the
+        argument will be aligned with the vector from this joint to its first child joint. For example, if the
+        argument is "xyz", the x-axis will point towards the child joint. The alignment of the remaining two
+        joint orient axes are dependent on whether or not the -sao/-secondaryAxisOrient flag is used.
+        If the secondary_orient_axis flag is used, see the documentation for that flag for how the remaining
+        axes are aligned. In the absence of a user specification for the secondary axis orientation, the rotation
+        axis indicated by the last letter in the argument will be aligned with the vector perpendicular to first
+        axis and the vector from this joint to its parent joint. The remaining axis is aligned according the right
+        hand rule. If the argument is "none", the joint orientation will be set to zero and its effect to the
+        hierarchy below will be offset by modifying the scale orientation. The flag will be ignored if: A. the
+        joint has non-zero rotations when the argument is not "none". B. the joint does not have child joint, or
+        the distance to the child joint is zero when the argument is not "none". C. either flag -o or -so is set.
+        :param jnt: str, can be one of the following strings: xyz, yzx, zxy, zyx, yxz, xzy, none
+        :param orient_axis: str, can be one of the following strings: xyz, yzx, zxy, zyx, yxz, xzy, none
+        :param secondary_orient_axis: str, one of the following strings: xup, xdown, yup, ydown, zup, zdown, none. This
+            flag is used in conjunction with the -oj/orientJoint flag. It specifies the scene axis that the second
+            axis should align with. For example, a flag combination of "-oj yzx -sao yup" would result in the y-axis
+             pointing down the bone, the z-axis oriented with the scene's positive y-axis, and the x-axis oriented
+             according to the right hand rule.
+         :param:
+        :return:
+        """
+
+        zero_scale_joint = kwargs.get('zero_scale_joint', False)
+
+        return maya.cmds.joint(jnt, edit=True, zso=zero_scale_joint, oj=orient_axis, sao=secondary_orient_axis)
+
+    @staticmethod
+    def attach_joints(source_chain, target_chain, **kwargs):
+        """
+        Attaches a chain of joints to a matching chain
+        :param source_chain: list(str)
+        :param target_chain: list(str)
+        """
+
+        # 0 = Constraint; 1 = Matrix
+        attach_type = kwargs.get('attach_type', 0)
+
+        attach = joint_utils.AttachJoints(source_joints=source_chain, target_joints=target_chain)
+        attach.set_attach_type(attach_type)
+        attach.create()
+
+    @staticmethod
+    def create_hierarchy(transforms, replace_str=None, new_str=None):
+        """
+        Creates a transforms hierarchy with the given list of joints
+        :param transforms: list(str)
+        :param replace_str: str, if given this string will be replace with the new_str
+        :param new_str: str, if given replace_str will be replace with this string
+        :return: list(str)
+        """
+
+        build_hierarchy = joint_utils.BuildJointHierarchy()
+        build_hierarchy.set_transforms(transform)
+        if replace_str and new_str:
+            build_hierarchy.set_replace(replace_str, new_str)
+
+        return build_hierarchy.create()
+
+    @staticmethod
+    def duplicate_hierarchy(transforms, stop_at=None, force_only_these=None, replace_str=None, new_str=None):
+        """
+        Duplicates given hierarchy of transform nodes
+        :param transforms: list(str), list of joints to duplicate
+        :param stop_at: str, if given the duplicate process will be stop in the given node
+        :param force_only_these: list(str), if given only these list of transforms will be duplicated
+        :param replace_str: str, if given this string will be replace with the new_str
+        :param new_str: str, if given replace_str will be replace with this string
+        :return: list(str)
+        """
+
+        duplicate_hierarchy = transform.DuplicateHierarchy(transforms[0])
+        if stop_at:
+            duplicate_hierarchy.stop_at(stop_at)
+        if force_only_these:
+            duplicate_hierarchy.only_these(force_only_these)
+        if replace_str and new_str:
+            duplicate_hierarchy.set_replace(replace_str, new_str)
+
+        return duplicate_hierarchy.create()
 
     @staticmethod
     def delete_history(node):
@@ -2452,6 +3643,35 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return transform.freeze_transforms(
             node=node, translate=translate, rotate=rotate, scale=scale, normal=normal,
             preserve_normals=preserve_normals, clean_history=clean_history)
+
+    @staticmethod
+    def move_pivot_to_zero(node):
+        """
+        Moves pivot of given node to zero (0, 0, 0 in the world)
+        :param node: str
+        """
+
+        return maya.cmds.xform(node, ws=True, a=True, piv=(0, 0, 0))
+
+    @staticmethod
+    def combine_meshes(meshes_to_combine=None, **kwargs):
+        """
+        Combines given meshes into one unique mesh. If no meshes given, all selected meshes will be combined
+        :param meshes_to_combine: list(str) or None
+        :return: str
+        """
+
+        construction_history = kwargs.get('construction_history', True)
+        if not meshes_to_combine:
+            meshes_to_combine = maya.cmds.ls(sl=True, long=True)
+        if not meshes_to_combine:
+            return
+
+        out, unite_node = maya.cmds.polyUnite(*meshes_to_combine)
+        if not construction_history:
+            MayaDcc.delete_history(out)
+
+        return out
 
     @staticmethod
     def reset_node_transforms(node, **kwargs):
@@ -2705,6 +3925,562 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             return name.change_suffix_padding(obj_names=obj_names, add_underscore=add_underscore, padding=padding)
 
     @staticmethod
+    def node_vertex_name(mesh_node, vertex_id):
+        """
+        Returns the full name of the given node vertex
+        :param mesh_node: str
+        :param vertex_id: int
+        :return: str
+        """
+
+        return '{}.vtx[{}]'.format(mesh_node, vertex_id)
+
+    @staticmethod
+    def total_vertices(mesh_node):
+        """
+        Returns the total number of vertices of the given geometry
+        :param mesh_node: str
+        :return: int
+        """
+
+        return maya.cmds.polyEvaluate(mesh_node, vertex=True)
+
+    @staticmethod
+    def node_vertex_object_space_translation(mesh_node, vertex_id=None):
+        """
+        Returns the object space translation of the vertex id in the given node
+        :param mesh_node: str
+        :param vertex_id: int
+        :return:
+        """
+
+        if vertex_id is not None:
+            vertex_name = MayaDcc.node_vertex_name(mesh_node=mesh_node, vertex_id=vertex_id)
+        else:
+            vertex_name = mesh_node
+
+        return maya.cmds.xform(vertex_name, objectSpace=True, q=True, translation=True)
+
+    @staticmethod
+    def node_vertex_world_space_translation(mesh_node, vertex_id=None):
+        """
+        Returns the world space translation of the vertex id in the given node
+        :param mesh_node: str
+        :param vertex_id: int
+        :return:
+        """
+
+        if vertex_id is not None:
+            vertex_name = MayaDcc.node_vertex_name(mesh_node=mesh_node, vertex_id=vertex_id)
+        else:
+            vertex_name = mesh_node
+
+        return maya.cmds.xform(vertex_name, worldSpace=True, q=True, translation=True)
+
+    @staticmethod
+    def set_node_vertex_object_space_translation(mesh_node, translate_list, vertex_id=None):
+        """
+        Sets the object space translation of the vertex id in the given node
+        :param mesh_node: str
+        :param translate_list: list
+        :param vertex_id: int
+        :return:
+        """
+
+        if vertex_id is not None:
+            vertex_name = MayaDcc.node_vertex_name(mesh_node=mesh_node, vertex_id=vertex_id)
+        else:
+            vertex_name = mesh_node
+
+        return maya.cmds.xform(vertex_name, objectSpace=True, t=translate_list)
+
+    @staticmethod
+    def set_node_vertex_world_space_translation(mesh_node, translate_list, vertex_id=None):
+        """
+        Sets the world space translation of the vertex id in the given node
+        :param mesh_node: str
+        :param translate_list: list
+        :param vertex_id: int
+        :return:
+        """
+
+        if vertex_id is not None:
+            vertex_name = MayaDcc.node_vertex_name(mesh_node=mesh_node, vertex_id=vertex_id)
+        else:
+            vertex_name = mesh_node
+
+        return maya.cmds.xform(vertex_name, worldSpace=True, t=translate_list)
+
+    @staticmethod
+    def create_nurbs_sphere(name='sphere', radius=1.0, **kwargs):
+        """
+        Creates a new NURBS sphere
+        :param name: str
+        :param radius: float
+        :return: str
+        """
+
+        axis = kwargs.get('axis', (0, 1, 0))
+        construction_history = kwargs.get('construction_history', True)
+
+        return maya.cmds.sphere(name=name, radius=radius, axis=axis, constructionHistory=construction_history)[0]
+
+    @staticmethod
+    def create_nurbs_cylinder(name='cylinder', radius=1.0, **kwargs):
+        """
+        Creates a new NURBS cylinder
+        :param name: str
+        :param radius: float
+        :return: str
+        """
+
+        axis = kwargs.get('axis', (0, 1, 0))
+        height_ratio = kwargs.get('height_ratio', 1)
+        construction_history = kwargs.get('construction_history', True)
+
+        return maya.cmds.cylinder(
+            name=name, ax=axis, ssw=0, esw=360, r=radius, hr=height_ratio, d=3,
+            ut=0, tol=0.01, s=8, nsp=1, ch=construction_history)[0]
+
+    @staticmethod
+    def rebuild_curve(curve, spans, **kwargs):
+        """
+        Rebuilds curve with given parameters
+        :param curve: str
+        :param spans: int
+        :param kwargs:
+        :return:
+        """
+
+        construction_history = kwargs.get('construction_history', True)
+        replace_original = kwargs.get('replace_original', False)
+        keep_control_points = kwargs.get('keep_control_points', False)
+        keep_end_points = kwargs.get('keep_end_points', True)
+        keep_tangents = kwargs.get('keep_tangents', True)
+        # Degree: 1: linear; 2: quadratic; 3: cubic; 5: quintic; 7: hepetic
+        degree = kwargs.get('degree', 3)
+        # Rebuild Type: 0: uniform; 1: reduce spans; 2: match knots; 3: remove multiple knots;
+        # 4: curvature; 5: rebuild ends; 6: clean
+        rebuild_type = kwargs.get('rebuild_type', 0)
+        # End Knots: 0: uniform end knots; 1: multiple end knots
+        end_knots = kwargs.get('end_knots', 0)
+        # Keep range: 0: reparametrize the resulting curve from 0 to 1; 1: keep the original curve parametrization;
+        # 2: reparametrize the result from 0 to number of spans
+        keep_range = kwargs.get('keep_range', 1)
+
+        return maya.cmds.rebuildCurve(
+            curve, spans=spans, rpo=replace_original, rt=rebuild_type, end=end_knots, kr=keep_range,
+            kcp=keep_control_points, kep=keep_end_points, kt=keep_tangents, d=degree, ch=construction_history)
+
+    @staticmethod
+    def convert_surface_to_bezier(surface, **kwargs):
+        """
+        Rebuilds given surface as a bezier surface
+        :param surface: str
+        :return:
+        """
+
+        replace_original = kwargs.get('replace_original', True)
+        construction_history = kwargs.get('construction_history', True)
+        spans_u = kwargs.get('spans_u', 4)
+        spans_v = kwargs.get('spans_v', 4)
+        degree_u = kwargs.get('degree_u', 3)
+        degree_v = kwargs.get('degree_v', 3)
+
+        return maya.cmds.rebuildSurface(
+            surface, ch=construction_history, rpo=replace_original,
+            su=spans_u, sv=spans_v, rt=7, du=degree_u, dv=degree_v)
+
+    @staticmethod
+    def create_locator(name='loc'):
+        """
+        Creates a new locator
+        :param name: str
+        :return: str
+        """
+
+        return maya.cmds.spaceLocator(name=name)[0]
+
+    @staticmethod
+    def create_cluster(objects, cluster_name='cluster', **kwargs):
+        """
+        Creates a new cluster in the given objects
+        :param objects: list(str)
+        :param cluster_name: str
+        :return: list(str)
+        """
+
+        relative = kwargs.pop('relative', False)
+
+        return maya.cmds.cluster(objects, n=MayaDcc.find_unique_name(cluster_name), relative=relative, **kwargs)
+
+    @staticmethod
+    def create_decompose_matrix_node(node_name):
+        """
+        Creates a new decompose matrix node
+        :param node_name: str
+        :return: str
+        """
+
+        return maya.cmds.createNode('decomposeMatrix', name=node_name)
+
+    @staticmethod
+    def create_empty_mesh(mesh_name):
+        """
+        Creates a new empty mesh
+        :param mesh_name:str
+        :return: str
+        """
+
+        return maya.cmds.polyCreateFacet(
+            name=mesh_name, ch=False, tx=1, s=1, p=[(0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)])
+
+    @staticmethod
+    def create_circle_curve(name, **kwargs):
+        """
+        Creates a new circle control
+        :param name: str
+        :param kwargs:
+        :return: str
+        """
+
+        construction_history = kwargs.get('construction_history', True)
+        normal = kwargs.get('normal', (1, 0, 0))
+
+        return maya.cmds.circle(n=name, normal=normal, ch=construction_history)[0]
+
+    @staticmethod
+    def create_joint(joint_name):
+        """
+        Creates a new joint
+        :param joint_name: str
+        :return: str
+        """
+
+        return maya.cmds.joint(name=joint_name)
+
+    @staticmethod
+    def orient_joint(joint, **kwargs):
+        """
+        Orients given joint
+        :param joint: str
+        :return:
+        """
+
+        # Aim At: 0: aim at world X; 1: aim at world Y; 2: aim at world Z; 3: aim at immediate child;
+        # 4: aim at immediate parent; 5: aim at local parent (aiming at the parent and the reverseing the direction)
+        aim_at = kwargs.get('aim_at', 3)
+        # Aim Up At: 0: parent rotation:; 1: child position; 2: parent position; 3: triangle plane
+        aim_up_at = kwargs.get('aim_up_at', 0)
+
+        orient = joint_utils.OrientJointAttributes(joint)
+        orient.set_default_values()
+        orient = joint_utils.OrientJoint(joint)
+        orient.set_aim_at(aim_at)
+        orient.set_aim_up_at(aim_up_at)
+
+        return orient.run()
+
+    @staticmethod
+    def create_ik_handle(name, start_joint, end_joint, solver_type=None, curve=None, **kwargs):
+        """
+        Creates a new IK handle
+        :param name: str
+        :param start_joint: str
+        :param end_joint: str
+        :param solver_type: str
+        :param curve: str
+        :param kwargs:
+        :return: str
+        """
+
+        if solver_type is None:
+            solver_type = ik_utils.IkHandle.SOLVER_SPLINE
+
+        handle = ik_utils.IkHandle(name)
+        handle.set_solver(solver_type)
+        handle.set_start_joint(start_joint)
+        handle.set_end_joint(end_joint)
+        if curve and maya.cmds.objExists(curve):
+            handle.set_curve(curve)
+
+        return handle.create()
+
+    @staticmethod
+    def create_spline_ik_stretch(
+            curve, joints, node_for_attribute=None, create_stretch_on_off=False, stretch_axis='X', **kwargs):
+        """
+        Makes the joints stretch on the curve
+        :param curve: str, name of the curve that joints are attached via Spline IK
+        :param joints: list<str>, list of joints attached to Spline IK
+        :param node_for_attribute: str, name of the node to create the attributes on
+        :param create_stretch_on_off: bool, Whether to create or not extra attributes to slide the stretch value on/off
+        :param stretch_axis: str('X', 'Y', 'Z'), axis that the joints stretch on
+        :param kwargs:
+        """
+
+        create_bulge = kwargs.get('create_bulge', True)
+
+        return ik_utils.create_spline_ik_stretch(
+            curve, joints, node_for_attribute=node_for_attribute, create_stretch_on_off=create_stretch_on_off,
+            scale_axis=stretch_axis, create_bulge=create_bulge)
+
+    @staticmethod
+    def create_cluster_surface(
+            surface, name, first_cluster_pivot_at_start=True, last_cluster_pivot_at_end=True, join_ends=False):
+        """
+        Creates a new clustered surface
+        :param surface: str
+        :param name: str
+        :param first_cluster_pivot_at_start: str
+        :param last_cluster_pivot_at_end: str
+        :param join_ends: bool
+        :return: list(str), list(str)
+        """
+
+        cluster_surface = deform_utils.ClusterSurface(surface, name)
+        cluster_surface.set_first_cluster_pivot_at_start(first_cluster_pivot_at_start)
+        cluster_surface.set_last_cluster_pivot_at_end(last_cluster_pivot_at_end)
+        cluster_surface.set_join_ends(join_ends)
+        cluster_surface.create()
+
+        return cluster_surface.get_cluster_handle_list(), cluster_surface.get_cluster_list()
+
+    @staticmethod
+    def create_cluster_curve(
+        curve, name, first_cluster_pivot_at_start=True, last_cluster_pivot_at_end=True, join_ends=False):
+        """
+        Creates a new clustered curve
+        :param curve: str
+        :param name: str
+        :param first_cluster_pivot_at_start: str
+        :param last_cluster_pivot_at_end: str
+        :param last_cluster_pivot_at_end: str
+        :param join_ends: bool
+        :return: list(str), list(str)
+        """
+
+        cluster_curve = deform_utils.ClusterCurve(curve, name)
+        cluster_curve.set_first_cluster_pivot_at_start(first_cluster_pivot_at_start)
+        cluster_curve.set_last_cluster_pivot_at_end(last_cluster_pivot_at_end)
+        cluster_curve.set_join_ends(join_ends)
+        cluster_curve.create()
+
+        return cluster_curve.get_cluster_handle_list(), cluster_curve.get_cluster_list()
+
+
+    @staticmethod
+    def create_wire(surface, curves, name='wire', **kwargs):
+        """
+        Creates a new wire that wires given surface/curve to given curves
+        :param surface:str
+        :param curves: list(str)
+        :param name:str
+        :param kwargs:
+        :return: str, str
+        """
+
+        curves = python.force_list(curves)
+        dropoff_distance = kwargs.get('dropoff_distance',  [])
+        group_with_base = kwargs.get('group_with_base', False)
+
+        return maya.cmds.wire(surface, w=curves, n=name, dds=dropoff_distance, gw=group_with_base)
+
+
+    @staticmethod
+    def attach_transform_to_surface(transform, surface, u=None, v=None, constraint=False, attach_type=None):
+        """
+        Attaches a transform to given surface
+        If no U an V values are given, the command will try to find the closest position on the surface
+        :param transform: str, str, name of a transform to follicle to the surface
+        :param surface: str, name of a surface to attach follicle to
+        :param u: float, U value to attach to
+        :param v: float, V value to attach to
+        :param constraint: bool
+        :param attach_type: bool
+        :return: str, name of the follicle created
+        """
+
+        if attach_type is None:
+            attach_type = 0
+
+        # Follicle
+        if attach_type == 0:
+            return follicle_utils.follicle_to_surface(transform, surface, constraint=constraint)
+        else:
+            return rivet_utils.attach_to_surface(transform, surface, constraint=constraint)
+
+    @staticmethod
+    def create_curve_from_transforms(transforms, spans=None, description='from_transforms'):
+        """
+        Creates a curve from a list of transforms. Each transform will define a curve CV
+        Useful when creating a curve from a joint chain (spines/tails)
+        :param transforms: list<str>, list of tranfsorms to generate the curve from. Positions will be used to place CVs
+        :param spans: int, number of spans the final curve should have
+        :param description: str, description to given to the curve
+        :return: str name of the new curve
+        """
+
+        return curve_utils.transforms_to_curve(transforms=transforms, spans=spans, description=description)
+
+    @staticmethod
+    def create_nurbs_surface_from_transforms(transforms, name, spans=-1, offset_axis='Y', offset_amount=1):
+        """
+        Creates a NURBS surface from a list of transforms
+        Useful for creating a NURBS surface that follows a spine or tail
+        :param transforms: list<str>, list of transforms
+        :param name: str, name of the surface
+        :param spans: int, number of spans to given to the final surface.
+        If -1, the surface will have spans based on the number of transforms
+        :param offset_axis: str, axis to offset the surface relative to the transform ('X', 'Y' or 'Z')
+        :param offset_amount: int, amount the surface offsets from the transform
+        :return: str, name of the NURBS surface
+        """
+
+        return geo_utils.transforms_to_nurbs_surface(
+            transforms, name, spans=spans, offset_axis=offset_axis, offset_amount=offset_amount)
+
+    @staticmethod
+    def create_follow_group(source_transform, target_transform, **kwargs):
+        """
+        Creates a group above a target transform that is constrained to the source transform
+        :param source_transform: str, name of the transform to follow
+        :param target_transform: str, name of the transform make follow
+        :param source_transform:
+        :param target_transform:
+        :param kwargs:
+        :return:
+        """
+
+        return space_utils.create_follow_group(source_transform, target_transform)
+
+    @staticmethod
+    def get_constraints():
+        """
+        Returns all constraints nodes in current DCC scene
+        :return: list(str)
+        """
+
+        return maya.cmds.listRelatives(type='constraint')
+
+    @staticmethod
+    def node_constraint(node, constraint_type):
+        """
+        Returns a constraint on the transform with the given type
+        :param node: str
+        :param constraint_type: str
+        :return: str
+        """
+
+        cns = constraint_utils.Constraint()
+
+        return cns.get_constraint(node, constraint_type=constraint_type)
+
+    @staticmethod
+    def node_constraints(node):
+        """
+        Returns all constraints a node is linked to
+        :param node: str
+        :return: list(str)
+        """
+
+        return maya.cmds.listRelatives(node, type='constraint')
+
+    @staticmethod
+    def node_transforms(node):
+        """
+        Returns all transforms nodes of a given node
+        :param node: str
+        :return: list(str)
+        """
+
+        return maya.cmds.listRelatives(node, type='transform')
+
+    @staticmethod
+    def node_joints(node):
+        """
+        Returns all oints nodes of a give node
+        :param node: str
+        :return: listr(str)
+        """
+
+        return maya.cmds.listRelatives(node, type='joint')
+
+    @staticmethod
+    def node_shape_type(node):
+        """
+        Returns the type of the given shape node
+        :param node: str
+        :return: str
+        """
+
+        return shape_utils.get_shape_node_type(node)
+
+    @staticmethod
+    def delete_node_constraints(node):
+        """
+        Removes all constraints applied to the given node
+        :param node: str
+        """
+
+        return maya.cmds.delete(maya.cmds.listRelatives(node, ad=True, type='constraint'))
+
+    @staticmethod
+    def get_color_of_side(side='C', sub_color=False):
+        """
+        Returns override color of the given side
+        :param side: str
+        :param sub_color: fool, whether to return a sub color or not
+        :return:
+        """
+
+        if MayaDcc.name_is_center(side):
+            side = 'C'
+        elif MayaDcc.name_is_left(side):
+            side = 'L'
+        elif MayaDcc.name_is_right(side):
+            side = 'R'
+        else:
+            side = 'C'
+
+        if not sub_color:
+            if side == 'L':
+                return 6
+            elif side == 'R':
+                return 13
+            else:
+                return 17
+        else:
+            if side == 'L':
+                return 18
+            elif side == 'R':
+                return 20
+            else:
+                return 21
+
+    @staticmethod
+    def set_parent_controller(control, parent_controller):
+        """
+        Sets the parent controller of the given control
+        :param control: str
+        :param parent_controller: str
+        """
+
+        return maya.cmds.controller(control, parent_controller, p=True)
+
+    @staticmethod
+    def distance_between_nodes(source_node=None, target_node=None):
+        """
+        Returns the distance between 2 given nodes
+        :param str source_node: first node to start measuring distance from. If not given, first selected node will be used.
+        :param str target_node: second node to end measuring distance to. If not given, second selected node will be used.
+        :return: distance between 2 nodes.
+        :rtype: float
+        """
+
+        return mathutils.distance_between_nodes(source_node, target_node)
+
+    @staticmethod
     def dock_widget(widget, *args, **kwargs):
         """
         Docks given widget into current DCC UI
@@ -2788,6 +4564,14 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
 
     def get_count(self):
         return maya.cmds.progressBar(self.progress_ui, query=True, maxValue=True)
+
+    def set_progress(self, value):
+        """
+        Set progress bar progress value
+        :param value: int
+        """
+
+        return maya.cmds.progressBar(self.progress_ui, edit=True, progress=value)
 
     def inc(self, inc=1):
         """
@@ -2888,3 +4672,4 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
 
 
 register.register_class('Dcc', MayaDcc)
+register.register_class('DccProgressBar', MayaProgessBar)
