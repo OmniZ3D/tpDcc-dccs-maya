@@ -21,6 +21,10 @@ TRANSFORM_SIDES = {
         'short': [('_L', '_R'), ('_l', '_r')],
         'long': [('_left', '_right')],
     },
+    'mid': {
+        'short': [('_L_', '_R_'), ('_l_', '_r_')],
+        'long': [('_left_', '_right_')]
+    },
     'start': {
         'short': [('L_', 'R_'), ('l_', 'r_')],
         'long': [('left_', 'right_')]
@@ -1057,7 +1061,7 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
                     var = attribute.NumericAttribute('radius')
                     var.set_node(other)
                     var.set_value(radius)
-                if not maya.cmds.getAttr('{}.radius'.format(other), long=True):
+                if not maya.cmds.getAttr('{}.radius'.format(other), lock=True):
                     maya.cmds.setAttr('{}.radius'.format(other), radius)
                 maya.cmds.move(
                     new_xform[0] * -1, new_xform[1], new_xform[2],
@@ -1126,6 +1130,18 @@ def find_transform_right_side(transform, check_if_exists=True):
             if (maya.cmds.objExists(other) and check_if_exists) or not check_if_exists:
                 return other
 
+    for side in TRANSFORM_SIDES['mid']['short']:
+        if side[0] in transform:
+            other = transform.replace(side[0], side[1])
+            if (maya.cmds.objExists(other) and check_if_exists) or not check_if_exists:
+                return other
+
+    for side in TRANSFORM_SIDES['mid']['long']:
+        if side[0] in transform:
+            other = transform.replace(side[0], side[1])
+            if (maya.cmds.objExists(other) and check_if_exists) or not check_if_exists:
+                return other
+
     for i, side in enumerate(TRANSFORM_SIDES['start']['short']):
         if transform.startswith(side[0]) and not transform.endswith(TRANSFORM_SIDES['end']['short'][i][1]):
             other = name.replace_string_at_start(transform, side[0], side[1])
@@ -1172,6 +1188,18 @@ def find_transform_left_side(transform, check_if_exists=True):
                 if transform.startswith(start_side[0]):
                     continue
 
+            if (maya.cmds.objExists(other) and check_if_exists) or not check_if_exists:
+                return other
+
+    for side in TRANSFORM_SIDES['mid']['short']:
+        if side[0] in transform:
+            other = transform.replace(side[0], side[1])
+            if (maya.cmds.objExists(other) and check_if_exists) or not check_if_exists:
+                return other
+
+    for side in TRANSFORM_SIDES['mid']['long']:
+        if side[0] in transform:
+            other = transform.replace(side[0], side[1])
             if (maya.cmds.objExists(other) and check_if_exists) or not check_if_exists:
                 return other
 
@@ -1357,8 +1385,8 @@ def create_buffer_group(node_name, suffix='buffer', use_duplicate=False, copy_sc
             pass
 
     if use_duplicate:
-        buffer_grp = maya.cmds.duplicate(node_name, po=True)[
-            0]  # TODO: Sometimes Maya does not duplicate with proper values
+        # TODO: Sometimes Maya does not duplicate with proper
+        buffer_grp = maya.cmds.duplicate(node_name, po=True)[0]
         attribute.remove_user_defined_attributes(buffer_grp)
         buffer_grp = maya.cmds.rename(buffer_grp, name_utils.find_unique_name(full_name))
     else:
@@ -1380,6 +1408,23 @@ def create_buffer_group(node_name, suffix='buffer', use_duplicate=False, copy_sc
     attribute.connect_group_with_message(buffer_grp, node_name, suffix)
 
     return buffer_grp
+
+
+def get_buffer_group(node, suffix='buffer'):
+    """
+    Returns buffer group above given node
+    :param node: str
+    :param suffix: str, suffix given when creating buffer group
+    :return: str
+    """
+
+    attr_name = '{}_group'.format(suffix)
+    node_and_attr = '{}.{}'.format(node, attr_name)
+    if not maya.cmds.objExists(node_and_attr):
+        return
+    input_node = attribute.get_attribute_input(node_and_attr, node_only=True)
+
+    return input_node
 
 
 def get_shape_bounding_box(shape):

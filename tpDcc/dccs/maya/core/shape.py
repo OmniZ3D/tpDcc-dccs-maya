@@ -174,28 +174,29 @@ def get_shape_node_type(node_name):
     :return: str
     """
 
-    shapes = get_shapes(node)
+    shapes = get_shapes(node_name)
     if shapes:
         return maya.cmds.nodeType(shapes[0])
 
 
-def get_shapes_of_type(node_name, shape_type=None, no_intermediate=False):
+def get_shapes_of_type(node_name, shape_type=None, full_path=True, no_intermediate=False):
     """
     Returns a list of shapes under a transform parent
     :param node_name: str, transform to list parent for
     :param shape_type: str, shape type to get
+    :param full_path: bool
     :param no_intermediate: bool, list non intermediate shapes
     :return: list
     """
 
     if node.is_a_shape(node_name):
-        parent = maya.cmds.listRelatives(node_name, p=True, f=True)
-        return maya.cmds.listRelatives(parent, s=True, f=True, ni=no_intermediate)
+        parent = maya.cmds.listRelatives(node_name, p=True, f=full_path)
+        return maya.cmds.listRelatives(parent, s=True, f=full_path, ni=no_intermediate)
 
     if shape_type:
-        maya.cmds.listRelatives(node_name, s=True, f=True, type=shape_type, ni=no_intermediate)
+        maya.cmds.listRelatives(node_name, s=True, f=full_path, type=shape_type, ni=no_intermediate)
     else:
-        return maya.cmds.listRelatives(node_name, s=True, f=True, ni=no_intermediate)
+        return maya.cmds.listRelatives(node_name, s=True, f=full_path, ni=no_intermediate)
 
 
 def get_shapes_generator(mobj):
