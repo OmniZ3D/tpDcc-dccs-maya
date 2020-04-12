@@ -208,7 +208,6 @@ def TryExcept(fn):
     return wrapper
 
 
-# region Functions
 def viewport_off(f):
     """
     Function decorator that turns off Maya display while the function is running

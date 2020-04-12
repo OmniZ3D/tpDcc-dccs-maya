@@ -140,13 +140,13 @@ def get_maya_window(window_name=None, wrap_instance=True):
                     return qt_obj
             ptr = maya.OpenMayaUI.MQtUtil.findControl(window_name)
             if ptr is not None:
-                return qtutils.wrapinstance(ptr, QWidget)
+                return qtutils.wrapinstance(ptr, QMainWindow)
         else:
             ptr = maya.OpenMayaUI.MQtUtil.mainWindow()
             if ptr is not None:
                 return qtutils.wrapinstance(ptr, QMainWindow)
 
-    if isinstance(window_name, QWidget):
+    if isinstance(window_name, (QWidget, QMainWindow)):
         return window_name
     search = window_name or 'MayaWindow'
     for obj in QApplication.topLevelWidgets():

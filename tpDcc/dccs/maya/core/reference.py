@@ -286,7 +286,7 @@ def replace_reference(ref_node, ref_path):
     """
     Replaces the reference file path for a given reference node
     :param ref_node: str, reference node to replace file path for
-    :param ref_path: str, new reference file pathh
+    :param ref_path: str, new reference file path
     """
 
     check_reference(ref_node)

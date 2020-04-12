@@ -121,12 +121,12 @@ def import_scene(file_path, force=True, do_save=True):
     maya.cmds.file(file_path, i=True, force=force, iv=True, pr=True)
 
 
-def open_scene(file_path, force=True, save=True):
+def open_scene(file_path, force=True, do_save=True):
     """
     Open a Maya scene given its file path
     :param file_path: str, Path of the Maya scene to open
     :param force: bool, True if we want to save the scene without any prompt dialog
-    :param save: bool, True if you want to save the current scene before opening a new scene
+    :param do_save: bool, True if you want to save the current scene before opening a new scene
     """
 
     if save:
@@ -150,7 +150,7 @@ def reference_scene(file_path, namespace=None, save=True):
         if split_name:
             namespace = string.join(split_name[:-1], '_')
 
-        maya.cmds.file(file_path, reference=True, glong=True, mergeNamespacesOnClash=False, namespace=namespace)
+    maya.cmds.file(file_path, reference=True, glong=True, mergeNamespacesOnClash=False, namespace=namespace)
 
 
 def save():
