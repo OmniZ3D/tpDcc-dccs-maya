@@ -4292,7 +4292,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         curves = python.force_list(curves)
-        dropoff_distance = kwargs.get('dropoff_distance',  [])
+        dropoff_distance = kwargs.get('dropoff_distance', [])
         group_with_base = kwargs.get('group_with_base', False)
 
         return maya.cmds.wire(surface, w=curves, n=name, dds=dropoff_distance, gw=group_with_base)
