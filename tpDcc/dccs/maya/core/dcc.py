@@ -138,6 +138,18 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return gui.get_maya_window()
 
     @staticmethod
+    def get_main_menubar():
+        """
+        Returns Qt object that references to the main DCC menubar
+        :return:
+        """
+
+        win = MayaDcc.get_main_window()
+        menu_bar = win.menuBar()
+
+        return menu_bar
+
+    @staticmethod
     def is_window_floating(window_name):
         """
         Returns whether or not DCC window is floating
