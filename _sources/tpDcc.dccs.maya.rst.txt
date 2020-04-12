@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    tpDcc.dccs.maya.core
    tpDcc.dccs.maya.data
@@ -16,6 +17,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    tpDcc.dccs.maya.loader
    tpDcc.dccs.maya.register

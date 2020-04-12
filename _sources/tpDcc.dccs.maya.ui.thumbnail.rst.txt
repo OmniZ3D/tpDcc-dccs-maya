@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.ui.thumbnail module
+===================================
+
+.. automodule:: tpDcc.dccs.maya.ui.thumbnail
+   :members:
+   :undoc-members:
+   :show-inheritance:

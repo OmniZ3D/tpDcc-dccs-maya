@@ -5,6 +5,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    tpDcc.dccs.maya.data.base
    tpDcc.dccs.maya.data.curve

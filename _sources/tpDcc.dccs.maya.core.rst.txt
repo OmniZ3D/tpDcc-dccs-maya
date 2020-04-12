@@ -5,6 +5,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    tpDcc.dccs.maya.core.animation
    tpDcc.dccs.maya.core.api
@@ -61,7 +62,6 @@ Submodules
    tpDcc.dccs.maya.core.space
    tpDcc.dccs.maya.core.standin
    tpDcc.dccs.maya.core.symmetry
-   tpDcc.dccs.maya.core.thumbnail
    tpDcc.dccs.maya.core.time
    tpDcc.dccs.maya.core.transform
    tpDcc.dccs.maya.core.vertexcolor
