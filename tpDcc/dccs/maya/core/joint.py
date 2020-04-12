@@ -1336,8 +1336,6 @@ def create_joints_along_curve(curve, joint_count, joint_description='new', attac
             maya.cmds.connectAttr('{}.param'.format(new_joint), '{}.parameter'.format(attach_node))
         current_length += part_length
         if create_controls:
-
-
             raise NotImplementedError('create controls functionality not implemented yet!')
 
         joints.append(new_joint)

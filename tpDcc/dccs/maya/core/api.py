@@ -1421,4 +1421,3 @@ class KeyframeFunction(MayaFunction, object):
 
     def set_pre_infinity(self, infinity_type):
         self.obj.setPreInfinityType(infinity_type)
-

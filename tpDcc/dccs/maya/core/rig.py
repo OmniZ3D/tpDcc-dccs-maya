@@ -352,7 +352,9 @@ class StretchyChain(object):
     def _create_offsets(self, divide_distance):
         stretch_offsets = list()
 
-        plus_total_offset = tp.Dcc.create_node(node_name=tp.Dcc.find_unique_name('plusMinusAverage_total_offset_{}'.format(self._name)), node_type='plusMinusAverage')
+        plus_total_offset = tp.Dcc.create_node(
+            node_name=tp.Dcc.find_unique_name('plusMinusAverage_total_offset_{}'.format(
+                self._name)), node_type='plusMinusAverage')
         self._plus_total_offset = plus_total_offset
         tp.Dcc.set_integer_attribute_value(plus_total_offset, 'operation', 3)
 
@@ -363,7 +365,8 @@ class StretchyChain(object):
             tp.Dcc.add_double_attribute(multiply, var_name, min_value=0.1, default_value=self._scale_offset)
 
             if self._scale_offset != 1:
-                offset_multiply = tp.Dcc.create_node(node_name='multiplyDivide_scaleOffset', node_type='multiplyDivide')
+                offset_multiply = tp.Dcc.create_node(
+                    node_name='multiplyDivide_scaleOffset', node_type='multiplyDivide')
                 tp.Dcc.connect_attribute(multiply, var_name, offset_multiply, 'input1X')
                 offset_value = 1.0 / self._scale_offset
                 tp.Dcc.set_float_attribute_value(offset_multiply, 'input2X', offset_value)
@@ -417,7 +420,7 @@ class StretchyChain(object):
         tp.Dcc.connect_attribute(self._attribute_node, var_stretch, multiply, 'offset{}'.format(index))
         child_joints = tp.Dcc.node_joints(jnt)
         if child_joints:
-            dst = tp.Dcc.distance_between_nodes(jnt ,child_joints[0])
+            dst = tp.Dcc.distance_between_nodes(jnt, child_joints[0])
             length = tp.Dcc.get_attribute_value(self._orig_distance, 'input1X')
             length += dst
             tp.Dcc.set_float_attribute_value(self._orig_distance, 'input1X', length)
@@ -762,7 +765,8 @@ class SoftIk(object):
     # =================================================================================================================
 
     def _rename(self, old_name, new_name):
-        return tp.Dcc.rename_Node(old_name, tp.Dcc.find_unique_name('{}_{}_{}'.format(tp.Dcc.nodetype(old_name), new_name, self._description)))
+        return tp.Dcc.rename_Node(old_name, tp.Dcc.find_unique_name(
+            '{}_{}_{}'.format(tp.Dcc.nodetype(old_name), new_name, self._description)))
 
     def _add_attribute(self, node, attribute_name, default=0):
         tp.Dcc.add_integer_attribute(node, attribute_name, default_value=default, keyable=True)
@@ -811,7 +815,7 @@ class SoftIk(object):
         if not self._default_distance_attribute:
             tp.Dcc.set_float_attribute_value(subtract_end_soft, 'input1D[0]', chain_distance)
         else:
-             maya.cmds.connectAttr(self._default_distance_attribute, '{}.input1D[0]'.format(subtract_end_soft))
+            maya.cmds.connectAttr(self._default_distance_attribute, '{}.input1D[0]'.format(subtract_end_soft))
         tp.Dcc.connect_attribute(power_mult_soft, 'outputX', subtract_end_soft, 'input1D[1]')
         inside_condition = self._rename(tp.Dcc.create_node('condition'), 'insideSoft')
         maya.cmds.connectAttr(self._control_distance_attribute, '{}.firstTerm'.format(inside_condition))

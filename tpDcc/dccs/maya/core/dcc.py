@@ -477,7 +477,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param kwargs:
         """
 
-        relative=kwargs.get('relative', False)
+        relative = kwargs.get('relative', False)
 
         return maya.cmds.rotate(x, y, z, node, relative=relative)
 
@@ -4260,7 +4260,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
     @staticmethod
     def create_cluster_curve(
-        curve, name, first_cluster_pivot_at_start=True, last_cluster_pivot_at_end=True, join_ends=False):
+            curve, name, first_cluster_pivot_at_start=True, last_cluster_pivot_at_end=True, join_ends=False):
         """
         Creates a new clustered curve
         :param curve: str
@@ -4280,7 +4280,6 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         return cluster_curve.get_cluster_handle_list(), cluster_curve.get_cluster_list()
 
-
     @staticmethod
     def create_wire(surface, curves, name='wire', **kwargs):
         """
@@ -4297,7 +4296,6 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         group_with_base = kwargs.get('group_with_base', False)
 
         return maya.cmds.wire(surface, w=curves, n=name, dds=dropoff_distance, gw=group_with_base)
-
 
     @staticmethod
     def attach_transform_to_surface(transform, surface, u=None, v=None, constraint=False, attach_type=None):
@@ -4484,8 +4482,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
     def distance_between_nodes(source_node=None, target_node=None):
         """
         Returns the distance between 2 given nodes
-        :param str source_node: first node to start measuring distance from. If not given, first selected node will be used.
-        :param str target_node: second node to end measuring distance to. If not given, second selected node will be used.
+        :param str source_node: first node to start measuring distance from.
+            If not given, first selected node will be used.
+        :param str target_node: second node to end measuring distance to.
+            If not given, second selected node will be used.
         :return: distance between 2 nodes.
         :rtype: float
         """
