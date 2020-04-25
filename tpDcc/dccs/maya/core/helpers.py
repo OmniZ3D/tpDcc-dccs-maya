@@ -461,8 +461,8 @@ def load_plugin(plugin_name, quiet=True):
     if not maya.cmds.pluginInfo(plugin_name, query=True, loaded=True):
         try:
             maya.cmds.loadPlugin(plugin_name, quiet=quiet)
-        except Exception as e:
-            LOGGER.error('Impossible to load plugin: {}'.format(plugin_name))
+        except Exception as exc:
+            LOGGER.error('Impossible to load plugin: {} | {}'.format(plugin_name, exc))
             return False
 
     return True

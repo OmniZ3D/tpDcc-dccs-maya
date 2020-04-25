@@ -444,6 +444,58 @@ def get_all_scene_nodes():
     return node.get_objects_of_mtype_iterator(obj_types)
 
 
+def get_all_parent_nodes(node_name):
+    """
+    Returns all parent nodes of the given Maya node
+    :param node_name: str, name of the Maya node
+    :return: list(str)
+    """
+
+    def _append_parents(node_name, node_list_):
+        """
+        Internal function to recursvely append parents to list
+        :param node_name: str
+        :param node_list_: list<str>
+        """
+
+        parents = maya.cmds.listRelatives(node_name, parent=True, fullPath=True, type='transform')
+        if parents:
+            for parent in parents:
+                node_list_.append(parent)
+                _append_parents(parent, node_list_)
+
+    node_list = list()
+    _append_parents(node_name, node_list)
+
+    return node_list
+
+
+def get_all_children_nodes(node_name):
+    """
+    Return all children nodes of the given node
+    :param node_name: str
+    :return: list<str>
+    """
+
+    def _append_children(node_name, node_list_):
+        """
+        Internal function to recursively append children to list
+        :param node_name: str
+        :param node_list_: list<str>
+        """
+
+        children = maya.cmds.listRelatives(node_name, fullPath=True, type='transform')
+        if children:
+            for child in children:
+                node_list_.append(child)
+                _append_children(child, node_list_)
+
+    node_list = list()
+    _append_children(node_name, node_list)
+
+    return node_list
+
+
 def get_sets():
     """
     Returns a list of sets found in the scene (outliner)
