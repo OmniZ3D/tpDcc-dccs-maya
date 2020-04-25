@@ -1157,7 +1157,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param node: str
         """
 
-        return maya.cmds.show(node)
+        return maya.cmds.showHidden(node)
 
     @staticmethod
     def hide_node(node):
@@ -2268,6 +2268,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.listConnections(node, type=connection_type)
 
     @staticmethod
+    def list_node_parents(node):
+        """
+        Returns all parent nodes of the given Maya node
+        :param node: str
+        :return: list(str)
+        """
+
+        return scene.get_all_parent_nodes(node)
+
+    @staticmethod
     def list_node_connections(node):
         """
         Returns all connections of the given node
@@ -2308,6 +2318,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.listConnections(node, source=False, destination=True)
 
     @staticmethod
+    def scene_is_modified():
+        """
+        Returns whether or not current opened DCC file has been modified by the user or not
+        :return: True if current DCC file has been modified by the user; False otherwise
+        :rtype: bool
+        """
+
+        return maya.cmds.file(query=True, modified=True)
+
+    @staticmethod
     def new_file(force=True):
         """
         Creates a new file
@@ -2324,7 +2344,19 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param force: bool
         """
 
-        return maya.cmds.file(file_path, o=True, f=force, returnNewNodes=True)
+        nodes = maya.cmds.file(file_path, o=True, f=force, returnNewNodes=True)
+
+        scene_ext = os.path.splitext(file_path)[-1]
+        scene_type = None
+        if scene_ext == '.ma':
+            scene_type = 'mayaAscii'
+        elif scene_ext == '.mb':
+            scene_type = 'mayaBinary'
+        if scene_type:
+            maya.mel.eval('$filepath = "{}";'.format(file_path))
+            maya.mel.eval('addRecentFile $filepath "{}";'.format(scene_type))
+
+        return nodes
 
     @staticmethod
     def import_file(file_path, force=True, **kwargs):
