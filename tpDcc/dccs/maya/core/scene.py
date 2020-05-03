@@ -150,7 +150,7 @@ def reference_scene(file_path, namespace=None, save=True):
         if split_name:
             namespace = string.join(split_name[:-1], '_')
 
-    maya.cmds.file(file_path, reference=True, glong=True, mergeNamespacesOnClash=False, namespace=namespace)
+    maya.cmds.file(file_path, reference=True, mergeNamespacesOnClash=False, namespace=namespace)
 
 
 def save():
