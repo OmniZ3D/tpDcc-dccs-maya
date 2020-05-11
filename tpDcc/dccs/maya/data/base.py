@@ -16,8 +16,6 @@ from tpDcc.core import data, scripts
 from tpDcc.libs.python import path, osplatform, mathlib, version
 from tpDcc.dccs.maya.core import constants, geometry, scene, helpers
 
-LOGGER = logging.getLogger()
-
 
 class DataTypes(data.DataTypes, object):
     MayaAscii = 'MayaAscii'
@@ -53,11 +51,11 @@ class MayaCustomData(data.CustomData, object):
             maya.cmds.viewFit(an=True)
             self._fix_camera()
         except Exception:
-            LOGGER.debug('Could not center view: {}'.format(traceback.format_exc()))
+            tp.logger.debug('Could not center view: {}'.format(traceback.format_exc()))
 
     def _fix_camera(self):
         camera_pos = maya.cmds.xform('persp', q=True, ws=True, t=True)
-        dst = mathlib.get_distance([0, 0, 0], camera_pos)
+        dst = mathlib.get_distance_between_vectors([0, 0, 0], camera_pos)
         maya.cmds.setAttr('persp.farClipPlane', dst * 10)
         near = 0.1
         if dst > 10000:
@@ -74,22 +72,19 @@ class MayaFileData(MayaCustomData, object):
 
         self.maya_file_type = self.get_maya_file_type()
 
-    # region Override Functions
     def get_data_title(self):
         return 'maya_file'
 
     def set_directory(self, directory):
         super(MayaFileData, self).set_directory(directory)
         self.file_path = path.join_path(directory, '{}.{}'.format(self.name, self.get_data_extension()))
-    # endregion
 
-    # region Public Functions
     def get_maya_file_type(self):
         return self.maya_binary
 
     def open(self, file_path=None):
         if not tp.is_maya():
-            LOGGER.warning('Maya data must be accessed from within Maya!')
+            tp.logger.warning('Maya data must be accessed from within Maya!')
             return
 
         open_file = None
@@ -98,7 +93,7 @@ class MayaFileData(MayaCustomData, object):
         if not open_file:
             file_path = self.get_file()
             if not path.is_file(file_path):
-                LOGGER.warning('Could not open file: {}'.format(file_path))
+                tp.logger.warning('Could not open file: {}'.format(file_path))
                 return
             open_file = file_path
 
@@ -107,7 +102,7 @@ class MayaFileData(MayaCustomData, object):
         try:
             maya.cmds.file(open_file, f=True, o=True, iv=True, pr=True)
         except Exception:
-            LOGGER.error('Impossible to open Maya file: {} | {}'.format(open_file, traceback.format_exc()))
+            tp.logger.error('Impossible to open Maya file: {} | {}'.format(open_file, traceback.format_exc()))
 
         self._after_open()
 
@@ -115,13 +110,10 @@ class MayaFileData(MayaCustomData, object):
 
         return top_transforms
 
-    def save(self, comment, create_version=True):
+    def export_data(self, comment='-', create_version=True, *args, **kwargs):
         if not tp.is_maya():
-            LOGGER.warning('Maya data must be accessed from within Maya!')
+            tp.logger.warning('Maya data must be saved from within Maya!')
             return
-
-        if not comment:
-            comment = '-'
 
         file_path = self.get_file()
         osplatform.get_permission(file_path)
@@ -150,8 +142,13 @@ class MayaFileData(MayaCustomData, object):
         return False
 
     def import_data(self, file_path=''):
+        """
+        Loads data object
+        :param file_path: str, file path of file to load
+        """
+
         if not tp.Dcc.get_name() == tp.Dccs.Maya:
-            LOGGER.warning('Data must be accessed from within Maya!')
+            tp.logger.warning('Data must be accessed from within Maya!')
             return
 
         if file_path:
@@ -159,7 +156,7 @@ class MayaFileData(MayaCustomData, object):
         else:
             import_file = self.get_file()
         if not path.is_file(import_file):
-            LOGGER.warning('Impossible to import invalid data file: {}'.format(file_path))
+            tp.logger.warning('Impossible to import invalid data file: {}'.format(file_path))
             return
 
         track = scene.TrackNodes()
@@ -175,7 +172,7 @@ class MayaFileData(MayaCustomData, object):
 
     def reference_data(self, file_path=''):
         if not tp.is_maya():
-            LOGGER.warning('Data must be accessed from within Maya!')
+            tp.logger.warning('Data must be accessed from within Maya!')
             return
 
         if file_path:
@@ -183,7 +180,7 @@ class MayaFileData(MayaCustomData, object):
         else:
             reference_file = self.get_file()
         if not path.is_file(reference_file):
-            LOGGER.warning('Impossible to reference invalid data file: {}'.format(file_path))
+            tp.logger.warning('Impossible to reference invalid data file: {}'.format(file_path))
             return
 
         track = scene.TrackNodes()
@@ -196,32 +193,9 @@ class MayaFileData(MayaCustomData, object):
 
         return top_transforms
 
-    def export_data(self, comment):
-
-        if not tp.is_maya():
-            LOGGER.warning('Data must be accessed from within Maya!')
-            return
-
-        file_path = self.get_file()
-
-        osplatform.get_permission(file_path)
-        self._handle_unknowns()
-        self._clean_scene()
-        maya.cmds.file(rename=file_path)
-        self._prepare_scene_for_export()
-
-        # maya.cmds.file(
-        # exportSelected=True, prompt=False, force=True, pr=True, ch=False,
-        # chn=True, exp=True, con=False, stx='never', type=self.maya_file_type)
-
-        version_file = version.VersionFile(file_path)
-        version_file.save(comment)
-
-        helpers.display_info('Export {} data'.format(self.name))
-
     def clean_student_license(self, file_path=''):
         if not tp.is_maya():
-            LOGGER.warning('Data must be accessed from within Maya!')
+            tp.logger.warning('Data must be accessed from within Maya!')
             return
 
         if file_path:
@@ -229,12 +203,12 @@ class MayaFileData(MayaCustomData, object):
         else:
             file_to_clean = self.get_file()
         if not path.is_file(file_to_clean):
-            LOGGER.warning('Impossible to reference invalid data file: {}'.format(file_path))
+            tp.logger.warning('Impossible to reference invalid data file: {}'.format(file_path))
             return
 
         changed = helpers.clean_student_line(file_to_clean)
         if changed:
-            LOGGER.debug('Cleaned student license from file: {}'.format(file_to_clean))
+            tp.logger.debug('Cleaned student license from file: {}'.format(file_to_clean))
 
     def _check_after_save(self, client_data, comment=None):
         file_path = maya.cmds.file(query=True, sn=True)
@@ -252,7 +226,7 @@ class MayaFileData(MayaCustomData, object):
         self._center_view()
 
     def _clean_scene(self):
-        LOGGER.debug('Cleaning Maya scene ...')
+        tp.logger.debug('Cleaning Maya scene ...')
         scene.delete_turtle_nodes()
         if helpers.get_maya_version() > 2014:
             scene.delete_garbage()
@@ -298,8 +272,12 @@ class MayaBinaryFileData(MayaFileData):
     def get_data_extension():
         return 'mb'
 
+    @staticmethod
+    def get_data_title(self):
+        return 'Maya Binary'
+
     def get_maya_file_type(self):
-        return self.maya_ascii
+        return self.maya_binary
 
 
 class MayaAsciiFileData(MayaFileData):

@@ -9,7 +9,6 @@ from __future__ import print_function, division, absolute_import
 
 import os
 import sys
-import logging
 from collections import OrderedDict
 
 from Qt.QtWidgets import *
@@ -25,8 +24,6 @@ from tpDcc.dccs.maya.core import sequencer, animation, qtutils, decorators as ma
 from tpDcc.dccs.maya.core import filtertypes, joint as joint_utils, space as space_utils, curve as curve_utils
 from tpDcc.dccs.maya.core import geometry as geo_utils, ik as ik_utils, deformer as deform_utils
 from tpDcc.dccs.maya.core import follicle as follicle_utils, rivet as rivet_utils, constraint as constraint_utils
-
-LOGGER = logging.getLogger()
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
@@ -609,7 +606,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.showHidden(node)
 
     @staticmethod
-    def select_object(node, replace_selection=False, **kwargs):
+    def select_object(node, replace_selection=True, **kwargs):
         """
         Selects given object in the current scene
         :param replace_selection: bool
@@ -1386,7 +1383,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         elif maya.cmds.nodeType(material) == 'shadingEngine':
             shading_group = material
         if not shading_group:
-            LOGGER.warning('Impossible to apply material "{}" into "{}"'.format(material, node))
+            tpDcc.logger.warning('Impossible to apply material "{}" into "{}"'.format(material, node))
             return False
 
         maya.cmds.sets(node, e=True, forceElement=shading_group)
@@ -4588,7 +4585,7 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
             self.count = count
             msg = '{} count: {}'.format(title, count)
             self.status_string = ''
-            LOGGER.debug(msg)
+            tpDcc.logger.debug(msg)
             return
         else:
             self.progress_ui = gui.get_progress_bar()
