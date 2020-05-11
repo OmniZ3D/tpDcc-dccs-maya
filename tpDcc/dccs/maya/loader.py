@@ -122,14 +122,17 @@ class tpMayaLib(importer.Importer, object):
                 sys.path.append(p)
 
 
-def create_logger():
+def create_logger(dev=False):
     """
     Returns logger of current module
     """
 
     logging.config.fileConfig(get_logging_config(), disable_existing_loggers=False)
-    create_logger_directory()
     logger = logging.getLogger('tpDcc-dccs-maya')
+    if dev:
+        logger.setLevel(logging.DEBUG)
+        for handler in logger.handlers:
+            handler.setLevel(logging.DEBUG)
 
     return logger
 
@@ -155,7 +158,7 @@ def get_logging_config():
     return os.path.normpath(os.path.join(os.path.dirname(__file__), '__logging__.ini'))
 
 
-def init_dcc(do_reload=False):
+def init_dcc(do_reload=False, dev=False):
     """
     Initializes module
     :param do_reload: bool, Whether to reload modules or not
@@ -167,7 +170,7 @@ def init_dcc(do_reload=False):
     class tpMayaLibResource(resource_utils.Resource, object):
         RESOURCES_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
 
-    logger = create_logger()
+    logger = create_logger(dev=dev)
 
     maya_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
     maya_importer.update_paths()
