@@ -345,7 +345,9 @@ class SkinWeightsData(base.MayaCustomData, object):
             if type(joints) == list and len(joints) > 1:
                 add_joints.append(joints[0])
                 conflicting_count = len(joints)
-                maya.logger.warning('Found {} joinbts with name {}. Using only the first one: {}'.format(conflicting_count, influence, joints[0]))
+                maya.logger.warning(
+                    'Found {} joints with name {}. Using only the first one: {}'.format(
+                        conflicting_count, influence, joints[0]))
                 remove_entries.append(influence)
                 influence = joints[0]
             if not tp.Dcc.object_exists(influence):
@@ -360,7 +362,7 @@ class SkinWeightsData(base.MayaCustomData, object):
         if skin_cluster:
             tp.Dcc.delete_object(skin_cluster)
         skin_cluster = maya.cmds.skinCluster(
-            influences, mesh,  tsb = True, n = tp.Dcc.find_unique_name('skin_%s' % short_name))[0]
+            influences, mesh,  tsb=True, n=tp.Dcc.find_unique_name('skin_%s' % short_name))[0]
         tp.Dcc.set_attribute_value(skin_cluster, 'normalizeWeights', 0)
         deform_utils.set_skin_weights_to_zero(skin_cluster)
 
@@ -374,11 +376,11 @@ class SkinWeightsData(base.MayaCustomData, object):
                 if len(split_influence) > 1:
                     influence = split_influence[-1]
             progress_bar.status('Importing skin mesh: {}, influence: {}'.format(short_name, influence))
-            if not 'weights' in influence_dict[orig_influence]:
+            if 'weights' not in influence_dict[orig_influence]:
                 maya.logger.warning('Weights msissing for influence: {}. Skipping it ...'.format(influence))
                 continue
             weights = influence_dict[orig_influence]['weights']
-            if not influence in influence_index_dict:
+            if influence not in influence_index_dict:
                 continue
             index = influence_index_dict[influence]
 

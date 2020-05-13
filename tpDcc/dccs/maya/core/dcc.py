@@ -2169,6 +2169,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return attribute.connect_rotate(source_node, target_node)
 
     @staticmethod
+    def connect_scale(source_node, target_node):
+        """
+        Connects the scale of the source node into the rotation of the target node
+        :param source_node: str
+        :param target_node: str
+        """
+
+        return attribute.connect_scale(source_node, target_node)
+
+    @staticmethod
     def connect_visibility(node, attr, target_node, default_value=True):
         """
         Connect the visibility of the target node into an attribute
