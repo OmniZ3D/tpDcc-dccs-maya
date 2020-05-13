@@ -362,7 +362,7 @@ class SkinWeightsData(base.MayaCustomData, object):
         if skin_cluster:
             tp.Dcc.delete_object(skin_cluster)
         skin_cluster = maya.cmds.skinCluster(
-            influences, mesh,  tsb=True, n=tp.Dcc.find_unique_name('skin_%s' % short_name))[0]
+            influences, mesh, tsb=True, n=tp.Dcc.find_unique_name('skin_%s' % short_name))[0]
         tp.Dcc.set_attribute_value(skin_cluster, 'normalizeWeights', 0)
         deform_utils.set_skin_weights_to_zero(skin_cluster)
 

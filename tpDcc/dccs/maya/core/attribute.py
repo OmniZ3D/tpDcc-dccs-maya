@@ -2556,7 +2556,7 @@ def add_attribute(node, attr, value=None, attr_type=None, hidden=False, **kwargs
             if not attr_type:
                 attr_type = validate_attribute_data_type(value)
 
-            if 'dt'in attr_mapping[attr_type]:
+            if 'dt' in attr_mapping[attr_type]:
                 maya.cmds.setAttr(
                     '{0}.{1}'.format(node, attr), value, edit=True, **{'typ': attr_mapping[attr_type]['dt']})
             else:
