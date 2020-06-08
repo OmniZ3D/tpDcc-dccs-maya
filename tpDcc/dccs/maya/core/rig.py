@@ -6,22 +6,18 @@ Module that contains rig utils functions for Maya
 """
 
 import math
-import logging
 
 import tpDcc as tp
 from tpDcc.libs.python import python
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.meta import metanode
 from tpDcc.dccs.maya.core import constraint as cns_utils, attribute as attr_utils, transform as transform_utils
 from tpDcc.dccs.maya.core import joint as jnt_utils, animation as anim_utils, space as space_utils
-
-LOGGER = logging.getLogger()
 
 
 class RigSwitch(object):
     """
-    Creates a switch between differetn rigs on a buffer joint
+    Creates a switch between different rigs on a buffer joint
     """
 
     def __init__(self, switch_joint):
@@ -32,13 +28,13 @@ class RigSwitch(object):
 
         self._switch_joint = switch_joint
         if not maya.cmds.objExists('{}.switch'.format(switch_joint)):
-            LOGGER.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
+            maya.logger.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
 
         self._groups = dict()
 
         weight_count = self.get_weight_count()
         if not weight_count:
-            LOGGER.warning('{} has no weights!'.format(weight_count))
+            maya.logger.warning('{} has no weights!'.format(weight_count))
 
         for i in range(weight_count):
             self._groups[i] = None
@@ -62,7 +58,7 @@ class RigSwitch(object):
         elif not self._control_name or not maya.cmds.objExists(self._control_name):
             attr_name = '{}.switch'.format(self._switch_joint)
         else:
-            LOGGER.error('Impossible to create RigSwitch Attribute ...')
+            maya.logger.error('Impossible to create RigSwitch Attribute ...')
             return
 
         for key in self._groups.keys():
@@ -98,12 +94,12 @@ class RigSwitch(object):
 
         groups = python.force_list(groups)
         if not self._switch_joint or not maya.cmds.objExists(self._switch_joint):
-            LOGGER.warning('Swtich joint {} does not exists!'.format(self._switch_joint))
+            maya.logger.warning('Swtich joint {} does not exists!'.format(self._switch_joint))
             return
 
         weight_count = self.get_weight_count()
         if weight_count < (index + 1):
-            LOGGER.warning(
+            maya.logger.warning(
                 'Adding groups to index {} is undefined. {}.switch does not have that many inputs'.format(
                     index, self._switch_joint))
 
@@ -841,41 +837,6 @@ class SoftIk(object):
             locator = new_grp
 
         return locator
-
-
-def get_all_rig_modules():
-    """
-    Returns all rig modules in the scene
-    :return: list<str>
-    """
-
-    modules = maya.cmds.ls(type='network')
-    found = list()
-    for module in modules:
-        attrs = maya.cmds.listAttr(module)
-        if 'parent' in attrs:
-            found.append(module)
-
-    return found
-
-
-def get_character_module(character_name, character_meta_class='RigCharacter'):
-    """
-    Return root module of the given character name
-    :param character_name: str
-    :return: str
-    """
-
-    modules = maya.cmds.ls(type='network')
-    for module in modules:
-        attrs = maya.cmds.listAttr(module)
-        if 'meta_class' in attrs and 'meta_node_id' in attrs:
-            meta_class = maya.cmds.getAttr('{}.meta_class'.format(module))
-            module_name = maya.cmds.getAttr('{}.meta_node_id'.format(module))
-            if meta_class == character_meta_class and module_name == character_name:
-                return metanode.validate_obj_arg(module, character_meta_class)
-
-    return None
 
 
 def parent_shape_in_place(transform, shape_source, keep_source=True, replace_shapes=False, snap_first=False):

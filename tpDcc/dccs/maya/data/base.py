@@ -7,7 +7,6 @@ Module that contains base classes for Maya
 
 from __future__ import print_function, division, absolute_import
 
-import logging
 import traceback
 
 import tpDcc as tp
@@ -38,9 +37,6 @@ class ScriptMelData(scripts.ScriptData, object):
 
 
 class MayaCustomData(data.CustomData, object):
-
-    # When dealing with Maya files we are not interested in generating a settings file
-    SETTINGS_FILE = None
 
     def _center_view(self):
         if scene.is_batch():

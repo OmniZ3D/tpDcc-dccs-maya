@@ -3323,12 +3323,13 @@ def repair_message_to_reference_target(obj, attr):
     return False
 
 
-def connect_message(input_node, target_node, attr):
+def connect_message(input_node, target_node, attr, force=False):
     """
     Connects the message attribute of the input_node into a custom message attribute on target_node
     :param input_node: str, name of a node
     :param target_node: str, name of a node
     :param attr: str, name of the message attribute to create and connect into. If already exists, just connect
+    :param force: bool, Whether or not force the connection of the message attribute
     """
 
     if not input_node or not maya.cmds.objExists(input_node):
@@ -3353,7 +3354,7 @@ def connect_message(input_node, target_node, attr):
         maya.cmds.addAttr(target_node, ln=test_attr, at='message')
 
     if not maya.cmds.isConnected('{}.message'.format(input_node), '{}.{}'.format(target_node, test_attr)):
-        maya.cmds.connectAttr('{}.message'.format(input_node), '{}.{}'.format(target_node, test_attr))
+        maya.cmds.connectAttr('{}.message'.format(input_node), '{}.{}'.format(target_node, test_attr), force=force)
 
 
 def connect_group_with_message(input_node, target_node, attr):
@@ -3807,7 +3808,7 @@ def get_color(shape_node):
         return color
 
     if maya.cmds.getAttr('{}.overrideRGBColors'.format(shape_node)):
-        color = maya.cmds.getAttr('{}.overrideColorRGB'.format(shape_node))
+        color = list(maya.cmds.getAttr('{}.overrideColorRGB'.format(shape_node))[0])
 
         color[0] *= 255
         color[1] *= 255
@@ -3823,20 +3824,24 @@ def set_color(nodes, color, color_transform=False, short_range=False):
     :param color: variant, list || int, color index to set override color to or color RGB list
     :param color_transform: bool, whether to override the shapes of the color or the transform itself
     :param short_range: bool, Whether color calculations are made using short range (values between 0 and 1)
-        or long range (values betten 0 and 255)
+        or long range (values between 0 and 255)
     """
 
-    from tpDcc.libs.qt.core import color as color_utils
+    from Qt.QtGui import QColor
 
     nodes = python.force_list(nodes)
 
     maya_version = int(maya.cmds.about(version=True))
-    use_rgb_color = type(color) in [list, tuple] or isinstance(color, color_utils.Color)
+    use_rgb_color = type(color) in [list, tuple] or isinstance(color, QColor)
     if type(color) in [list, tuple]:
+
+        if not short_range and all(i <= 1.0 for i in color):
+            short_range = True
+
         if short_range:
-            color = color_utils.Color.fromRgbF(*color)
+            color = QColor.fromRgbF(*color)
         else:
-            color = color_utils.Color.fromRgb(*color)
+            color = QColor.fromRgb(*color)
     else:
         if color < 0 or color > 31:
             LOGGER.warning('Maximum color index is 31. Using 31 value instead of {}!'.format(color))

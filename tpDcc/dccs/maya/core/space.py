@@ -7,15 +7,52 @@ Module that contains functions and classes related with spaces
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-
-from tpDcc.libs.python import python
-
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import name as name_utils, attribute as attr_utils, transform as xform_utils
+from tpDcc.libs.python import python
+from tpDcc.dccs.maya.core import api, name as name_utils, attribute as attr_utils, transform as xform_utils
 from tpDcc.dccs.maya.core import constraint as cns_utils
 
-LOGGER = logging.getLogger()
+
+def create_empty_follow_group(
+        target_xform, follow_group_name, follow_attr_name='follow', follow_constraint_name='follow_spaceConstraint'):
+    """
+    Creates a new follow group above a target transform
+    :param target_xform: str, name of the transform make follow
+    :param follow_group_name: str, name of the group that will be placed above given target transform.
+    :param follow_attr_name: str, name of the attribute that handles space switch functionality.
+    :param follow_constraint_name: str, name of constraint used to setup follow functionality.
+    :return: str, name of the follow group
+    """
+
+    if not target_xform or not maya.cmds.objExists(target_xform):
+        return None, None
+
+    driven_node = None
+    constraint = None
+
+    if maya.cmds.attributeQuery(follow_attr_name, node=target_xform, exists=True):
+        driven_node = maya.cmds.listConnections('{}.{}'.format(target_xform, follow_attr_name))
+    if driven_node:
+        constraint = maya.cmds.listConnections('{}.{}'.format(driven_node[0], follow_constraint_name))
+    if constraint:
+        return False, None
+
+    offset_grp = maya.cmds.group(n=follow_group_name, world=True, empty=True)
+    maya.cmds.delete(maya.cmds.pointConstraint(target_xform, offset_grp)[0])
+    driven_node_rot = maya.cmds.xform(target_xform, query=True, rotation=True, worldSpace=True)
+    maya.cmds.xform(offset_grp, rotation=driven_node_rot, worldSpace=True)
+    driven_node_scale = maya.cmds.xform(target_xform, query=True, scale=True, worldSpace=True)
+    maya.cmds.xform(offset_grp, scale=driven_node_scale, worldSpace=True)
+
+    sel_list = api.SelectionList()
+    sel_list.add(target_xform)
+    target_path = sel_list.get_dag_path()
+    controller_parent = maya.cmds.listRelatives(target_xform, parent=True)
+    if controller_parent:
+        maya.cmds.parent(offset_grp, controller_parent[0])
+    maya.cmds.parent(target_xform, offset_grp)
+
+    return offset_grp, target_path.full_path_name()
 
 
 def create_follow_group(source_transform, target_transform, prefix='follow', follow_scale=False, use_duplicate=False):
@@ -98,9 +135,9 @@ def create_multi_follow_direct(
     state on/off. Constraints will be "directly" added on the target transform
     :param source_list: list(str), list of transforms that the target should be constrained by
     :param target_transform: str, name of a transform node that should follow the transforms in source_list
-    :param node: str, name of the node to add the swtich attribute to
+    :param node: str, name of the node to add the switch attribute to
     :param constraint_type: str, Maya constraint type ('parentConstraint', 'pointConstraint' or 'orientConstraint')
-    :param attribute_name: str, name of the swtich attribute t oadd to the the node
+    :param attribute_name: str, name of the switch attribute to add to the the node
     :param value: float, value to give the switch attribute on the node
     :return: str, name of the new group
     """
@@ -157,7 +194,7 @@ def create_multi_follow(
     """
 
     if len(source_list) < 2:
-        LOGGER.warning('Cannot create mlti follow with less than 2 source transforms!')
+        maya.logger.warning('Cannot create multi follow with less than 2 source transforms!')
         return False
 
     locators = list()

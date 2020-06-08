@@ -1358,11 +1358,12 @@ def delete_all_incoming_nodes(node_name):
             maya.cmds.delete(n)
 
 
-def create_buffer_group(node_name, suffix='buffer', use_duplicate=False, copy_scale=False):
+def create_buffer_group(node_name, buffer_name=None, suffix='buffer', use_duplicate=False, copy_scale=False):
     """
     Creates a group above a transform that matches transformation of the transform
     Used to zeroing transform values of the node
     :param node_name: str, name of the transform to match
+    :param buffer_name: str, name of the buffer
     :param suffix: str, suffix to add to the matching group
     :param use_duplicate: bool, If True, matching happens by duplication instead of changing transform values
     :param copy_scale:
@@ -1371,9 +1372,9 @@ def create_buffer_group(node_name, suffix='buffer', use_duplicate=False, copy_sc
 
     parent = maya.cmds.listRelatives(node_name, p=True, f=True)
     basename = name_utils.get_basename(node_name)
-    if not suffix:
-        suffix = 'buffer'
-    full_name = '{}_{}'.format(basename, suffix)
+    full_name = buffer_name
+    if not full_name:
+        full_name = '{}_{}'.format(basename, suffix)
 
     if copy_scale:
         orig_scale = maya.cmds.getAttr('{}.scale'.format(node_name))

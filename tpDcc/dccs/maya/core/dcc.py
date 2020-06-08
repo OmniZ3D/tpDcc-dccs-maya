@@ -256,9 +256,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: str
         """
 
-        suffix = kwargs.get('suffix', 'buffer')
+        buffer_name = kwargs.get('buffer_name', None)
 
-        return transform.create_buffer_group(node, suffix=suffix)
+        return transform.create_buffer_group(node, buffer_name=buffer_name)
 
     @staticmethod
     def get_buffer_group(node, **kwargs):
@@ -270,7 +270,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         suffix = kwargs.get('suffix', 'buffer')
 
-        return transform.get_buffer_group(node, suffix='buffer')
+        return transform.get_buffer_group(node, suffix=suffix)
 
     @staticmethod
     def group_node(node, name, parent=None):
@@ -391,6 +391,27 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return transform.get_closest_transform(source_transform, targets)
+
+    @staticmethod
+    def node_world_matrix(node):
+        """
+        Returns node world matrix of given node
+        :param node: str
+        :return: list
+        """
+
+        return maya.cmds.xform(node, matrix=True, query=True, worldSpace=True)
+
+    @staticmethod
+    def set_node_world_matrix(node, world_matrix):
+        """
+        Sets node world matrix of given node
+        :param node: str
+        :param world_matrix: list
+        :return: list
+        """
+
+        return maya.cmds.xform(node, matrix=world_matrix, worldSpace=True)
 
     @staticmethod
     def node_world_space_translation(node):
@@ -1207,10 +1228,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         if children_type:
-            return maya.cmds.listRelatives(
+            children = maya.cmds.listRelatives(
                 node, children=True, allDescendents=all_hierarchy, fullPath=full_path, type=children_type)
         else:
-            return maya.cmds.listRelatives(node, children=True, allDescendents=all_hierarchy, fullPath=full_path)
+            children = maya.cmds.listRelatives(node, children=True, allDescendents=all_hierarchy, fullPath=full_path)
+
+        children.reverse()
+
+        return children
 
     @staticmethod
     def list_relatives(
@@ -1310,6 +1335,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.listRelatives(shape_node, parent=True, fullPath=full_path)
+
+    @staticmethod
+    def rename_shapes(node):
+        """
+        Rename all shapes of the given node with a standard DCC shape name
+        :param node: str
+        """
+
+        return shape_utils.rename_shapes(node)
 
     @staticmethod
     def node_bounding_box_pivot(node):
@@ -1629,6 +1663,25 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
     @staticmethod
+    def add_enum_attribute(node, attribute_name, value, **kwargs):
+        """
+        Adds a new enum attribute into the given node
+        :param node: str
+        :param attribute_name: str
+        :param value: list(str)
+        :param kwargs:
+        :return:
+        """
+
+        lock = kwargs.get('lock', False)
+        channel_box_display = kwargs.get('channel_box_display', True)
+        keyable = kwargs.pop('keyable', True)
+
+        maya.cmds.addAttr(node, ln=attribute_name, attributeType='enum', enumName=value, **kwargs)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
+
+    @staticmethod
     def attribute_query(node, attribute_name, **kwargs):
         """
         Returns attribute qyer
@@ -1638,7 +1691,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return:
         """
 
-        return maya.cmds.attributeQuery(attribute_name, node=node, **kwargs)
+        return maya.cmds.attributeQuery(attribute_name, node=node, **kwargs)[0]
 
     @staticmethod
     def attribute_exists(node, attribute_name):
@@ -1663,7 +1716,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.getAttr('{}.{}'.format(node, attribute_name, lock=True))
 
     @staticmethod
-    def is_attribute_connected(self, node, attribute_name):
+    def is_attribute_connected(node, attribute_name):
         """
         Returns whether given attribute is connected or not
         :param node: str
@@ -2192,16 +2245,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             '{}.{}'.format(node, attr), target_node, default_value=default_value)
 
     @staticmethod
-    def connect_message_attribute(source_node, target_node, message_attribute):
+    def connect_message_attribute(source_node, target_node, message_attribute, force=False):
         """
         Connects the message attribute of the input_node into a custom message attribute on target_node
         :param source_node: str, name of a node
         :param target_node: str, name of a node
         :param message_attribute: str, name of the message attribute to create and connect into. If already exists,
         just connect
+        :param force, Whether or not force the connection of the message attribute
         """
 
-        attribute.connect_message(source_node, target_node, message_attribute)
+        return attribute.connect_message(source_node, target_node, message_attribute, force=force)
 
     @staticmethod
     def get_message_attributes(node, **kwargs):
@@ -2240,9 +2294,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return attribute.get_message_input(node=node, message=message_attribute)
 
     @staticmethod
-    def store_world_matrix_to_attribute(node, attribute_name='worldMatrix', **kwargs):
+    def store_world_matrix_to_attribute(node, attribute_name='origMatrix', **kwargs):
         """
         Stores world matrix of given transform into an attribute in the same transform
+        :param node: str
         :param attribute_name: str
         :param kwargs:
         """
@@ -2835,7 +2890,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.findKeyframe('{}.{}'.format(node, attribute_name), time=(start_time, end_time), which='next')
 
     @staticmethod
-    def set_flat_key_frame(self, node, attribute_name, start_time, end_time):
+    def set_flat_key_frame(node, attribute_name, start_time, end_time):
         """
         Sets flat tangent in given keyframe
         :param node: str
@@ -3434,6 +3489,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return animation.set_active_frame_range(start_frame, end_frame)
 
     @staticmethod
+    def list_node_constraints(node):
+        """
+        Returns all constraints linked to given node
+        :param node: str
+        :return: list(str)
+        """
+
+        return maya.cmds.listRelatives(node, type='constraint')
+
+    @staticmethod
     def create_point_constraint(source, constraint_to, **kwargs):
         """
         Creates a new point constraint
@@ -3527,6 +3592,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
     def get_selection_groups(name=None):
         """
         Returns all selection groups (sets) in current DCC scene
+        :param name: str or None
         :return: list(str)
         """
 
@@ -3557,15 +3623,19 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.sets(name=name, empty=empty)
 
     @staticmethod
-    def add_node_to_selection_group(node, selection_group_name):
+    def add_node_to_selection_group(node, selection_group_name, force=True):
         """
         Adds given node to selection group
         :param node: str
         :param selection_group_name: str
+        :param force: bool
         :return: str
         """
 
-        return maya.cmds.sets(node, edit=True, forceElement=selection_group_name)
+        if force:
+            return maya.cmds.sets(node, edit=True, forceElement=selection_group_name)
+        else:
+            return maya.cmds.sets(node, edit=True, addElement=selection_group_name)
 
     @staticmethod
     def zero_transform_attribute_channels(node):
@@ -4390,18 +4460,42 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             transforms, name, spans=spans, offset_axis=offset_axis, offset_amount=offset_amount)
 
     @staticmethod
+    def create_empty_follow_group(target_transform, **kwargs):
+        """
+        Creates a new follow group above a target transform
+        :param target_transform: str, name of the transform make follow
+        :param kwargs:
+        :return:
+        """
+
+        return space_utils.create_empty_follow_group(target_transform, **kwargs)
+
+    @staticmethod
     def create_follow_group(source_transform, target_transform, **kwargs):
         """
         Creates a group above a target transform that is constrained to the source transform
         :param source_transform: str, name of the transform to follow
         :param target_transform: str, name of the transform make follow
-        :param source_transform:
-        :param target_transform:
         :param kwargs:
         :return:
         """
 
-        return space_utils.create_follow_group(source_transform, target_transform)
+        return space_utils.create_follow_group(source_transform, target_transform, **kwargs)
+
+    @staticmethod
+    def get_constraint_functions_dict():
+        """
+        Returns a dict that maps each constraint type with its function in DCC API
+        :return: dict(str, fn)
+        """
+
+        return {
+            'pointConstraint': maya.cmds.pointConstraint,
+            'orientConstraint': maya.cmds.orientConstraint,
+            'parentConstraint': maya.cmds.parentConstraint,
+            'scaleConstraint': maya.cmds.scaleConstraint,
+            'aimConstraint': maya.cmds.aimConstraint
+        }
 
     @staticmethod
     def get_constraints():
@@ -4411,6 +4505,18 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.listRelatives(type='constraint')
+
+    @staticmethod
+    def get_constraint_targets(constraint_node):
+        """
+        Returns target of the given constraint node
+        :param constraint_node: str
+        :return: list(str)
+        """
+
+        cns = constraint_utils.Constraint()
+
+        return cns.get_targets(constraint_node)
 
     @staticmethod
     def node_constraint(node, constraint_type):
@@ -4473,39 +4579,6 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.delete(maya.cmds.listRelatives(node, ad=True, type='constraint'))
-
-    @staticmethod
-    def get_color_of_side(side='C', sub_color=False):
-        """
-        Returns override color of the given side
-        :param side: str
-        :param sub_color: fool, whether to return a sub color or not
-        :return:
-        """
-
-        if MayaDcc.name_is_center(side):
-            side = 'C'
-        elif MayaDcc.name_is_left(side):
-            side = 'L'
-        elif MayaDcc.name_is_right(side):
-            side = 'R'
-        else:
-            side = 'C'
-
-        if not sub_color:
-            if side == 'L':
-                return 6
-            elif side == 'R':
-                return 13
-            else:
-                return 17
-        else:
-            if side == 'L':
-                return 18
-            elif side == 'R':
-                return 20
-            else:
-                return 21
 
     @staticmethod
     def set_parent_controller(control, parent_controller):
