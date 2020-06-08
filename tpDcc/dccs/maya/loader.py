@@ -12,8 +12,9 @@ import sys
 import inspect
 import logging
 
-from tpDcc.libs.python import importer
-from tpDcc.dccs.maya import register
+# =================================================================================
+
+PACKAGE = 'tpDcc.dccs.maya'
 
 # =================================================================================
 
@@ -57,14 +58,6 @@ try:
         }
     else:
         api2 = api
-
-    register.register_class('cmds', cmds)
-    register.register_class('mel', mel)
-    register.register_class('utils', utils)
-    register.register_class('OpenMaya', OpenMaya)
-    register.register_class('OpenMayaUI', OpenMayaUI)
-    register.register_class('OpenMayaAnim', OpenMayaAnim)
-    register.register_class('OpenMayaRender', OpenMayaRender)
 except Exception:
     # NOTE: We use this empty try/catch to avoid errors during CI/CD
     pass
@@ -72,54 +65,52 @@ except Exception:
 # =================================================================================
 
 
-class tpMayaLib(importer.Importer, object):
-    def __init__(self, *args, **kwargs):
-        super(tpMayaLib, self).__init__(module_name='tpDcc.dccs.maya', *args, **kwargs)
+def get_module_path():
+    """
+    Returns path where tpDcc.dccs.maya module is stored
+    :return: str
+    """
 
-    def get_module_path(self):
-        """
-        Returns path where tpDcc.dccs.maya module is stored
-        :return: str
-        """
-
+    try:
+        mod_dir = os.path.dirname(inspect.getframeinfo(inspect.currentframe()).filename)
+    except Exception:
         try:
-            mod_dir = os.path.dirname(inspect.getframeinfo(inspect.currentframe()).filename)
+            mod_dir = os.path.dirname(__file__)
         except Exception:
             try:
-                mod_dir = os.path.dirname(__file__)
+                import tpDcc.dccs.maya
+                mod_dir = tpDcc.dccs.maya.__path__[0]
             except Exception:
-                try:
-                    import tpDcc.dccs.maya
-                    mod_dir = tpDcc.dccs.maya.__path__[0]
-                except Exception:
-                    return None
+                return None
 
-        return mod_dir
+    return mod_dir
 
-    def externals_path(self):
-        """
-        Returns the paths where tpDcc.dccs.maya externals packages are stored
-        :return: str
-        """
 
-        return os.path.join(self.get_module_path(), 'externals')
+def externals_path():
+    """
+    Returns the paths where tpDcc.dccs.maya externals packages are stored
+    :return: str
+    """
 
-    def update_paths(self):
-        """
-        Adds path to system paths at startup
-        """
+    return os.path.join(get_module_path(), 'externals')
 
-        import maya.cmds as cmds
 
-        ext_path = self.externals_path()
-        python_path = os.path.join(ext_path, 'python')
-        maya_path = os.path.join(python_path, str(cmds.about(v=True)))
+def update_paths():
+    """
+    Adds path to system paths at startup
+    """
 
-        paths_to_update = [self.externals_path(), maya_path]
+    import maya.cmds as cmds
 
-        for p in paths_to_update:
-            if os.path.isdir(p) and p not in sys.path:
-                sys.path.append(p)
+    ext_path = externals_path()
+    python_path = os.path.join(ext_path, 'python')
+    maya_path = os.path.join(python_path, str(cmds.about(v=True)))
+
+    paths_to_update = [externals_path(), maya_path]
+
+    for p in paths_to_update:
+        if os.path.isdir(p) and p not in sys.path:
+            sys.path.append(p)
 
 
 def create_logger(dev=False):
@@ -127,8 +118,14 @@ def create_logger(dev=False):
     Returns logger of current module
     """
 
-    logging.config.fileConfig(get_logging_config(), disable_existing_loggers=False)
-    logger = logging.getLogger('tpDcc-dccs-maya')
+    logger_directory = os.path.normpath(os.path.join(os.path.expanduser('~'), 'tpDcc', 'logs'))
+    if not os.path.isdir(logger_directory):
+        os.makedirs(logger_directory)
+
+    logging_config = os.path.normpath(os.path.join(os.path.dirname(__file__), '__logging__.ini'))
+
+    logging.config.fileConfig(logging_config, disable_existing_loggers=False)
+    logger = logging.getLogger(PACKAGE.replace('.', '-'))
     if dev:
         logger.setLevel(logging.DEBUG)
         for handler in logger.handlers:
@@ -137,67 +134,48 @@ def create_logger(dev=False):
     return logger
 
 
-def create_logger_directory():
-    """
-    Creates artellapipe logger directory
-    """
-
-    logger_path = os.path.normpath(os.path.join(os.path.expanduser('~'), 'tpDcc', 'logs'))
-    if not os.path.isdir(logger_path):
-        os.makedirs(logger_path)
-
-
-def get_logging_config():
-    """
-    Returns logging configuration file path
-    :return: str
-    """
-
-    create_logger_directory()
-
-    return os.path.normpath(os.path.join(os.path.dirname(__file__), '__logging__.ini'))
-
-
-def init_dcc(do_reload=False, dev=False):
+def init_dcc(dev=False):
     """
     Initializes module
-    :param do_reload: bool, Whether to reload modules or not
+    :param dev: bool, Whether to launch code in dev mode or not
     """
 
     from tpDcc.dccs.maya import register
-    from tpDcc.libs.qt.core import resource as resource_utils
+    from tpDcc.libs.python import importer
 
-    class tpMayaLibResource(resource_utils.Resource, object):
-        RESOURCES_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
+    if dev:
+        register.cleanup()
+
+    register.register_class('is_new_api', is_new_api)
+    register.register_class('cmds', cmds)
+    register.register_class('mel', mel)
+    register.register_class('utils', utils)
+    register.register_class('OpenMaya', OpenMaya)
+    register.register_class('OpenMayaUI', OpenMayaUI)
+    register.register_class('OpenMayaAnim', OpenMayaAnim)
+    register.register_class('OpenMayaRender', OpenMayaRender)
+
+    update_paths()
+    register_resources()
 
     logger = create_logger(dev=dev)
-
-    maya_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
-    maya_importer.update_paths()
-    use_new_api()
-
-    register.register_class('resource', tpMayaLibResource)
     register.register_class('logger', logger)
 
-    maya_importer.import_modules(skip_modules=['tpDcc.dccs.maya.ui'])
-    maya_importer.import_packages(only_packages=True, skip_modules=['tpDcc.dccs.maya.ui'])
-    if do_reload:
-        maya_importer.reload_all()
+    skip_modules = ['{}.{}'.format(PACKAGE, name) for name in ['loader', 'ui']]
+    importer.init_importer(package=PACKAGE, skip_modules=skip_modules)
+
+    use_new_api()
 
     create_metadata_manager()
 
 
-def init_ui(do_reload=False):
-    maya_importer = importer.init_importer(importer_class=tpMayaLib, do_reload=False)
-    maya_importer.update_paths()
-    use_new_api()
+def init_ui():
+    from tpDcc.libs.python import importer
 
-    maya_importer.import_modules(skip_modules=[
-        'tpDcc.dccs.maya.core', 'tpDcc.dccs.maya.data', 'tpDcc.dccs.maya.managers', 'tpDcc.dccs.maya.meta'])
-    maya_importer.import_packages(only_packages=True, skip_modules=[
-        'tpDcc.dccs.maya.core', 'tpDcc.dccs.maya.data', 'tpDcc.dccs.maya.managers', 'tpDcc.dccs.maya.meta'])
-    if do_reload:
-        maya_importer.reload_all()
+    update_paths()
+    skip_modules = ['{}.{}'.format(PACKAGE, name) for name in ['loader', 'core', 'data', 'managers', 'meta']]
+    importer.init_importer(package=PACKAGE, skip_modules=skip_modules)
+    use_new_api()
 
     create_metadata_manager()
 
@@ -253,4 +231,14 @@ def create_metadata_manager():
     metadatamanager.MetaDataManager.register_meta_nodes()
 
 
-register.register_class('is_new_api', is_new_api)
+def register_resources():
+    """
+    Registers tpDcc.libs.qt resources path
+    """
+
+    import tpDcc
+
+    resources_manager = tpDcc.ResourcesMgr()
+    resources_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
+    resources_manager.register_resource(resources_path, key=tpDcc.Dccs.Maya)
+
