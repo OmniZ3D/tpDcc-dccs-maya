@@ -10,6 +10,7 @@ Submodules
    tpDcc.dccs.maya.meta.metaattribute
    tpDcc.dccs.maya.meta.metanode
    tpDcc.dccs.maya.meta.metaobject
+   tpDcc.dccs.maya.meta.metarigutils
    tpDcc.dccs.maya.meta.metautils
 
 Module contents

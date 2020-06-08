@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.meta.metarigutils module
+========================================
+
+.. automodule:: tpDcc.dccs.maya.meta.metarigutils
+   :members:
+   :undoc-members:
+   :show-inheritance:
