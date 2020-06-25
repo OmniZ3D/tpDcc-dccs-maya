@@ -426,7 +426,10 @@ class DuplicateHierarchy(object):
     def _duplicate(self, xform):
         new_name = xform
         if self._replace_old and self._replace_new:
-            new_name = xform.replace(self._replace_old, self._replace_new)
+            if self._replace_old in new_name:
+                new_name = xform.replace(self._replace_old, self._replace_new)
+            else:
+                new_name = '{}_{}'.format(xform, self._replace_new)
             new_name = name_utils.get_basename(new_name)
 
         duplicate = maya.cmds.duplicate(xform, po=True)[0]
@@ -935,7 +938,7 @@ def get_pole_vector(transform1, transform2, transform3, offset=1):
     :param transform2: str, name of a transform node
     :param transform3: str, name of a transform node
     :param offset: float, offset value for the final pole vector position
-    :return: list<float, float, float>, pole vector with offset
+    :return: list(float, float, float), pole vector with offset
     """
 
     dst = get_distance(transform1, transform3)
