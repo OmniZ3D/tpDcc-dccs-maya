@@ -12,7 +12,7 @@ from tpDcc.libs.python import python
 
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import constraint as cns_utils, attribute as attr_utils, transform as transform_utils
-from tpDcc.dccs.maya.core import joint as jnt_utils, animation as anim_utils, space as space_utils
+from tpDcc.dccs.maya.core import joint as jnt_utils, animation as anim_utils, space as space_utils, shape as shape_utils
 
 
 class RigSwitch(object):
@@ -20,7 +20,7 @@ class RigSwitch(object):
     Creates a switch between different rigs on a buffer joint
     """
 
-    def __init__(self, switch_joint):
+    def __init__(self, switch_joint, switch_attribut_name='switch'):
         """
         Constructor
         :param switch_joint: str, name of a buffer joint with switch attribute
@@ -40,7 +40,7 @@ class RigSwitch(object):
             self._groups[i] = None
 
         self._control_name = None
-        self._attribute_name = 'switch'
+        self._attribute_name = switch_attribut_name
 
     def create(self):
         if self._control_name and maya.cmds.objExists(self._control_name):
@@ -54,9 +54,9 @@ class RigSwitch(object):
             var.set_keyable(True)
             var.create(self._control_name)
             attr_name = var.get_name()
-            maya.cmds.connectAttr(attr_name, '{}.switch'.format(self._switch_joint))
+            maya.cmds.connectAttr(attr_name, '{}.{}'.format(self._switch_joint, self._attribute_name))
         elif not self._control_name or not maya.cmds.objExists(self._control_name):
-            attr_name = '{}.switch'.format(self._switch_joint)
+            attr_name = '{}.{}'.format(self._switch_joint, self._attribute_name)
         else:
             maya.logger.error('Impossible to create RigSwitch Attribute ...')
             return
@@ -837,6 +837,120 @@ class SoftIk(object):
             locator = new_grp
 
         return locator
+
+
+class RiggedLine(object):
+    """
+    Creates a line rig that connects two transforms
+    Useful when creating pole vector setups
+    """
+
+    def __init__(self, top_transform, bottom_transform, name):
+        self._name = name
+        self._top = top_transform
+        self._bottom = bottom_transform
+        self._local = False
+        self._extra_joint = None
+        self._top_group = None
+        self._curve = None
+        self._cluster1 = None
+        self._cluster2 = None
+
+    def create(self):
+        """
+        Creates rig line setup
+        :return: str, name of the top group that contains rig line setup
+        """
+
+        self._create_top_group()
+        self._create_curve()
+        self._create_clusters()
+        self._match_clusters()
+        self._constrain_clusters()
+
+        return self._top_group
+
+    def set_local(self, flag):
+        """
+        Sets whether or not rig line setup should be remain local to the origin or not
+        :param flag:
+        :return:
+        """
+
+        self._local = flag
+
+    def _create_top_group(self):
+        """
+        Internal function that creates group for top transform
+        """
+
+        self._top_group = maya.cmds.group(empty=True, n='guideLineGroup_{}'.format(self._name))
+        maya.cmds.setAttr('{}.inheritsTransform'.format(self._top_group), 0)
+
+    def _create_curve(self):
+        """
+        Internal function that creates curve that connects both transforms
+        """
+
+        self._curve = maya.cmds.curve(
+            d = 1, p = [(0, 0, 0),(0,0,0)], k = [0, 1], n=tp.Dcc.find_unique_name('guideLine_%s' % self._name))
+        maya.cmds.delete(self._curve, ch=True)
+        shapes = shape_utils.get_shapes(self._curve)
+        maya.cmds.rename(shapes[0], '{}Shape'.format(self._curve))
+        maya.cmds.setAttr('{}.template'.format(self._curve), True)
+        maya.cmds.parent(self._curve, self._top_group)
+
+    def _create_cluster(self, curve, cv):
+        """
+        Internal function that creates a new cluster in the given curve and in given curve CV
+        :param curve: str
+        :param cv: int
+        :return: list(str, str), cluster node and cluster transform
+        """
+
+        cluster, transform = maya.cmds.cluster('{}.cv[{}]'.format(self._curve, cv))
+        transform = maya.cmds.rename(transform, tp.Dcc.find_unique_name('guideLine_cluster_{}'.format(self._name)))
+        cluster = maya.cmds.rename(
+            '{}Cluster'.format(transform), tp.Dcc.find_unique_name('cluster_guideLine_{}'.format(self._name)))
+        maya.cmds.hide(transform)
+        maya.cmds.parent(transform, self._top_group)
+
+        return [cluster, transform]
+
+    def _create_clusters(self):
+        """
+        Internal function that creates all clusters used by the rig line setup
+        """
+
+        self._cluster1 = self._create_cluster(self._curve, 0)
+        self._cluster2 = self._create_cluster(self._curve, 1)
+
+    def _match_clusters(self):
+        """
+        Internal function that match cluster positions with the positions of the rig line controls
+        """
+
+        tp.Dcc.match_translation_to_rotate_pivot(self._top, self._cluster1[1])
+        tp.Dcc.match_translation_to_rotate_pivot(self._bottom, self._cluster2[1])
+
+    def _constrain_clusters(self):
+        """
+        Internal function that constraints controls to the clusters
+        """
+
+        if self._local:
+            offset1 = maya.cmds.group(empty=True, n='buffer_{}'.format(self._cluster1[1]))
+            offset2 = maya.cmds.group(empty=True, n='buffer_{}'.format(self._cluster2[1]))
+            maya.cmds.parent(offset1, offset2, self._top_group)
+            maya.cmds.parent(self._cluster1[1], offset1)
+            maya.cmds.parent(self._cluster2[1], offset2)
+            tp.Dcc.match_translation(self._top, offset1)
+            tp.Dcc.match_translation(self._bottom, offset2)
+            cns_utils.constraint_local(self._top, offset1)
+            cns_utils.constraint_local(self._bottom, offset2)
+        else:
+            maya.cmds.pointConstraint(self._top, self._cluster1[1])
+            maya.cmds.pointConstraint(self._bottom, self._cluster2[1])
 
 
 def parent_shape_in_place(transform, shape_source, keep_source=True, replace_shapes=False, snap_first=False):

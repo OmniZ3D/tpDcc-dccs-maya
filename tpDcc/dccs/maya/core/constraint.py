@@ -627,7 +627,7 @@ def constraint_local(source_transform, target_transform, parent=False, scale_con
                      constraint='parentConstraint', use_duplicate=False):
     """
     Constraints a target transform to a source one in a way that allows for setups to remain local to the origin.
-    Useful whe na control needs to move with a rig, but move something at the origin only when the control moves
+    Useful when a control needs to move with a rig, but move something at the origin only when the control moves
     :param source_transform: str, name of a transform
     :param target_transform: str, name of a transform
     :param parent: bool, If False, the setup uses a local group to constraint the target transform. Otherwise,
@@ -667,7 +667,7 @@ def constraint_local(source_transform, target_transform, parent=False, scale_con
     if not local_group:
         return
 
-    attribute.connect_Translate(source_transform, local_group)
+    attribute.connect_translate(source_transform, local_group)
     attribute.connect_rotate(source_transform, local_group)
     if scale_connect:
         attribute.connect_scale(source_transform, local_group)

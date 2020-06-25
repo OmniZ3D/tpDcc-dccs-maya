@@ -1054,7 +1054,7 @@ class Connection(object):
             if maya.cmds.isConnected(self.connections[i], self.connections[i + 1], ignoreUnitConversion=True):
                 lock_state = maya.cmds.getAttr(self.connections[i + 1], lock=True)
                 if lock_state:
-                    maya.cmds.setAttr(self.connections[i + 1], long=False)
+                    maya.cmds.setAttr(self.connections[i + 1], lock=False)
                     maya.cmds.disconnectAttr(self.connections[i], self.connections[i + 1])
                 if lock_state:
                     maya.cmds.setAttr(self.connections[i + 1], lock=True)
@@ -1071,7 +1071,7 @@ class Connection(object):
             if not maya.cmds.isConnected(self.connections[i], self.connections[i + 1], ignoreUnitConversion=True):
                 lock_state = maya.cmds.getAttr(self.connections[i + 1], lock=True)
                 if lock_state:
-                    maya.cmds.setAttr(self.connections[i + 1], long=False)
+                    maya.cmds.setAttr(self.connections[i + 1], lock=False)
                 maya.cmds.connectAttr(self.connections[i], self.connections[i + 1])
                 if lock_state:
                     maya.cmds.setAttr(self.connections[i + 1], lock=True)
@@ -1764,7 +1764,7 @@ class LockAttributesState(LockState, object):
         for attr in self.attributes:
             try:
                 attr_name = '{}.{}'.format(self.node, attr)
-                maya.cmds.setAttr(attr_name, long=False)
+                maya.cmds.setAttr(attr_name, lock=False)
             except Exception:
                 pass
 
@@ -1788,7 +1788,7 @@ class LockAttributesState(LockState, object):
         for attr in self.attributes:
             try:
                 attr_name = '{}.{}'.format(self.node, attr)
-                maya.cmds.setAttr(attr_name, long=self.lock_state[attr])
+                maya.cmds.setAttr(attr_name, lock=self.lock_state[attr])
             except Exception:
                 pass
 
@@ -2876,7 +2876,7 @@ def delete_user_attrs(obj, attrs_list=None, keep_if_connected=False):
                     continue
 
             try:
-                maya.cmds.setAttr('{}.{}'.format(obj, attr), long=False)
+                maya.cmds.setAttr('{}.{}'.format(obj, attr), lock=False)
                 maya.cmds.deleteAttr(obj, at=attr)
             except Exception:
                 LOGGER.warning(
@@ -3277,7 +3277,7 @@ def store_world_matrix_to_attribute(transform, attribute_name='origMatrix', skip
     if maya.cmds.objExists('{}.{}'.format(transform, attribute_name)):
         if skip_if_exists:
             return
-        maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), long=False)
+        maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), lock=False)
         maya.cmds.deleteAttr('{}.{}'.format(transform, attribute_name))
     maya.cmds.addAttr(transform, ln=attribute_name, at='matrix')
     maya.cmds.setAttr('{}.{}'.format(transform, attribute_name), *world_matrix, type='matrix', lock=True)
@@ -3986,7 +3986,7 @@ def unlock_attributes(node, attributes=None, only_keyable=False):
     if attributes:
         attributes = python.force_list(attributes)
         for attr in attributes:
-            maya.cmds.setAttr('{}.{}'.format(node, attr), long=False, k=True, cb=True)
+            maya.cmds.setAttr('{}.{}'.format(node, attr), lock=False, k=True, cb=True)
             maya.cmds.setAttr('{}.{}'.format(node, attr), k=True)
 
 
