@@ -60,8 +60,16 @@ class BuildJointHierarchy(object):
         for xform in self._transforms:
             maya.cmds.select(clear=True)
             joint = maya.cmds.joint()
+            name = xform
+            if self._replace_old and self._replace_new:
+                if self._replace_old in name:
+                    name = name.replace(self._replace_old, self._replace_new)
+                else:
+                    name = '{}_{}'.format(name, self._replace_new)
+                joint = maya.cmds.rename(joint, name_utils.find_unique_name(name))
             xform_utils.MatchTransform(xform, joint).translation_rotation()
             xform_utils.MatchTransform(xform, joint).world_pivots()
+            maya.cmds.makeIdentity(joint, r=True, apply=True)
             new_joints.append(joint)
             if last_transform:
                 maya.cmds.parent(joint, last_transform)
@@ -88,12 +96,13 @@ class AttachJoints(object):
 
             return ['Constraint', 'Matrix']
 
-    def __init__(self, source_joints, target_joints):
+    def __init__(self, source_joints, target_joints, create_switch, switch_attribute_name='switch'):
         self._source_joints = source_joints
         self._target_joints = target_joints
+        self._create_switch = create_switch
+        self._switch_attribute_name = switch_attribute_name
         self._attach_type = AttachJoints.AttachType.CONSTRAINT
 
-    # region Public Functions
     def create(self):
         """
         Creates the attachments
@@ -113,9 +122,12 @@ class AttachJoints(object):
     def set_attach_type(self, attach_type):
         self._attach_type = attach_type
 
-    # endregion
+    def set_create_switch(self, flag):
+        self._create_switch = flag
 
-    # region Private Functions
+    def set_switch_attribute_name(self, attribute_name):
+        self._switch_attribute_name = attribute_name
+
     def _hook_scale_constraint(self, node):
         cns = cns_utils.Constraint()
         scale_cns = cns.get_constraint(node, cns_utils.Constraints.SCALE)
@@ -132,25 +144,28 @@ class AttachJoints(object):
             parent_cns = maya.cmds.parentConstraint(source_joint, target_joint, mo=True)[0]
             maya.cmds.setAttr('{}.interpType'.format(parent_cns), 2)
             scale_cns = maya.cmds.scaleConstraint(source_joint, target_joint)[0]
-            cns = cns_utils.Constraint()
-            cns.create_switch(self._target_joints[0], 'switch', parent_cns)
-            cns.create_switch(self._target_joints[0], 'switch', scale_cns)
+            if self._create_switch:
+                cns = cns_utils.Constraint()
+                cns.create_switch(self._target_joints[0], self._switch_attribute_name, parent_cns)
+                cns.create_switch(self._target_joints[0], self._switch_attribute_name, scale_cns)
             self._unhook_scale_constraint(scale_cns)
         elif self._attach_type == AttachJoints.AttachType.MATRIX:
             switches = cns_utils.SpaceSwitch().get_space_switches(target_joint)
             if switches:
                 cns_utils.SpaceSwitch().add_source(source_joint, target_joint, switches[0])
-                cns_utils.SpaceSwitch().create_switch(self._target_joints[0], 'switch', switches[0])
+                if self._create_switch:
+                    cns_utils.SpaceSwitch().create_switch(
+                        self._target_joints[0], self._switch_attribute_name, switches[0])
             else:
                 switch = cns_utils.SpaceSwitch(source_joint, target_joint)
                 switch.set_use_weight(True)
                 switch_node = switch.create()
-                switch.create_switch(self._target_joints[0], 'switch', switch_node)
+                if self._create_switch:
+                    switch.create_switch(self._target_joints[0], self._switch_attribute_name, switch_node)
 
     def _attach_joints(self, source_chain, target_chain):
         for i in range(len(source_chain)):
             self._attach_joint(source_chain[i], target_chain[i])
-    # endregion
 
 
 class OrientJointAttributes(object):
