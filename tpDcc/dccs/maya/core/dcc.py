@@ -256,9 +256,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: str
         """
 
-        buffer_name = kwargs.get('buffer_name', None)
-
-        return transform.create_buffer_group(node, buffer_name=buffer_name)
+        return transform.create_buffer_group(node, **kwargs)
 
     @staticmethod
     def get_buffer_group(node, **kwargs):
@@ -1554,7 +1552,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         min_value = kwargs.pop('min_value', -sys.maxsize - 1)
         max_value = kwargs.pop('max_value', sys.maxsize + 1)
 
-        maya.cmds.addAttr(node, ln=attribute_name, at='long', dv=default_value, min=min_value, max=max_value, **kwargs)
+        maya.cmds.addAttr(
+            node, ln=attribute_name, at='long', dv=default_value, min=float(min_value), max=float(max_value), **kwargs)
         maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
         maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
@@ -1682,6 +1681,28 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
     @staticmethod
+    def get_enum_attribute_values(node, attribute_name):
+        """
+        Return list of enum attribute values in the given attribute
+        :param node: str
+        :param attribute_name: str
+        :return: list(str)
+        """
+
+        return maya.cmds.addAttr('{}.{}'.format(node, attribute_name), query=True, enumName=True)
+
+    @staticmethod
+    def set_enum_attribute_value(node, attribute_name, value):
+        """
+        Return list of enum attribute values in the given attribute
+        :param node: str
+        :param attribute_name: str
+        :param value: str
+        """
+
+        return maya.cmds.addAttr('{}.{}'.format(node, attribute_name), edit=True, enumName=value)
+
+    @staticmethod
     def attribute_query(node, attribute_name, **kwargs):
         """
         Returns attribute qyer
@@ -1725,6 +1746,20 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return attribute.is_connected('{}.{}'.format(node, attribute_name))
+
+    @staticmethod
+    def is_attribute_connected_to_attribute(source_node, source_attribute_name, target_node, target_attribute_name):
+        """
+        Returns whether given source attribute is connected or not to given target attribute
+        :param source_node: str
+        :param source_attribute_name: str
+        :param target_node: str
+        :param target_attribute_name: str
+        :return: bool
+        """
+
+        return maya.cmds.isConnected(
+            '{}.{}'.format(source_node, source_attribute_name), '{}.{}'.format(target_node, target_attribute_name))
 
     @staticmethod
     def get_maximum_integer_attribute_value(node, attribute_name):
@@ -2200,6 +2235,21 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         return maya.cmds.connectAttr(
             '{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), force=force)
+
+    @staticmethod
+    def connect_multiply(source_node, source_attribute, target_node, target_attribute, value=0.1):
+        """
+        Connects source attribute into target attribute with a multiply node inbetween
+        :param source_node: str
+        :param source_attribute: str
+        :param target_node: str
+        :param target_attribute: str
+        :param value: float, value of the multiply node
+        :return: str, name of the created multiply node
+        """
+
+        return attribute.connect_multiply(
+            '{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), value=value)
 
     @staticmethod
     def connect_translate(source_node, target_node):
@@ -3198,7 +3248,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
     @staticmethod
     def match_translation_rotation(source_node, target_node):
         """
-        Match translation and rotation of the given node to the translation and rotation of the target node
+        Match translation and rotation of the target node to the translation and rotation of the source node
         :param source_node: str
         :param target_node: str
         """
@@ -3589,6 +3639,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             worldUpType=world_up_type, weight=weight, mo=maintain_offset, **kwargs)
 
     @staticmethod
+    def create_pole_vector_constraint(control, handle):
+        """
+        Creates a new pole vector constraint
+        :param control: str
+        :param handle: str
+        :return: str
+        """
+
+        return maya.cmds.poleVectorConstraint(control, handle)[0]
+
+    @staticmethod
     def get_selection_groups(name=None):
         """
         Returns all selection groups (sets) in current DCC scene
@@ -3695,9 +3756,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         # 0 = Constraint; 1 = Matrix
         attach_type = kwargs.get('attach_type', 0)
+        create_switch = kwargs.get('create_switch', True)
+        switch_attribute_name = kwargs.get('switch_attribute_name', 'switch')
 
-        attach = joint_utils.AttachJoints(source_joints=source_chain, target_joints=target_chain)
+        attach = joint_utils.AttachJoints(
+            source_joints=source_chain, target_joints=target_chain, create_switch=create_switch)
         attach.set_attach_type(attach_type)
+        if switch_attribute_name:
+            attach.set_switch_attribute_name(switch_attribute_name)
         attach.create()
 
     @staticmethod
@@ -3728,6 +3794,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param new_str: str, if given replace_str will be replace with this string
         :return: list(str)
         """
+
+        transforms = python.force_list(transforms)
 
         duplicate_hierarchy = transform.DuplicateHierarchy(transforms[0])
         if stop_at:
@@ -4615,6 +4683,19 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return qtutils.dock_widget(widget, *args, **kwargs)
+
+    @staticmethod
+    def get_pole_vector_position(transform_init, transform_mid, transform_end, offset=1):
+        """
+        Given 3 transform (such as arm, elbow, wrist), returns a position where pole vector should be located
+        :param transform_init: str, name of a transform node
+        :param transform_mid: str, name of a transform node
+        :param transform_end: str, name of a transform node
+        :param offset: float, offset value for the final pole vector position
+        :return: list(float, float, float), pole vector with offset
+        """
+
+        return transform.get_pole_vector(transform_init, transform_mid, transform_end, offset=offset)
 
     @staticmethod
     def deferred_function(fn, *args, **kwargs):
