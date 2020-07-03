@@ -18,13 +18,11 @@ def create_empty_follicle(description, uv=None):
     """
     Creates a new empty follicle
     :param description: str, description of the follicle
-    :param uv: lsit(int, int), uv where follicle will be created
+    :param uv: list(int, int), uv where follicle will be created
     :return: str, name of the created follicle
     """
 
-    if uv is None:
-        uv = [0, 0]
-
+    uv = uv if uv is not None else [0, 0]
     follicle_shape = maya.cmds.createNode('follicle')
     maya.cmds.hide(follicle_shape)
     follicle = maya.cmds.listRelatives(follicle_shape, p=True)[0]
