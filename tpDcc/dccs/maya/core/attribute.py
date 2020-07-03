@@ -1722,21 +1722,30 @@ class LockState(object):
         Unlock the attribute
         """
 
-        maya.cmds.setAttr(self.attribute, lock=False)
+        try:
+            maya.cmds.setAttr(self.attribute, lock=False)
+        except Exception as exc:
+            maya.logger.debug('Impossible to unlock: {} | {}'.format(self.attribute, exc))
 
     def lock(self):
         """
         Lock the attribute
         """
 
-        maya.cmds.setAttr(self.attribute, lock=True)
+        try:
+            maya.cmds.setAttr(self.attribute, lock=True)
+        except Exception as exc:
+            maya.logger.debug('Impossible to lock: {} | {}'.format(self.attribute, exc))
 
     def restore_initial(self):
         """
         Restore the initial lock state
         """
 
-        maya.cmds.setAttr(self.attribute, lock=self.lock_state)
+        try:
+            maya.cmds.setAttr(self.attribute, lock=self.lock_state)
+        except Exception as exc:
+            maya.logger.debug('Impossible to restore initial lock status for {} | {}'.format(self.attribute, exc))
 
 
 class LockAttributesState(LockState, object):
@@ -1791,6 +1800,19 @@ class LockAttributesState(LockState, object):
                 maya.cmds.setAttr(attr_name, lock=self.lock_state[attr])
             except Exception:
                 pass
+
+
+class LockTransformState(LockAttributesState, object):
+    def __init__(self, node):
+        self.lock_state = dict()
+        self.attributes = list()
+        self.node = node
+
+        for attr in ['translate', 'rotate', 'scale']:
+            for axis in 'XYZ':
+                attr_name = '{}{}'.format(attr, axis)
+                self.attributes.append(attr_name)
+                self.lock_state[attr_name] = maya.cmds.getAttr('{}.{}'.format(node, attr_name), l=True)
 
 
 class RemapAttributesToAttribute(object):
@@ -2065,11 +2087,11 @@ class MultiplyDivideNode(MayaNode, object):
         :param value_z: float
         """
 
-        if value_x:
+        if value_x is not None:
             maya.cmds.setAttr('{}.input1X'.format(self._node), value_x)
-        if value_y:
+        if value_y is not None:
             maya.cmds.setAttr('{}.input1Y'.format(self._node), value_y)
-        if value_z:
+        if value_z is not None:
             maya.cmds.setAttr('{}.input1Z'.format(self._node), value_z)
 
     def set_input2(self, value_x=None, value_y=None, value_z=None):
@@ -2080,11 +2102,11 @@ class MultiplyDivideNode(MayaNode, object):
         :param value_z: float
         """
 
-        if value_x:
+        if value_x is not None:
             maya.cmds.setAttr('{}.input2X'.format(self._node), value_x)
-        if value_y:
+        if value_y is not None:
             maya.cmds.setAttr('{}.input2Y'.format(self._node), value_y)
-        if value_z:
+        if value_z is not None:
             maya.cmds.setAttr('{}.input2Z'.format(self._node), value_z)
 
     def input1X_in(self, attribute):
@@ -3573,10 +3595,11 @@ def return_family_dict(obj, attr):
     return False
 
 
-def is_translate_rotate_connected(transform):
+def is_translate_rotate_connected(transform, ignore_keyframe=False):
     """
     Returns whether the given transform translate and rotate attributes are connected or not
     :param transform: str, name of a transform
+    :param ignore_keyframe: bool
     :return: bool
     """
 
@@ -3584,10 +3607,13 @@ def is_translate_rotate_connected(transform):
         for axis in 'xyz':
             name = '{}.{}{}'.format(transform, attr, axis)
             input_value = get_attribute_input(name)
-            if input_value:
-                return True
+            if not input_value:
+                return False
+            if ignore_keyframe:
+                if maya.cmds.nodeType(input_value).find('animCurve') > -1:
+                    return False
 
-    return False
+            return True
 
 
 def create_axis_attribute(name, node, value=0, positive_axes=True, negative_axis=True, none_value=True):
