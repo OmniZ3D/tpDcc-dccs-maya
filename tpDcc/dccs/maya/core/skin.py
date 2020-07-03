@@ -7,14 +7,12 @@ Module that contains functions and classes related with skins
 
 from __future__ import print_function, division, absolute_import
 
-import logging
 import cStringIO
 
 import tpDcc.dccs.maya as maya
+from tpDcc.libs.python import python, mathlib
 from tpDcc.dccs.maya.core import decorators, exceptions, api, node as node_utils, mesh as mesh_utils
-from tpDcc.dccs.maya.core import joint as jnt_utils, transform as xform_utils
-
-LOGGER = logging.getLogger()
+from tpDcc.dccs.maya.core import joint as jnt_utils, transform as xform_utils, shape as shape_utils
 
 
 class ShowJointInfluence(object):
@@ -85,7 +83,7 @@ class ShowJointInfluence(object):
 
         connections = list(set(maya.cmds.listConnections(self.joint, type='skinCluster')))
         if len(connections) <= 0:
-            LOGGER.warning('Wrapped joint "{}" has no skinCluster!'.format(self.joint))
+            maya.logger.warning('Wrapped joint "{}" has no skinCluster!'.format(self.joint))
             return
 
         for skin_cluster in connections:
@@ -99,7 +97,7 @@ class ShowJointInfluence(object):
                     break
 
             if skin_cluster_set <= 0:
-                LOGGER.warning(
+                maya.logger.warning(
                     'Wrapped joint "{}" with skinCluster "{}" has no valid SkinClusterSet'.format(
                         self.joint, skin_cluster))
                 return
@@ -262,13 +260,13 @@ class StoreSkinWeight(object):
         while not selection_list_iter.is_done():
             loop += 1
             if loop >= 10000:
-                LOGGER.warning('Too many loops while retrieving vertices from mesh node!')
+                maya.logger.warning('Too many loops while retrieving vertices from mesh node!')
                 return list()
 
             try:
                 mesh_dag = selection_list_iter.get_dag_path()
             except Exception as e:
-                LOGGER.error('Get Dag Path error : {}'.format(e.message))
+                maya.logger.error('Get Dag Path error : {}'.format(e.message))
                 selection_list_iter.next()
                 continue
 
@@ -306,7 +304,7 @@ class StoreSkinWeight(object):
             try:
                 mesh_dag, component = selection_list.get_component(0)
             except Exception as e:
-                LOGGER.erro('Get Dag Path error : {}'.format(e.message))
+                maya.logger.erro('Get Dag Path error : {}'.format(e.message))
                 continue
 
             skin_fn, vertex_array, skin_name = self._adjust_to_vertex_list(mesh_dag, component)
@@ -334,12 +332,12 @@ class StoreSkinWeight(object):
         while not selection_list_iter.is_done():
             loop += 1
             if loop >= 10000:
-                LOGGER.warning('Too many loops while retrieving vertices from mesh node!')
+                maya.logger.warning('Too many loops while retrieving vertices from mesh node!')
                 return vertex_arrays
             try:
                 mesh_dag, component = selection_list_iter.get_component()
             except Exception as e:
-                LOGGER.error('Get current vertex error : {}'.format(e.message))
+                maya.logger.error('Get current vertex error : {}'.format(e.message))
                 selection_list_iter.next()
                 continue
 
@@ -414,7 +412,7 @@ class StoreSkinWeight(object):
             try:
                 weights = api_skin_fn.get_weights(mesh_path, vertex_component)
             except Exception as e:
-                LOGGER.error('Get Skin Weight error : {}'.format(e.message))
+                maya.logger.error('Get Skin Weight error : {}'.format(e.message))
                 continue
 
             weights = self._convert_shape_weights(len(influence_indices), weights)
@@ -499,10 +497,10 @@ def is_skin_cluster(skin_cluster):
     """
 
     if not maya.cmds.objExists(skin_cluster):
-        LOGGER.error('SkinCluster "{}" does not exists!'.format(skin_cluster))
+        maya.logger.error('SkinCluster "{}" does not exists!'.format(skin_cluster))
         return False
     if maya.cmds.objectType(skin_cluster) != 'skinCluster':
-        LOGGER.error('Object "{}" is not a valid skinCluster node!'.format(skin_cluster))
+        maya.logger.error('Object "{}" is not a valid skinCluster node!'.format(skin_cluster))
         return False
 
     return True
@@ -543,7 +541,7 @@ def average_vertex(selection, use_distance):
 
     total_vertices = len(selection)
     if total_vertices < 2:
-        LOGGER.warning('Not enough vertices selected! Select a minimum of 2 vertices')
+        maya.logger.warning('Not enough vertices selected! Select a minimum of 2 vertices')
         return
 
     obj = selection[0]
@@ -618,12 +616,312 @@ def average_vertex(selection, use_distance):
             cmd.write('])')
             eval(cmd.getvalue())
     except Exception as e:
-        LOGGER.warning(str(e))
+        maya.logger.warning(str(e))
         succeeded = False
     finally:
         maya.cmds.setAttr('{0}.envelope'.format(skin_cluster_name), 1)
 
     return succeeded
+
+
+class SkinJointObject(object):
+    """
+    Class to manage skinning objects easily
+    """
+
+    def __init__(self, geometry, name):
+        self._geometry = geometry
+        self._name = name
+        self._join_ends = False
+        self._cvs = list()
+        self._cvs_count = 0
+        self._skin_cluster = None
+        self._joints = list()
+        self._cvs_dict = dict()
+
+    # ==============================================================================================
+    # BASE
+    # ==============================================================================================
+
+    def create(self):
+        """
+        Function that creates skinning
+        :return:
+        """
+
+        self._create()
+
+    def get_joints_list(self):
+        """
+        Returns the names of the joints in the skinning
+        :return: list(str)
+        """
+
+        return self._joints
+
+    def get_skin(self):
+        """
+        Returns skin deformer name
+        :return: str
+        """
+
+        return self._skin_cluster
+
+    # ==============================================================================================
+    # INTERNAL
+    # ==============================================================================================
+
+    def _create(self):
+        """
+        Internal function that MUST be override for custom skinning
+        """
+
+        raise NotImplementedError()
+
+    def _create_joint(self, cvs):
+        """
+        Internal function that creates a new joint in the given CV
+        :param cvs: list(str)
+        :return:  str, name of the created joint
+        """
+
+        joint = jnt_utils.create_joint_at_points(cvs, self._name)
+        cvs = python.force_list(cvs)
+        self._cvs_dict.setdefault(joint, list()).append(cvs)
+
+        return joint
+
+
+class SkinJointSurface(SkinJointObject, object):
+    """
+    Class to manage skinning for surfaces
+    """
+
+    def __init__(self, geometry, name):
+        super(SkinJointSurface, self).__init__(geometry, name)
+
+        self._join_ends = False
+        self._join_both_ends = False
+        self._first_joint_pivot_at_start = True
+        self._last_joint_pivot_at_end = True
+        self._maya_type = None
+        self._joint_u = True
+
+        if shape_utils.has_shape_of_type(self._geometry, 'nurbsCurve'):
+            self._maya_type = 'nurbsCurve'
+        elif shape_utils.has_shape_of_type(self._geometry, 'nurbsSurface'):
+            self._maya_type = 'nurbsSurface'
+
+    # ==============================================================================================
+    # OVERRIDES
+    # ==============================================================================================
+
+    def _create(self):
+        self._cvs = maya.cmds.ls('{}.cv[*]'.format(self._geometry), flatten=True)
+        if self._maya_type == 'nurbsCurve':
+            self._cvs_count = len(self._cvs)
+        elif self._maya_type == 'nurbsSurface':
+            index = '[0][*]' if self._joint_u else '[*][0]'
+            self._cvs_count = len(maya.cmds.ls('{}.cv{}'.format(self._geometry, index), flatten=True))
+
+        start_index = 0
+        cvs_count = self._cvs_count
+
+        if self._join_ends:
+            if self._join_both_ends:
+                self._create_start_and_end_joined_joints()
+            else:
+                last_joint = self._create_start_and_end_joints()
+            cvs_count = len(self._cvs[2:self._cvs_count])
+            start_index = 2
+
+        for i in range(start_index, cvs_count):
+            if self._maya_type == 'nurbsCurve':
+                cv = '{}.cv[{}]'.format(self._geometry, i)
+            elif self._maya_type == 'nurbsSurface':
+                index = '[*][{}]'.format(i) if self._joint_u else '[{}][*]'.format(i)
+                cv = '{}.cv{}'.format(self._geometry, index)
+
+            joint = self._create_joint(cv)
+            self._joints.append(joint)
+
+        if self._join_ends and not self._join_both_ends:
+            self._joints.append(last_joint)
+
+        self._skin()
+
+        return self._joints
+
+    # ==============================================================================================
+    # BASE
+    # ==============================================================================================
+
+    def set_join_ends(self, flag):
+        """
+        Sets whether the skin ends of the surfaces take up 2 CVs or not
+        :param flag: bool, Whether 2 CVs at the start have one joint, and 2 CVs on the end have one joint
+        """
+
+        self._join_ends = flag
+
+    def set_join_both_ends(self, flag):
+        """
+        Sets whether the skin ends of the surface are joined together
+        :param flag: bool, Whether to join or not the ends of the surface
+        """
+
+        self._join_both_ends = flag
+
+    def set_last_joint_pivot_at_end(self, flag):
+        """
+        Sets whether or not the last joint pivot should be moved to the end of the curve
+        :param flag: bool
+        """
+
+        self._last_joint_pivot_at_end = flag
+
+    def set_first_joint_pivot_at_start(self, flag):
+        """
+        Sets whether or not the start joint pivot should be moved to the start of the curve
+        :param flag: bool
+        """
+
+        self._first_joint_pivot_at_start = flag
+
+    def set_joint_u(self, flag):
+        """
+        Sets whether to skin the U instead of the V spans
+        :param flag: bool
+        """
+
+        self._joint_u = flag
+
+    # ==============================================================================================
+    # INTERNAL
+    # ==============================================================================================
+
+    def _create_start_and_end_joints(self):
+        start_cvs = None
+        end_cvs = None
+        start_position = None
+        end_position = None
+
+        if self._maya_type == 'nurbsCurve':
+            start_cvs = '{}.cv[0:1]'.format(self._geometry)
+            end_cvs = '{}.cv[{}:{}]'.format(self._geometry, self._cvs_count - 2, self._cvs_count - 1)
+            start_position = maya.cmds.xform('{}.cv[0]'.format(self._geometry), q=True, ws=True, t=True)
+            end_position = maya.cmds.xform(
+                '{}.cv[{}]'.format(self._geometry, self._cvs_count - 1), q=True, ws=True, t=True)
+        elif self._maya_type == 'nurbsSurface':
+            if self._joint_u:
+                cv_count_u = len(maya.cmds.ls('{}.cv[*][0]'.format(self._geometry), flatten=True))
+                index1 = '[0:*][0:1]'
+                index2 = '[0:*][{}:{}]'.format(self._cvs_count - 2, self._cvs_count - 1)
+                index3 = '[{}][0]'.format(cv_count_u - 1)
+                index4 = '[0][{}]'.format(self._cvs_count - 1)
+                index5 = '[{}][{}]'.format(cv_count_u, self._cvs_count - 1)
+            else:
+                cv_count_v = len(maya.cmds.ls('{}.cv[0][*]'.format(self._geometry), flatten=True))
+                index1 = '[0:1][0:*]'
+                index2 = '[{}:{}][0:*]'.format(self._cvs_count - 2, self._cvs_count - 1)
+                index3 = '[0][{}]'.format(cv_count_v - 1)
+                index4 = '[{}][0]'.format(self._cvs_count - 1)
+                index5 = '[{}][{}]'.format(self._cvs_count - 1, cv_count_v)
+
+            start_cvs = '{}.cv{}'.format(self._geometry, index1)
+            end_cvs = '{}.cv{}'.format(self._geometry, index2)
+            p1 = maya.cmds.xform('{}.cv[0][0]'.format(self._geometry), q=True, ws=True, t=True)
+            p2 = maya.cmds.xform('{}.cv{}'.format(self._geometry, index3), q=True, ws=True, t=True)
+            start_position = mathlib.get_mid_point(p1, p2)
+            p1 = maya.cmds.xform('{}.cv{}'.format(self._geometry, index4), q=True, ws=True, t=True)
+            p2 = maya.cmds.xform('{}.cv{}'.format(self._geometry, index5), q=True, ws=True, t=True)
+            end_position = mathlib.get_mid_point(p1, p2)
+
+        start_joint = self._create_joint(start_cvs)
+        self._joints.append(start_joint)
+        if self._first_joint_pivot_at_start:
+            maya.cmds.xform(start_joint, ws=True, rp=start_position, sp=start_position)
+
+        end_joint = self._create_joint(end_cvs)
+        if self._last_joint_pivot_at_end:
+            maya.cmds.xform(end_joint, ws=True, rp=end_position, sp=end_position)
+
+        return end_joint
+
+    def _create_start_and_end_joined_joint(self):
+        start_cvs = None
+        end_cvs = None
+
+        if self._maya_type == 'nurbsCurve':
+            start_cvs = '{}.cv[0:1]'.format(self._geometry)
+            end_cvs = '{}.cv[{}:{}]'.format(self._geometry, self._cvs_count - 2, self._cvs_count - 1)
+        elif self._maya_type == 'nurbsSurface':
+            if self._joint_u:
+                index1 = '[0:*][0]'
+                index2 = '[0:*][{}]'.format(self._cvs_count - 1)
+            else:
+                index1 = '[0][0:*]'
+                index2 = '[{}][0:*]'.format(self._cvs_count - 1)
+            start_cvs = '{}.cv{}'.format(self._geometry, index1)
+            end_cvs = '{}.cv{}'.format(self._geometry, index2)
+
+        cvs = start_cvs + end_cvs
+        joint = self._create_joint(cvs)
+        self._joints.append(joint)
+
+        return joint
+
+    def _skin(self):
+        self._skin_cluster = maya.cmds.skinCluster(self._joints, self._geometry, tsb=True)[0]
+        for joint, cvs in self._cvs_dict.items():
+            for cv in cvs:
+                maya.cmds.skinPercent(self._skin_cluster, cv, transformValue=[(joint, 1)])
+        maya.cmds.setAttr('{}.skinningMethod'.format(self._skin_cluster), 1)
+
+
+class SkinJointCurve(SkinJointSurface, object):
+    def __init__(self, geometry, name):
+        super(SkinJointCurve, self).__init__(geometry, name)
+
+    # ==============================================================================================
+    # OVERRIDES
+    # ==============================================================================================
+
+    def set_joint_u(self, flag):
+        maya.logger.warning('Cannot set joint U, curves only have one direction for spans')
+
+    def _create(self):
+        self._cvs = maya.cmds.ls('{}.cv[*]'.format(self._geometry), flatten=True)
+        self._cvs_count = len(self._cvs)
+        start_index = 0
+        cvs_count = self._cvs_count
+
+        if self._join_ends:
+            last_joint = self._create_start_and_end_joints()
+            cvs_count = len(self._cvs[2:self._cvs_count])
+            start_index = 2
+
+        for i in range(start_index, cvs_count):
+            joint = self._create_joint('{}.cv[{}]'.format(self._geometry, i))
+            self._joints.append(joint)
+
+        if self._join_ends:
+            self._joints.append(last_joint)
+
+        self._skin()
+
+        return self._joints
+
+    def _create_start_and_end_joints(self):
+        joint = self._create_joint('{}.cv[0:1]'.format(self._geometry))
+        self._joints.append(joint)
+        position = maya.cmds.xform('{}.cv[0]'.format(self._geometry), query=True, ws=True, t=True)
+        maya.cmds.xform(joint, ws=True, rp=position, sp=position)
+        last_joint = self._create_joint('{}.cv[{}:{}'.format(self._geometry, self._cvs_count - 2, self._cvs_count - 1))
+        position = maya.cmds.xform('{}.cv[{}]'.format(self._geometry, self._cvs_count - 1), q=True, ws=True, t=True)
+        maya.cmds.xform(last_joint, ws=True, rp=position, sp=position)
+
+        return last_joint
 
 
 def apply_smooth_bind(geo=None, show_options=True):
