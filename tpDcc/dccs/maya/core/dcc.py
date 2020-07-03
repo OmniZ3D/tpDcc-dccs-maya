@@ -4339,14 +4339,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.circle(n=name, normal=normal, ch=construction_history)[0]
 
     @staticmethod
-    def create_joint(joint_name):
+    def create_joint(joint_name, size=1.0):
         """
         Creates a new joint
-        :param joint_name: str
+        :param joint_name: str, name of the new joint
+        :param size: float, size of the joint
         :return: str
         """
 
-        return maya.cmds.joint(name=joint_name)
+        return maya.cmds.joint(name=joint_name, rad=size)
 
     @staticmethod
     def orient_joint(joint, **kwargs):

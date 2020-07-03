@@ -7,13 +7,9 @@ Utility methods related to Maya Curves
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.python import mathlib
 from tpDcc.dccs.maya.core import exceptions, api, transform, decorators, name as name_utils, shape as shape_utils
-
-LOGGER = logging.getLogger()
 
 
 def check_curve(curve):
@@ -114,7 +110,7 @@ def transforms_to_curve(transforms, spans=None, description='from_transforms'):
     """
 
     if not transforms:
-        LOGGER.warning('Impossible to create curve from transforms because no transforms given!')
+        maya.logger.warning('Impossible to create curve from transforms because no transforms given!')
         return None
 
     transform_positions = list()
@@ -413,3 +409,39 @@ def snap_project_curve_to_surface(curve, surface, offset=1):
     """
 
     return snap_curve_to_surface(curve=curve, surface=surface, offset=offset, project=True)
+
+
+def curve_to_nurbs_surface(curve, description, spans=-1, offset_axis='X', offset_amount=1):
+    """
+    Creates a new NURBS surface given a curve
+    :param curve: str
+    :param description: str
+    :param spans: int
+    :param offset_axis: str
+    :param offset_amount: float
+    :return: str, newly created NURBS surface
+    """
+
+    curve1 = maya.cmds.duplicate(curve)[0]
+    curve2 = maya.cmds.duplicate(curve)[0]
+    offset_axis = offset_axis.upper()
+    pos_move = mathlib.get_axis_vector(offset_axis, offset_amount)
+    neg_move = mathlib.get_axis_vector(offset_axis, offset_amount * -1)
+    maya.cmds.move(pos_move[0], pos_move[1], pos_move[2], curve1)
+    maya.cmds.move(neg_move[0], neg_move[1], neg_move[2], curve2)
+    curves = [curve1, curve2]
+
+    if not spans == -1:
+        for curve in curves:
+            maya.cmds.rebuildCurve(
+                curve, ch=False, rpo=True, rt=0, end=1, kr=False,
+                kcp=False, kep=True, kt=False, spans=spans, degree=3, tol=0.01)
+
+    loft = maya.cmds.loft(
+        curve1, curve2, n=name_utils.find_unique_name('nurbsSurface_{}'.forat(description)), ss=1, degree=1, ch=False)
+    spans = maya.cmds.getAttr('{}.spans'.format(curve1))
+    maya.cmds.rebuildSurface(
+        loft, ch=False, rpo=1, rt=0, end=1, kr=0, kcp=0, kc=0, su=1, du=1, sv=spans, dv=3, tol=0.01, fr=0, dir=2)
+    maya.cmds.delete(curve1, curve2)
+
+    return loft[0]
