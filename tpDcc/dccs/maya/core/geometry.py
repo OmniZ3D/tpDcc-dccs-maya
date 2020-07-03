@@ -7,14 +7,11 @@ Module that contains functions and classes related with geometry
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-
 from tpDcc.libs.python import mathlib, python
 
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import api, exceptions, shape, transform as xform_utils, name as name_utils
-
-LOGGER = logging.getLogger()
+from tpDcc.dccs.maya.core import joint as joint_utils
 
 
 class MeshTopologyCheck(object):
@@ -432,7 +429,7 @@ def get_mbounding_box(geometry, world_space=True):
     if world_space:
         geo_bbox.transformUsing(geo_path.exclusiveMatrix())
     else:
-        LOGGER.warning('Local space Bounding Bosx is not fully reliable ...')
+        maya.logger.warning('Local space Bounding Bosx is not fully reliable ...')
         geo_bbox.transformUsing(geo_node_fn.transformationMatrix().inverse())
 
     return geo_bbox
@@ -510,9 +507,9 @@ def transforms_to_nurbs_surface(transforms, name, spans=-1, offset_axis='Y', off
 
     crv_1 = maya.cmds.curve(p=transform_positions_1, degree=1)
     crv_2 = maya.cmds.curve(p=transform_positions_2, degree=1)
-    crvs = [crv_1, crv_2]
+    curves = [crv_1, crv_2]
     if not spans == -1:
-        for crv in crvs:
+        for crv in curves:
             maya.cmds.rebuildCurve(
                 crv, ch=False, rpo=True, rt=0, end=1, kr=False, kcp=False, kep=True, kt=False,
                 spans=spans, degree=3, tol=0.01)
@@ -524,6 +521,137 @@ def transforms_to_nurbs_surface(transforms, name, spans=-1, offset_axis='Y', off
     maya.cmds.delete(crv_1, crv_2)
 
     return loft[0]
+
+
+def nurbs_surface_u_to_transforms(surface, description='', count=4, value=0.5):
+    """
+    Creates joints along the U axis of the given surface
+    :param surface: str
+    :param description: str
+    :param count: int
+    :param value: float
+    :return: list(str)
+    """
+
+    joints = list()
+    last_joint = None
+    section_value = 0
+    description = description or surface
+
+    max_value_u = maya.cmds.getAttr('{}.maxValueU'.format(surface))
+    max_value_v = maya.cmds.getAttr('{}.maxValueV'.format(surface))
+    mid_value = float(max_value_v * value)
+    section = float(max_value_u / count)
+
+    for i in range(count + 1):
+        pos = maya.cmds.pointPosition('{}.uv[{}][{}]'.format(surface, section_value, mid_value))
+        joint = maya.cmds.createNode('joint', n='joint_{}_{}'.format(i + 1, description))
+        maya.cmds.xform(joint, ws=True, t=pos)
+
+        if last_joint:
+            maya.cmds.parent(joint, last_joint)
+            joint_utils.orient_x_to_child(last_joint)
+
+        joints.append(joint)
+        section_value += section
+        last_joint = joint
+        if i == count:
+            maya.cmds.makeIdentity(joint, apply=True, jo=True)
+
+    return joints
+
+
+def nurbs_surface_v_to_transforms(surface, description='', count=4, value=0.5):
+    """
+    Creates joints along the V axis of the given surface
+    :param surface: str
+    :param description: str
+    :param count: int
+    :param value: float
+    :return: list(str)
+    """
+
+    joints = list()
+    last_joint = None
+    section_value = 0
+    description = description or surface
+
+    max_value_u = maya.cmds.getAttr('{}.maxValueU'.format(surface))
+    max_value_v = maya.cmds.getAttr('{}.maxValueV'.format(surface))
+    mid_value = float(max_value_u * value)
+    section = float(max_value_v / count)
+
+    for i in range(count + 1):
+        pos = maya.cmds.pointPosition('{}.uv[{}][{}]'.format(surface, section_value, mid_value))
+        joint = maya.cmds.createNode('joint', n='joint_{}_{}'.format(i + 1, description))
+        maya.cmds.xform(joint, ws=True, t=pos)
+
+        if last_joint:
+            maya.cmds.parent(joint, last_joint)
+            joint_utils.orient_x_to_child(last_joint)
+
+        joints.append(joint)
+        section_value += section
+        last_joint = joint
+        if i == count:
+            maya.cmds.makeIdentity(joint, apply=True, jo=True)
+
+    return joints
+
+
+def transform_to_polygon_plane(transform, size=1, axis='Y'):
+    """
+    Creates a single polygon face from the position and orientation of a transform
+    :param transform: str, name of the transform where the plane should be created
+    :param size: float, size of the plane
+    :param axis: str, axis plane should point at
+    :return: str, name of the new plane
+    """
+
+    axis = axis.upper()
+    if axis == 'X':
+        axis_vector = [1, 0, 0]
+    elif axis == 'Y':
+        axis_vector = [0, 1, 0]
+    elif axis == 'Z':
+        axis_vector = [0, 0, 1]
+
+    plane = maya.cmds.polyPlane(w=size, h=size, sx=1, sy=1, ax=axis_vector, ch=False)
+    plane = maya.cmds.rename(plane, name_utils.find_unique_name('{}_plane'.format(transform)))
+    xform_utils.MatchTransform(transform, plane).translation_rotation()
+
+    return plane
+
+
+def transforms_to_polygon(transforms, name, size=1, merge=True, axis='Y'):
+    """
+    Creates polygons on each given transform.
+    Useful to create mesh for rivets and then deform.
+    :param transforms: list(str)
+    :param name: str
+    :param size: float
+    :param merge: bool
+    :param axis: str
+    :return: list(str)
+    """
+
+    new_mesh = None
+    meshes = list()
+    transforms = python.force_list(transforms)
+
+    for transform in transforms:
+        mesh = transform_to_polygon_plane(transform, size, axis=axis)
+        meshes.append(mesh)
+
+    if merge:
+        if len(transforms) > 1:
+            new_mesh = maya.cmds.polyUnite(meshes, ch=False, mergeUVSets=True, name=name)
+            new_mesh = new_mesh[0]
+        elif len(transforms) == 1:
+            new_mesh = maya.cmds.rename(meshes[0], name)
+        maya.cmds.polyLayoutUV(new_mesh, lm=1)
+
+    return new_mesh
 
 
 def get_mesh_shape(mesh, shape_index=0):
@@ -550,7 +678,7 @@ def get_mesh_shape(mesh, shape_index=0):
     if shape_index < shape_count:
         return shapes[0]
     if shape_index > shape_count:
-        LOGGER.warning('{} does not have a shape count up to {}'.format(mesh, shape_index))
+        maya.logger.warning('{} does not have a shape count up to {}'.format(mesh, shape_index))
         return None
 
     return shapes[shape_index]
@@ -681,3 +809,30 @@ def get_point_from_surface_parameter(surface, u_value, v_value):
     position = surface_fn.get_position_from_parameter(u_value, v_value)
 
     return position
+
+
+def get_face_center(mesh, face_id):
+    """
+    Returns the center position of a face
+    :param mesh: str, name of a mesh
+    :param face_id: int, index of a face component
+    :return: list(float, float, float), vector of the center of the face
+    """
+
+    mesh = get_mesh_shape(mesh)
+    face_iter = api.IteratePolygonFaces(mesh)
+
+    return face_iter.get_center(face_id)
+
+
+def get_face_centers(mesh):
+    """
+    Returns all face centers of the given mesh
+    :param mesh: str, name of a mesh
+    :return: list(list(float, float, float)), list containing all vector centers of the mesh
+    """
+
+    mesh = get_mesh_shape(mesh)
+    face_iter = api.IteratePolygonFaces(mesh)
+
+    return face_iter.get_face_center_vectors()
