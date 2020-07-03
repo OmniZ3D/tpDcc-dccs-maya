@@ -7,14 +7,12 @@ Module that contains functions and classes related with transforms
 
 from __future__ import print_function, division, absolute_import
 
-import logging
+import random
 
 from tpDcc.libs.python import name, mathlib, python
 
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import exceptions, attribute, node, component, name as name_utils
-
-LOGGER = logging.getLogger()
 
 TRANSFORM_SIDES = {
     'end': {
@@ -511,16 +509,77 @@ def is_transform_default(transform):
 
     attrs = ['translate', 'rotate']
     for attr in attrs:
-        for axis in ['X', 'Y', 'Z']:
+        for axis in 'XYZ':
             value = maya.cmds.getAttr('{}.{}{}'.format(transform, attr, axis))
             if value < -0.00001 or value > 0.00001:
                 return False
 
-    for axis in ['X', 'Y', 'Z']:
+    for axis in 'XYZ':
         if maya.cmds.getAttr('{}.scale{}'.format(transform, axis)) != 1:
             return False
 
     return True
+
+
+def is_rotate_default(transform):
+    """
+    Returns whether given transform has the default rotation values
+    :param transform: str
+    :return: bool
+    """
+
+    attributes = ['rotate']
+    for attr in attributes:
+        for axis in 'XYZ':
+            value = maya.cmds.getAttr('{}.{}{}'.format(transform, attr, axis))
+            if value < -0.00001 or value > 0.00001:
+                return False
+
+    return True
+
+
+def is_rotate_scale_default(transform):
+    """
+    Returns whether given transform has the default rotation and scale values
+    :param transform: str
+    :return: bool
+    """
+
+    attributes = ['rotate']
+    for attr in attributes:
+        for axis in 'XYZ':
+            value = maya.cmds.getAttr('{}.{}{}'.format(transform, attr, axis))
+            if value < -0.00001 or value > 0.00001:
+                return False
+
+    for axis in 'XYZ':
+        if maya.cmds.getAttr('{}.scale{}'.format(transform, axis)) != 1:
+            return False
+
+    return True
+
+
+def get_non_default_transforms():
+    """
+    Returns transforms in the scene that do not have default values
+    :return: list(str)
+    """
+
+    from tpDcc.dccs.maya.core import shape as shape_lib
+
+    found = list()
+    skip_types = ['joint', 'aimConstraint', 'pointConstraint', 'orientConstraint', 'parentConstraint', 'ikHandle']
+
+    transforms = maya.cmds.ls(type='transform')
+    for transform in transforms:
+        if maya.cmds.nodeType(transform) in skip_types:
+            continue
+        elif shape_lib.has_shape_of_type(transform, 'camera'):
+            continue
+        elif not is_transform_default(transform):
+            found.append(transform)
+
+    return found
 
 
 def match(transform, target):
@@ -568,7 +627,7 @@ def get_position(point):
 
     if type(point) == list or type(point) == tuple:
         if len(point < 3):
-            LOGGER.exception('Invalid point value supplied! Not enough list/tuple elements!')
+            maya.logger.exception('Invalid point value supplied! Not enough list/tuple elements!')
             return
         pos = point[0:3]
     elif type(point) == str or type(point) == unicode:
@@ -584,11 +643,11 @@ def get_position(point):
             except Exception:
                 pass
         if not pos:
-            LOGGER.exception(
+            maya.logger.exception(
                 'Invalid point value supplied! Unable to determine type of point "{0}"!'.format(str(point)))
             return
     else:
-        LOGGER.exception('Invalid point value supplied! Invalid argument type!')
+        maya.logger.exception('Invalid point value supplied! Invalid argument type!')
         return
 
     return pos
@@ -950,6 +1009,19 @@ def get_pole_vector(transform1, transform2, transform3, offset=1):
     return final_pos
 
 
+def mirror_toggle(transform, flag):
+    """
+    Mirrors attribute value that handles the mirror functionality
+    :param transform: str
+    :param flag: bool
+    """
+
+    if not maya.cmds.objExists('{}.mirror'.format(transform)):
+        maya.cmds.addAttr(transform, ln='mirror', at='bool', k=True)
+
+    maya.cmds.setAttr('{}.mirror'.format(transform), flag)
+
+
 def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_missing=False, transforms=None,
                      left_to_right=True):
     """
@@ -962,6 +1034,8 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
     :param left_to_right:
     :return:
     """
+
+    from tpDcc.dccs.maya.core import shape as shape_lib
 
     if transforms is None:
         transforms = list()
@@ -1010,7 +1084,7 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
     scope_transforms += transforms
     scope = list(set(scope_joints + scope_transforms))
     if not scope:
-        LOGGER.warning('No objects to mirror!')
+        maya.logger.warning('No objects to mirror!')
         return
 
     other_parents = dict()
@@ -1018,6 +1092,10 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
     created = False
 
     for xform in scope:
+
+        if maya.cmds.objExists('{}.inMesh'.format(xform)):
+            continue
+
         if left_to_right:
             other = find_transform_right_side(xform, check_if_exists=False)
         else:
@@ -1027,11 +1105,27 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
             continue
         if xform in fixed:
             continue
-        if attribute.is_translate_rotate_connected(other):
+        if attribute.is_translate_rotate_connected(other, ignore_keyframe=True):
             continue
 
+        shape_type = shape_lib.get_shape_node_type(xform)
         if not maya.cmds.objExists(other) and create_if_missing:
-            other = maya.cmds.duplicate(xform, po=True, n=other)[0]
+            node_type = maya.cmds.nodeType(xform)
+            if not node_type == 'joint':
+                other_node = maya.cmds.createNode(shape_type)
+                if shape_lib.is_a_shape(other_node):
+                    other_node = maya.cmds.listRelatives(other_node, p=True, f=True)
+                    other = maya.cmds.rename(other_node, other)
+            elif node_type == 'joint':
+                other = maya.cmds.duplicate(xform, po=True, n=other)[0]
+                if shape_type:
+                    other_shape = maya.cmds.createNode(shape_type)
+                    if shape_lib.is_a_shape(other_shape):
+                        temp_parent = maya.cmds.listRelatives(other_shape, p=True, f=True)
+                    maya.cmds.parent(other_shape, other, r=True, s=True)
+                    maya.cmds.rename(other_shape, '{}Shape'.format(other))
+                    maya.cmds.delete(temp_parent)
+
             created = True
             parent = maya.cmds.listRelatives(xform, p=True)
             if parent:
@@ -1046,16 +1140,20 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
             if maya.cmds.objExists('{}.mirror'.format(other)):
                 mirror = maya.cmds.getAttr('{}.mirror'.format(other))
                 if not mirror:
-                    LOGGER.debug('{} was not mirrored because its mirror attribute is set off!'.format(other))
+                    maya.logger.debug('{} was not mirrored because its mirror attribute is set off!'.format(other))
                     continue
 
-            lock_xforms = list()
-            for axis in 'xyz':
-                lock_xform = attribute.LockState('{}.translate{}'.format(other, axis.upper()))
-                lock_xform.unlock()
-                lock_xforms.append(lock_xform)
+            lock_state = attribute.LockTransformState(other)
+            lock_state.unlock()
 
             new_xform = maya.cmds.xform(xform, query=True, ws=True, t=True)
+
+            # Mirror locator
+            if shape_type == 'locator':
+                local_position = maya.cmds.getAttr('{}.localPosition'.format(xform))[0]
+                local_scale = maya.cmds.getAttr('{}.localScale'.format(xform))[0]
+                maya.cmds.setAttr('{}.localPosition'.format(other), *local_position, type='float3')
+                maya.cmds.setAttr('{}.localScale'.format(other), *local_scale, type='float3')
 
             # Mirror Joint
             if maya.cmds.nodeType(other) == 'joint':
@@ -1082,8 +1180,18 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
                 if maya.cmds.objExists('{}.localPosition'.format(other)):
                     fix_locator_shape_position(other)
 
-            for lock in lock_xforms:
-                lock.restore_initial()
+            children = maya.cmds.listRelatives(xform, type='transform')
+            if not children:
+                rotate = maya.cmds.getAttr('%s.rotate' % xform)[0]
+                scale = maya.cmds.getAttr('%s.scale' % xform)[0]
+                rotate = python.force_list(rotate)
+                scale = python.force_list(scale)
+                rotate[1] *= -1
+                rotate[2] *= -1
+                maya.cmds.setAttr('%s.rotate' % other, *rotate, type='float3')
+                maya.cmds.setAttr('%s.scale' % other, *scale, type='float3')
+
+                lock_state.restore_initial()
 
             fixed.append(other)
 
@@ -1093,13 +1201,13 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
             if maya.cmds.objExists(parent):
                 maya.cmds.parent(other, parent)
 
-    if not create_if_missing:
-        if fixed:
+    if create_if_missing:
+        if created:
             return True
         else:
             return False
     else:
-        if created:
+        if fixed:
             return True
         else:
             return False
@@ -1271,8 +1379,8 @@ def fix_locator_shape_position(locator_name):
     """
 
     pivot_pos = maya.cmds.xform(locator_name, query=True, os=True, rp=True)
-    for i, axis in enumerate('xyz'):
-        maya.cmds.setAttr('{}.localPosition{}'.format(locator_name, axis.upper), pivot_pos[i])
+    for i, axis in enumerate('XYZ'):
+        maya.cmds.setAttr('{}.localPosition{}'.format(locator_name, axis), pivot_pos[i])
 
 
 def parent_in_hierarchy(transform, parent):
@@ -1513,8 +1621,8 @@ def get_axis_aimed_at_child(transform):
     aim_axis = [0, 0, 0]
     current_result = 0
 
-    pos_1 = maya.cmds.xfomr(transform, q=True, ws=True, t=True)
-    pos_2 = maya.cmds.xforem(children[0], q=True, ws=True, t=True)
+    pos_1 = maya.cmds.xform(transform, q=True, ws=True, t=True)
+    pos_2 = maya.cmds.xform(children[0], q=True, ws=True, t=True)
     pos_2 = mathlib.vector_sub(pos_2, pos_1)
 
     for axis in all_axis:
@@ -1537,7 +1645,7 @@ def get_axis_letter_aimed_at_child(transform):
     :return: str
     """
 
-    vector = get_axis_letter_aimed_at_child(transform)
+    vector = get_axis_aimed_at_child(transform)
     return get_vector_axis_letter(vector)
 
 
@@ -1764,3 +1872,172 @@ def inverse_transform(source_node, target_node, translate=True, rotate=True, sca
         maya.cmds.connectAttr('{}.outputScale'.format(decompose_node), '{}.scale'.format(target_node), f=True)
 
     return decompose_node
+
+
+def set_translate_x_limit(transform, min_value=None, max_value=None):
+    """
+    Sets the maximum value a transform node accepts for the translate X of its transform
+    :param transform: str
+    :param min_value: float or None
+    :param max_value: float or None
+    """
+
+    min_bool = 0 if min_value is None else 1
+    max_bool = 0 if max_value is None else 1
+    min_value = -1 if min_value is None else min_value
+    max_value = 1 if min_value is None else max_value
+
+    maya.cmds.transformLimits(transform, tx=[min_value, max_value], etx=[min_bool, max_bool])
+
+
+def set_translate_y_limit(transform, min_value=None, max_value=None):
+    """
+    Sets the maximum value a transform node accepts for the translate Y of its transform
+    :param transform: str
+    :param min_value: float or None
+    :param max_value: float or None
+    """
+
+    min_bool = 0 if min_value is None else 1
+    max_bool = 0 if max_value is None else 1
+    min_value = -1 if min_value is None else min_value
+    max_value = 1 if min_value is None else max_value
+
+    maya.cmds.transformLimits(transform, ty=[min_value, max_value], ety=[min_bool, max_bool])
+
+
+def set_translate_z_limit(transform, min_value=None, max_value=None):
+    """
+    Sets the maximum value a transform node accepts for the translate Z of its transform
+    :param transform: str
+    :param min_value: float or None
+    :param max_value: float or None
+    """
+
+    min_bool = 0 if min_value is None else 1
+    max_bool = 0 if max_value is None else 1
+    min_value = -1 if min_value is None else min_value
+    max_value = 1 if min_value is None else max_value
+
+    maya.cmds.transformLimits(transform, tz=[min_value, max_value], etz=[min_bool, max_bool])
+
+
+def set_rotate_x_limit(transform, min_value=None, max_value=None):
+    """
+    Sets the maximum value a transform node accepts for the rotate X of its transform
+    :param transform: str
+    :param min_value: float or None
+    :param max_value: float or None
+    """
+
+    min_bool = 0 if min_value is None else 1
+    max_bool = 0 if max_value is None else 1
+    min_value = -45 if min_value is None else min_value
+    max_value = 45 if min_value is None else max_value
+
+    maya.cmds.transformLimits(transform, rx=[min_value, max_value], erx=[min_bool, max_bool])
+
+
+def set_rotate_y_limit(transform, min_value=None, max_value=None):
+    """
+    Sets the maximum value a transform node accepts for the rotate Y of its transform
+    :param transform: str
+    :param min_value: float or None
+    :param max_value: float or None
+    """
+
+    min_bool = 0 if min_value is None else 1
+    max_bool = 0 if max_value is None else 1
+    min_value = -45 if min_value is None else min_value
+    max_value = 45 if min_value is None else max_value
+
+    maya.cmds.transformLimits(transform, ry=[min_value, max_value], ery=[min_bool, max_bool])
+
+
+def set_rotate_z_limit(transform, min_value=None, max_value=None):
+    """
+    Sets the maximum value a transform node accepts for the rotate Z of its transform
+    :param transform: str
+    :param min_value: float or None
+    :param max_value: float or None
+    """
+
+    min_bool = 0 if min_value is None else 1
+    max_bool = 0 if max_value is None else 1
+    min_value = -45 if min_value is None else min_value
+    max_value = 45 if min_value is None else max_value
+
+    maya.cmds.transformLimits(transform, rz=[min_value, max_value], erz=[min_bool, max_bool])
+
+
+def randomize_transform(translate=[0.1, 0.1, 0.1], rotate=[1,1,1], scale=[0.1, 0.1, 0.1], transforms=None):
+    """
+    Generates random transforms taking into account the given amounts
+    :param translate: list(float, float, float), positive and negative amount values used to generate random translation
+    :param rotate: list(float, float, float), positive and negative amount values used to generate random rotation
+    :param scale: list(float, float, float), positive and negative amount values used to generate random scale
+    :param transforms: list(list(float, float, float), transforms to apply randomization. If not given, current
+        viewport selected transforms will be randomized
+    """
+
+    transforms = transforms if transforms else maya.cmds.ls(sl=True, type='transform')
+    for xform in transforms:
+        maya.cmds.move(
+            random.uniform(-translate[0], translate[0]),
+            random.uniform(-translate[1], translate[1]),
+            random.uniform(-translate[2], translate[2]),
+            xform, relative=True)
+
+        maya.cmds.rotate(
+            random.uniform(-rotate[0], rotate[0]),
+            random.uniform(-rotate[1], rotate[1]),
+            random.uniform(-rotate[2], rotate[2]),
+            xform, ocp=True, relative=True)
+
+        scale_x_invert = 1 - scale[0]
+        scale_y_invert = 1 - scale[1]
+        scale_z_invert = 1 - scale[2]
+
+        maya.cmds.scale(
+            random.uniform(scale_x_invert, (1 + scale[0])),
+            random.uniform(scale_y_invert, (1 + scale[1])),
+            random.uniform(scale_z_invert, (1 + scale[2])),
+            xform)
+
+
+def create_locators_along_curve(curve, count, description, attach=True):
+    """
+    Crates new locators on given curve
+    :param curve: str, name of the curve
+    :param count: int, number of joints to create
+    :param description: str, description to give to the created locators
+    :param attach: bool, Whether ot attach or not the joints on the curve
+    :return: list(str), list of created locators
+    """
+
+    from tpDcc.dccs.maya.core import curve as curve_utils
+
+    maya.cmds.select(clear=True)
+
+    locators = list()
+    current_length = 0
+    percent = 0
+    segment = 1.0 / count
+
+    total_length = maya.cmds.arclen(curve)
+    part_length = total_length / (count - 1)
+
+    for i in range(count):
+        param = curve_utils.get_parameter_from_curve_length(curve, current_length)
+        position = curve_utils.get_point_from_curve_parameter(curve, param)
+        if attach:
+            maya.cmds.select(clear=True)
+        locator = maya.cmds.spaceLocator(n=name_utils.find_unique_name('locator_{}'.format(description)))
+        maya.cmds.xform(locator, ws=True, t=position)
+        if attach:
+            curve_utils.attach_to_curve(locator, curve, parameter=param)
+        current_length += part_length
+        locators.append(locator)
+        percent += segment
+
+    return locators

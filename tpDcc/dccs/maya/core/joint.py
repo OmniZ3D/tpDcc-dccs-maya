@@ -11,10 +11,10 @@ import math
 import logging
 
 import tpDcc.dccs.maya as maya
-from tpDcc.libs.python import strings, python
-from tpDcc.dccs.maya.core import exceptions, decorators, mathutils, scene, attribute, transform, node
+from tpDcc.libs.python import strings, python, name as python_name, mathlib as math_utils
+from tpDcc.dccs.maya.core import exceptions, decorators, mathutils, scene, attribute, transform, node, api
 from tpDcc.dccs.maya.core import transform as xform_utils, constraint as cns_utils, matrix as matrix_utils
-from tpDcc.dccs.maya.core import name as name_utils, curve as curve_utils
+from tpDcc.dccs.maya.core import name as name_utils, curve as curve_utils, shape as shape_utils, ik as ik_utils
 
 LOGGER = logging.getLogger()
 
@@ -372,30 +372,31 @@ class OrientJoint(object):
     Orient the joint using attributes created with OrientJointAttributes
     """
 
-    def __init__(self, joint_name):
+    def __init__(self, joint_name, children=None):
         """
         Constructor
         :param joint_name: str, name of the joint we want to orient
         """
 
-        self.joint = joint_name
-        self.orient_values = None
-        self.aim_vector = [1, 0, 0]
-        self.up_vector = [0, 1, 0]
-        self.world_up_vector = [0, 1, 0]
+        self._joint = joint_name
+        self._orient_values = None
+        self._aim_vector = [1, 0, 0]
+        self._up_vector = [0, 1, 0]
+        self._world_up_vector = [0, 1, 0]
 
-        self.aim_at = 3
-        self.aim_up_at = 0
+        self._aim_at = 3
+        self._aim_up_at = 0
 
-        self.child = None
-        self.chidl2 = None
-        self.grand_child = None
-        self.parent = None
-        self.grand_parent = None
-
-        self.delete_later = list()
-        self.world_up_vector = self.get_vector_from_axis(1)
-        self.up_space_type = 'vector'
+        self._children = children or list()
+        self._child = None
+        self._child2 = None
+        self._grand_child = None
+        self._parent = None
+        self._grand_parent = None
+        self._surface = None
+        self._delete_later = list()
+        self._world_up_vector = self.get_vector_from_axis(1)
+        self._up_space_type = 'vector'
 
         self._get_relatives()
 
@@ -423,7 +424,7 @@ class OrientJoint(object):
         :param vector_list: list<float, float, float>, vector that defines what axis should aim
         """
 
-        self.aim_vector = vector_list
+        self._aim_vector = vector_list
 
     def set_up_vector(self, vector_list):
         """
@@ -431,7 +432,7 @@ class OrientJoint(object):
         :param vector_list: list<float, float, float>, vector that defines what axis should aim up
         """
 
-        self.up_vector = vector_list
+        self._up_vector = vector_list
 
     def set_world_up_vector(self, vector_list):
         """
@@ -439,7 +440,7 @@ class OrientJoint(object):
         :param vector_list: list<float, float, float>, vector that defines what world up axis be
         """
 
-        self.world_up_vector = vector_list
+        self._world_up_vector = vector_list
 
     def set_aim_at(self, index):
         """
@@ -453,7 +454,7 @@ class OrientJoint(object):
                                 5: aim at local parent (aiming at the parent and then reversing the direction)
         """
 
-        self.aim_at = self._get_aim_at(index=index)
+        self._aim_at = self._get_aim_at(index=index)
 
     def set_aim_up_at(self, index):
         """
@@ -465,7 +466,7 @@ class OrientJoint(object):
                                 3: triangle plane (need to be configured before)
         """
 
-        self.aim_up_at = self._get_aim_up_at(index=index)
+        self._aim_up_at = self._get_aim_up_at(index=index)
 
     def set_aim_up_at_object(self, transform_name):
         """
@@ -473,47 +474,67 @@ class OrientJoint(object):
         :param transform_name: str, name of the object
         """
 
-        self.aim_up_at = self._get_local_up_group(transform_name=transform_name)
-        self.up_space_type = 'objectrotation'
-        self.world_up_vector = [0, 1, 0]
+        self._aim_up_at = self._get_local_up_group(transform_name=transform_name)
+        self._up_space_type = 'objectrotation'
+        self._world_up_vector = [0, 1, 0]
+
+    def set_surface(self, surface_name):
+        """
+        Defines the surface used to orient
+        :param surface_name: str
+        """
+
+        self._surface = surface_name
+        self.set_aim_up_at(6)
+        if maya.cmds.objExists('{}.surface'.format(self._joint)):
+            try:
+                maya.cmds.setAttr('{}.surface'.format(self._joint), surface_name, type='string')
+            except Exception:
+                pass
 
     def run(self):
         """
         Orients joints
         """
 
-        if maya.cmds.objExists('{}.active'.format(self.joint)):
-            if not maya.cmds.getAttr('{}.active'.format(self.joint)):
-                LOGGER.warning('{} has orientation attributes but is not acitve. Skipping ...'.format(self.joint))
+        if maya.cmds.objExists('{}.active'.format(self._joint)):
+            if not maya.cmds.getAttr('{}.active'.format(self._joint)):
+                LOGGER.warning('{} has orientation attributes but is not active. Skipping ...'.format(self._joint))
                 return
 
-        self._freeze()
         self._get_relatives()
-        self._pin()
+        self._unparent()
+        self._get_children_special_cases()
+        self._freeze(scale=True)
+
+        maya.logger.info('Orienting {}'.format(name_utils.get_basename(self._joint)))
 
         try:
-            for axis in 'xyz':
-                maya.cmds.setAttr('{}.rotateAxis{}'.format(self.joint, axis.upper()), 0)
+            for axis in 'XYZ':
+                maya.cmds.setAttr('{}.rotateAxis{}'.format(self._joint, axis), 0)
         except Exception:
-            LOGGER.warning('Could not zero our rotateAxis on {}. This can cause rig errors!'.format(self.joint))
+            LOGGER.warning('Could not zero our rotateAxis on {}. This can cause rig errors!'.format(self._joint))
 
-        self.orient_values = self._get_values()
+        self._orient_values = self._get_values()
 
-        if self.orient_values:
-            self.aim_vector = self.get_vector_from_axis(self.orient_values['aimAxis'])
-            self.up_vector = self.get_vector_from_axis(self.orient_values['upAxis'])
-            self.world_up_vector = self.get_vector_from_axis(self.orient_values['worldUpAxis'])
-            self.aim_at = self._get_aim_at(self.orient_values['aimAt'])
-            self.aim_up_at = self._get_aim_up_at(self.orient_values['aimUpAt'])
+        if self._orient_values:
+            self._aim_vector = self.get_vector_from_axis(self._orient_values['aimAxis'])
+            self._up_vector = self.get_vector_from_axis(self._orient_values['upAxis'])
+            self._world_up_vector = self.get_vector_from_axis(self._orient_values['worldUpAxis'])
+            self._aim_at = self._get_aim_at(self._orient_values['aimAt'])
+            self._aim_up_at = self._get_aim_up_at(self._orient_values['aimUpAt'])
         else:
-            if type(self.aim_at) == int:
-                self.aim_at = self._get_aim_at(self.aim_at)
-            if type(self.aim_up_at) == int:
-                self.aim_up_at = self._get_aim_up_at(self.aim_up_at)
+            if type(self._aim_at) == int:
+                self._aim_at = self._get_aim_at(self._aim_at)
+            if type(self._aim_up_at) == int:
+                self._aim_up_at = self._get_aim_up_at(self._aim_up_at)
 
         self._create_aim()
+        if self._orient_values:
+            self._invert_scale()
         self._cleanup()
-        self._freeze()
+        self._freeze(scale=False)
+        self._parent()
 
     def _get_values(self):
         """
@@ -521,12 +542,12 @@ class OrientJoint(object):
         :return: dict<str, Attribute>
         """
 
-        if not maya.cmds.objExists('{}.ORIENT_INFO'.format(self.joint)):
+        if not maya.cmds.objExists('{}.ORIENT_INFO'.format(self._joint)):
             LOGGER.warning(
-                'Impossible to get orient attributes from {} because they do not exists!'.format(self.joint))
+                'Impossible to get orient attributes from {} because they do not exists!'.format(self._joint))
             return
 
-        ori_attrs = OrientJointAttributes(joint=self.joint)
+        ori_attrs = OrientJointAttributes(joint=self._joint)
         return ori_attrs.get_values()
 
     def _get_relatives(self):
@@ -535,22 +556,64 @@ class OrientJoint(object):
         """
 
         # Get parent and grand parent nodes
-        parent = maya.cmds.listRelatives(self.joint, p=True, f=True)
+        parent = maya.cmds.listRelatives(self._joint, p=True, f=True)
         if parent:
-            self.parent = parent[0]
-            grand_parent = maya.cmds.listRelatives(self.parent, p=True, f=True)
+            self._parent = parent[0]
+            grand_parent = maya.cmds.listRelatives(self._parent, p=True, f=True)
             if grand_parent:
-                self.grand_parent = grand_parent[0]
+                self._grand_parent = grand_parent[0]
 
-        # Get children and grand children
-        children = maya.cmds.listRelatives(self.joint, f=True, type='transform')
-        if children:
-            self.child = children[0]
-            if len(children) > 1:
-                self.child2 = children[1]
-            grand_children = maya.cmds.listRelatives(self.child, f=True)
-            if grand_children:
-                self.grand_child = grand_children[0]
+        if self._children:
+            self._children = maya.cmds.listRelatives(self._joint, f=True, type='transform')
+        else:
+            self._child = self._children[0]
+
+    def _get_children_special_cases(self):
+        if not self._children:
+            return
+
+        self._child = self._children[0]
+        if len(self._children) > 1:
+            self._child2 = self._children[1]
+        grand_children = maya.cmds.listRelatives(self._child, f=True, type='transform')
+        if grand_children:
+            self._grand_child = grand_children[0]
+
+    def _update_locator_scale(self, locator):
+        """
+        Internal function that updates locator scale to fit the radius of the joint
+        :param locator: str
+        """
+
+        if maya.cmds.objExists('{}.localScale'.format(locator)):
+            radius = maya.cmds.getAttr('{}.radius'.format(self._joint))
+            for axis in 'XYZ':
+                maya.cmds.setAttr('{}.localScale{}'.format(locator, axis), radius)
+
+    def _invert_scale(self):
+        invert_scale = self._orient_values['invertScale']
+        if invert_scale == 0:
+            return
+
+        if self._child:
+            maya.logger.warning('Orient Joints inverted scale only permitted on joints with no children. Skipping scale invert change on {}'.format(name_utils.get_basename(self.joint)))
+            return
+
+        if invert_scale == 1:
+            maya.cmds.setAttr('{}.scaleX'.format(self._joint), -1)
+        elif invert_scale == 2:
+            maya.cmds.setAttr('{}.scaleY'.format(self._joint), -1)
+        elif invert_scale == 3:
+            maya.cmds.setAttr('{}.scaleZ'.format(self._joint), -1)
+        elif invert_scale == 4:
+            maya.cmds.setAttr('{}.scaleX'.format(self._joint), -1)
+            maya.cmds.setAttr('{}.scaleY'.format(self._joint), -1)
+        elif invert_scale == 5:
+            maya.cmds.setAttr('{}.scaleX'.format(self._joint), -1)
+            maya.cmds.setAttr('{}.scaleZ'.format(self._joint), -1)
+        elif invert_scale == 6:
+            maya.cmds.setAttr('{}.scaleY'.format(self._joint), -1)
+            maya.cmds.setAttr('{}.scaleZ'.format(self._joint), -1)
 
     def _get_aim_at(self, index):
         """
@@ -562,7 +625,7 @@ class OrientJoint(object):
         # World Axis (0=X, 1=Y, 2=Z)
         if index < 3:
             world_aim = maya.cmds.group(empty=True, n='world_aim')
-            transform.MatchTransform(source_transform=self.joint, target_transform=world_aim).translation()
+            transform.MatchTransform(source_transform=self._joint, target_transform=world_aim).translation()
 
             if index == 0:
                 maya.cmds.move(1, 0, 0, world_aim, r=True)
@@ -571,22 +634,25 @@ class OrientJoint(object):
             elif index == 2:
                 maya.cmds.move(0, 0, 1, world_aim, r=True)
 
-            self.delete_later.append(world_aim)
+            self._delete_later.append(world_aim)
             return world_aim
 
         # Child
         elif index == 3:
-            child_aim = self._get_position_group(self.child)
+            child_aim = None
+            if self._child and maya.cmds.objExists(self._child):
+                self._update_locator_scale(self._child)
+                child_aim = self._get_position_group(self._child)
             return child_aim
 
         # Parent
         elif index == 4:
-            parent_aim = self._get_position_group(self.parent)
+            parent_aim = self._get_position_group(self._parent)
             return parent_aim
 
         # Front (in X axis) of wrapped joint
         elif index == 5:
-            aim = self._get_local_up_group(self.parent)
+            aim = self._get_local_up_group(self._parent)
             return aim
 
     def _get_aim_up_at(self, index):
@@ -597,75 +663,82 @@ class OrientJoint(object):
         """
 
         if index == 1:
-            self.up_space_type = 'objectrotation'
-            return self._get_local_up_group(self.parent)
+            self._up_space_type = 'objectrotation'
+            return self._get_local_up_group(self._parent)
 
         elif index == 2:
-            child_group = self._get_position_group(self.child)
-            self.up_space_type = 'object'
+            if self._child and maya.cmds.objExists(self._child):
+                self._update_locator_scale(self._child)
+                child_group = self._get_position_group(self._child)
+                self._up_space_type = 'object'
+            elif not self._child or not maya.cmds.objExists(self._child):
+                maya.logger.warning('Child specified as up in orient attribute but {} has no child'.format(self._joint))
             return child_group
 
         elif index == 3:
-            parent_group = self._get_position_group(self.parent)
-            self.up_space_type = 'object'
+            parent_group = self._get_position_group(self._parent)
+            self._up_space_type = 'object'
             return parent_group
 
         elif index == 4:
-            top = self._get_triangle_group(self.orient_values['triangleTop'])
-            mid = self._get_triangle_group(self.orient_values['triangleMid'])
-            btm = self._get_triangle_group(self.orient_values['triangleBottom'])
+            top = self._get_triangle_group(self._orient_values['triangleTop'])
+            mid = self._get_triangle_group(self._orient_values['triangleMid'])
+            btm = self._get_triangle_group(self._orient_values['triangleBottom'])
             if not top or not mid or not btm:
-                LOGGER.warning('Could not orient {} fully with current triangle plane settings'.format(self.joint))
+                LOGGER.warning('Could not orient {} fully with current triangle plane settings'.format(self._joint))
                 return
 
             plane_grp = xform_utils.create_group_in_plane(top, mid, btm)
             maya.cmds.move(0, 10, 0, plane_grp, r=True, os=True)
-            self.delete_later.append(plane_grp)
-            self.up_space_type = 'object'
+            self._delete_later.append(plane_grp)
+            self._up_space_type = 'object'
             return plane_grp
 
         elif index == 5:
-            self.up_space_type = 'object'
-            child_grp = None
+            child_group = None
+            if self._child2 and maya.cmds.objExists(self._child2):
+                self._update_locator_scale(self._child2)
+                child_group = self._get_position_group(self._child2)
+                self._up_space_type = 'object'
+            elif not self._child2 or not maya.cmds.objExists(self._child2):
+                maya.logger.warning(
+                    'Child 2 specified as up in orient attributes but {} has no 2nd child'.format(self._joint))
+            return child_group
 
-            if self.child2 and maya.cmds.objExists(self.child2):
-                child_grp = self._get_position_group(self.child2)
-            if not self.child2 or not maya.cmds.objExists(self.child2):
-                LOGGER.warning(
-                    'Child2 specified as up in orient attribute but {} has no 2nd child'.format(self.joint))
+        elif index == 6:
+            self._get_surface()
+            space_group = None
+            if not self._surface:
+                return space_group
+            self._up_space_type = 'object'
+            space_group = self._get_position_group(self._joint)
+            space_group_xform = maya.cmds.xform(space_group, query=True, t=True, ws=True)
+            if shape_utils.has_shape_of_type(self._surface, 'mesh'):
+                mesh_fn = api.MeshFunction(self._surface)
+                normal = mesh_fn.get_closest_normal(space_group_xform, at_source_position=True)
+                maya.cmds.xform(space_group, ws=True, t=normal)
+            elif shape_utils.has_shape_of_type(self._surface, 'nurbsSurface'):
+                surface_fn = api.NurbsSurfaceFunction(self._surface)
+                normal = surface_fn.get_closest_normal(space_group_xform, at_source_position=True)
+                maya.cmds.xform(space_group, ws=True, t=normal)
+            return space_group
 
-            return child_grp
-
-    def _freeze(self):
+    def _freeze(self, scale=True):
         """
         Internal function that freezes wrapped joint without touching its hierarchy
         """
 
-        children = maya.cmds.listRelatives(self.joint, f=True)
+        if scale:
+            if transform.is_rotate_scale_default(self._joint):
+                return
+        else:
+            if transform.is_rotate_default(self._joint):
+                return
 
-        found_children = list()
-        if children:
-            for child in children:
-                if xform_utils.is_transform(child):
-                    child_parented = maya.cmds.parent(child, w=True)[0]
-                    found_children.append(child_parented)
-
-        maya.cmds.makeIdentity(self.joint, apply=True, r=True, s=True)
-
-        if found_children:
-            maya.cmds.parent(found_children, self.joint)
-
-    def _pin(self):
-        """
-        Internal function that pin joint so its children and parent does not move when transforming
-        Updates list of nodes to remove so pin is removed after orienting
-        """
-
-        pin = transform.PinTransform(transform_name=self.joint)
-        pin.pin()
-
-        nodes = pin.get_pin_nodes()
-        self.delete_later += nodes
+        try:
+            maya.cmds.makeIdentity(self._joint, apply=True, r=True, s=scale)
+        except Exception as exc:
+            maya.logger.warning('Could not freeze {} when trying to orient: {}'.format(self._joint, exc))
 
     def _get_local_up_group(self, transform_name):
         """
@@ -677,9 +750,9 @@ class OrientJoint(object):
 
         local_up_group = maya.cmds.group(empty=True, n='local_up_{}'.format(transform))
         transform.MatchTransform(source_transform=transform_name, target_transform=local_up_group).rotation()
-        transform.MatchTransform(source_transform=self.joint, target_transform=local_up_group).translation()
+        transform.MatchTransform(source_transform=self._joint, target_transform=local_up_group).translation()
         maya.cmds.move(1, 0, 0, local_up_group, relative=True, objectSpace=True)
-        self.delete_later.append(local_up_group)
+        self._delete_later.append(local_up_group)
 
         return local_up_group
 
@@ -693,7 +766,7 @@ class OrientJoint(object):
         position_group = maya.cmds.group(empty=True, name='position_group')
         transform.MatchTransform(source_transform=transfrom_name,
                                  target_transform=position_group).translation_rotation()
-        self.delete_later.append(position_group)
+        self._delete_later.append(position_group)
 
         return position_group
 
@@ -707,15 +780,15 @@ class OrientJoint(object):
 
         target_transform = None
         if index == 0:
-            target_transform = self.grand_parent
+            target_transform = self._grand_parent
         elif index == 1:
-            target_transform = self.parent
+            target_transform = self._parent
         elif index == 2:
-            target_transform = self.joint
+            target_transform = self._joint
+        elif index == 3:
+            target_transform = self._child
         elif index == 4:
-            target_transform = self.child
-        elif index == 4:
-            target_transform = self.grand_child
+            target_transform = self._grand_child
         if not target_transform:
             return
 
@@ -726,32 +799,52 @@ class OrientJoint(object):
         Create aim constraints used to orient the joint
         """
 
-        if self.aim_up_at:
+        if not self._aim_at:
+            return
+
+        if self._aim_up_at:
             aim = maya.cmds.aimConstraint(
-                self.aim_at,
-                self.joint,
-                aimVector=self.aim_vector,
-                upVector=self.up_vector,
-                worldUpObject=self.aim_up_at,
-                worldUpVector=self.world_up_vector,
-                worldUpType=self.up_space_type)[0]
+                self._aim_at,
+                self._joint,
+                aimVector=self._aim_vector,
+                upVector=self._up_vector,
+                worldUpObject=self._aim_up_at,
+                worldUpVector=self._world_up_vector,
+                worldUpType=self._up_space_type)[0]
         else:
             aim = maya.cmds.aimConstraint(
-                self.aim_at,
-                self.joint,
-                aimVector=self.aim_vector,
-                upVector=self.up_vector,
-                worldUpVector=self.world_up_vector,
-                worldUpType=self.up_space_type)[0]
+                self._aim_at,
+                self._joint,
+                aimVector=self._aim_vector,
+                upVector=self._up_vector,
+                worldUpVector=self._world_up_vector,
+                worldUpType=self._up_space_type)[0]
 
-        self.delete_later.append(aim)
+        self._delete_later.append(aim)
+
+    def _parent(self):
+        if self._children:
+            maya.cmds.parent(self._children, self._joint)
+
+    def _unparent(self):
+        if self._children:
+            self._children = maya.cmds.parent(self._children, w=True)
+        else:
+            self._children = maya.cmds.listRelatives(self._joint, f=True, type='transform')
+
+    def _get_surface(self):
+        try:
+            self._surface = maya.cmds.getAttr('{}.surface'.format(self.joint))
+        except Exception:
+            pass
 
     def _cleanup(self):
         """
         Removes all extra nodes created during orient process
         """
 
-        maya.cmds.delete(self.delete_later)
+        if self._delete_later:
+            maya.cmds.delete(self._delete_later)
 
 
 def check_joint(joint):
@@ -1173,6 +1266,75 @@ def orient_to(joint, target):
         maya.cmds.aprent(child_list, joint)
 
 
+def orient_x_to_child(joint, invert=False):
+    """
+    Function that orients given joint to its child (points X axis of joint to its child)
+    :param joint: str
+    :param invert: bool
+    """
+
+    aim_axis = [1, 0, 0] if not invert else [-1, 0, 0]
+    up_axis = [0, 1, 0] if not invert else [0, -1, 0]
+    children = maya.cmds.listRelatives(joint, type='transform')
+    if children:
+        orient = OrientJoint(joint, children)
+        orient.set_aim_at(3)
+        orient.set_aim_up_at(0)
+        orient.set_aim_vector(aim_axis)
+        orient.set_up_vector(up_axis)
+        orient.run()
+
+    if not children:
+        maya.cmds.makeIdentity(joint, jo=True, apply=True)
+
+
+def orient_y_to_child(joint, invert=False):
+    """
+    Function that orients given joint to its child (points Y axis of joint to its child)
+    :param joint: str
+    :param invert: bool
+    """
+
+    aim_axis = [0, 1, 0] if not invert else [0, -1, 0]
+    up_axis = [0, 0, 1] if not invert else [0, 0, -1]
+    children = maya.cmds.listRelatives(joint, type='transform')
+    if children:
+        orient = OrientJoint(joint, children)
+        orient.set_aim_at(3)
+        orient.set_aim_up_at(0)
+        orient.set_aim_vector(aim_axis)
+        orient.set_up_vector(up_axis)
+        orient.run()
+
+    if not children:
+        maya.cmds.makeIdentity(joint, jo=True, apply=True)
+
+
+def orient_x_to_child_up_to_surface(joint, invert=False, surface=None):
+    """
+    Function that orients given joint to its child (points X axis of joint to its child) and tryis to orient the
+    up axis to the normal of the given surface
+    :param joint: str
+    :param invert: bool
+    :param surface: str
+    """
+
+    aim_axis = [1, 0, 0] if not invert else [-1, 0, 0]
+    up_axis = [0, 1, 0] if not invert else [0, -1, 0]
+    children = maya.cmds.listRelatives(joint, type='transform')
+    if children:
+        orient = OrientJoint(joint, children)
+        orient.set_surface(surface)
+        orient.set_aim_at(3)
+        orient.set_aim_up_at(6)
+        orient.set_aim_vector(aim_axis)
+        orient.set_up_vector(up_axis)
+        orient.run()
+
+    if not children:
+        maya.cmds.makeIdentity(joint, jo=True, apply=True)
+
+
 def flip_orient(joint, target=None, axis='x'):
     """
     Flips the given joint orient across the given axis
@@ -1304,62 +1466,184 @@ def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
     return '{}.scale'.format(inverse_scale_object)
 
 
+def create_joint_at_points(points, name):
+    """
+    Creates a new joint in the middle center of the given points. If only 1 point is given, the joint
+    will be created in the same exact position of the point
+    :param points: list(float, float, float), list of points
+    :param name: str, name for the new joint
+    :return: str, newly created joint
+    """
+
+    pos = transform.get_center(points)
+    maya.cmds.select(clear=True)
+    joint = maya.cmds.joint(n=name_utils.find_unique_name('joint_{}'.format(name)), p=pos)
+
+    return joint
+
+
+def create_joints_on_cvs(curve, parented=True):
+    """
+    Creates a joint in each CV of the given curve.
+    :param curve: str, name of the curve
+    :param parented: bool, Whether or not, joints should be parented under the last joint created at the previous CV
+    :return: list(str), list of created joints
+    """
+
+    joints = list()
+    last_joint = None
+
+    cvs = maya.cmds.ls('{}.cv[*]'.format(curve), flatten=True)
+    maya.cmds.select(clear=True)
+
+    for i, cv in enumerate(cvs):
+        position = maya.cmds.pointPosition(cv)
+        if not parented:
+            maya.cmds.select(clear=True)
+        joint = maya.cmds.joint(n=name_utils.find_unique_name('joint_{}'.format(curve)), p=position)
+        joints.append(joint)
+        if last_joint and parented:
+            maya.cmds.joint(last_joint, e=True, zso=True, oj='xyz', sao='yup')
+        last_joint = joint
+
+    return joints
+
+
+def create_joints_on_faces(mesh, faces=None, follow=True, name=None):
+    """
+    Creates joints on the faces of the given mesh
+    :param mesh: str, name of a mesh
+    :param faces: list(str), list of faces ids to create joints on. If not given, new joints will be created in all
+        geometry faces
+    :param follow: bool, Whether or not joints should follow faces
+    :param name: str, name to apply to created joints
+    :return: list(str) or list(str, str): List of created joints if follow is False or list of created joints and list
+        of created follicles if follow is True
+    """
+
+    from tpDcc.dccs.maya.core import rivet as rivet_utils, geometry as geo_utils
+
+    centers = list()
+    face_ids = list()
+    joints = list()
+    follicles = list()
+
+    mesh = geo_utils.get_mesh_shape(mesh)
+
+    if faces:
+        for face in faces:
+            if type(face) in [str, unicode]:
+                sub_faces = maya.cmds.ls(face, flatten=True)
+                for sub_face in sub_faces:
+                    id_value = python_name.get_last_number(sub_face)
+                    face_ids.append(id_value)
+            elif type(face) == int:
+                face_ids.append(face)
+
+    if face_ids:
+        for face_id in face_ids:
+            center = geo_utils.get_face_center(mesh, face_id)
+            centers.append(center)
+    else:
+        centers = geo_utils.get_face_centers(mesh)
+
+    for center in centers:
+        maya.cmds.select(clear=True)
+        name = name if name else 'joint_mesh_1'
+        joint = maya.cmds.joint(p=center, n=name_utils.find_unique_name(name))
+        joints.append(joint)
+        if follow:
+            follicle = rivet_utils.attach_to_mesh(joint, mesh, hide_shape=True, constraint=False, rotate_pivot=True)
+            follicles.append(follicle)
+
+    if follicles:
+        return joints, follicles
+
+    return joints
+
+
 @decorators.undo_chunk
-def create_joints_along_curve(curve, joint_count, joint_description='new', attach=True, create_controls=False):
+def create_joints_along_curve(curve, count, description='new', attach=True):
     """
     Create joints on curve that do not aim at child
     :param curve: str, name of a curve
-    :param joint_count: int, number of joints to create
-    :param joint_description: str, description for the new created joints
+    :param count: int, number of joints to create
+    :param description: str, description for the new created joints
     :param attach: bool, Whether to attach the joints to the curve or not
-    :param create_controls: bool, Whether to create new controls on the joints
-    :return: list(joint, group, control_group)
-        joints: list of joints
-        group: main group for the joints
-        control_group: main group above the controls (None if controls are not created)
+    :return: list(str), list of created joints
     """
 
-    group = maya.cmds.group(empty=True, n=name_utils.find_unique_name('{}_joints_grp'.format(curve)))
-
-    control_group = None
-    if create_controls:
-        control_group = maya.cmds.group(empty=True, n=name_utils.find_unique_name('{}_controls_grp'.format(curve)))
-        maya.cmds.addAttr(control_group, ln='twist', k=True)
-        maya.cmds.addAttr(control_group, ln='offsetScale', min=-1, dv=0, k=True)
-
     maya.cmds.select(clear=True)
-
-    total_length = maya.cmds.arclen(curve)
-    part_length = total_length / (joint_count - 1)
 
     joints = list()
     current_length = 0
     percent = 0
-    segment = 1.0 / joint_count
-    for i in range(joint_count):
+    segment = 1.0 / count
+
+    total_length = maya.cmds.arclen(curve)
+    part_length = total_length / (count - 1)
+
+    for i in range(count):
         param = curve_utils.get_parameter_from_curve_length(curve, current_length)
         position = curve_utils.get_point_from_curve_parameter(curve, param)
         if attach:
             maya.cmds.select(clear=True)
-        new_joint = maya.cmds.joint(p=position, n=name_utils.find_unique_name('{}_jnt'.format(joint_description)))
+        new_joint = maya.cmds.joint(p=position, n=name_utils.find_unique_name('{}_jnt'.format(description)))
         maya.cmds.addAttr(new_joint, ln='param', at='double', dv=param, k=True)
         if joints:
             maya.cmds.joint(joints[-1], e=True, zso=True, oj='xyz', sao='yup')
         if attach:
-            attach_node = curve_utils.attach_to_curve(new_joint, curve, parameter=param)
-            maya.cmds.parent(new_joint, group)
-            maya.cmds.connectAttr('{}.param'.format(new_joint), '{}.parameter'.format(attach_node))
+            curve_utils.attach_to_curve(new_joint, curve, parameter=param)
         current_length += part_length
-        if create_controls:
-            raise NotImplementedError('create controls functionality not implemented yet!')
-
         joints.append(new_joint)
         percent += segment
 
-    if not attach:
-        maya.cmds.parent(joints[0], group)
+    return joints
 
-    return joints, group, control_group
+
+@decorators.undo_chunk
+def create_oriented_joints_along_curve(curve, count=20, description='curve', attach=False):
+    """
+    Create joints on curve that are oriented to aim at child
+    :param curve: str, name of a curve
+    :param count: int, number of joints to create
+    :param description: str, description for the new created joints
+    :param attach: bool, Whether to attach the joints to the curve or not
+    :return: list(str), list of created joints
+    """
+
+    if count < 2:
+        return
+
+    new_joints = list()
+
+    maya.cmds.select(clear=True)
+
+    total_length = maya.cmds.arclen(curve)
+    start_joint = maya.cmds.joint(n='joint_{}Start'.format(description))
+    end_joint = maya.cmds.joint(p=[total_length, 0, 0], n='joint_{}End'.format(description))
+    if count > 3:
+        count = count - 2
+
+    joints = subdivide_joint(start_joint, end_joint, count, prefix='joint', name=description)
+    joints.insert(0, start_joint)
+    joints.append(end_joint)
+    for joint in joints:
+        new_joints.appedn(maya.cmds.rename(joint, name_utils.find_unique_name('joint_{}_1'.format(curve))))
+
+    ik = ik_utils.IkHandle(curve)
+    ik.set_start_joint(new_joints[0])
+    ik.set_end_joint(new_joints[-1])
+    ik.set_solver(ik.SOLVER_SPLINE)
+    ik.set_curve(curve)
+    ik_handle = ik.create()
+    maya.cmds.setAttr('{}.dTwistControlEnable'.format(ik_handle), 1)
+    maya.cmds.refresh()
+    if not attach:
+        maya.cmds.delete(ik_handle)
+        maya.cmds.makeIdentity(new_joints[0], apply=True, r=True)
+
+    return new_joints
 
 
 def create_joint_along_curve_in_intersection_curves(
@@ -1506,6 +1790,85 @@ def insert_joints(joints=None, joint_count=1):
             result.append(joint)
 
     return result
+
+
+@decorators.undo_chunk
+def subdivide_joint(joint1=None, joint2=None, count=1, prefix='joint', name='sub_1', duplicate=False):
+    """
+    Adds evenly spaced joints between joint1 and joint2
+    :param joint1: str, first joint. If None, first selected joint will be used
+    :param joint2: str, second joint. If None, second selected joint will be used
+    :param count: int, number of joints to add inbetween joint1 and joint2
+    :param prefix: str, prefix to add in front of the new joints
+    :param name: str name to give t othe new joints after the prefix.
+    :param duplicate: bool, Whether or not to create a duplicate chain and keep the original chain intact
+    :return: list(str), list of newly created joints
+    """
+
+    if not joint1 and not joint2:
+        selection = maya.cmds.ls(sl=True)
+        if maya.cmds.nodeType(selection[0]) == 'joint':
+            joint1 = selection[0]
+        if len(selection) > 1:
+            if maya.cmds.nodeType(selection[1]) == 'joint':
+                joint2 = selection[1]
+    if joint1 and not joint2:
+        joint_relatives = maya.cmds.listRelatives(joint1, type='joint')
+        if joint_relatives:
+            joint2 = joint_relatives[0]
+    if not joint1 and not joint2:
+        return
+
+    joints = list()
+    top_joint = joint1
+    last_joint = None
+    bottom_joint = joint2
+    radius = maya.cmds.getAttr('{}.radius'.format(joint1))
+    vector1 = maya.cmds.xform(joint1, query=True, worldSpace=True, translation=True)
+    vector2 = maya.cmds.xform(joint2, query=True, worldSpace=True, translation=True)
+    name = '{}_{}'.format(prefix, name)
+    offset = 1.00 / (count + 1)
+    value = offset
+
+    if duplicate:
+        maya.cmds.select(clear=True)
+        top_joint = maya.cmds.joint(p=vector1, n=name_utils.find_unique_name(name), r=radius + 1)
+        joints.append(top_joint)
+        match = transform.MatchTransform(joint1, top_joint)
+        match.rotation()
+        maya.cmds.makeIdentity(top_joint, apply=True, r=True)
+
+    for i in range(count):
+        position = math_utils.get_inbetween_vector(vector1, vector2, value)
+        maya.cmds.select(clear=True)
+        joint = maya.cmds.joint(p=position, n=name_utils.find_unique_name(name), r=radius)
+        maya.cmds.setAttr('{}.radius'.format(joint), radius)
+        joints.append(joint)
+        value += offset
+        if i == 0:
+            maya.cmds.parent(joint, top_joint)
+            maya.cmds.makeIdentity(joint, apply=True, jointOrient=True)
+        if last_joint:
+            maya.cmds.parent(joint, last_joint)
+            maya.cmds.makeIdentity(joint, apply=True, jointOrient=True)
+            if not maya.cmds.isConnected('{}.scale'.format(last_joint), '{}.inverseScale'.format(joint)):
+                maya.cmds.connectAttr('{}.scale'.format(last_joint), '{}.inverseScale'.format(joint))
+        last_joint = joint
+
+    if duplicate:
+        maya.cmds.select(clear=True)
+        bottom_joint = maya.cmds.joint(p=vector2, n=name_utils.find_unique_name(name), r=radius + 1)
+        joints.append(bottom_joint)
+        match = transform.MatchTransform(joint1, bottom_joint)
+        match.rotation()
+        maya.cmds.makeIdentity(bottom_joint, apply=True ,r=True)
+
+    maya.cmds.parent(bottom_joint, joint)
+
+    if not maya.cmds.isConnected('{}.scale'.format(joint), '{}.inverseScale'.format(bottom_joint)):
+        maya.cmds.connectAttr('{}.scale'.format(joint), '{}.inverseScale'.format(bottom_joint))
+
+    return joints
 
 
 def get_joints_chain_length(list_of_joints_in_chain):
