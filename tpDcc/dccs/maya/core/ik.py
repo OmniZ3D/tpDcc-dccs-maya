@@ -11,7 +11,7 @@ import tpDcc as tp
 from tpDcc.libs.python import mathlib
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import attribute as attr_utils
+from tpDcc.dccs.maya.core import attribute as attr_utils, name as name_utils, transform as transform_utils
 
 
 class IkHandle(object):
@@ -291,3 +291,64 @@ def create_simple_spline_ik_stretch(curve, joints, stretch_axis='Y'):
         attr = '{}.outputX'.format(multiply)
         maya.cmds.connectAttr(attr, '{}.scale{}'.format(jnt, stretch_axis))
         percent += segment
+
+
+def create_ik_chain(top_transform, bottom_transform, name, solver=IkHandle.SOLVER_SC):
+    """
+    Creates a new two joint chain with an Ik handle
+    :param top_transform: str, name of a transform
+    :param bottom_transform: str, name of a transform
+    :param name: str, name to give to new joints
+    :param solver: str, type of Ik solver to use
+    :return: tuple(str, str, str), tuple containing joint names and ik handle name
+    """
+
+    maya.cmds.select(clear=True)
+
+    # Create joints and match to given transforms
+    start_joint = maya.cmds.joint(n=name_utils.find_unique_name(name))
+    end_joint = maya.cmds.joint(n=name_utils.find_unique_name(name))
+    transform_utils.MatchTransform(top_transform, start_joint).translation()
+    transform_utils.MatchTransform(bottom_transform, end_joint).translation()
+    maya.cmds.joint(start_joint, e=True, oj='xyz', secondaryAxisOrient='xup', zso=True)
+    maya.cmds.makeIdentity(end_joint, jo=True, apply=True)
+
+    # Create IK handle
+    ik_handle = IkHandle(name)
+    ik_handle.set_start_joint(start_joint)
+    ik_handle.set_end_joint(end_joint)
+    ik_handle.set_solver(solver)
+    ik_pole = ik_handle.create()
+
+    if solver == IkHandle.SOLVER_RP:
+        for axis in 'XYZ':
+            tp.Dcc.set_attribute_value(ik_pole, 'poleVector{}'.format(axis), 0)
+
+    return start_joint, end_joint, ik_pole
+
+
+def create_ik_on_joint(joint, name, solver=IkHandle.SOLVER_SC):
+    """
+    Creates a new IK on given joint. The end of the IK handle will be the last joint on the given joint hierarchy
+    :param joint: str
+    :param name: str
+    :param solver: str
+    :return: str
+    """
+
+    relatives = tp.Dcc.list_relatives(joint, type='joint')
+    if not relatives:
+        return
+    joint_end = relatives[0]
+
+    ik_handle = IkHandle(name)
+    ik_handle.set_start_joint(joint)
+    ik_handle.set_end_joint(joint_end)
+    ik_handle.set_solver(solver)
+    ik_pole = ik_handle.create()
+
+    if solver == IkHandle.SOLVER_RP:
+        for axis in 'XYZ':
+            tp.Dcc.set_attribute_value(ik_pole, 'poleVector{}'.format(axis), 0)
+
+    return ik_pole
