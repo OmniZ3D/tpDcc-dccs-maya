@@ -92,7 +92,7 @@ class ThumbnailCaptureDialog(tpDcc.Dialog, object):
 
         self._capture_btn = QPushButton('Capture')
         self._capture_btn.clicked.connect(self._on_capture)
-        self._model_panel_widget = modelpanel.ModelPanelWidget()
+        self._model_panel_widget = modelpanel.ModelPanelWidget(parent=self)
         # self._model_panel_widget = viewport.MayaViewport(parent=self)
         main_layout = QVBoxLayout(self)
         main_layout.setObjectName(self.objectName() + 'Layout')
