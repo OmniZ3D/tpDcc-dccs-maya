@@ -153,7 +153,10 @@ class MetaAttributeUtils(object):
                 raise ValueError('Given argument is not a valid dictionary: {}'.format(args[0]))
             elif type(args[0]) in [list, tuple] and len(args[0]) == 2:
                 # LOGGER.debug('|Attribute Validation| >> list argument')
-                obj = args[0][0]
+                if hasattr(args[0][0], 'meta_node'):
+                    obj = args[0][0].meta_node
+                else:
+                    obj = args[0][0]
                 attr = args[0][1]
                 combined = '{0}.{1}'.format(obj, attr)
             elif '.' in args[0]:
@@ -165,6 +168,10 @@ class MetaAttributeUtils(object):
                 raise ValueError('Invalid attribute argument: {}'.format(args))
         else:
             # LOGGER.debug('|Attribute Validation| >> multi argument')
+
+            if hasattr(args[0], 'meta_node'):
+                args[0] = args[0].meta_node
+
             combined = '{0}.{1}'.format(args[0], args[1])
             obj = args[0]
             attr = args[1]
