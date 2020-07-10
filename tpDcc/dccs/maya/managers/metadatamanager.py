@@ -8,7 +8,6 @@ Manager to control current scene meta data values and nodes
 from __future__ import print_function, division, absolute_import
 
 import inspect
-import logging
 
 from Qt.QtCore import *
 from Qt.QtWidgets import *
@@ -20,12 +19,10 @@ from tpDcc.libs.qt.widgets import models, views
 
 # ===================================================================================================================
 METANODES_CACHE = dict()
-METANODE_CLASSES_REGISTER = list()
+METANODE_CLASSES_REGISTER = dict()
 METANODE_TYPES_REGISTER = list()
 METANODE_CLASSES_INHERITANCE_MAP = list()
 # ===================================================================================================================
-
-LOGGER = logging.getLogger()
 
 
 class MetaDataManager(window.MainWindow, object):
@@ -84,7 +81,7 @@ class MetaDataManager(window.MainWindow, object):
         :return: str
         """
 
-        LOGGER.debug('Generating a new UUID')
+        maya.logger.debug('Generating a new UUID')
 
         valid_uuid = False
         generated_uuid = None
@@ -96,11 +93,11 @@ class MetaDataManager(window.MainWindow, object):
                 valid_uuid = True
             else:
                 if not meta_node == METANODES_CACHE[uuid]:
-                    LOGGER.debug(
+                    maya.logger.debug(
                         'METANODES_CACHE: {0} : UUID is registered to a different node : modifying UUID: {1}'.format(
                             uuid, meta_node.meta_node))
                 else:
-                    LOGGER.debug('METANODES_CACHE : UUID {0} is already registered in METANODES_CACHE'.format(uuid))
+                    maya.logger.debug('METANODES_CACHE : UUID {0} is already registered in METANODES_CACHE'.format(uuid))
 
         return generated_uuid
 
@@ -118,7 +115,7 @@ class MetaDataManager(window.MainWindow, object):
         uuid = metanode.MetaNode.get_metanode_uuid(meta_node=meta_node)
 
         if METANODES_CACHE or uuid not in METANODES_CACHE.keys():
-            LOGGER.debug('CACHE: Adding to MetaNode UUID Cache: {0} > {1}'.format(meta_node.meta_node, uuid))
+            maya.logger.debug('CACHE: Adding to MetaNode UUID Cache: {0} > {1}'.format(meta_node.meta_node, uuid))
             METANODES_CACHE[uuid] = meta_node
 
         meta_node._lastUUID = uuid
@@ -136,10 +133,10 @@ class MetaDataManager(window.MainWindow, object):
             try:
                 if not metanode.MetaNode.check_metanode_validity(v):
                     METANODES_CACHE.pop(k)
-                    LOGGER.debug('CACHE : {} being removed from the META NODE CACHE due to invalid MObject'.format(k))
+                    maya.logger.debug('CACHE : {} being removed from the META NODE CACHE due to invalid MObject'.format(k))
             except Exception as e:
-                LOGGER.debug('CACHE : Clean cache failed!')
-                LOGGER.debug(str(e))
+                maya.logger.debug('CACHE : Clean cache failed!')
+                maya.logger.debug(str(e))
 
     @staticmethod
     def get_metanode_from_cache(meta_node):
@@ -169,7 +166,7 @@ class MetaDataManager(window.MainWindow, object):
         METANODE_CLASSES_INHERITANCE_MAP[meta_data_name]['short'] = meta_data_name
 
         for meta_class in python.itersubclasses(metanode.MetaNode):
-            LOGGER.debug('Registering: {}'.format(meta_class))
+            maya.logger.debug('Registering: {}'.format(meta_class))
             METANODE_CLASSES_REGISTER[meta_class.__name__] = meta_class
             METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__] = dict()
             METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__]['full'] = list(inspect.getmro(meta_class))
@@ -201,8 +198,7 @@ class MetaDataManager(window.MainWindow, object):
         METANODE_TYPES_REGISTER = list()
 
         if node_types:
-            if not type(node_types) == list():
-                node_types = [node_types]
+            node_types = python.force_list(node_types)
             [base_types.append(n) for n in node_types if n not in base_types]
 
         try:
@@ -210,12 +206,12 @@ class MetaDataManager(window.MainWindow, object):
 
             for node_type in base_types:
                 if node_type not in METANODE_TYPES_REGISTER and node_type in valid_dcc_metanode_types:
-                    LOGGER.debug('MetaNode type: {0} : added to METANODE_TYPES_REGISTER'.format(node_type))
+                    maya.logger.debug('MetaNode type: {0} : added to METANODE_TYPES_REGISTER'.format(node_type))
                     METANODE_TYPES_REGISTER.append(node_type)
                 else:
-                    LOGGER.debug('MetaNode TYPE: {0} is an invalid Maya Meta type'.format(node_type))
+                    maya.logger.debug('MetaNode TYPE: {0} is an invalid Maya Meta type'.format(node_type))
         except Exception as e:
-            LOGGER.warning('Fail when register MetaNode types: {0}'.format(str(e)))
+            maya.logger.warning('Fail when register MetaNode types: {0}'.format(str(e)))
 
     @staticmethod
     def register_meta_nodes():
@@ -272,10 +268,10 @@ class MetaDataManager(window.MainWindow, object):
             if v and v in meta_nodes:
                 try:
                     METANODES_CACHE.pop(k)
-                    LOGGER.debug('METANODES CACHE: {0} being removed from the MetaNodes Cache >> {1}'.format(
+                    maya.logger.debug('METANODES CACHE: {0} being removed from the MetaNodes Cache >> {1}'.format(
                         name_utils.strip_name(k), name_utils.strip_name(v.meta_node)))
                 except Exception as e:
-                    LOGGER.debug('METANODES CACHE: Failed to remove {0} from cache >> {1}'.format(k, v.meta_node))
+                    maya.logger.debug('METANODES CACHE: Failed to remove {0} from cache >> {1}'.format(k, v.meta_node))
 
     @staticmethod
     def reset_metanodes_cache():
@@ -293,7 +289,7 @@ class MetaDataManager(window.MainWindow, object):
     @staticmethod
     def get_metanode_classes_instances(metanode_instances):
         """
-        Returns a list of registered metaClasses that are subclassed from the given metanode classes
+        Returns a list of registered metaNodes classes that are subclassed from the given metanode classes
         This function can be useful to group meta classes by their inheritance
         :param metanode_instances: list<MetaNode>
         :return: list<str>
@@ -311,8 +307,7 @@ class MetaDataManager(window.MainWindow, object):
 
     @staticmethod
     def meta_types_to_registry_key(meta_types):
-        if not type(meta_types) == list:
-            meta_types = [meta_types]
+        meta_types = python.force_list(meta_types)
         keys = list()
 
         for cls in meta_types:
@@ -329,7 +324,7 @@ class MetaDataManager(window.MainWindow, object):
         """
         Converts given node to MetaNode, assuming that the node type is registered in the MetaNodeTypesRegistry
         :param nodes: list, nodes to cast to MetaNode instance
-        :param meta_class: MetaClass class to convert them to
+        :param meta_class: MetaNode class to convert them to
         NOTE: Always use convert_meta_class_to_type function because it checks if the given nodes
         are or not already instantiated or bound to Meta system
         """
@@ -339,7 +334,7 @@ class MetaDataManager(window.MainWindow, object):
         if not type(nodes) == list:
             nodes = [nodes]
         for n in nodes:
-            LOGGER.debug('Converting node {0} >> to {1} MetaNode'.format(name_utils.strip_name(n), meta_class))
+            maya.logger.debug('Converting node {0} >> to {1} MetaNode'.format(name_utils.strip_name(n), meta_class))
             meta_node = metanode.MetaNode(n)
             meta_node.add_attribute('meta_class', value=MetaDataManager.meta_types_to_registry_key(meta_class)[0])
             meta_node.add_attribute('meta_node_id', value=name_utils.strip_name(n))
@@ -353,9 +348,9 @@ class MetaDataManager(window.MainWindow, object):
     @classmethod
     @decorators.timer
     def get_meta_nodes(cls, meta_types=[], meta_instances=[], meta_classes_grps=[], meta_attrs=None,
-                       data_type='MetaClass', node_types=None, **kwargs):
+                       data_type='MetaNode', node_types=None, **kwargs):
         """
-        Get all MetaClass nodes in the current scene and return as MetaClass objects if possible
+        Get all MetaNode nodes in the current scene and return as MetaNode objects if possible
         :param meta_types: list(str), if given, only will return the meta nodes of the given type
         :param meta_instances: list(str), if given the meta inheritance will be checked and child classes
             will be returned
@@ -401,7 +396,7 @@ class MetaDataManager(window.MainWindow, object):
         if meta_attrs:
             raise NotImplementedError('not implemented yet')
 
-        if data_type == 'MetaClass':
+        if data_type == 'MetaNode':
             return [metanode.MetaNode(node, **kwargs) for node in meta_nodes]
         else:
             return meta_nodes
