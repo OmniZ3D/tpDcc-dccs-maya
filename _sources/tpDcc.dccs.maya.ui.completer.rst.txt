@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.ui.completer module
+===================================
+
+.. automodule:: tpDcc.dccs.maya.ui.completer
+   :members:
+   :undoc-members:
+   :show-inheritance:
