@@ -14,7 +14,6 @@ from collections import OrderedDict
 from Qt.QtWidgets import *
 
 import tpDcc
-from tpDcc import register
 from tpDcc.libs.python import python
 import tpDcc.dccs.maya as maya
 from tpDcc.abstract import dcc as abstract_dcc, progressbar
@@ -4926,7 +4925,3 @@ class MayaProgessBar(progressbar.AbstractProgressBar, object):
 #             self.setAttribute(Qt.WA_DeleteOnClose, True)
 #
 #         super(MayaDockedWindow, self).ui()
-
-
-register.register_class('Dcc', MayaDcc)
-register.register_class('DccProgressBar', MayaProgessBar)

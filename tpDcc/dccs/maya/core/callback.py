@@ -176,4 +176,3 @@ class MayaCallback(object):
                 maya.OpenMaya.MSceneMessage.removeCallback(token)
 
 
-register.register_class('Callbacks', MayaCallback)

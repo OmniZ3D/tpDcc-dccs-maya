@@ -12,6 +12,9 @@ import sys
 import inspect
 import logging
 
+import tpDcc.register as core_register
+from tpDcc.dccs.maya import register
+
 # =================================================================================
 
 PACKAGE = 'tpDcc.dccs.maya'
@@ -61,6 +64,62 @@ try:
 except Exception:
     # NOTE: We use this empty try/catch to avoid errors during CI/CD
     pass
+
+
+def use_new_api(flag=False):
+    """
+    Enables new Maya API usage
+    """
+
+    from tpDcc.dccs.maya import register
+
+    if new_api:
+        if flag:
+            OpenMaya = api2['OpenMaya']
+            OpenMayaUI = api2['OpenMayaUI']
+            OpenMayaAnim = api2['OpenMayaAnim']
+            OpenMayaRender = api2['OpenMayaRender']
+        else:
+            OpenMaya = api['OpenMaya']
+            OpenMayaUI = api['OpenMayaUI']
+            OpenMayaAnim = api['OpenMayaAnim']
+            OpenMayaRender = api['OpenMayaRender']
+    else:
+        OpenMaya = api['OpenMaya']
+        OpenMayaUI = api['OpenMayaUI']
+        OpenMayaAnim = api['OpenMayaAnim']
+        OpenMayaRender = api['OpenMayaRender']
+
+    register.register_class('OpenMaya', OpenMaya)
+    register.register_class('OpenMayaUI', OpenMayaUI)
+    register.register_class('OpenMayaAnim', OpenMayaAnim)
+    register.register_class('OpenMayaRender', OpenMayaRender)
+
+
+def is_new_api():
+    """
+    Returns whether new Maya API is used or not
+    :return: bool
+    """
+
+    return not OpenMaya == api['OpenMaya']
+
+
+register.register_class('is_new_api', is_new_api)
+register.register_class('use_news_api', use_new_api)
+register.register_class('cmds', cmds)
+register.register_class('mel', mel)
+register.register_class('utils', utils)
+register.register_class('OpenMaya', OpenMaya)
+register.register_class('OpenMayaUI', OpenMayaUI)
+register.register_class('OpenMayaAnim', OpenMayaAnim)
+register.register_class('OpenMayaRender', OpenMayaRender)
+
+
+# =================================================================================
+
+from tpDcc.dccs.maya.core import dcc, callback, menu, shelf
+from tpDcc.dccs.maya.ui import completer, dialog, window
 
 # =================================================================================
 
@@ -140,29 +199,14 @@ def init_dcc(dev=False):
     :param dev: bool, Whether to launch code in dev mode or not
     """
 
-    from tpDcc.dccs.maya import register
-    from tpDcc.libs.python import importer
-
     if dev:
         register.cleanup()
-
-    register.register_class('is_new_api', is_new_api)
-    register.register_class('cmds', cmds)
-    register.register_class('mel', mel)
-    register.register_class('utils', utils)
-    register.register_class('OpenMaya', OpenMaya)
-    register.register_class('OpenMayaUI', OpenMayaUI)
-    register.register_class('OpenMayaAnim', OpenMayaAnim)
-    register.register_class('OpenMayaRender', OpenMayaRender)
 
     update_paths()
     register_resources()
 
     logger = create_logger(dev=dev)
     register.register_class('logger', logger)
-
-    skip_modules = ['{}.{}'.format(PACKAGE, name) for name in ['loader', 'ui']]
-    importer.init_importer(package=PACKAGE, skip_modules=skip_modules)
 
     use_new_api()
 
@@ -178,45 +222,6 @@ def init_ui():
     use_new_api()
 
     create_metadata_manager()
-
-
-def use_new_api(flag=False):
-    """
-    Enables new Maya API usage
-    """
-
-    from tpDcc.dccs.maya import register
-
-    if new_api:
-        if flag:
-            OpenMaya = api2['OpenMaya']
-            OpenMayaUI = api2['OpenMayaUI']
-            OpenMayaAnim = api2['OpenMayaAnim']
-            OpenMayaRender = api2['OpenMayaRender']
-        else:
-            OpenMaya = api['OpenMaya']
-            OpenMayaUI = api['OpenMayaUI']
-            OpenMayaAnim = api['OpenMayaAnim']
-            OpenMayaRender = api['OpenMayaRender']
-    else:
-        OpenMaya = api['OpenMaya']
-        OpenMayaUI = api['OpenMayaUI']
-        OpenMayaAnim = api['OpenMayaAnim']
-        OpenMayaRender = api['OpenMayaRender']
-
-    register.register_class('OpenMaya', OpenMaya)
-    register.register_class('OpenMayaUI', OpenMayaUI)
-    register.register_class('OpenMayaAnim', OpenMayaAnim)
-    register.register_class('OpenMayaRender', OpenMayaRender)
-
-
-def is_new_api():
-    """
-    Returns whether new Maya API is used or not
-    :return: bool
-    """
-
-    return not OpenMaya == api['OpenMaya']
 
 
 def create_metadata_manager():
@@ -241,3 +246,21 @@ def register_resources():
     resources_manager = tpDcc.ResourcesMgr()
     resources_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
     resources_manager.register_resource(resources_path, key=tpDcc.Dccs.Maya)
+
+
+# =================================================================================
+
+core_register.register_class('Dcc', dcc.MayaDcc)
+core_register.register_class('DccProgressBar', dcc.MayaProgessBar)
+core_register.register_class('Callbacks', callback.MayaCallback)
+core_register.register_class('Menu', menu.MayaMenu)
+core_register.register_class('Shelf', shelf.MayaShelf)
+core_register.register_class('Completer', completer.MayaCompleter)
+core_register.register_class('Dialog', dialog.MayaDialog)
+core_register.register_class('OpenFileDialog', dialog.MayaOpenFileDialog)
+core_register.register_class('SaveFileDialog', dialog.MayaSaveFileDialog)
+core_register.register_class('SelectFolderDialog', dialog.MayaSelectFolderDialog)
+core_register.register_class('NativeDialog', dialog.MayaNativeDialog)
+core_register.register_class('Window', window.MayaWindow)
+core_register.register_class('DockWindow', window.MayaWindow)
+core_register.register_class('SubWindow', window.MayaWindow)

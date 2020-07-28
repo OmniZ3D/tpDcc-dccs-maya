@@ -9,14 +9,10 @@ from __future__ import print_function, division, absolute_import
 
 import os
 import json
-import logging
 from collections import OrderedDict
 
-from tpDcc import register
 from tpDcc.abstract import menu as abstract_menu
 import tpDcc.dccs.maya as maya
-
-LOGGER = logging.getLogger()
 
 
 class MayaMenu(abstract_menu.AbstractMenu, object):
@@ -54,7 +50,7 @@ class MayaMenu(abstract_menu.AbstractMenu, object):
             return
 
         if not os.path.isfile(file_path):
-            LOGGER.warning('Menu was not created because menu file is not valid or does not exists!')
+            maya.logger.warning('Menu was not created because menu file is not valid or does not exists!')
             return
 
         with open(file_path, 'r') as f:
@@ -137,6 +133,3 @@ def find_menu(menu_name):
             return m
 
     return None
-
-
-register.register_class('Menu', MayaMenu)

@@ -10,7 +10,6 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtWidgets import *
 from Qt.QtCore import *
 
-from tpDcc import register
 from tpDcc.libs.qt.core import window as core_window
 from tpDcc.dccs import maya as maya
 
@@ -170,8 +169,3 @@ def bootstrap_destroy_window(object_name):
         wid.close()
         return True
     return False
-
-
-register.register_class('Window', MayaWindow)
-register.register_class('DockWindow', MayaWindow)
-register.register_class('SubWindow', MayaWindow)

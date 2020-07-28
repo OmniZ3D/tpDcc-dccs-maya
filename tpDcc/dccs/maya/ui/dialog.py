@@ -9,7 +9,6 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-from tpDcc import register
 from tpDcc.libs.python import path as path_utils
 from tpDcc.libs.qt.core import dialog as core_dialog
 from tpDcc.dccs.maya.core import directory
@@ -84,9 +83,3 @@ class MayaNativeDialog(core_dialog.NativeDialog, object):
 
         return folder_path
 
-
-register.register_class('Dialog', MayaDialog)
-register.register_class('OpenFileDialog', MayaOpenFileDialog)
-register.register_class('SaveFileDialog', MayaSaveFileDialog)
-register.register_class('SelectFolderDialog', MayaSelectFolderDialog)
-register.register_class('NativeDialog', MayaNativeDialog)

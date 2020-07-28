@@ -14,7 +14,6 @@ from functools import partial
 from Qt.QtCore import *
 from Qt.QtWidgets import *
 
-from tpDcc import register
 import tpDcc.dccs.maya as maya
 from tpDcc.abstract import shelf as abstract_shelf
 from tpDcc.libs.qt.core import qtutils
@@ -225,6 +224,3 @@ class MayaShelf(abstract_shelf.AbstractShelf, object):
                     maya.cmds.deleteUI(item)
                 except Exception:
                     pass
-
-
-register.register_class('Shelf', MayaShelf)

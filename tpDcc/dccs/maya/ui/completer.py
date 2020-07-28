@@ -9,7 +9,6 @@ from __future__ import print_function, division, absolute_import
 
 from Qt.QtCore import *
 
-from tpDcc import register
 from tpDcc.libs.qt.core import completer
 
 
@@ -66,9 +65,6 @@ class MayaCompleter(completer.BaseCompleter):
                         else:
                             syntax.append(node)
                     return '\n'.join(syntax)
-                except:
+                except Exception:
                     pass
         return text
-
-
-register.register_class('Completer', MayaCompleter)
