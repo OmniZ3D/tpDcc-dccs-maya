@@ -22,7 +22,7 @@ from tpDcc.dccs.maya.core import helpers, name, namespace, scene, playblast, tra
 from tpDcc.dccs.maya.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
 from tpDcc.dccs.maya.core import sequencer, animation, qtutils, decorators as maya_decorators, shape as shape_utils
 from tpDcc.dccs.maya.core import filtertypes, joint as joint_utils, space as space_utils, curve as curve_utils
-from tpDcc.dccs.maya.core import geometry as geo_utils, ik as ik_utils, deformer as deform_utils
+from tpDcc.dccs.maya.core import geometry as geo_utils, ik as ik_utils, deformer as deform_utils, color as maya_color
 from tpDcc.dccs.maya.core import follicle as follicle_utils, rivet as rivet_utils, constraint as constraint_utils
 
 
@@ -632,7 +632,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param node: str
         """
 
-        return maya.cmds.select(node, replace=replace_selection, **kwargs)
+        return maya.cmds.select(node, replace=replace_selection, add=not replace_selection, **kwargs)
 
     @staticmethod
     def select_hierarchy(root=None, add=False):
@@ -689,6 +689,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.delete(node)
+
+    @staticmethod
+    def clean_construction_history(node):
+        """
+        Removes the construction history of the given node
+        :param node: str
+        """
+
+        return maya.cmds.delete(node, constructionHistory=True)
 
     @staticmethod
     def selected_nodes(full_path=True, **kwargs):
@@ -1230,6 +1239,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
                 node, children=True, allDescendents=all_hierarchy, fullPath=full_path, type=children_type)
         else:
             children = maya.cmds.listRelatives(node, children=True, allDescendents=all_hierarchy, fullPath=full_path)
+        if not children:
+            return list()
 
         children.reverse()
 
@@ -1317,8 +1328,12 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return:
         """
 
-        return shape_utils.get_shapes_in_hierarchy(
-            transform_node=node, full_path=full_path, intermediate_shapes=intermediate_shapes)
+        if all_hierarchy:
+            return shape_utils.get_shapes_in_hierarchy(
+                transform_node=node, full_path=full_path, intermediate_shapes=intermediate_shapes)
+        else:
+            return maya.cmds.listRelatives(
+                node, shapes=True, fullPath=full_path, noIntermediate=not intermediate_shapes, allDescendents=False)
 
         # return maya.cmds.listRelatives(node, shapes=True, fullPath=full_path, children=True,
         # allDescendents=all_hierarchy, noIntermediate=not intermediate_shapes)
@@ -2237,7 +2252,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             '{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), force=force)
 
     @staticmethod
-    def connect_multiply(source_node, source_attribute, target_node, target_attribute, value=0.1):
+    def connect_multiply(source_node, source_attribute, target_node, target_attribute, value=0.1, multiply_name=None):
         """
         Connects source attribute into target attribute with a multiply node inbetween
         :param source_node: str
@@ -2245,11 +2260,13 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param target_node: str
         :param target_attribute: str
         :param value: float, value of the multiply node
+        :param multiply_name: str
         :return: str, name of the created multiply node
         """
 
         return attribute.connect_multiply(
-            '{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), value=value)
+            '{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute),
+            value=value, name=multiply_name)
 
     @staticmethod
     def connect_translate(source_node, target_node):
@@ -4339,15 +4356,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.circle(n=name, normal=normal, ch=construction_history)[0]
 
     @staticmethod
-    def create_joint(joint_name, size=1.0):
+    def create_joint(name, size=1.0, *args, **kwargs):
         """
         Creates a new joint
-        :param joint_name: str, name of the new joint
+        :param name: str, name of the new joint
         :param size: float, size of the joint
         :return: str
         """
 
-        return maya.cmds.joint(name=joint_name, rad=size)
+        pos = kwargs.pop('position', [0, 0, 0])
+
+        return maya.cmds.joint(name=name, rad=size, p=pos)
 
     @staticmethod
     def orient_joint(joint, **kwargs):
@@ -4497,6 +4516,20 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             return follicle_utils.follicle_to_surface(transform, surface, constraint=constraint)
         else:
             return rivet_utils.attach_to_surface(transform, surface, constraint=constraint)
+
+    @staticmethod
+    def create_curve(name, degree, points, knots, periodic):
+        """
+        Creates a new Nurbs curve
+        :param name: str, name of the new curve
+        :param degree: int
+        :param points: list
+        :param knots: list
+        :param periodic: bool
+        :return: str
+        """
+
+        return maya.cmds.curve(n=name, d=degree, p=points, k=knots, per=periodic)
 
     @staticmethod
     def create_curve_from_transforms(transforms, spans=None, description='from_transforms'):
@@ -4697,6 +4730,24 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return transform.get_pole_vector(transform_init, transform_mid, transform_end, offset=offset)
+
+    @staticmethod
+    def get_control_colors():
+        """
+        Returns control colors available in DCC
+        :return: list(float, float, float)
+        """
+
+        return maya_color.CONTROL_COLORS
+
+    @staticmethod
+    def get_all_fonts():
+        """
+        Returns all fonts available in DCC
+        :return: list(str)
+        """
+
+        return maya.cmds.fontDialog(FontList=True) or list()
 
     @staticmethod
     def deferred_function(fn, *args, **kwargs):
