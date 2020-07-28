@@ -7,13 +7,9 @@ Module that contains functions and classes related with Maya API
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-
-from tpDcc.libs.python import mathlib
+from tpDcc.libs.python import mathlib, python
 
 import tpDcc.dccs.maya as maya
-
-LOGGER = logging.getLogger()
 
 
 class ApiObject(object):
@@ -27,25 +23,20 @@ class ApiObject(object):
     def __call__(self):
         return self.obj
 
-    # region Public Functions
     def get(self):
         return None
 
     def get_api_object(self):
         return self.obj
-    # endregion
 
-    # region Private Functions
     def _set_api_object(self):
         return None
-    # endregion
 
 
 class Point(ApiObject, object):
     def __init__(self, x=0, y=0, z=0, w=1):
         self.obj = self._set_api_object(x, y, z, w)
 
-    # region Override Functions
     def _set_api_object(self, x, y, z, w):
         return maya.OpenMaya.MPoint(x, y, z, w)
 
@@ -54,14 +45,12 @@ class Point(ApiObject, object):
 
     def get_as_vector(self):
         return [self.obj.x, self.obj.y, self.obj.z]
-    # endregion
 
 
 class FloatPoint(ApiObject, object):
     def __init__(self, x=0, y=0, z=0, w=1):
         self.obj = self._set_api_object(x, y, z, w)
 
-    # region Override Functions
     def _set_api_object(self, x, y, z, w):
         return maya.OpenMaya.MFloatPoint(x, y, z, w)
 
@@ -70,7 +59,6 @@ class FloatPoint(ApiObject, object):
 
     def get_as_vector(self):
         return [self.obj.x, self.obj.y, self.obj.z]
-    # endregion
 
 
 class Matrix(ApiObject, object):
@@ -79,7 +67,6 @@ class Matrix(ApiObject, object):
             matrix_list = list()
         self.obj = self._set_api_object(matrix_list)
 
-    # region Override Functions
     def _set_api_object(self, matrix_list):
         matrix = maya.OpenMaya.MMatrix()
         if matrix_list:
@@ -212,6 +199,12 @@ class PointArray(ApiObject, object):
         for i in range(len(positions)):
             self.obj.set(i, positions[i][0], positions[i][1], positions[i][2])
 
+    def length(self):
+        if maya.is_new_api():
+            return len(self.obj)
+        else:
+            return self.obj.length()
+
 
 class DagPathArray(ApiObject, object):
 
@@ -252,7 +245,7 @@ class MayaObject(ApiObject, object):
     """
 
     def __init__(self, mobj=None):
-        if type(mobj) in [str, unicode]:
+        if python.is_string(mobj):
             mobj = node_name_to_mobject(mobj)
 
         if mobj:
@@ -367,7 +360,7 @@ class SelectionList(ApiObject, object):
         try:
             self.obj.add(name)
         except Exception:
-            LOGGER.warning('Could not add {} into selection list'.format(name))
+            maya.logger.warning('Could not add {} into selection list'.format(name))
             return
 
     def get_depend_node(self, index=0):
@@ -384,7 +377,7 @@ class SelectionList(ApiObject, object):
                 self.obj.getDependNode(0, mobj())
             return mobj()
         except Exception:
-            LOGGER.warning('Could not get MObject at index {}'.format(index))
+            maya.logger.warning('Could not get MObject at index {}'.format(index))
             return
 
     def get_dag_path(self, index=0):
@@ -402,8 +395,8 @@ class SelectionList(ApiObject, object):
             maya_dag_path = maya.OpenMaya.MDagPath()
             self.obj.getDagPath(index, maya_dag_path)
 
-        return DagPath(maya_dag_path)
-
+        return maya_dag_path
+        
     def get_component(self, index=0):
         """
         Returns the index'th item of the list as a component, represented by
@@ -645,7 +638,7 @@ class TransformFunction(MayaFunction, object):
 
     def get_vector_matrix_product(self, vector):
         # TODO: Not working properly
-        LOGGER.warning('get_vector_matrix_product() does not work properly yet ...!')
+        maya.logger.warning('get_vector_matrix_product() does not work properly yet ...!')
         vct = maya.OpenMaya.MVector()
         vct.x = vector[0]
         vct.y = vector[1]
@@ -962,6 +955,7 @@ class MeshFunction(MayaFunction, object):
 
 
 class NurbsSurfaceFunction(MayaFunction, object):
+
     def _set_api_object(self, mobj):
         return maya.OpenMaya.MFnNurbsSurface(mobj)
 
