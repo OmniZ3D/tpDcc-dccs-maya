@@ -97,7 +97,8 @@ class MetaDataManager(window.MainWindow, object):
                         'METANODES_CACHE: {0} : UUID is registered to a different node : modifying UUID: {1}'.format(
                             uuid, meta_node.meta_node))
                 else:
-                    maya.logger.debug('METANODES_CACHE : UUID {0} is already registered in METANODES_CACHE'.format(uuid))
+                    maya.logger.debug(
+                        'METANODES_CACHE : UUID {0} is already registered in METANODES_CACHE'.format(uuid))
 
         return generated_uuid
 
@@ -133,7 +134,8 @@ class MetaDataManager(window.MainWindow, object):
             try:
                 if not metanode.MetaNode.check_metanode_validity(v):
                     METANODES_CACHE.pop(k)
-                    maya.logger.debug('CACHE : {} being removed from the META NODE CACHE due to invalid MObject'.format(k))
+                    maya.logger.debug(
+                        'CACHE : {} being removed from the META NODE CACHE due to invalid MObject'.format(k))
             except Exception as e:
                 maya.logger.debug('CACHE : Clean cache failed!')
                 maya.logger.debug(str(e))

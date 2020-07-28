@@ -843,12 +843,14 @@ class AttributeValidator(object):
         if file_path:
             if file_mode == 1:
                 if os.path.exists(file_path):
-                    maya.logger.debug('{} mode | file path validated ... {}'.format(open_modes.get(file_mode), file_path))
+                    maya.logger.debug(
+                        '{} mode | file path validated ... {}'.format(open_modes.get(file_mode), file_path))
                     result = file_path
                 else:
                     maya.logger.debug('Invalid file path ... {}'.format(file_path))
             elif file_mode == 0:
-                maya.logger.debug('{} mode | file path invalidated ... {}'.format(open_modes.get(file_mode), file_path))
+                maya.logger.debug(
+                    '{} mode | file path invalidated ... {}'.format(open_modes.get(file_mode), file_path))
                 result = file_path
 
         return result

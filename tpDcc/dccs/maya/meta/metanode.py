@@ -31,7 +31,8 @@ def node_lock_manager(fn):
         try:
             locked = False
             meta_node = args[0]
-            maya.logger.debug('NodeLockManager > fn : {0} : MetaNode / self: {1}'.format(fn.__name__, meta_node.meta_node))
+            maya.logger.debug(
+                'NodeLockManager > fn : {0} : MetaNode / self: {1}'.format(fn.__name__, meta_node.meta_node))
             if meta_node.meta_node and meta_node._lockState:
                 locked = True
                 maya.logger.debug('NodeLockManager > fn : {0} : node being unlocked'.format(fn.__name))
@@ -102,9 +103,9 @@ class MetaNode(object):
             if meta_class in metadatamanager.METANODE_CLASSES_REGISTER:
                 registered_meta_class = metadatamanager.METANODE_CLASSES_REGISTER[meta_class]
                 try:
-                    maya.logger.debug('### Instantiating existing MetaClass : {0} >> {1} ###'.format(
+                    maya.logger.debug('### Instantiating existing MetaClass : {0} >> {1}'.format(
                         meta_class, registered_meta_class))
-                    return super(cls.__class__, cls).__new__(registered_meta_class) #, *args, **kwargs)
+                    return super(cls.__class__, cls).__new__(registered_meta_class)
                 except Exception:
                     maya.logger.debug('Failed to initialize MetaClass : {0}'.format(registered_meta_class))
                     pass
@@ -535,7 +536,6 @@ class MetaNode(object):
 
                 mobj = object.__getattribute__(self, '_MObject')
 
-                # maya.logger.debug('Getting Maya Node: \n\tMObject=>{} \n\tMObjectHandle=>{}'.format(mobj, mobj_handle))
                 if maya.OpenMaya.MObject.hasFn(mobj, maya.OpenMaya.MFn.kDagNode):
                     dag_path = maya.OpenMaya.MDagPath()
                     maya.OpenMaya.MDagPath.getAPathTo(mobj, dag_path)
@@ -1462,8 +1462,9 @@ class MetaNode(object):
                                     'Connecting MeatNode nodes via indices: {0}.{1} >> {2}.{3}'.format(
                                         self.meta_node, attr, node, source_attr))
                             elif allow_incest:
-                                maya.logger.debug('Connecting Standard Maya nodes via indices: {0}.{1} >> {2}.{3}'.format(
-                                    self.meta_node, attr, node, source_attr))
+                                maya.logger.debug(
+                                    'Connecting Standard Maya nodes via indices: {0}.{1} >> {2}.{3}'.format(
+                                        self.meta_node, attr, node, source_attr))
                             if not source_simple:
                                 maya.cmds.connectAttr(
                                     '%s.%s[%i]' % (
@@ -1554,7 +1555,8 @@ class MetaNode(object):
                 attr = source_plug.split('[')[0]  # split any multi-indexing from the plug ie node.attr[0]
                 if maya.cmds.listConnections(attr):
                     allow_delete = False
-                    maya.logger.debug('DstPlug connections remaining: {0}'.format(','.join(maya.cmds.listConnections(attr))))
+                    maya.logger.debug(
+                        'DstPlug connections remaining: {0}'.format(','.join(maya.cmds.listConnections(attr))))
                 if allow_delete:
                     maya.logger.debug('Deleting DstPug Attr {}'.format(attr))
                     delattr(source_plug_meta, attr.split('.')[-1])
@@ -1970,7 +1972,8 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
                 pass
             redo = True
         elif cached_type == new_meta_class:
-            maya.logger.debug('Cached Type ({0}) match with new given MetaClass ({1})'.format(cached_type, new_meta_class))
+            maya.logger.debug(
+                'Cached Type ({0}) match with new given MetaClass ({1})'.format(cached_type, new_meta_class))
             if update_class and not cached_meta_class:
                 maya.logger.debug('Trying to update given node with UUID and meta_class attributes')
                 try:

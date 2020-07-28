@@ -894,7 +894,7 @@ class RiggedLine(object):
         """
 
         self._curve = maya.cmds.curve(
-            d = 1, p = [(0, 0, 0),(0,0,0)], k = [0, 1], n=tp.Dcc.find_unique_name('guideLine_%s' % self._name))
+            d=1, p=[(0, 0, 0), (0, 0, 0)], k=[0, 1], n=tp.Dcc.find_unique_name('guideLine_%s' % self._name))
         maya.cmds.delete(self._curve, ch=True)
         shapes = shape_utils.get_shapes(self._curve)
         maya.cmds.rename(shapes[0], '{}Shape'.format(self._curve))
@@ -1060,9 +1060,11 @@ class TwistRibbon(object):
 
         tp.Dcc.set_parent(self._surface, self._group)
         if not self._joints:
-            self._joints = geo_utils.nurbs_surface_u_to_transforms(self._surface, self._description, count=self._joint_count)
+            self._joints = geo_utils.nurbs_surface_u_to_transforms(
+                self._surface, self._description, count=self._joint_count)
 
-        self._rivets_group = tp.Dcc.create_empty_group(tp.Dcc.find_unique_name('twistRibbon_rivets_{}'.format(self._description)))
+        self._rivets_group = tp.Dcc.create_empty_group(
+            tp.Dcc.find_unique_name('twistRibbon_rivets_{}'.format(self._description)))
         tp.Dcc.set_parent(self._rivets_group, self._group)
 
         for joint in self._joints:

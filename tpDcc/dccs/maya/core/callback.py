@@ -174,5 +174,3 @@ class MayaCallback(object):
         def unregister(cls, token):
             if token:
                 maya.OpenMaya.MSceneMessage.removeCallback(token)
-
-

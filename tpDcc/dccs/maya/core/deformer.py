@@ -113,7 +113,7 @@ class ClusterSurface(ClusterObject, object):
                 index = '[*][0]'
 
             self._cv_count = len(maya.cmds.ls('{}.cv{}'.format(self._geo, index), flatten=True))
-        
+
         start_index = 0
         cv_count = self._cv_count
         if self._join_ends:

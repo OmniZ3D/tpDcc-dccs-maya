@@ -396,7 +396,7 @@ class SelectionList(ApiObject, object):
             self.obj.getDagPath(index, maya_dag_path)
 
         return maya_dag_path
-        
+
     def get_component(self, index=0):
         """
         Returns the index'th item of the list as a component, represented by
@@ -893,8 +893,9 @@ class MeshFunction(MayaFunction, object):
         hit_bary2_ptr = hit_bary2.asFloatPtr()
 
         self.obj.closestIntersection(
-            point_base, point_direction, None, None, False, space, 100000, False, accelerator, hit_point,
-            hit_param_ptr, hit_face_ptr, hit_triangle_ptr, hit_bary1_ptr, hit_bary2_ptr)
+            point_base, point_direction, None, None, False, space, 100000, False, accelerator,
+            hit_point, hit_param_ptr, hit_face_ptr, hit_triangle_ptr, hit_bary1_ptr, hit_bary2_ptr
+        )
 
         return [hit_point.x, hit_point.y, hit_point.z]
 

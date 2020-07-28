@@ -82,4 +82,3 @@ class MayaNativeDialog(core_dialog.NativeDialog, object):
         folder_path = directory.select_folder_dialog(title=title, start_directory=clean_path)
 
         return folder_path
-

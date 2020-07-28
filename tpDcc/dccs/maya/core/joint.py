@@ -602,7 +602,9 @@ class OrientJoint(object):
             return
 
         if self._child:
-            maya.logger.warning('Orient Joints inverted scale only permitted on joints with no children. Skipping scale invert change on {}'.format(name_utils.get_basename(self.joint)))
+            maya.logger.warning(
+                'Orient Joints inverted scale only permitted on joints with no children. '
+                'Skipping scale invert change on {}'.format(name_utils.get_basename(self.joint)))
             return
 
         if invert_scale == 1:

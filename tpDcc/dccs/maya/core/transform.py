@@ -1970,7 +1970,7 @@ def set_rotate_z_limit(transform, min_value=None, max_value=None):
     maya.cmds.transformLimits(transform, rz=[min_value, max_value], erz=[min_bool, max_bool])
 
 
-def randomize_transform(translate=[0.1, 0.1, 0.1], rotate=[1,1,1], scale=[0.1, 0.1, 0.1], transforms=None):
+def randomize_transform(translate=[0.1, 0.1, 0.1], rotate=[1, 1, 1], scale=[0.1, 0.1, 0.1], transforms=None):
     """
     Generates random transforms taking into account the given amounts
     :param translate: list(float, float, float), positive and negative amount values used to generate random translation
