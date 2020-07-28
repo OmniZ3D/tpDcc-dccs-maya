@@ -198,7 +198,7 @@ class MetaNode(object):
         try:
             if attr in MetaNode.UNMANAGED:
                 return data
-            #
+
             meta_node = object.__getattribute__(self, 'meta_node')
             if not meta_node or not maya.cmds.objExists(meta_node):
                 return data

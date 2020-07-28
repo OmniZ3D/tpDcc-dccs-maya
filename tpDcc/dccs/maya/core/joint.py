@@ -360,6 +360,12 @@ class OrientJointAttributes(object):
         self.attributes.append(attribute.create_triangle_attribute(name='triangleMid', node=self.joint, value=2))
         self.attributes.append(attribute.create_triangle_attribute(name='triangleBottom', node=self.joint, value=3))
 
+        invert_scale_attr = attribute.EnumAttribute('invertScale')
+        invert_scale_attr.set_enum_names(['none', 'X', 'Y', 'Z', 'XY', 'XZ', 'YZ'])
+        invert_scale_attr.set_locked(False)
+        invert_scale_attr.create(self.joint)
+        self.attributes.append(invert_scale_attr)
+
         active_attr = attribute.NumericAttribute('active', value=1)
         active_attr.set_variable_type(attribute.AttributeTypes.Bool)
         active_attr.set_keyable(True)
@@ -534,7 +540,7 @@ class OrientJoint(object):
             self._invert_scale()
         self._cleanup()
         self._freeze(scale=False)
-        self._parent()
+        self._create_parent()
 
     def _get_values(self):
         """
@@ -563,9 +569,9 @@ class OrientJoint(object):
             if grand_parent:
                 self._grand_parent = grand_parent[0]
 
-        if self._children:
+        if not self._children:
             self._children = maya.cmds.listRelatives(self._joint, f=True, type='transform')
-        else:
+        if self._children:
             self._child = self._children[0]
 
     def _get_children_special_cases(self):
@@ -822,7 +828,7 @@ class OrientJoint(object):
 
         self._delete_later.append(aim)
 
-    def _parent(self):
+    def _create_parent(self):
         if self._children:
             maya.cmds.parent(self._children, self._joint)
 
@@ -1466,7 +1472,7 @@ def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
     return '{}.scale'.format(inverse_scale_object)
 
 
-def create_joint_at_points(points, name):
+def create_joint_at_points(points, name, joint_radius=1.0):
     """
     Creates a new joint in the middle center of the given points. If only 1 point is given, the joint
     will be created in the same exact position of the point
@@ -1477,7 +1483,7 @@ def create_joint_at_points(points, name):
 
     pos = transform.get_center(points)
     maya.cmds.select(clear=True)
-    joint = maya.cmds.joint(n=name_utils.find_unique_name('joint_{}'.format(name)), p=pos)
+    joint = maya.cmds.joint(n=name_utils.find_unique_name('joint_{}'.format(name)), p=pos, radius=joint_radius)
 
     return joint
 

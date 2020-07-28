@@ -15,8 +15,6 @@ from tpDcc.libs.python import python, mathlib, name as name_utils
 from tpDcc.dccs.maya.core import node, attribute, exceptions, name as name_lib, decorators
 from tpDcc.dccs.maya.core import geometry as geo_utils, shape as shape_utils
 
-LOGGER = logging.getLogger()
-
 ALL_DEFORMERS = (
     'blendShape',
     'skinCluster',
@@ -48,7 +46,6 @@ class ClusterObject(object):
         self._clusters = list()
         self._handles = list()
 
-    # region Public Functions
     def create(self):
         """
         Creates the clusters
@@ -71,9 +68,7 @@ class ClusterObject(object):
         """
 
         return self._handles
-    # endregion
 
-    # region Private Functions
     def _create(self):
         """
         Internal function that creates the custer
@@ -84,7 +79,6 @@ class ClusterObject(object):
 
     def _create_cluster(self, cvs):
         return create_cluster(cvs, self._name)
-    # endregion
 
 
 class ClusterSurface(ClusterObject, object):
@@ -108,7 +102,6 @@ class ClusterSurface(ClusterObject, object):
 
         self._cluster_u = True
 
-    # region Override Functions
     def _create(self):
         self._cvs = maya.cmds.ls('{}.cv[*]'.format(self._geo, flatten=True))
         if self._maya_type == 'nurbsCurve':
@@ -120,7 +113,7 @@ class ClusterSurface(ClusterObject, object):
                 index = '[*][0]'
 
             self._cv_count = len(maya.cmds.ls('{}.cv{}'.format(self._geo, index), flatten=True))
-
+        
         start_index = 0
         cv_count = self._cv_count
         if self._join_ends:
@@ -141,7 +134,7 @@ class ClusterSurface(ClusterObject, object):
                     index = '[{}][*]'.format(i)
                 cv = '{}.cv{}'.format(self._geo, index)
             else:
-                LOGGER.warning('Given NURBS Maya type "{}" is not valid!'.format(self._maya_type))
+                maya.logger.warning('Given NURBS Maya type "{}" is not valid!'.format(self._maya_type))
                 return
 
             cluster, handle = self._create_cluster(cv)
@@ -153,9 +146,7 @@ class ClusterSurface(ClusterObject, object):
             self._handles.append(last_handle)
 
         return self._clusters
-    # endregion
 
-    # region Public Functions
     def set_join_ends(self, flag):
         """
         Sets whether clusters on the end of the surface take up 2 CVs or 1 CV
@@ -195,9 +186,7 @@ class ClusterSurface(ClusterObject, object):
         """
 
         self._cluster_u = flag
-    # endregion
 
-    # region Private Functions
     def _create_start_and_end_clusters(self):
         """
         Internal function used to create start and end clusters
@@ -211,7 +200,7 @@ class ClusterSurface(ClusterObject, object):
         if self._maya_type == 'nurbsCurve':
             start_cvs = '{}.cv[0:1]'.format(self._geo)
             end_cvs = '{}.cv[{}:{}]'.format(self._geo, self._cv_count - 2, self._cv_count - 1)
-            start_pos = maya.cmds.xforem('{}.cv[0]'.format(self._geo), q=True, ws=True, t=True)
+            start_pos = maya.cmds.xform('{}.cv[0]'.format(self._geo), q=True, ws=True, t=True)
             end_pos = maya.cmds.xform('{}.cv[{}]'.format(self._geo, self._cv_count - 1), q=True, ws=True, t=True)
         elif self._maya_type == 'nurbsSurface':
             if self._cluster_u:
@@ -278,7 +267,6 @@ class ClusterSurface(ClusterObject, object):
         cluster, handle = self._create_cluster(cvs)
         self._clusters.append(cluster)
         self._handles.append(handle)
-    # endregion
 
 
 class ClusterCurve(ClusterSurface, object):
@@ -286,7 +274,6 @@ class ClusterCurve(ClusterSurface, object):
     Util class for clustering a curve
     """
 
-    # region Override Functions
     def _create(self):
         self._cvs = maya.cmds.ls('{}.cv[*]'.format(self._geo), flatten=True)
         self._cv_count = len(self._cvs)
@@ -331,8 +318,7 @@ class ClusterCurve(ClusterSurface, object):
         :param flag: bool
         """
 
-        LOGGER.warning('Cannot set cluster U, there is only one direction for spans on a curve.')
-    # endregion
+        maya.logger.warning('Cannot set cluster U, there is only one direction for spans on a curve.')
 
 
 def is_deformer(deformer):
@@ -409,7 +395,7 @@ def get_deformer_fn(deformer):
     """
 
     if maya.use_new_api():
-        LOGGER.warning('MFnWeightGeometryFilter does not exists in OpenMayaAnim 2.0 yet! Using OpenMaya 1.0 ...')
+        maya.logger.warning('MFnWeightGeometryFilter does not exists in OpenMayaAnim 2.0 yet! Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
 
     if not maya.cmds.objExists(deformer):
@@ -673,7 +659,7 @@ def find_input_shape(shape):
     if not deformer_obj.hasFn(maya.OpenMaya.MFn.kGeometryFilt):
         deformer_hist = maya.cmds.listHistory(shape, type='geometryFilter')
         if not deformer_hist:
-            LOGGER.warning(
+            maya.logger.warning(
                 'Shape node "{0}" has incoming inMesh connections but is not affected by any valid deformers! '
                 'Returning "{0}"!'.format(shape))
             return shape
@@ -719,7 +705,7 @@ def get_weights(deformer, geometry=None):
 
     use_new_api = False
     if maya.is_new_api():
-        LOGGER.warning(
+        maya.logger.warning(
             'get_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! '
             'Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
@@ -756,7 +742,7 @@ def set_weights(deformer, weights, geometry=None):
 
     use_new_api = False
     if maya.is_new_api():
-        LOGGER.warning(
+        maya.logger.warning(
             'set_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! '
             'Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
@@ -857,7 +843,7 @@ def prune_membership_by_weights(deformer, geo_list=None, threshold=0.001):
 
     use_new_api = False
     if maya.is_new_api():
-        LOGGER.warning(
+        maya.logger.warning(
             'prune_membership_by_weights function is dependant of MFnWeightGeometryFilter which is not available in '
             'OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
         maya.use_new_api(False)
@@ -910,7 +896,7 @@ def clean(deformer, threshold=0.001):
 
     check_deformer(deformer)
 
-    LOGGER.debug('Cleaning deformer: {}!'.format(deformer))
+    maya.logger.debug('Cleaning deformer: {}!'.format(deformer))
 
     prune_weights(deformer=deformer, threshold=threshold)
     prune_membership_by_weights(deformer=deformer, threshold=threshold)
@@ -944,11 +930,11 @@ def check_multiple_outputs(deformer, print_result=True):
         if len(plug_cnt) > 1:
             return_dict[deformer + '.outputGeometry[' + str(index_list[i]) + ']'] = plug_cnt
             if print_result:
-                LOGGER.debug(
+                maya.logger.debug(
                     'Deformer output "' + deformer + '.outputGeometry[' + str(
                         index_list[i]) + ']" has ' + str(len(plug_cnt)) + ' outgoing connections:')
                 for cnt in plug_cnt:
-                    LOGGER.debug('\t- ' + cnt)
+                    maya.logger.debug('\t- ' + cnt)
 
     return return_dict
 
@@ -1382,16 +1368,16 @@ def skin_mesh_from_mesh(source_mesh, target_mesh, exclude_joints=None, include_j
     :param uv_space: bool, Whether to copy the skin weights in UV space rather than point space
     """
 
-    LOGGER.debug('Skinning {} using weights from {}'.format(target_mesh, source_mesh))
+    maya.logger.debug('Skinning {} using weights from {}'.format(target_mesh, source_mesh))
 
     skin = find_deformer_by_type(source_mesh, 'skinCluster')
     if not skin:
-        LOGGER.warning('{} has no skin. No skinning to copy!'.lformat(source_mesh))
+        maya.logger.warning('{} has no skin. No skinning to copy!'.lformat(source_mesh))
         return
 
     target_skin = find_deformer_by_type(target_mesh, 'skinCluster')
     if target_skin:
-        LOGGER.warning('{} already has a skinCluster. Deleting existing one ...'.format(target_mesh))
+        maya.logger.warning('{} already has a skinCluster. Deleting existing one ...'.format(target_mesh))
         maya.cmds.delete(target_skin)
         target_skin = None
 

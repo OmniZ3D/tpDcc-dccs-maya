@@ -629,9 +629,10 @@ class SkinJointObject(object):
     Class to manage skinning objects easily
     """
 
-    def __init__(self, geometry, name):
+    def __init__(self, geometry, name, joint_radius=1.0):
         self._geometry = geometry
         self._name = name
+        self._joint_radius = joint_radius
         self._join_ends = False
         self._cvs = list()
         self._cvs_count = 0
@@ -685,7 +686,7 @@ class SkinJointObject(object):
         :return:  str, name of the created joint
         """
 
-        joint = jnt_utils.create_joint_at_points(cvs, self._name)
+        joint = jnt_utils.create_joint_at_points(cvs, self._name, joint_radius=self._joint_radius)
         cvs = python.force_list(cvs)
         self._cvs_dict.setdefault(joint, list()).append(cvs)
 
@@ -697,8 +698,8 @@ class SkinJointSurface(SkinJointObject, object):
     Class to manage skinning for surfaces
     """
 
-    def __init__(self, geometry, name):
-        super(SkinJointSurface, self).__init__(geometry, name)
+    def __init__(self, geometry, name, joint_radius=1.0):
+        super(SkinJointSurface, self).__init__(geometry, name, joint_radius)
 
         self._join_ends = False
         self._join_both_ends = False
@@ -848,7 +849,7 @@ class SkinJointSurface(SkinJointObject, object):
 
         return end_joint
 
-    def _create_start_and_end_joined_joint(self):
+    def _create_start_and_end_joined_joints(self):
         start_cvs = None
         end_cvs = None
 
@@ -880,8 +881,8 @@ class SkinJointSurface(SkinJointObject, object):
 
 
 class SkinJointCurve(SkinJointSurface, object):
-    def __init__(self, geometry, name):
-        super(SkinJointCurve, self).__init__(geometry, name)
+    def __init__(self, geometry, name, joint_radius=1.0):
+        super(SkinJointCurve, self).__init__(geometry, name, joint_radius)
 
     # ==============================================================================================
     # OVERRIDES
@@ -917,7 +918,7 @@ class SkinJointCurve(SkinJointSurface, object):
         self._joints.append(joint)
         position = maya.cmds.xform('{}.cv[0]'.format(self._geometry), query=True, ws=True, t=True)
         maya.cmds.xform(joint, ws=True, rp=position, sp=position)
-        last_joint = self._create_joint('{}.cv[{}:{}'.format(self._geometry, self._cvs_count - 2, self._cvs_count - 1))
+        last_joint = self._create_joint('{}.cv[{}:{}]'.format(self._geometry, self._cvs_count - 2, self._cvs_count - 1))
         position = maya.cmds.xform('{}.cv[{}]'.format(self._geometry, self._cvs_count - 1), q=True, ws=True, t=True)
         maya.cmds.xform(last_joint, ws=True, rp=position, sp=position)
 

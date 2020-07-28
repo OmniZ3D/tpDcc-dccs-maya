@@ -99,13 +99,13 @@ def create_from_point_list(point_list, degree=3, prefix=''):
     return crv
 
 
-def transforms_to_curve(transforms, spans=None, description='from_transforms'):
+def transforms_to_curve(transforms, spans=None, name='from_transforms'):
     """
     Creates a curve from a list of transforms. Each transform will define a curve CV
     Useful when creating a curve from a joint chain (spines/tails)
     :param transforms: list<str>, list of tranfsorms to generate the curve from. Positions will be used to place CVs
     :param spans: int, number of spans the final curve should have
-    :param description: str, description to given to the curve
+    :param name: str, name for the curve
     :return: str name of the new curve
     """
 
@@ -123,7 +123,7 @@ def transforms_to_curve(transforms, spans=None, description='from_transforms'):
         maya.cmds.rebuildCurve(
             curve, ch=False, rpo=True, rt=0, end=1, kr=False, kcp=False, kep=True,
             kt=False, spans=spans, degree=3, tol=0.01)
-    curve = maya.cmds.rename(curve, name_utils.find_unique_name('curve_{}'.format(description)))
+    curve = maya.cmds.rename(curve, name_utils.find_unique_name(name))
     maya.cmds.setAttr('{}.inheritsTransform'.format(curve), False)
 
     return curve

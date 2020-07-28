@@ -7,7 +7,6 @@ Module that contains functions and classes related to Maya UI
 
 from __future__ import print_function, division, absolute_import
 
-import logging
 import functools
 import traceback
 import contextlib
@@ -18,8 +17,6 @@ from Qt.QtWidgets import *
 import tpDcc
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.qt.core import qtutils
-
-LOGGER = logging.getLogger()
 
 # ===================================================================================
 
@@ -568,8 +565,8 @@ def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right'
         dock.create()
         window.show()
     except Exception:
-        LOGGER.warning('{} window failed to load. Maya may need to finish loading'.format(ui_name))
-        LOGGER.error(traceback.format_exc())
+        tpDcc.logger.warning('{} window failed to load. Maya may need to finish loading'.format(ui_name))
+        tpDcc.logger.error(traceback.format_exc())
 
 
 def is_window_floating(window_name):

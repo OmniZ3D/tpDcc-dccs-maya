@@ -101,10 +101,10 @@ class Rivet(object):
 
     def _create_rivet(self):
         if self._create_joint:
-            maya.cmds.select(clear=True)
-            self._rivet = maya.cmds.joint(n=tp.Dcc.find_unique_name('joint_{}'.format(self._name)))
+            tp.Dcc.clear_selection()
+            self._rivet = tp.Dcc.create_joint(name=tp.Dcc.find_unique_name('joint_{}'.format(self._name)))
         else:
-            self._rivet = maya.cmds.spaceLocator(n=name_utils.find_unique_name('rivet_{}'.format(self._name)))[0]
+            self._rivet = tp.Dcc.create_locator(name=tp.Dcc.find_unique_name('rivet_{}'.format(self._name)))
 
     def _create_point_on_surface(self):
         self._point_on_surface = maya.cmds.createNode(
@@ -126,7 +126,7 @@ class Rivet(object):
                     '{}.local'.format(self._surface), '{}.inputSurface'.format(self._point_on_surface))
             else:
                 maya.cmds.connectAttr(
-                    '{}.worldSpace'.format(self._surface_created), '{}.inputSurface'.format(self._point_on_surface))
+                    '{}.worldSpace'.format(self._surface), '{}.inputSurface'.format(self._point_on_surface))
 
         if maya.cmds.objExists('{}.outputSurface'.format(self._surface)):
             maya.cmds.connectAttr(
