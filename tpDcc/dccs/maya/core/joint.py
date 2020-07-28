@@ -1869,7 +1869,7 @@ def subdivide_joint(joint1=None, joint2=None, count=1, prefix='joint', name='sub
         joints.append(bottom_joint)
         match = transform.MatchTransform(joint1, bottom_joint)
         match.rotation()
-        maya.cmds.makeIdentity(bottom_joint, apply=True ,r=True)
+        maya.cmds.makeIdentity(bottom_joint, apply=True, r=True)
 
     maya.cmds.parent(bottom_joint, joint)
 
