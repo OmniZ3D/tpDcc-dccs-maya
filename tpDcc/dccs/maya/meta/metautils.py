@@ -9,8 +9,6 @@ import copy
 import pprint
 import logging
 
-import euclid
-
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.python import decorators
 from tpDcc.dccs.maya.core import common, attribute as attr_utils, name as name_utils, shape as shape_utils
@@ -2608,11 +2606,10 @@ class MetaMessageListUtils(object):
 class MetaTransformUtils(object):
 
     @staticmethod
-    def get_rotate_pivot(node=None, as_euclidean=False):
+    def get_rotate_pivot(node=None):
         """
         Returns the world space rotate pivot of a given node
         :param node: str, node to query
-        :param as_euclidean: bool, Whether to return rotate pivot as a Vector
         :return: variant, list | euclid.Vector3
         """
 
@@ -2620,26 +2617,19 @@ class MetaTransformUtils(object):
         result = maya.cmds.xform(node, query=True, ws=True, rp=True)
         LOGGER.debug('|{}| >> [{}] = {}'.format('get_rotate_pivot', node, result))
 
-        if as_euclidean:
-            return euclid.Vector3(result[0], result[1], result[2])
-
         return result
 
     @staticmethod
-    def get_scale_pivot(node=None, as_euclidean=False):
+    def get_scale_pivot(node=None):
         """
         Returns the world space scale pivot of a given node
         :param node: str, node to query
-        :param as_euclidean: bool, Whether to return rotate pivot as a Vector
         :return: list | euclid.Vector3
         """
 
         node = MetaAttributeValidator.meta_node_string(node)
         result = maya.cmds.xform(node, query=True, ws=True, sp=True)
         LOGGER.debug('|{}| >> [{}] = {}'.format('get_scale_pivot', node, result))
-
-        if as_euclidean:
-            return euclid.Vector3(result[0], result[1], result[2])
 
         return result
 

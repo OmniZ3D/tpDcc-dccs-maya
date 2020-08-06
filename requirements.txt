@@ -2,7 +2,6 @@
 # tpDcc-dccs-maya requirements file
 # ===================================================================
 
-euclid
-tpDcc-core
-tpDcc-libs-python
-tpDcc-libs-qt
+tpDcc-core==0.0.16
+tpDcc-libs-python==0.0.9
+tpDcc-libs-qt==0.0.16
