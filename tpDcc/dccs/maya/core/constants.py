@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 from tpDcc.libs.python import python
 
 if python.is_python2():
-    from aenum import Enum
+    from tpDcc.libs.python.enum import Enum
 else:
     from enum import Enum
 
