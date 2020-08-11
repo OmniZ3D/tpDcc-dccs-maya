@@ -105,15 +105,19 @@ def is_new_api():
     return not OpenMaya == api['OpenMaya']
 
 
-register.register_class('is_new_api', is_new_api)
-register.register_class('use_news_api', use_new_api)
-register.register_class('cmds', cmds)
-register.register_class('mel', mel)
-register.register_class('utils', utils)
-register.register_class('OpenMaya', OpenMaya)
-register.register_class('OpenMayaUI', OpenMayaUI)
-register.register_class('OpenMayaAnim', OpenMayaAnim)
-register.register_class('OpenMayaRender', OpenMayaRender)
+def register_maya_classes():
+    register.register_class('is_new_api', is_new_api)
+    register.register_class('use_news_api', use_new_api)
+    register.register_class('cmds', cmds)
+    register.register_class('mel', mel)
+    register.register_class('utils', utils)
+    register.register_class('OpenMaya', OpenMaya)
+    register.register_class('OpenMayaUI', OpenMayaUI)
+    register.register_class('OpenMayaAnim', OpenMayaAnim)
+    register.register_class('OpenMayaRender', OpenMayaRender)
+
+
+register_maya_classes()
 
 
 # =================================================================================
@@ -201,6 +205,8 @@ def init_dcc(dev=False):
 
     if dev:
         register.cleanup()
+        register_classes()
+        register_maya_classes()
 
     update_paths()
     register_resources()
@@ -248,19 +254,21 @@ def register_resources():
     resources_manager.register_resource(resources_path, key=tpDcc.Dccs.Maya)
 
 
-# =================================================================================
+def register_classes():
+    core_register.register_class('Dcc', dcc.MayaDcc)
+    core_register.register_class('DccProgressBar', dcc.MayaProgessBar)
+    core_register.register_class('Callbacks', callback.MayaCallback)
+    core_register.register_class('Menu', menu.MayaMenu)
+    core_register.register_class('Shelf', shelf.MayaShelf)
+    core_register.register_class('Completer', completer.MayaCompleter)
+    core_register.register_class('Dialog', dialog.MayaDialog)
+    core_register.register_class('OpenFileDialog', dialog.MayaOpenFileDialog)
+    core_register.register_class('SaveFileDialog', dialog.MayaSaveFileDialog)
+    core_register.register_class('SelectFolderDialog', dialog.MayaSelectFolderDialog)
+    core_register.register_class('NativeDialog', dialog.MayaNativeDialog)
+    core_register.register_class('Window', window.MayaWindow)
+    core_register.register_class('DockWindow', window.MayaWindow)
+    core_register.register_class('SubWindow', window.MayaWindow)
 
-core_register.register_class('Dcc', dcc.MayaDcc)
-core_register.register_class('DccProgressBar', dcc.MayaProgessBar)
-core_register.register_class('Callbacks', callback.MayaCallback)
-core_register.register_class('Menu', menu.MayaMenu)
-core_register.register_class('Shelf', shelf.MayaShelf)
-core_register.register_class('Completer', completer.MayaCompleter)
-core_register.register_class('Dialog', dialog.MayaDialog)
-core_register.register_class('OpenFileDialog', dialog.MayaOpenFileDialog)
-core_register.register_class('SaveFileDialog', dialog.MayaSaveFileDialog)
-core_register.register_class('SelectFolderDialog', dialog.MayaSelectFolderDialog)
-core_register.register_class('NativeDialog', dialog.MayaNativeDialog)
-core_register.register_class('Window', window.MayaWindow)
-core_register.register_class('DockWindow', window.MayaWindow)
-core_register.register_class('SubWindow', window.MayaWindow)
+
+register_classes()
