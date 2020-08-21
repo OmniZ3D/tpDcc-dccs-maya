@@ -21,6 +21,7 @@ BOOTSTRAP_WIDGETS = dict()
 class MayaWindow(core_window.MainWindow, object):
     def __init__(self, *args, **kwargs):
         super(MayaWindow, self).__init__(*args, **kwargs)
+        self.setProperty('saveWindowPref', True)
 
     def bootstrap_widget(self):
         bootstrap_widget = self.property("bootstrapWidget")

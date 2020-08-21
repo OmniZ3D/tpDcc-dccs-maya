@@ -446,10 +446,12 @@ def clean_student_line(filename=None):
         try:
             os.remove(no_student_filename)
         except Exception as exc:
-            maya.logger.info('')
+            maya.logger.warning('Error while cleanup no student file process files ... >> {}'.format(exc))
+            return False
+
         maya.logger.info('Student file cleaned successfully!')
 
-    return changed
+    return True
 
 
 def load_plugin(plugin_name, quiet=True):
