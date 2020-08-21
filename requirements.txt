@@ -1,4 +1,6 @@
 # ===================================================================
 # tpDcc-dccs-maya requirements file
 # ===================================================================
-tpDcc-libs-qt==0.0.17
+tpDcc-libs-python
+tpDcc-libs-core
+tpDcc-libs-qt
