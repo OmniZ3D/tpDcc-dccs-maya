@@ -27,6 +27,12 @@ from tpDcc.dccs.maya.core import follicle as follicle_utils, rivet as rivet_util
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
 
+    class DialogResult(object):
+        Yes = 'Yes'
+        No = 'No'
+        Cancel = 'No'
+        Close = 'No'
+
     TYPE_FILTERS = OrderedDict([
         ('All Node Types', filtertypes.ALL_FILTER_TYPE),
         ('Group', filtertypes.GROUP_FILTER_TYPE),
