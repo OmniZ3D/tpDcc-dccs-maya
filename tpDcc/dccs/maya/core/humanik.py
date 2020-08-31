@@ -65,10 +65,7 @@ def rename_character(character):
     Opens a dialog that allows the user to rename the given HumanIK character
     """
 
-    maya.mel.eval("""
-    hikSetCurrentCharacter("{0}"); 
-    hikRenameDefinition();
-    """.format(character))
+    maya.mel.eval('hikSetCurrentCharacter("{0}");  hikRenameDefinition();'.format(character))
 
 
 def get_current_character():
