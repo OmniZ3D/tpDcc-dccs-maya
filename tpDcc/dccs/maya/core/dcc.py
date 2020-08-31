@@ -53,6 +53,13 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         ('Controllers', ['control'])
     ])
 
+    SIDE_LABELS = ['Center', 'Left', 'Right', 'None']
+    TYPE_LABELS = [
+        'None', 'Root', 'Hip', 'Knee', 'Foot', 'Toe', 'Spine', 'Neck', 'Head', 'Collar', 'Shoulder', 'Elbow', 'Hand',
+        'Finger', 'Thumb', 'PropA', 'PropB', 'PropC', 'Other', 'Index Finger', 'Middle Finger', 'Ring Finger',
+        'Pinky Finger', 'Extra Finger', 'Big Toe', 'Index Toe', 'Middle Toe', 'Ring Toe', 'Pinky Toe', 'Foot Thumb'
+    ]
+
     @staticmethod
     def get_name():
         """
@@ -815,8 +822,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         remove_attribute = kwargs.get('remove_attribute', False)
+        remove_namespace = kwargs.get('remove_namespace', False)
 
-        return name.get_basename(node, remove_namespace=False, remove_attribute=remove_attribute)
+        return name.get_basename(node, remove_namespace=remove_namespace, remove_attribute=remove_attribute)
 
     @staticmethod
     def node_long_name(node):
@@ -951,6 +959,20 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.referenceQuery(node, parentNamespace=True)
+
+    @staticmethod
+    def assign_node_namespace(node, node_namespace, force_create=True, **kwargs):
+        """
+        Assigns a namespace to given node
+        :param node: str
+        :param node_namespace: str
+        :param force_create: bool
+        """
+
+        rename_shape = kwargs.get('rename_shape', True)
+
+        return namespace.assign_namespace_to_object(
+            node, node_namespace, force_create=force_create, rename_shape=rename_shape)
 
     @staticmethod
     def node_is_visible(node):
@@ -4753,6 +4775,130 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.fontDialog(FontList=True) or list()
+
+    @staticmethod
+    def get_side_labelling(node):
+        """
+        Returns side labelling of the given node
+        :param node: str
+        :return: list(str)
+        """
+
+        if not MayaDcc.attribute_exists(node, 'side'):
+            return 'None'
+
+        side_index = MayaDcc.get_attribute_value(node, 'side')
+
+        return MayaDcc.SIDE_LABELS[side_index]
+
+    @staticmethod
+    def set_side_labelling(node, side_label):
+        """
+        Sets side labelling of the given node
+        :param node: str
+        :param side_label: str
+        """
+
+        if not side_label or side_label not in MayaDcc.SIDE_LABELS or not MayaDcc.attribute_exists(node, 'side'):
+            return False
+
+        side_index = MayaDcc.SIDE_LABELS.index(side_label)
+
+        return MayaDcc.set_attribute_value(node, 'side', side_index)
+
+    @staticmethod
+    def get_type_labelling(node):
+        """
+        Returns type labelling of the given node
+        :param node: str
+        :return: list(str)
+        """
+
+        if not MayaDcc.attribute_exists(node, 'type'):
+            return 'None'
+
+        type_index = MayaDcc.get_attribute_value(node, 'type')
+
+        return MayaDcc.TYPE_LABELS[type_index]
+
+    @staticmethod
+    def set_type_labelling(node, type_label):
+        """
+        Sets type labelling of the given node
+        :param node: str
+        :param type_label: str
+        """
+
+        if not type_label or type_label not in MayaDcc.TYPE_LABELS or not MayaDcc.attribute_exists(node, 'type'):
+            return False
+
+        type_index = MayaDcc.TYPE_LABELS.index(type_label)
+
+        return MayaDcc.set_attribute_value(node, 'type', type_index)
+
+    @staticmethod
+    def get_other_type_labelling(node):
+        """
+        Returns other type labelling of the given node
+        :param node: str
+        :return: list(str)
+        """
+
+        if not MayaDcc.get_type_labelling(node) == 'Other':
+            return ''
+
+        if not MayaDcc.attribute_exists(node, 'otherType'):
+            return ''
+
+        return MayaDcc.get_attribute_value(node, 'otherType')
+
+    @staticmethod
+    def set_other_type_labelling(node, other_type_label):
+        """
+        Sets other type labelling of the given node
+        :param node: str
+        :param other_type_label: str
+        """
+
+        if not MayaDcc.get_type_labelling(node) == 'Other' or not MayaDcc.attribute_exists(node, 'otherType'):
+            return False
+
+        return MayaDcc.set_attribute_value(node, 'otherType', str(other_type_label))
+
+    @staticmethod
+    def get_draw_label_labelling(node):
+        """
+        Returns draw label labelling of the given node
+        :param node: str
+        :return: list(str)
+        """
+
+        if not MayaDcc.attribute_exists(node, 'drawLabel'):
+            return False
+
+        return MayaDcc.get_attribute_value(node, 'drawLabel')
+
+    @staticmethod
+    def set_draw_label_labelling(node, draw_type_label):
+        """
+        Sets draw label labelling of the given node
+        :param node: str
+        :param draw_type_label: str
+        """
+
+        if not MayaDcc.attribute_exists(node, 'drawLabel'):
+            return False
+
+        return MayaDcc.set_attribute_value(node, 'drawLabel', bool(draw_type_label))
+
+    @staticmethod
+    def get_up_axis_name():
+        """
+        Returns the name of the current DCC up axis
+        :return: str
+        """
+
+        return maya.cmds.upAxis(query=True, axis=True)
 
     @staticmethod
     def deferred_function(fn, *args, **kwargs):
