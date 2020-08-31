@@ -414,6 +414,9 @@ def rename(name, new_name, uuid=None, rename_shape=True, return_long_name=True):
     if maya.cmds.lockNode(name, query=True)[0]:
         maya.logger.warning('Node "{}" is loced and cannot be renamed!'.format(name))
         return name
+    if not new_short_name:
+        maya.logger.warning('Names cannot be an empty string')
+        return name
     if new_short_name[0].isdigit():
         maya.logger.warning('Names cannot start with numbers')
         return name
