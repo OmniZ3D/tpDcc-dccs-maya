@@ -219,15 +219,15 @@ def init_dcc(dev=False):
     create_metadata_manager()
 
 
-def init_ui():
-    from tpDcc.libs.python import importer
-
-    update_paths()
-    skip_modules = ['{}.{}'.format(PACKAGE, name) for name in ['loader', 'core', 'data', 'managers', 'meta']]
-    importer.init_importer(package=PACKAGE, skip_modules=skip_modules)
-    use_new_api()
-
-    create_metadata_manager()
+# def init_ui():
+#     from tpDcc.libs.python import importer
+#
+#     update_paths()
+#     skip_modules = ['{}.{}'.format(PACKAGE, name) for name in ['loader', 'core', 'data', 'managers', 'meta']]
+#     importer.init_importer(package=PACKAGE, skip_modules=skip_modules)
+#     use_new_api()
+#
+#     create_metadata_manager()
 
 
 def create_metadata_manager():
