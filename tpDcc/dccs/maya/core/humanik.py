@@ -157,31 +157,71 @@ HIK_BONES = {
     HIKBoneNames.Spine2: {'index': 24}
 }
 
+
+class HIKSkeletonGeneratorAttrs(object):
+    WantUpperArmRollBone = 'WantUpperArmRollBone'
+    WantLowerArmRollBone = 'WantLowerArmRollBone'
+    WantUpperLegRollBone = 'WantUpperLegRollBone'
+    WantLowerLegRollBone = 'WantLowerLegRollBone'
+    NbUpperArmRollBones = 'NbUpperArmRollBones'
+    NbLowerArmRollBones = 'NbLowerArmRollBones'
+    NbUpperLegRollBones = 'NbUpperLegRollBones'
+    NbLowerLegRollBones = 'NbLowerLegRollBones'
+    SpineCount = 'SpineCount'
+    NeckCount = 'NeckCount'
+    ShoulderCount = 'ShoulderCount'
+    FingerJointCount = 'FingerJointCount'
+    WantMiddleFinger = 'WantMiddleFinger'
+    WantIndexFinger = 'WantIndexFinger'
+    WantRingFinger = 'WantRingFinger'
+    WantPinkyFinger = 'WantPinkyFinger'
+    WantThumb = 'WantThumb'
+    WantExtraFinger = 'WantExtraFinger'
+    ToeJointCount = 'ToeJointCount'
+    WantIndexToe = 'WantIndexToe'
+    WantRingToe = 'WantRingToe'
+    WantMiddleToe = 'WantMiddleToe'
+    WantPinkyToe = 'WantPinkyToe'
+    WantBigToe = 'WantBigToe'
+    WantFootThumb = 'WantFootThumb'
+    WantFingerBase = 'WantFingerBase'
+    WantToeBase = 'WantToeBase'
+    WantInHandJoint = 'WantInHandJoint'
+    WantInFootJoint = 'WantInFootJoint'
+    WantHipsTranslation = 'WantHipsTranslation'
+
+
 HIK_SKELETON_GENERATOR_DEFAULTS = {
-    'WantUpperArmRollBone': 0,
-    'WantLowerArmRollBone': 0,
-    'WantUpperLegRollBone': 0,
-    'WantLowerLegRollBone': 0,
-    'SpineCount': 3,
-    'NeckCount': 1,
-    'FingerJointCount': 3,
-    'WantMiddleFinger': 1,
-    'WantIndexFinger': 1,
-    'WantRingFinger': 1,
-    'WantPinkyFinger': 1,
-    'WantThumb': 1,
-    'WantExtraFinger': 0,
-    'ToeJointCount': 3,
-    'WantIndexToe': 0,
-    'WantRingToe': 0,
-    'WantPinkyToe': 0,
-    'WantBigToe': 0,
-    'WantFootThumb': 0,
-    'WantFingerBase': 0,
-    'WantToeBase': 1,
-    'WantInHandJoint': 0,
-    'WantInFootJoint': 0,
-    'WantHipsTranslation': 0
+    HIKSkeletonGeneratorAttrs.WantUpperArmRollBone: 0,
+    HIKSkeletonGeneratorAttrs.WantLowerArmRollBone: 0,
+    HIKSkeletonGeneratorAttrs.WantUpperLegRollBone: 0,
+    HIKSkeletonGeneratorAttrs.WantLowerLegRollBone: 0,
+    HIKSkeletonGeneratorAttrs.NbUpperArmRollBones: 0,
+    HIKSkeletonGeneratorAttrs.NbLowerArmRollBones: 0,
+    HIKSkeletonGeneratorAttrs.NbUpperLegRollBones: 0,
+    HIKSkeletonGeneratorAttrs.NbLowerLegRollBones: 0,
+    HIKSkeletonGeneratorAttrs.SpineCount: 3,
+    HIKSkeletonGeneratorAttrs.NeckCount: 1,
+    HIKSkeletonGeneratorAttrs.ShoulderCount: 1,
+    HIKSkeletonGeneratorAttrs.FingerJointCount: 3,
+    HIKSkeletonGeneratorAttrs.WantMiddleFinger: 1,
+    HIKSkeletonGeneratorAttrs.WantIndexFinger: 1,
+    HIKSkeletonGeneratorAttrs.WantRingFinger: 1,
+    HIKSkeletonGeneratorAttrs.WantPinkyFinger: 1,
+    HIKSkeletonGeneratorAttrs.WantThumb: 1,
+    HIKSkeletonGeneratorAttrs.WantExtraFinger: 0,
+    HIKSkeletonGeneratorAttrs.ToeJointCount: 3,
+    HIKSkeletonGeneratorAttrs.WantIndexToe: 0,
+    HIKSkeletonGeneratorAttrs.WantRingToe: 0,
+    HIKSkeletonGeneratorAttrs.WantMiddleToe: 0,
+    HIKSkeletonGeneratorAttrs.WantPinkyToe: 0,
+    HIKSkeletonGeneratorAttrs.WantBigToe: 0,
+    HIKSkeletonGeneratorAttrs.WantFootThumb: 0,
+    HIKSkeletonGeneratorAttrs.WantFingerBase: 0,
+    HIKSkeletonGeneratorAttrs.WantToeBase: 0,
+    HIKSkeletonGeneratorAttrs.WantInHandJoint: 1,
+    HIKSkeletonGeneratorAttrs.WantInFootJoint: 0,
+    HIKSkeletonGeneratorAttrs.WantHipsTranslation: 0
 }
 
 
@@ -414,10 +454,13 @@ def get_node_count(character_node=None):
 # HIK SKELETON
 # ==============================================================================================================
 
-def create_skeleton(character_name='Character1'):
+def create_skeleton(character_name='Character1', attrs_dict=None):
     """
     Creates a new HumanIk skeleton
     """
+
+    if attrs_dict is None:
+        attrs_dict = dict()
 
     sync_skeleton_generator_from_ui()
 
@@ -433,6 +476,7 @@ def create_skeleton(character_name='Character1'):
 
     load_default_human_ik_pose_onto_skeleton_generator_node(skeleton_generator_node)
     set_skeleton_generator_defaults(skeleton_generator_node)
+    set_skeleton_generator_attrs(skeleton_generator_node, attrs_dict)
 
     reset_current_source()
 
@@ -441,6 +485,8 @@ def create_skeleton(character_name='Character1'):
     update_current_character_from_scene()
     update_definition_ui()
     select_skeleton_tab()
+
+    return True
 
 
 # ==============================================================================================================
@@ -484,6 +530,17 @@ def set_skeleton_generator_defaults(skeleton_generator_node):
                 'HIK Skeleton generator node: "{}"'.format(attr_name, skeleton_generator_node))
             continue
         tp.Dcc.set_attribute_value(skeleton_generator_node, attr_name, default_value)
+
+
+def set_skeleton_generator_attrs(skeleton_generator_node, attrs_dict):
+
+    for attr_name, attr_value in attrs_dict.items():
+        if not tp.Dcc.attribute_exists(skeleton_generator_node, attr_name):
+            maya.logger.warning(
+                'Impossible to set {} because that attribute was not found in '
+                'HIK Skeleton generator node "{}"'.format(attr_name, skeleton_generator_node))
+            continue
+        tp.Dcc.set_attribute_value(skeleton_generator_node, attr_name, attr_value)
 
 
 def load_default_human_ik_pose_onto_skeleton_generator_node(skeleton_generator_node):
@@ -583,6 +640,7 @@ def get_properties_node(character_node):
 
     return property_node
 
+
 # ==============================================================================================================
 # HIK SOLVER NODE
 # ==============================================================================================================
@@ -610,6 +668,7 @@ def get_solver_node(character_node):
                 character_node))
 
     return connections[0]
+
 
 # ==============================================================================================================
 # HIK RETARGET NODE
