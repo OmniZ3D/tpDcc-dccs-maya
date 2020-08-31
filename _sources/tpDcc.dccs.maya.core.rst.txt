@@ -33,6 +33,7 @@ Submodules
    tpDcc.dccs.maya.core.geometrycache
    tpDcc.dccs.maya.core.gui
    tpDcc.dccs.maya.core.helpers
+   tpDcc.dccs.maya.core.humanik
    tpDcc.dccs.maya.core.ik
    tpDcc.dccs.maya.core.joint
    tpDcc.dccs.maya.core.layer

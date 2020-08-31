@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.humanik module
+===================================
+
+.. automodule:: tpDcc.dccs.maya.core.humanik
+   :members:
+   :undoc-members:
+   :show-inheritance:
