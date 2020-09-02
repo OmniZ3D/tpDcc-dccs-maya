@@ -60,6 +60,8 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         'Pinky Finger', 'Extra Finger', 'Big Toe', 'Index Toe', 'Middle Toe', 'Ring Toe', 'Pinky Toe', 'Foot Thumb'
     ]
 
+    ROTATION_AXES = ['xyz', 'yzx', 'zxy', 'xzy', 'yxz', 'zyx']
+
     @staticmethod
     def get_name():
         """
@@ -444,6 +446,20 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.xform(node, worldSpace=True, q=True, boundingBox=True)
 
     @staticmethod
+    def set_rotation_axis(node, rotation_axis):
+        """
+        Sets the rotation axis used by the given node
+        :param node: str
+        :param rotation_axis: str or int
+        """
+
+        if python.is_string(rotation_axis):
+            rotation_axis = MayaDcc.ROTATION_AXES.index(rotation_axis)
+
+        MayaDcc.set_attribute_value(node, 'rotateOrder', rotation_axis)
+
+
+    @staticmethod
     def move_node(node, x, y, z, **kwargs):
         """
         Moves given node
@@ -592,6 +608,133 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.xform(node, query=True, rp=True, ws=True)
+
+    @staticmethod
+    def mirror_transform(create_if_missing=False, transforms=None, left_to_right=True, **kwargs):
+        """
+        Mirrors the position of all transforms
+        :param create_if_missing:
+        :param transforms:
+        :param left_to_right:
+        :param kwargs:
+        """
+
+        prefix = kwargs.get('prefix', None)
+        suffix = kwargs.get('suffix', None)
+        string_search = kwargs.get('string_search', None)
+
+        return transform.mirror_transform(
+            prefix=prefix, suffix=suffix, string_search=string_search, create_if_missing=create_if_missing,
+            transforms=transforms, left_to_right=left_to_right)
+
+    @staticmethod
+    def orient_joints(joints_to_orient=None, **kwargs):
+        """
+        Orients joints
+        :param joints_to_orient: list(str) or None
+        :param kwargs:
+        :return:
+        """
+
+        force_orient_attributes = kwargs.get('force_orient_attributes', False)
+
+        return joint_utils.OrientJointAttributes.orient_with_attributes(
+            objects_to_orient=joints_to_orient, force_orient_attributes=force_orient_attributes)
+
+    @staticmethod
+    def zero_orient_joint(joints_to_zero_orient):
+        """
+        Zeroes the orientation of the given joints
+        :param joints_to_zero_orient: list(str)
+        """
+
+        return joint_utils.OrientJointAttributes.zero_orient_joint(joints_to_zero_orient)
+
+    @staticmethod
+    def start_joint_tool():
+        """
+        Starts the DCC tool used to create new joints/bones
+        """
+
+        return joint_utils.start_joint_tool()
+
+    @staticmethod
+    def insert_joints(count, root_joint=None):
+        """
+        Inserts the given number of joints between the root joint and its direct child
+        """
+
+        return joint_utils.insert_joints(joint_count=count)
+
+    @staticmethod
+    def set_joint_local_rotation_axis_visibility(flag, joints_to_apply=None):
+        """
+        Sets the visibility of selected joints local rotation axis
+        :param flag: bool
+        :param joints_to_apply: list(str) or None
+        :return: bool
+        """
+
+        return joint_utils.set_joint_local_rotation_axis_visibility(joints=joints_to_apply, bool_value=flag)
+
+    @staticmethod
+    def get_joint_display_size():
+        """
+        Returns current DCC joint display size
+        :return: float
+        """
+
+        return maya.cmds.jointDisplayScale(query=True, absolute=True)
+
+    @staticmethod
+    def set_joint_display_size(value):
+        """
+        Returns current DCC joint display size
+        :param value: float
+        """
+
+        if value <= 0.0:
+            return False
+
+        return maya.cmds.jointDisplayScale(value, absolute=True)
+
+    @staticmethod
+    def toggle_xray_joints():
+        """
+        Toggles XRay joints functionality (joints are rendered in front of the geometry)
+        """
+
+        current_panel = maya.cmds.getPanel(withFocus=True)
+        if maya.cmds.modelEditor(current_panel, query=True, jointXray=True):
+            maya.cmds.modelEditor(current_panel, edit=True, jointXray=False)
+        else:
+            maya.cmds.modelEditor(current_panel, edit=True, jointXray=True)
+
+    @staticmethod
+    def toggle_xray():
+        """
+        Toggle XRay functionality (model is displayed with transparency)
+        """
+
+        current_panel = maya.cmds.getPanel(withFocus=True)
+        try:
+            if maya.cmds.modelEditor(current_panel, query=True, xray=True):
+                maya.cmds.modelEditor(current_panel, edit=True, xray=False)
+            else:
+                maya.cmds.modelEditor(current_panel, edit=True, xray=True)
+        except Exception as exc:
+            maya.logger.warning('Error while toggling xray: {}'.format(exc))
+
+    @staticmethod
+    def toggle_xray_on_selection():
+        """
+        Toggle XRay functionality (model is displayed with transparency) on selected geometry
+        """
+
+        selected = maya.cmds.ls(sl=True, dagObjects=True, shapes=True)
+        for obj in selected:
+            xray_state = maya.cmds.displaySurface(obj, query=True, xRay=True)[0]
+            maya.cmds.displaySurface(obj, xRay=not xray_state)
 
     @staticmethod
     def all_scene_objects(full_path=True):
@@ -4937,6 +5080,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya_decorators.undo_chunk
+
+    @staticmethod
+    def get_repeat_last_decorator(command_name=None):
+        """
+        Returns repeat last decorator for current DCC
+        """
+
+        return maya_decorators.repeat_static_command(command_name)
 
 
 class MayaProgessBar(progressbar.AbstractProgressBar, object):
