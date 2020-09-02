@@ -72,7 +72,7 @@ class HIKBoneNames(object):
     RightHandThumb3 = 'RightHandThumb3'
     RightInHandIndex = 'RightInHandIndex'
     RightInHandMiddle = 'RightInHandMiddle'
-    RightInHandPinky= 'RightInHandPinky'
+    RightInHandPinky = 'RightInHandPinky'
     RightInHandRing = 'RightInHandRing'
     RightLeg = 'RightLeg'
     RightLegRoll = 'RightLegRoll'
@@ -893,6 +893,6 @@ def bake_animation(character_node):
     maya.cmds.bakeResult(
         bones, simulation=True, t=[1, 55], sampleBy=1, disableImplicitControl=True, preserveOutsideKeys=False,
         sparseAnimCurveBake=False, removeBakedAttributeFromLayer=False, bakeOnOverrideLayer=False,
-        minimizeRotation=False, at=['tx','ty','tz','rx','ry','rz'])
+        minimizeRotation=False, at=['tx', 'ty', 'tz', 'rx', 'ry', 'rz'])
 
     return bones

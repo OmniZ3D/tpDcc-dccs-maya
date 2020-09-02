@@ -50,6 +50,5 @@ def cleanup():
     for cls_name in tpDcc.dccs.maya.__dict__[REGISTER_ATTR]:
         if cls_name not in tpDcc.dccs.maya.__dict__:
             continue
-        print('Deleting: {}'.format(cls_name))
         del tpDcc.dccs.maya.__dict__[cls_name]
     del tpDcc.dccs.maya.__dict__[REGISTER_ATTR]

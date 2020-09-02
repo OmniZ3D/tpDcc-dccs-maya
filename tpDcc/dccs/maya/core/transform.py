@@ -16,16 +16,16 @@ from tpDcc.dccs.maya.core import exceptions, attribute, node, component, name as
 
 TRANSFORM_SIDES = {
     'end': {
-        'short': [('_L', '_R'), ('_l', '_r')],
-        'long': [('_left', '_right')],
+        'short': [('_L', '_R'), ('_l', '_r'), ('left', 'right'), ('Left', 'Right')],
+        'long': [('_left', '_right'), ('left', 'right'), ('Left', 'Right')],
     },
     'mid': {
         'short': [('_L_', '_R_'), ('_l_', '_r_')],
         'long': [('_left_', '_right_')]
     },
     'start': {
-        'short': [('L_', 'R_'), ('l_', 'r_')],
-        'long': [('left_', 'right_')]
+        'short': [('L_', 'R_'), ('l_', 'r_'), ('left', 'right'), ('Left', 'Right')],
+        'long': [('left_', 'right_'), ('left', 'right'), ('Left', 'Right')]
     }
 }
 
@@ -1237,7 +1237,8 @@ def find_transform_right_side(transform, check_if_exists=True):
             for start_side in TRANSFORM_SIDES['start']['short']:
                 if transform.startswith(start_side[1]):
                     continue
-
+            if not other:
+                continue
             if (maya.cmds.objExists(other) and check_if_exists) or not check_if_exists:
                 return other
 

@@ -222,6 +222,8 @@ class OrientJointAttributes(object):
                 maya.cmds.setAttr('{}.rotate{}'.format(jnt, axis), 0)
                 maya.cmds.setAttr('{}.jointOrient{}'.format(jnt, axis), rotate_value)
 
+        return True
+
     @staticmethod
     @decorators.undo_chunk
     def remove_orient_attributes(joint):
@@ -245,6 +247,7 @@ class OrientJointAttributes(object):
         """
         Orients all joints and transforms with OrientJointAttribute added on them
         :param objects_to_orient: list<str>, if given, only given objects will be oriented
+        :param force_orient_attributes: bool, Whether or not to force the creation of the orient attributes
         """
 
         if not objects_to_orient:
