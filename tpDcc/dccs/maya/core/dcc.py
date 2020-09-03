@@ -458,7 +458,6 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         MayaDcc.set_attribute_value(node, 'rotateOrder', rotation_axis)
 
-
     @staticmethod
     def move_node(node, x, y, z, **kwargs):
         """
