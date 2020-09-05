@@ -133,36 +133,43 @@ class MetaObject(metanode.MetaNode, object):
         self.hide_scale_attributes()
         self.hide_visibility_attribute()
 
-    def hide_keyable_attributes(self):
+    def hide_keyable_attributes(self, skip_visibility=False):
         """
         Lock and hide all keyable attributes on the control
         """
 
-        attr_utils.hide_keyable_attributes(self.meta_node)
+        attr_utils.hide_keyable_attributes(self.meta_node, skip_visibility=skip_visibility)
 
     def show_translate_attributes(self):
         """
-        Unlock and set keyable the control translate attributes
+        Unlock and set keyable translate attributes
         """
 
         for axis in 'XYZ':
-            maya.cmds.setAttr('{}.translate{}'.format(self.meta_node, axis), long=False, k=True)
+            maya.cmds.setAttr('{}.translate{}'.format(self.meta_node, axis), lock=False, k=True)
 
     def show_rotate_attributes(self):
         """
-        Unlock and set keyable the control rotate attributes
+        Unlock and set keyable rotate attributes
         """
 
         for axis in 'XYZ':
-            maya.cmds.setAttr('{}.rotate{}'.format(self.meta_node, axis), long=False, k=True)
+            maya.cmds.setAttr('{}.rotate{}'.format(self.meta_node, axis), lock=False, k=True)
 
     def show_scale_attributes(self):
         """
-        Unlock and set keyable the control scale attributes
+        Unlock and set keyable scale attributes
         """
 
         for axis in 'XYZ':
-            maya.cmds.setAttr('{}.scale{}'.format(self.meta_node, axis), long=False, k=True)
+            maya.cmds.setAttr('{}.scale{}'.format(self.meta_node, axis), lock=False, k=True)
+
+    def show_visibility_attribute(self):
+        """
+        Unlocks and set keyable visibility attribute
+        """
+
+        maya.cmds.setAttr('{}.visibility'.format(self.meta_node), lock=False, k=True)
 
     # =============================================================================================
     # SHAPES

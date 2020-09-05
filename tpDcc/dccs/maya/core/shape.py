@@ -194,7 +194,7 @@ def get_shapes_of_type(node_name, shape_type=None, full_path=True, no_intermedia
         return maya.cmds.listRelatives(parent, s=True, f=full_path, ni=no_intermediate)
 
     if shape_type:
-        maya.cmds.listRelatives(node_name, s=True, f=full_path, type=shape_type, ni=no_intermediate)
+        return maya.cmds.listRelatives(node_name, s=True, f=full_path, type=shape_type, ni=no_intermediate)
     else:
         return maya.cmds.listRelatives(node_name, s=True, f=full_path, ni=no_intermediate)
 

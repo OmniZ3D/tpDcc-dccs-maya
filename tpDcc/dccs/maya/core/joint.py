@@ -1574,17 +1574,22 @@ def create_joints_on_faces(mesh, faces=None, follow=True, name=None):
 
 
 @decorators.undo_chunk
-def create_joints_along_curve(curve, count, description='new', attach=True):
+def create_joints_along_curve(curve, count, description='new', attach=True, create_controls=False):
     """
     Create joints on curve that do not aim at child
     :param curve: str, name of a curve
     :param count: int, number of joints to create
     :param description: str, description for the new created joints
     :param attach: bool, Whether to attach the joints to the curve or not
+    :param create_controls: bool, Whether to create controls on top of the created joints
     :return: list(str), list of created joints
     """
 
     maya.cmds.select(clear=True)
+
+    if create_controls:
+        joints_group = maya.cmds.group(empty=True, n=name_utils.find_unique_name('joints_{}'.format(curve)))
+        control_group = None
 
     joints = list()
     current_length = 0
@@ -1604,8 +1609,16 @@ def create_joints_along_curve(curve, count, description='new', attach=True):
         if joints:
             maya.cmds.joint(joints[-1], e=True, zso=True, oj='xyz', sao='yup')
         if attach:
-            curve_utils.attach_to_curve(new_joint, curve, parameter=param)
+            attach_node = curve_utils.attach_to_curve(new_joint, curve, parameter=param)
+            if create_controls:
+                maya.cmds.parent(new_joint, joints_group)
+                maya.cmds.connectAttr('{}.param'.format(new_joint), '{}.parameter'.format(attach_node))
+
         current_length += part_length
+
+        if create_controls:
+            pass
+
         joints.append(new_joint)
         percent += segment
 

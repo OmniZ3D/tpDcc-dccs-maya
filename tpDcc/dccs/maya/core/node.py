@@ -970,3 +970,61 @@ def delete_nodes_of_type(node_type):
             deleted_nodes.append(n)
 
     return deleted_nodes
+
+
+def get_color(node):
+    """
+    Returns the color of the given node
+    :param node: str
+    :return: list(float, float, float)
+    """
+
+    if not maya.cmds.objExists('{}.overrideColor'.format(node)):
+        return [0, 0, 0]
+
+    if not maya.cmds.getAttr(
+            '{}.overrideRGBColors'.format(node)) or not maya.cmds.objExists('{}.overrideRGBColors'.format(node)):
+        color = maya.cmds.getAttr('{}.overrideColor'.format(node))
+        return color
+
+    color = maya.cmds.getAttr('{}.overrideRGBColors'.format(node))
+    color[0] = color[0] * 255
+    color[1] = color[1] * 255
+    color[2] = color[2] * 255
+
+    return color
+
+
+def set_color(nodes, color_index):
+    """
+    Sets the override color for the given nodes
+    :param nodes: list(str), list of nodes to change override color of
+    :param color_index: int, color index to set override color to
+    """
+
+    nodes = python.force_list(nodes)
+    for node in nodes:
+        if maya.cmds.objExists('{}.overrideEnabled'.format(node)):
+            maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
+            maya.cmds.setAttr('{}.overrideColor'.format(node), color_index)
+
+
+def set_color_rgb(nodes, r=0, g=0, b=0):
+    """
+    Sets the override RGB color of the given nodes
+    NOTE: This function only works for versions of Maya greater than 2015
+    :param nodes: list(str)
+    :param r: float
+    :param g: float
+    :param b: float
+    """
+
+    nodes = python.force_list(nodes)
+    for node in nodes:
+        if not maya.cmds.objExists(
+                '{}.overrideRGBColors'.format(node)) or not maya.cmds.objExists('{}.overrideEnabled'.format(node)):
+            continue
+
+        maya.cmds.setAttr('{}.overrideRGBColors'.format(node), True)
+        maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
+        maya.cmds.setAttr('{}.overrideColorRGB'.format(node), r, g, b)

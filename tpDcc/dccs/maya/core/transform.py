@@ -2035,6 +2035,7 @@ def create_locators_along_curve(curve, count, description, attach=True):
             maya.cmds.select(clear=True)
         locator = maya.cmds.spaceLocator(n=name_utils.find_unique_name('locator_{}'.format(description)))
         maya.cmds.xform(locator, ws=True, t=position)
+        maya.cmds.addAttr(locator, ln='param', at='double', dv=param)
         if attach:
             curve_utils.attach_to_curve(locator, curve, parameter=param)
         current_length += part_length
