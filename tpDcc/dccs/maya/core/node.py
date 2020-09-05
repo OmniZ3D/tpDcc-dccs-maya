@@ -145,29 +145,18 @@ def get_node_types(nodes, return_shape_type=True):
     nodes = python.force_list(nodes)
 
     found_type = dict()
+
     for n in nodes:
-
-        found_type[n] = list()
-
         node_type = maya.cmds.nodeType(n)
         if node_type == 'transform':
+            if return_shape_type:
+                shapes = shape.get_shapes(n)
+                if shapes:
+                    node_type = maya.cmds.nodeType(shapes[0])
+        if not node_type in found_type:
+            found_type[node_type] = list()
 
-            children = maya.cmds.listRelatives(n, shapes=True)
-            if not children:
-                node_type = 'group'
-            else:
-                if return_shape_type:
-                    shapes = shape.get_shapes(n)
-                    if shapes:
-                        node_type = maya.cmds.nodeType(shapes[0])
-
-        # TODO: Check if we need this
-        # if not node_type in found_type:
-        #     found_type[node_type] = list()
-        #
-        # found_type[node_type].append(n)
-
-        found_type[n].append(node_type)
+        found_type[node_type].append(n)
 
     return found_type
 
