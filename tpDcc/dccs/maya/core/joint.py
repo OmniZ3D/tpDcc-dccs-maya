@@ -8,15 +8,12 @@ Module that contains functions and classes related with joints
 from __future__ import print_function, division, absolute_import
 
 import math
-import logging
 
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.python import strings, python, name as python_name, mathlib as math_utils
 from tpDcc.dccs.maya.core import exceptions, decorators, mathutils, scene, attribute, transform, node, api
 from tpDcc.dccs.maya.core import transform as xform_utils, constraint as cns_utils, matrix as matrix_utils
-from tpDcc.dccs.maya.core import name as name_utils, curve as curve_utils, shape as shape_utils, ik as ik_utils
-
-LOGGER = logging.getLogger()
+from tpDcc.dccs.maya.core import name as name_utils, shape as shape_utils, ik as ik_utils
 
 
 class BuildJointHierarchy(object):
@@ -253,7 +250,7 @@ class OrientJointAttributes(object):
         if not objects_to_orient:
             objects_to_orient = scene.get_top_dag_nodes()
 
-        LOGGER.debug('Orienting {}'.format(objects_to_orient))
+        maya.logger.debug('Orienting {}'.format(objects_to_orient))
 
         oriented = False
         for obj in objects_to_orient:
@@ -508,7 +505,7 @@ class OrientJoint(object):
 
         if maya.cmds.objExists('{}.active'.format(self._joint)):
             if not maya.cmds.getAttr('{}.active'.format(self._joint)):
-                LOGGER.warning('{} has orientation attributes but is not active. Skipping ...'.format(self._joint))
+                maya.logger.warning('{} has orientation attributes but is not active. Skipping ...'.format(self._joint))
                 return
 
         self._get_relatives()
@@ -522,7 +519,7 @@ class OrientJoint(object):
             for axis in 'XYZ':
                 maya.cmds.setAttr('{}.rotateAxis{}'.format(self._joint, axis), 0)
         except Exception:
-            LOGGER.warning('Could not zero our rotateAxis on {}. This can cause rig errors!'.format(self._joint))
+            maya.logger.warning('Could not zero our rotateAxis on {}. This can cause rig errors!'.format(self._joint))
 
         self._orient_values = self._get_values()
 
@@ -552,7 +549,7 @@ class OrientJoint(object):
         """
 
         if not maya.cmds.objExists('{}.ORIENT_INFO'.format(self._joint)):
-            LOGGER.warning(
+            maya.logger.warning(
                 'Impossible to get orient attributes from {} because they do not exists!'.format(self._joint))
             return
 
@@ -696,7 +693,7 @@ class OrientJoint(object):
             mid = self._get_triangle_group(self._orient_values['triangleMid'])
             btm = self._get_triangle_group(self._orient_values['triangleBottom'])
             if not top or not mid or not btm:
-                LOGGER.warning('Could not orient {} fully with current triangle plane settings'.format(self._joint))
+                maya.logger.warning('Could not orient {} fully with current triangle plane settings'.format(self._joint))
                 return
 
             plane_grp = xform_utils.create_group_in_plane(top, mid, btm)
@@ -1100,7 +1097,7 @@ def joint_buffer(joint, index_str=0):
         if result == 'Create':
             index_str = maya.cmds.promptDialog(q=True, text=True)
         else:
-            LOGGER.warning('User canceled joint group creation ...')
+            maya.logger.warning('User canceled joint group creation ...')
             return
 
         # Get joint prefix and create joint buffer group
@@ -1459,7 +1456,7 @@ def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
         if parent and force:
             parent = maya.cmd.sls(parent, type='joint') or list()
         if not parent:
-            LOGGER.warning(
+            maya.logger.warning(
                 'No source object specified and no parent joint found for joint "{}". Skipping connection ...'.format(
                     joint))
             return None
@@ -1471,7 +1468,8 @@ def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
         try:
             maya.cmds.connectAttr('{}.scale'.format(inverse_scale_object), '{}.inverseScale'.format(joint), f=True)
         except Exception as exc:
-            LOGGER.error('Error connection "{}.scale" to "{}.inverseScale! {}'.format(inverse_scale_object, joint, exc))
+            maya.logger.error(
+                'Error connection "{}.scale" to "{}.inverseScale! {}'.format(inverse_scale_object, joint, exc))
             return None
 
     return '{}.scale'.format(inverse_scale_object)
@@ -1569,58 +1567,6 @@ def create_joints_on_faces(mesh, faces=None, follow=True, name=None):
 
     if follicles:
         return joints, follicles
-
-    return joints
-
-
-@decorators.undo_chunk
-def create_joints_along_curve(curve, count, description='new', attach=True, create_controls=False):
-    """
-    Create joints on curve that do not aim at child
-    :param curve: str, name of a curve
-    :param count: int, number of joints to create
-    :param description: str, description for the new created joints
-    :param attach: bool, Whether to attach the joints to the curve or not
-    :param create_controls: bool, Whether to create controls on top of the created joints
-    :return: list(str), list of created joints
-    """
-
-    maya.cmds.select(clear=True)
-
-    if create_controls:
-        joints_group = maya.cmds.group(empty=True, n=name_utils.find_unique_name('joints_{}'.format(curve)))
-        control_group = None
-
-    joints = list()
-    current_length = 0
-    percent = 0
-    segment = 1.0 / count
-
-    total_length = maya.cmds.arclen(curve)
-    part_length = total_length / (count - 1)
-
-    for i in range(count):
-        param = curve_utils.get_parameter_from_curve_length(curve, current_length)
-        position = curve_utils.get_point_from_curve_parameter(curve, param)
-        if attach:
-            maya.cmds.select(clear=True)
-        new_joint = maya.cmds.joint(p=position, n=name_utils.find_unique_name('{}_jnt'.format(description)))
-        maya.cmds.addAttr(new_joint, ln='param', at='double', dv=param, k=True)
-        if joints:
-            maya.cmds.joint(joints[-1], e=True, zso=True, oj='xyz', sao='yup')
-        if attach:
-            attach_node = curve_utils.attach_to_curve(new_joint, curve, parameter=param)
-            if create_controls:
-                maya.cmds.parent(new_joint, joints_group)
-                maya.cmds.connectAttr('{}.param'.format(new_joint), '{}.parameter'.format(attach_node))
-
-        current_length += part_length
-
-        if create_controls:
-            pass
-
-        joints.append(new_joint)
-        percent += segment
 
     return joints
 
@@ -1783,10 +1729,10 @@ def insert_joints(joints=None, joint_count=1):
     if joints is None:
         joints = maya.cmds.ls(sl=True, type='joint')
         if not joints:
-            LOGGER.warning('No joint selected')
+            maya.logger.warning('No joint selected')
             return
     if joint_count < 1:
-        LOGGER.warning('Must insert at least 1 joint')
+        maya.logger.warning('Must insert at least 1 joint')
         return
 
     result = list()
@@ -1794,7 +1740,7 @@ def insert_joints(joints=None, joint_count=1):
     for joint in joints:
         children = maya.cmds.listRelatives(joint, children=True, type='joint')
         if not children:
-            LOGGER.warning('Joint "{}" needs at least a child in order to insert joints. Skipping!'.format(joint))
+            maya.logger.warning('Joint "{}" needs at least a child in order to insert joints. Skipping!'.format(joint))
             continue
 
         name = joint
@@ -1913,3 +1859,49 @@ def get_joints_chain_length(list_of_joints_in_chain):
         length += distance
 
     return length
+
+
+@decorators.undo_chunk
+def create_oriented_joints_on_curve(curve, count=20, description=None, attach=False):
+    """
+    Create joints on curve that are oriented to aim at child
+    :param curve: str, name of the curve
+    :param count: int, number of joints
+    :param description: str, description to given to the newly created joints
+    :param attach: bool, Whether to attach or not the joints to the curve
+    :return: list(str), list of names of the created joints
+    """
+
+    created_joints = list()
+
+    description = description or 'curve'
+    if count < 2:
+        maya.logger.info('A joint chain need to have at least 2 joints')
+        return created_joints
+    if count < 3:
+        count = count - 2
+
+    length = maya.cmds.arclen(curve, ch=False)
+    maya.cmds.select(clear=True)
+    start_joint = maya.cmds.joint(n='joint_{}Start'.format(description))
+    end_joint = maya.cmds.joint(p=[length, 0, 0], n='joint_{}End'.format(description))
+    joints = subdivide_joint(start_joint, end_joint, count=count, prefix='joint', name=description)
+    joints.insert(0, start_joint)
+    joints.append(end_joint)
+
+    for joint in joints:
+        created_joints.append(maya.cmds.rename(joint, name_utils.find_unique_name('joint_{}_1'.format(curve))))
+
+    ik = ik_utils.IkHandle(curve)
+    ik.set_start_joint(created_joints[0])
+    ik.set_end_joint(created_joints[-1])
+    ik.set_solver(ik_utils.IkHandle.SOLVER_SPLINE)
+    ik.set_curve(curve)
+    ik_handle = ik.create()
+    maya.cmds.setAttr('{}.dTwistControlEnable'.format(ik_handle), True)
+    maya.cmds.refresh()
+    if not attach:
+        maya.cmds.delete(ik_handle)
+        maya.cmds.makeIdentity(created_joints[0], apply=True, r=True)
+
+    return created_joints
