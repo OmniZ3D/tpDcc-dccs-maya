@@ -445,3 +445,25 @@ def curve_to_nurbs_surface(curve, description, spans=-1, offset_axis='X', offset
     maya.cmds.delete(curve1, curve2)
 
     return loft[0]
+
+
+def set_shapes_as_text_curve(transform, text_string):
+    """
+    Updates the shapes of the given transform with given text (as curves)
+    :param transform: str, transform node we want to update shapes of
+    :param text_string: str, text we want to add
+    """
+
+    shapes = shape_utils.get_shapes(transform)
+    maya.cmds.delete(shapes)
+    text = maya.cmds.textCurves(ch=False, f='Arial|w400|h-1', t=text_string)
+    maya.cmds.makeIdentity(text, apply=True, t=True)
+    transforms = maya.cmds.listRelatives(text, ad=True, type='transform')
+    for text_transform in transforms:
+        shapes = shape_utils.get_shapes(text_transform)
+        if not shapes:
+            continue
+        for shape in shapes:
+            maya.cmds.parent(shape, transform, r=True, s=True)
+    maya.cmds.delete(text)
+    shape_utils.rename_shapes(transform)

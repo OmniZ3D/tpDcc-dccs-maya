@@ -3722,17 +3722,20 @@ def transfer_output_connections(source_node, target_node):
         maya.cmds.connectAttr(new_attr, outs[i + 1], f=True)
 
 
-def hide_attributes(node, attributes):
+def hide_attributes(node, attributes, skip_visibility=False):
     """
     Lock and hide the attributes given
     NOTE: Only should work in individual attributes (such as translateX, not translate)
     :param node: str, name of a node
     :param attributes: list<str>, list of attributes on node to lock and hide
+    :param skip_visibility: bool, Whether or not skip visibility attribute hide
         (just name of the attribute, such as translateX
     """
 
     attrs = python.force_list(attributes)
     for attr in attrs:
+        if attr == 'visibility' and skip_visibility:
+            continue
         current_attr = ['{}.{}'.format(node, attr)]
         if not maya.cmds.objExists(current_attr[0]):
             maya.logger.warning('Impossible to lock attribute {} because it does not exists!'.format(current_attr[0]))
@@ -3747,7 +3750,7 @@ def hide_attributes(node, attributes):
             maya.cmds.setAttr(sub_attr, l=True, k=False, cb=False)
 
 
-def hide_keyable_attributes(node):
+def hide_keyable_attributes(node, skip_visibility=False):
     """
     Hide keyable attributes on given node
     :param node: str, name of a node
@@ -3755,7 +3758,7 @@ def hide_keyable_attributes(node):
 
     attrs = maya.cmds.listAttr(node, k=True)
     if attrs:
-        return hide_attributes(node, attrs)
+        return hide_attributes(node, attrs, skip_visibility=skip_visibility)
     if maya.cmds.getAttr('{}.rotateOrder'.format(node), cb=True):
         hide_rotate_order(node)
 
