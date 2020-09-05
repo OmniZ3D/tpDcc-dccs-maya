@@ -2135,6 +2135,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return attribute.lock_translate_attributes(node, hide=False)
 
     @staticmethod
+    def unlock_translate_attributes(node):
+        """
+        Unlocks all translate transform attributes of the given node
+        :param node: str
+        """
+
+        return attribute.unlock_translate_attributes(node)
+
+    @staticmethod
     def hide_rotate_attributes(node):
         """
         Hides all rotate transform attributes of the given node
@@ -2151,6 +2160,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return attribute.lock_rotate_attributes(node, hide=False)
+
+    @staticmethod
+    def unlock_rotate_attributes(node):
+        """
+        Unlocks all rotate transform attributes of the given node
+        :param node: str
+        """
+
+        return attribute.unlock_rotate_attributes(node)
 
     @staticmethod
     def hide_scale_attributes(node):
@@ -2171,6 +2189,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return attribute.lock_scale_attributes(node, hide=False)
 
     @staticmethod
+    def unlock_scale_attributes(node):
+        """
+        Unlocks all scale transform attributes of the given node
+        :param node: str
+        """
+
+        return attribute.unlock_scale_attributes(node)
+
+    @staticmethod
     def hide_visibility_attribute(node):
         """
         Hides visibility attribute of the given node
@@ -2187,6 +2214,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return attribute.lock_attributes(node, ['visibility'], hide=False)
+
+    @staticmethod
+    def unlock_visibility_attribute(node):
+        """
+        Unlocks visibility attribute of the given node
+        :param node: str
+        """
+
+        return attribute.unlock_attributes(node, ['visibility'])
 
     @staticmethod
     def hide_scale_and_visibility_attributes(node):
