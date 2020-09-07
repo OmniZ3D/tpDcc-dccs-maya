@@ -1475,6 +1475,7 @@ def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
     return '{}.scale'.format(inverse_scale_object)
 
 
+@decorators.undo_chunk
 def create_joint_at_points(points, name, joint_radius=1.0):
     """
     Creates a new joint in the middle center of the given points. If only 1 point is given, the joint
@@ -1491,6 +1492,7 @@ def create_joint_at_points(points, name, joint_radius=1.0):
     return joint
 
 
+@decorators.undo_chunk
 def create_joints_on_cvs(curve, parented=True):
     """
     Creates a joint in each CV of the given curve.
@@ -1518,6 +1520,7 @@ def create_joints_on_cvs(curve, parented=True):
     return joints
 
 
+@decorators.undo_chunk
 def create_joints_on_faces(mesh, faces=None, follow=True, name=None):
     """
     Creates joints on the faces of the given mesh
@@ -1569,6 +1572,83 @@ def create_joints_on_faces(mesh, faces=None, follow=True, name=None):
         return joints, follicles
 
     return joints
+
+
+@decorators.undo_chunk
+def create_joint_on_center():
+    """
+    Creates a new joint on center of the selected objects or components
+    """
+
+    selection = maya.cmds.ls(sl=True)
+    if not selection:
+        return maya.cmds.joint(n='joint#')
+
+    if maya.cmds.objectType(selection[0]) != 'mesh':
+        raise NotImplementedError('Center to selected objects not implemented yet')
+
+    bounding = transform.BoundingBox(selection)
+    center_point = bounding.get_center()
+
+    maya.cmds.select(clear=True)
+
+    new_joint = maya.cmds.joint(n='joint#', p=center_point)
+
+    return new_joint
+
+
+@decorators.undo_chunk
+def create_joints_on_selected_components():
+    """
+    Creates joints on current selected components (vertices, faces or edges)
+    :return:
+    """
+
+    selected_components = maya.cmds.ls(sl=True)
+    if not selected_components:
+        return
+
+    if maya.cmds.objectType(selected_components[0]) != 'mesh':
+        return
+
+    sel_list = list()
+    obj_name = selected_components[0][0:selected_components[0].index('.')]
+    for comp in selected_components:
+        comp_split = comp.split(':')
+        c = ':'.join(comp_split[1:])
+
+        if ':' not in c:
+            sel_list.append(comp)
+        else:
+            start_component = int(c[c.index('[') + 1:c.index(':')])
+            end_component = int(c[c.index(':') + 1:c.index(']')])
+            component_type = c[c.index('.') + 1:c.index('[')]
+            while start_component <= end_component:
+                sel_list.append('{}.{}[{}]'.format(obj_name, component_type, start_component))
+                start_component += 1
+    if not sel_list:
+        return
+
+    component_centers = list()
+    component_type = sel_list[0][sel_list[0].index('.') + 1:sel_list[0].index('[')]
+
+    if component_type == 'f' or component_type == 'e':
+        for comp in sel_list:
+            pos = maya.cmds.xform(comp, query=True, t=True, ws=True)
+            component_centers.append([
+                sum(pos[0::3]) / len(pos[0::3]),
+                sum(pos[1::3]) / len(pos[1::3]),
+                sum(pos[2::3]) / len(pos[2::3])]
+            )
+            for loc in component_centers:
+                maya.cmds.select(clear=True)
+                maya.cmds.joint(n='joint#', p=loc, rad=0.25)
+    else:
+        for comp in sel_list:
+            maya.cmds.select(clear=True)
+            maya.cmds.joint(n='joint#', p=maya.cmds.pointPosition(comp), rad=0.25)
+
+    maya.cmds.select(clear=True)
 
 
 @decorators.undo_chunk

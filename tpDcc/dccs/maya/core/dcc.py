@@ -1675,7 +1675,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         try:
-            return maya.cmds.attributeQuery(attribute_name, node=node, listDefault=True)
+            return maya.cmds.attributeQuery(attribute_name, node=node, listDefault=True)[0]
         except Exception:
             try:
                 return maya.cmds.addAttr('{}.{}'.format(node, attribute_name), query=True, dv=True)
@@ -1918,7 +1918,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: bool
         """
 
-        return maya.cmds.getAttr('{}.{}'.format(node, attribute_name, lock=True))
+        return maya.cmds.getAttr('{}.{}'.format(node, attribute_name), lock=True)
 
     @staticmethod
     def is_attribute_connected(node, attribute_name):
