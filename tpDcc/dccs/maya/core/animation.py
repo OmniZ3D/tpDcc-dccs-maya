@@ -650,7 +650,7 @@ def quick_driven_key(source, target, source_values, target_values, infinite=Fals
     fn = api.KeyframeFunction(keyframe)
     if infinite:
         fn.set_pre_infinity(fn.LINEAR)
-        fn.set_pre_infinity(fn.LINEAR)
+        fn.set_post_infinity(fn.LINEAR)
     if infinite == 'post_only':
         fn.set_post_infinity(fn.LINEAR)
         fn.set_pre_infinity(fn.CONSTANT)
