@@ -309,7 +309,7 @@ class SkinWeightsData(base.MayaCustomData, object):
                 'Node "{}" is not a valid mesh node! Currently supported nodes include: {}'.format(mesh, shape_types))
             return False
 
-        print('Importing skin clusters {} --> "{}"'.format(mesh, data_path))
+        maya.logger.info('Importing skin clusters {} --> "{}"'.format(mesh, data_path))
 
         influence_dict = self._get_influences(data_path)
         if not influence_dict:

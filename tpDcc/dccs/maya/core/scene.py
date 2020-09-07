@@ -126,7 +126,7 @@ def open_scene(file_path, force=True, do_save=True):
     :param do_save: bool, True if you want to save the current scene before opening a new scene
     """
 
-    if save:
+    if do_save:
         save()
 
     maya.cmds.file(file_path, open=True, force=force)
