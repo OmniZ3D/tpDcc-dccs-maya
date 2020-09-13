@@ -20,6 +20,7 @@ from tpDcc.libs.python import python, decorators, name as name_utils
 
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import exceptions, mathutils, node as node_utils, shape as shape_utils
+from tpDcc.dccs.maya.core import name as maya_name_utils
 
 
 class AttributeTypes(object):
@@ -514,7 +515,7 @@ class AttributeValidator(object):
         node_shapes = maya.cmds.ls(node, type='shape', long=True)
         if node_shapes:
             if len(node_shapes) == 1:
-                if node_shapes[0] == name_utils.get_long_name(obj=node):
+                if node_shapes[0] == maya_name_utils.get_long_name(obj=node):
                     return True
 
         return False
