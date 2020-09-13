@@ -93,10 +93,11 @@ class AttachJoints(object):
 
             return ['Constraint', 'Matrix']
 
-    def __init__(self, source_joints, target_joints, create_switch, switch_attribute_name='switch'):
+    def __init__(self, source_joints, target_joints, create_switch, switch_node=None, switch_attribute_name='switch'):
         self._source_joints = source_joints
         self._target_joints = target_joints
         self._create_switch = create_switch
+        self._switch_node = switch_node
         self._switch_attribute_name = switch_attribute_name
         self._attach_type = AttachJoints.AttachType.CONSTRAINT
 

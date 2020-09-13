@@ -8,12 +8,12 @@ Module that contains functions and classes related with meta system
 import copy
 import pprint
 import logging
+import traceback
 
 import tpDcc.dccs.maya as maya
-from tpDcc.libs.python import decorators
 from tpDcc.dccs.maya.core import common, attribute as attr_utils, name as name_utils, shape as shape_utils
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class MetaAttributeValidator(attr_utils.AttributeValidator):
@@ -134,7 +134,6 @@ class MetaAttributeUtils(object):
 
     # region Abstract Functions
     @staticmethod
-    @decorators.abstractmethod
     def validate_attribute(*args):
         """
         Validates given attribute and check if the given attributes is valid or not
@@ -177,7 +176,6 @@ class MetaAttributeUtils(object):
         return {'node': obj, 'obj': obj, 'attr': attr, 'combined': combined}
 
     @staticmethod
-    @decorators.abstractmethod
     def get_type(*args):
         """
         Returns given attribute type
@@ -194,7 +192,6 @@ class MetaAttributeUtils(object):
             return False
 
     @staticmethod
-    @decorators.abstractmethod
     def convert_type(node=None, attr=None, attr_type=None, *args):
         """
         Attempts to convert an existing attribute type from one type to another
@@ -208,7 +205,7 @@ class MetaAttributeUtils(object):
 
         _attr_type = attr_type
         if '.' in node or issubclass(type(node), dict):
-            attr_dict = MetaAttributeUtils.validate_attribute(*args)
+            attr_dict = MetaAttributeUtils.validate_attribute(node)
             _attr_type = attr
         else:
             attr_dict = MetaAttributeUtils.validate_attribute(node, attr)
@@ -256,7 +253,7 @@ class MetaAttributeUtils(object):
                             _enum = _data.split(o)
                             break
 
-        MetaAttributeUtils.add(attr_dict, attr_type, enum_options=_enum)
+        MetaAttributeUtils.add(attr_dict, _attr_type, enum_options=_enum)
 
         if _data is not None:
             LOGGER.debug('|Convert Attribute Type| >> Data Setting: {}'.format(_data))
@@ -306,7 +303,6 @@ class MetaAttributeUtils(object):
         return True
 
     @staticmethod
-    @decorators.abstractmethod
     def get(*args, **kwargs):
         """
         Get attribute for the given DCC node
@@ -352,7 +348,6 @@ class MetaAttributeUtils(object):
             return maya.cmds.getAttr(combined, **kwargs)
 
     @staticmethod
-    @decorators.abstractmethod
     def get_driver(node, attr=None, get_node=False, skip_conversion_nodes=False, long_names=True):
         """
         Get the driver of an attribute if exists
@@ -412,7 +407,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_driven(node, attr=None, get_node=False, skip_conversion_nodes=False, long_names=True):
         """
         Get attributes driven by an attribute
@@ -458,7 +452,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def add(obj, attr=None, attr_type=None, enum_options=['off', 'on'], *args, **kwargs):
         """
         Add a new attribute to the given object
@@ -519,7 +512,8 @@ class MetaAttributeUtils(object):
 
             return combined
         except Exception as e:
-            LOGGER.error(str(e))
+            raise StandardError(traceback.format_exc())
+            # LOGGER.error(str(e))
 
     @staticmethod
     def set(node, attr=None, value=None, lock=False, **kwargs):
@@ -607,7 +601,6 @@ class MetaAttributeUtils(object):
         return
 
     @staticmethod
-    @decorators.abstractmethod
     def delete(*args):
         """
         Deletes given attribute from the given node
@@ -646,7 +639,6 @@ class MetaAttributeUtils(object):
             raise Exception(e)
 
     @staticmethod
-    @decorators.abstractmethod
     def get_children(*args):
         """
         Get children of a given attribute
@@ -662,7 +654,6 @@ class MetaAttributeUtils(object):
             return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_parent(*args):
         """
         Get parent of a given attribute
@@ -681,7 +672,6 @@ class MetaAttributeUtils(object):
             return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_siblings(*args):
         """
         Get siblings of a given attribute
@@ -697,7 +687,6 @@ class MetaAttributeUtils(object):
             return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_family_dict(*args):
         """
         Gets family dictionary of a given attribute
@@ -838,7 +827,6 @@ class MetaAttributeUtils(object):
         return data_dict
 
     @staticmethod
-    @decorators.abstractmethod
     def copy_to(from_object, from_attr, to_object=None, to_attr=None, convert_to_match=True, values=True,
                 in_connection=False, out_connections=False, keep_source_connections=True, copy_settings=True,
                 driven=None):
@@ -1004,7 +992,6 @@ class MetaAttributeUtils(object):
         return True
 
     @staticmethod
-    @decorators.abstractmethod
     def is_connected(*args):
         """
         Returns true if a given attribute is connected to another one
@@ -1089,7 +1076,6 @@ class MetaAttributeUtils(object):
         return True
 
     @staticmethod
-    @decorators.abstractmethod
     def break_connection(*args):
         """
         Breaks connection of a given attributes. Handles locks on source or end automatically
@@ -1141,7 +1127,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def has_attr(*args):
         """
         Returns True if the given attribute exists or False otherwise
@@ -1181,7 +1166,6 @@ class MetaAttributeUtils(object):
                     '|Long Attribute Name Getter| >> Attribute does nost exists: {}'.format(attr_dict['combined']))
 
     @staticmethod
-    @decorators.abstractmethod
     def is_locked(*args):
         """
         Returns True if the given attribute is locked or False otherwise
@@ -1198,7 +1182,6 @@ class MetaAttributeUtils(object):
             return False
 
     @staticmethod
-    @decorators.abstractmethod
     def set_lock(node, attr=None, arg=None):
         """
         Set the lock status of an attribute
@@ -1226,7 +1209,6 @@ class MetaAttributeUtils(object):
             maya.cmds.setAttr(combined, lock=arg)
 
     @staticmethod
-    @decorators.abstractmethod
     def is_hidden(*args):
         """
         Returns True if the given attribute is hidden or False otherwise
@@ -1285,7 +1267,6 @@ class MetaAttributeUtils(object):
                 maya.cmds.setAttr(combined, e=True, channelBox=True)
 
     @staticmethod
-    @decorators.abstractmethod
     def get_keyed(node):
         """
         Returns list of keyed attributes
@@ -1301,7 +1282,6 @@ class MetaAttributeUtils(object):
         return result
 
     @staticmethod
-    @decorators.abstractmethod
     def is_keyed(*args):
         """"
         Returns True if the given attribute is keyable or False otherwise
@@ -1317,7 +1297,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def set_keyable(node, attr=None, arg=None):
         """
         Set the lock of status of the given attribute
@@ -1352,7 +1331,6 @@ class MetaAttributeUtils(object):
                     MetaAttributeUtils.set_hidden(attr_dict, hidden)
 
     @staticmethod
-    @decorators.abstractmethod
     def get_enum(*args):
         """
         Returns enum attribute
@@ -1368,7 +1346,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def is_multi(*args):
         """
         :Check if the given attribute is a valid Maya multi attribute
@@ -1387,7 +1364,6 @@ class MetaAttributeUtils(object):
             return False
 
     @staticmethod
-    @decorators.abstractmethod
     def is_dynamic(*args):
         """
         Returns True if the given attribute is dynamic or False otherwise
@@ -1403,7 +1379,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def is_numeric(*args):
         """
         Returns if an attribute is numeric or False otherwise
@@ -1418,7 +1393,6 @@ class MetaAttributeUtils(object):
         return True
 
     @staticmethod
-    @decorators.abstractmethod
     def is_readable(*args):
         """
         Returns if an attribute is readable or False otherwise
@@ -1433,7 +1407,6 @@ class MetaAttributeUtils(object):
         return maya.cmds.addAttr(attr_dict['combined'], query=True, r=True) or False
 
     @staticmethod
-    @decorators.abstractmethod
     def is_writable(*args):
         """
         Returns if an attribute is writable or False otherwise
@@ -1448,7 +1421,6 @@ class MetaAttributeUtils(object):
         return maya.cmds.addAttr(attr_dict['combined'], query=True, w=True) or False
 
     @staticmethod
-    @decorators.abstractmethod
     def is_storable(*args):
         """
         Returns True if an attribute is storable or False otherwise
@@ -1463,7 +1435,6 @@ class MetaAttributeUtils(object):
         return maya.cmds.addAttr(attr_dict['combined'], query=True, s=True) or False
 
     @staticmethod
-    @decorators.abstractmethod
     def is_used_as_color(*args):
         """
         Returns True if an attribute is used as color or False otherwise
@@ -1478,7 +1449,6 @@ class MetaAttributeUtils(object):
         return maya.cmds.addAttr(attr_dict['combined'], query=True, usedAsColor=True) or False
 
     @staticmethod
-    @decorators.abstractmethod
     def is_user_defined(*args):
         """
         Returns True if an attribute is user defined or False otherwise
@@ -1493,7 +1463,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_default(*args):
         """
         Returns the default value of the given integer attribute
@@ -1532,7 +1501,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_max(*args):
         """
         Returns the maximum value of the given integer attribute
@@ -1556,7 +1524,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_min(*args):
         """
         Returns the minimum value of the given integer attribute
@@ -1580,7 +1547,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_range(*args):
         """
         Returns the range of the given integer attribute
@@ -1597,7 +1563,6 @@ class MetaAttributeUtils(object):
             return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_soft_range(*args):
         """
         Returns the soft range of the given integer attribute
@@ -1614,7 +1579,6 @@ class MetaAttributeUtils(object):
             return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_soft_max(*args):
         """
         Returns the soft maximum value of the given integer attribute
@@ -1637,7 +1601,6 @@ class MetaAttributeUtils(object):
         return False
 
     @staticmethod
-    @decorators.abstractmethod
     def get_soft_min(*args):
         """
         Returns the soft minimum value of the given integer attribute
@@ -1732,7 +1695,7 @@ class MetaAttributeUtils(object):
 
         if not maya.cmds.objExists(combined):
             LOGGER.debug('|Message Getter| >> {0} | No attribute exists'.format(combined))
-            return False
+            return None
 
         dict_type = MetaAttributeUtils.get_type(attr_dict)
         if dict_type in ['string']:
@@ -1752,7 +1715,7 @@ class MetaAttributeUtils(object):
             LOGGER.debug('|Message Getter| >> Multimessage')
             if msg_buffer:
                 return msg_buffer
-            return False
+            return None
         else:
             LOGGER.debug('|Message Getter| >> Single Message')
             if simple:
@@ -1780,7 +1743,7 @@ class MetaAttributeUtils(object):
                     return attr_utils.repair_message_to_reference_target(combined)
                     # return repairMessageToReferencedTarget(storageObject, messageAttr)
 
-        return False
+        return None
 
     @staticmethod
     def set_message(message_holder, message_attr, message, data_attr=None, data_key=None, simple=False,
@@ -1866,7 +1829,8 @@ class MetaAttributeUtils(object):
                         store_message_multi(message, attr_dict)
                     return True
                 else:
-                    message = message[0]
+                    if message:
+                        message = message[0]
 
             if not message:
                 MetaAttributeUtils.break_connection(attr_dict)
@@ -1993,7 +1957,7 @@ class MetaAttributeUtils(object):
 
             return True
         except Exception as e:
-            raise StandardError(e)
+            raise StandardError(traceback.format_exc())
 
 
 class MetaDataListUtils(object):

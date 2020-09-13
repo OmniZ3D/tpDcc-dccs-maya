@@ -93,6 +93,20 @@ def get_compatible_name(name_str):
     return ''.join([c if c.isalnum() else '_' for c in name_str])
 
 
+def remove_namespace_from_string(name):
+    """
+    Removes namespace from given string. Does not matter if the given name is a short or long one
+    :param name: str
+    :return: str
+    """
+
+    sub_name = name.split('.')
+    if not sub_name:
+        return ''
+
+    return sub_name[-1]
+
+
 def get_basename(obj, remove_namespace=True, remove_attribute=False):
     """
     Get the base name in a hierarchy name (a|b|c -> returns c)

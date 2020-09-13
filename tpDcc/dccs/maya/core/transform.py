@@ -129,10 +129,9 @@ class MatchTransform(object):
         Matches target translation to source one
         """
 
+        self._set_translation()
         self._set_scale_pivot()
         self._set_rotate_pivot()
-
-        self._set_translation()
 
     def rotation(self):
         """

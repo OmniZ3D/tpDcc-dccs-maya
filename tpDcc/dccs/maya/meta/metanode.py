@@ -329,7 +329,7 @@ class MetaNode(object):
                         value = metautils.MetaAttributeValidator.meta_node_string(value)
                 metautils.MetaAttributeUtils.set_message(self.meta_node, attr, value)
         except Exception as e:
-            raise Exception(e)
+            raise StandardError(traceback.format_exc())
 
     @node_lock_manager
     def __setattr__(self, attr, value, force=True, **kwargs):
