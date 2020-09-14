@@ -101,6 +101,11 @@ class AttachJoints(object):
         self._switch_node = switch_node
         self._switch_attribute_name = switch_attribute_name
         self._attach_type = AttachJoints.AttachType.CONSTRAINT
+        self._remap_nodes = list()
+
+    @property
+    def remap_nodes(self):
+        return self._remap_nodes
 
     def create(self):
         """
@@ -147,6 +152,7 @@ class AttachJoints(object):
                 cns = cns_utils.Constraint()
                 cns.create_switch(self._target_joints[0], self._switch_attribute_name, parent_cns)
                 cns.create_switch(self._target_joints[0], self._switch_attribute_name, scale_cns)
+                self._remap_nodes.extend(cns.remaps)
             self._unhook_scale_constraint(scale_cns)
         elif self._attach_type == AttachJoints.AttachType.MATRIX:
             switches = cns_utils.SpaceSwitch().get_space_switches(target_joint)

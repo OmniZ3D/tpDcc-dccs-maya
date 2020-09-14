@@ -28,10 +28,13 @@ class RigSwitch(object):
         """
 
         self._switch_joint = switch_joint
+        self._attribute_name = switch_attribut_name
+        self._groups = dict()
+        self._control_name = None
+        self._conditions = dict()
+
         if not maya.cmds.objExists('{}.switch'.format(switch_joint)):
             maya.logger.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
-
-        self._groups = dict()
 
         weight_count = self.get_weight_count()
         if not weight_count:
@@ -40,8 +43,25 @@ class RigSwitch(object):
         for i in range(weight_count):
             self._groups[i] = None
 
-        self._control_name = None
-        self._attribute_name = switch_attribut_name
+    @property
+    def switch_joint(self):
+        return self._switch_joint
+
+    @property
+    def attribute_name(self):
+        return self._attribute_name
+
+    @property
+    def groups(self):
+        return self._groups
+
+    @property
+    def control_name(self):
+        return self._control_name
+
+    @property
+    def conditions(self):
+        return self._conditions
 
     def create(self):
         if self._control_name and maya.cmds.objExists(self._control_name):
@@ -67,7 +87,8 @@ class RigSwitch(object):
             if not groups:
                 continue
             for group in groups:
-                attr_utils.connect_equal_condition(attr_name, '{}.visibility'.format(group), key)
+                self._conditions[group] = attr_utils.connect_equal_condition(
+                    attr_name, '{}.visibility'.format(group), key)
 
     def get_weight_count(self):
         edit_cns = cns_utils.Constraint()
@@ -329,7 +350,7 @@ class StretchyChain(object):
     def _create_stretch_condition(self):
         total_length = self._get_length()
         condition = tp.Dcc.create_node(
-            node_name=tp.Dcc.find_unique_name('condition_{}'.format(self._name)), node_type='condition')
+            node_name=tp.Dcc.find_unique_name('{}_stretchCondition'.format(self._name)), node_type='condition')
         tp.Dcc.set_integer_attribute_value(condition, 'operation', 2)
         tp.Dcc.set_integer_attribute_value(condition, 'firstTerm', total_length)
         tp.Dcc.set_integer_attribute_value(condition, 'colorIfTrueR', total_length)
@@ -910,9 +931,10 @@ class RiggedLine(object):
         """
 
         cluster, transform = maya.cmds.cluster('{}.cv[{}]'.format(self._curve, cv))
-        transform = maya.cmds.rename(transform, tp.Dcc.find_unique_name('guideLine_cluster_{}'.format(self._name)))
+        transform = maya.cmds.rename(
+            transform, tp.Dcc.find_unique_name('{}_cv{}_guideLineCluster'.format(self._name, cv)))
         cluster = maya.cmds.rename(
-            '{}Cluster'.format(transform), tp.Dcc.find_unique_name('cluster_guideLine_{}'.format(self._name)))
+            '{}Cluster'.format(transform), tp.Dcc.find_unique_name('{}_cv{}_clusterGuideLine'.format(self._name, cv)))
         maya.cmds.hide(transform)
         maya.cmds.parent(transform, self._top_group)
 

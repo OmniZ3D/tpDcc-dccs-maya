@@ -34,6 +34,11 @@ class Constraint(object):
 
     def __init__(self):
         self._set_to_last = False
+        self._remaps = list()
+
+    @property
+    def remaps(self):
+        return self._remaps
 
     def get_constraint(self, xform, constraint_type):
         """
@@ -184,6 +189,7 @@ class Constraint(object):
         remap = attribute.RemapAttributesToAttribute(node, attr)
         remap.create_attributes(constraint, attrs)
         remap.create()
+        self._remaps.extend(remap.remaps)
 
         if self._set_to_last:
             maya.cmds.setAttr('{}.{}'.format(node, attribute), (len(attrs) - 1))

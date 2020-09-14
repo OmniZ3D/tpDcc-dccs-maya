@@ -1834,6 +1834,11 @@ class RemapAttributesToAttribute(object):
         self.attr = attr
         self.attrs = list()
         self.keyable = True
+        self._remaps = list()
+
+    @property
+    def remaps(self):
+        return self._remaps
 
     def set_keyable(self, bool_value):
         """
@@ -1893,7 +1898,12 @@ class RemapAttributesToAttribute(object):
                     input_node = None
 
             if not input_node:
-                remap = maya.cmds.createNode('remapValue', n='remapValue_{}'.format(attr))
+                remap_name = '{}_remapValue'.format(attr)
+                if node and 'constraint' in tp.Dcc.node_type(node).lower():
+                    # remap_name = '{}_{}_remapValue'.format(attr, tp.Dcc.node_type(node))
+                    remap_name = '{}_{}_remapValue'.format(attr, node)
+                remap = maya.cmds.createNode('remapValue', n=remap_name)
+                self._remaps.append(remap)
 
             maya.cmds.setAttr('{}.inputMin'.format(remap), input_min)
             maya.cmds.setAttr('{}.inputMax'.format(remap), input_max)
@@ -4380,7 +4390,7 @@ def connect_equal_condition(source_attr, target_attr, equal_value):
     """
 
     source_attr_name = source_attr.replace('.', '_')
-    condition = maya.cmds.createNode('condition', n='condition_{}'.format(source_attr_name))
+    condition = maya.cmds.createNode('condition', n='{}_condition'.format(source_attr_name))
     maya.cmds.connectAttr(source_attr, '{}.firstTerm'.format(condition))
     maya.cmds.setAttr('{}.secondTerm'.format(condition), equal_value)
     maya.cmds.setAttr('{}.colorIfTrueR'.format(condition), 1)
