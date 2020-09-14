@@ -360,10 +360,9 @@ class DuplicateHierarchy(object):
         self._only_these_transform = None
         self._only_joints = False
 
-    # region Public Functions
     def create(self):
         """
-        Creates the duplicate hierarhcy
+        Creates the duplicate hierarchy
         """
 
         maya.cmds.refresh()
@@ -399,9 +398,6 @@ class DuplicateHierarchy(object):
         self._replace_old = old
         self._replace_new = new
 
-    # endregion
-
-    # region Private Functions
     def _get_children(self, xform):
         """
         Internal function used to return all children of the given transforms
@@ -423,10 +419,12 @@ class DuplicateHierarchy(object):
     def _duplicate(self, xform):
         new_name = xform
         if self._replace_old and self._replace_new:
-            if self._replace_old in new_name:
-                new_name = xform.replace(self._replace_old, self._replace_new)
-            else:
-                new_name = '{}_{}'.format(xform, self._replace_new)
+            for old_name, replace_name in zip(self._replace_old, self._replace_new):
+                if old_name in new_name:
+                    new_name = xform.replace(old_name, replace_name)
+                    break
+                else:
+                    new_name = '{}_{}'.format(xform, replace_name)
             new_name = name_utils.get_basename(new_name)
 
         duplicate = maya.cmds.duplicate(xform, po=True)[0]
@@ -466,7 +464,6 @@ class DuplicateHierarchy(object):
                 maya.cmds.parent(duplicates, top_duplicate)
 
         return top_duplicate
-    # endregion
 
 
 def check_transform(transform_name):

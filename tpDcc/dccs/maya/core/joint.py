@@ -53,16 +53,17 @@ class BuildJointHierarchy(object):
     def _build_hierarchy(self):
         new_joints = list()
         last_transform = None
-
         for xform in self._transforms:
             maya.cmds.select(clear=True)
             joint = maya.cmds.joint()
             name = xform
             if self._replace_old and self._replace_new:
-                if self._replace_old in name:
-                    name = name.replace(self._replace_old, self._replace_new)
-                else:
-                    name = '{}_{}'.format(name, self._replace_new)
+                for old_name, replace_name in zip(self._replace_old, self._replace_new):
+                    if old_name in name:
+                        name = name.replace(old_name, replace_name)
+                        break
+                    else:
+                        name = '{}_{}'.format(name, replace_name)
                 joint = maya.cmds.rename(joint, name_utils.find_unique_name(name))
             xform_utils.MatchTransform(xform, joint).translation_rotation()
             xform_utils.MatchTransform(xform, joint).world_pivots()
