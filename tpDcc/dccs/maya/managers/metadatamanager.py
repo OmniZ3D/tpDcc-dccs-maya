@@ -176,6 +176,23 @@ class MetaDataManager(window.MainWindow, object):
                 n.__name__ for n in inspect.getmro(meta_class)]
 
     @staticmethod
+    def register_meta_class(meta_class):
+        from tpDcc.dccs.maya.meta import metanode
+
+        if not issubclass(meta_class, metanode.MetaNode):
+            maya.logger.warning(
+                'Impossible to register MetaClass "{}" because it not a MetaNode subclass'.format(meta_class))
+            return False
+
+        METANODE_CLASSES_REGISTER[meta_class.__name__] = meta_class
+        METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__] = dict()
+        METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__]['full'] = list(inspect.getmro(meta_class))
+        METANODE_CLASSES_INHERITANCE_MAP[meta_class.__name__]['short'] = [
+            n.__name__ for n in inspect.getmro(meta_class)]
+
+        return True
+    
+    @staticmethod
     def register_meta_types(node_types=None):
 
         from tpDcc.dccs.maya.meta import metanode
