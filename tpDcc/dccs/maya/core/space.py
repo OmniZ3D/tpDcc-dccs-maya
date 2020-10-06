@@ -52,7 +52,7 @@ def create_empty_follow_group(
         maya.cmds.parent(offset_grp, controller_parent[0])
     maya.cmds.parent(target_xform, offset_grp)
 
-    return offset_grp, target_path.full_path_name()
+    return offset_grp, target_path.fullPathName()
 
 
 def create_follow_group(source_transform, target_transform, prefix='follow', follow_scale=False, use_duplicate=False):
