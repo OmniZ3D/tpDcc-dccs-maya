@@ -9,13 +9,10 @@ from __future__ import print_function, division, absolute_import
 
 import re
 import uuid
-import logging
 
-from tpDcc.libs.python import python, name
+from tpDcc.libs.python import python, name, color
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import exceptions
-
-LOGGER = logging.getLogger()
+from tpDcc.dccs.maya.core import exceptions, color as maya_color
 
 
 def is_a_shape(node_name):
@@ -270,7 +267,7 @@ def is_visible(node, check_lod_vis=True, check_draw_override=True):
         if not part:
             continue
         if not maya.cmds.objExists(part):
-            LOGGER.debug('Unable to find ancestor node {}!'.format(part))
+            maya.logger.debug('Unable to find ancestor node {}!'.format(part))
             continue
 
         if not maya.cmds.getAttr(part + '.visibility'):
@@ -743,7 +740,7 @@ def create_attribute(mobj, name, data_type=None, short_name=None, default=None):
         data_type = get_attribute_data_type(default)
         if data_type == maya.OpenMaya.MFnData.kInvalid:
             data_type = None
-            LOGGER.debug('Unable to determien the attribute type => {}'.format(str(default)))
+            maya.logger.debug('Unable to determine the attribute type => {}'.format(str(default)))
         if data_type is None:
             data_type = maya.OpenMaya.MFnData.kAny
 
@@ -961,27 +958,75 @@ def delete_nodes_of_type(node_type):
     return deleted_nodes
 
 
-def get_color(node):
+def get_index_color(node):
     """
-    Returns the color of the given node
+    Returns the node color as Maya color index
     :param node: str
-    :return: list(float, float, float)
+    :return: int or None, -1 if index not found because shape RGB mode color is enabled
+    """
+
+    if not node:
+        return None
+
+    if not maya.cmds.getAttr('{}.overrideEnabled'.format(node)):
+        return 0
+    elif not maya.cmds.getAttr('{}.overrideRGBColors'.format(node)):
+        return maya.cmds.getAttr('{}.overrideColor'.format(node))
+
+    return -1
+
+
+def get_rgb_color(node, linear=True, limit_decimal_places=False):
+    """
+    Returns the color of the given node in RGB
+    :param node: str, name of the shape node to retrieve color of
+    :param linear: bool, Whether or not the RGB should be in linear space (matches viewport color)
+    :param limit_decimal_places: bool, Whether or not decimal places should be limited to a maximum of 3
+    :return: tuple(float, float, float), tuple of floats in 0-1 range
     """
 
     if not maya.cmds.objExists('{}.overrideColor'.format(node)):
-        return [0, 0, 0]
+        return maya_color.MAYA_COLORS_LINEAR_RGB[0] if linear else maya_color.MAYA_COLORS_SRGB[0]
 
-    if not maya.cmds.getAttr(
-            '{}.overrideRGBColors'.format(node)) or not maya.cmds.objExists('{}.overrideRGBColors'.format(node)):
-        color = maya.cmds.getAttr('{}.overrideColor'.format(node))
-        return color
+    rgb = None
+    if not maya.cmds.getAttr('{}.overrideEnabled'.format(node)):
+        if linear:
+            rgb = maya_color.MAYA_COLORS_LINEAR_RGB[0] if linear else maya_color.MAYA_COLORS_SRGB[0]
+    elif not maya.cmds.getAttr('{}.overrideRGBColors'.format(node)):
+        color_index = maya.cmds.getAttr('{}.overrideColor'.format(node))
+        rgb = maya_color.MAYA_COLORS_LINEAR_RGB[color_index] if linear else maya_color.MAYA_COLORS_SRGB[color_index]
+    else:
+        rgb = tuple([
+            maya.cmds.getAttr('{}.overrideColorR'.format(node)),
+            maya.cmds.getAttr('{}.overrideColorG'.format(node)),
+            maya.cmds.getAttr('{}.overrideColorB'.format(node))])
+        if not linear:
+            rgb = color.convert_color_linear_to_srgb(rgb)
 
-    color = maya.cmds.getAttr('{}.overrideRGBColors'.format(node))
-    color[0] = color[0] * 255
-    color[1] = color[1] * 255
-    color[2] = color[2] * 255
+    if rgb and limit_decimal_places:
+        rgb = list(rgb)
+        for i, value in enumerate(rgb):
+            rgb[i] = float("{0:.3f}".format(value))
+        return tuple(rgb)
 
-    return color
+    return rgb
+
+
+def get_hsv_color(shape, linear=True):
+    """
+    Returns the color of the given node in HSV
+    :param shape: str, name of the shape node to retrieve color of
+    :param linear: bool, Whether or not the RGB should be in linear space (matches viewport color)
+    :return: tuple(float, float, float), tuple of floats in 0-1 range
+    """
+
+    rgb_color = get_rgb_color(shape, linear=linear)
+    if not rgb_color:
+        return None
+
+    hsv_color = color.convert_rgb_to_hsv(rgb_color)
+
+    return hsv_color
 
 
 def set_color(nodes, color_index):
@@ -998,17 +1043,51 @@ def set_color(nodes, color_index):
             maya.cmds.setAttr('{}.overrideColor'.format(node), color_index)
 
 
-def set_color_rgb(nodes, r=0, g=0, b=0):
+def set_index_color(node, index):
+    """
+    Sets the override Maya index color of the given nodes
+    :param index: int or str, Maya index color or Maya nice name color
+    :param index: int, Maya color index to apply (from 0 to 30)
+    """
+
+    if python.is_string(index):
+        index = maya_color.convert_maya_color_string_to_index(index)
+    if index is not None:
+        if maya.cmds.objExists('{}.overrideRGBColors'.format(node)):
+            maya.cmds.setAttr('{}.overrideRGBColors'.format(node), False)
+        maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
+        maya.cmds.setAttr('{}.overrideColor'.format(node), index)
+
+    return index
+
+
+def set_index_color_as_rgb(node, index, linear=True):
+    """
+    Sets the override RGB color by the given Maya color index
+    :param node: str or list(str)
+    :param index: int or str, Maya index color or Maya nice name color
+    :param linear: bool, Whether or not the RGB should be set in linear space (matches viewport color)
+    """
+
+    if python.is_string(index):
+        index = maya_color.convert_maya_color_string_to_index(index)
+    rgb_list = maya_color.convert_maya_color_index_to_rgb(index, linear=linear)
+    set_rgb_color(node, rgb_list=rgb_list)
+
+
+def set_rgb_color(node, rgb_list, linear=True):
     """
     Sets the override RGB color of the given nodes
     NOTE: This function only works for versions of Maya greater than 2015
-    :param nodes: list(str)
-    :param r: float
-    :param g: float
-    :param b: float
+    :param node: str or list(str)
+    :param linear: bool, Whether or not the RGB should be set in linear space (matches viewport color)
+    :param rgb_list: list(float, float, float)
     """
 
-    nodes = python.force_list(nodes)
+    if not linear:
+        rgb_list = color.convert_color_linear_to_srgb(rgb_list)
+
+    nodes = python.force_list(node)
     for node in nodes:
         if not maya.cmds.objExists(
                 '{}.overrideRGBColors'.format(node)) or not maya.cmds.objExists('{}.overrideEnabled'.format(node)):
@@ -1016,4 +1095,62 @@ def set_color_rgb(nodes, r=0, g=0, b=0):
 
         maya.cmds.setAttr('{}.overrideRGBColors'.format(node), True)
         maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
-        maya.cmds.setAttr('{}.overrideColorRGB'.format(node), r, g, b)
+        maya.cmds.setAttr('{}.overrideColorR'.format(node), rgb_list[0])
+        maya.cmds.setAttr('{}.overrideColorG'.format(node), rgb_list[1])
+        maya.cmds.setAttr('{}.overrideColorB'.format(node), rgb_list[2])
+        maya.cmds.setAttr('{}.overrideColorRGB'.format(node), rgb_list[0], rgb_list[1], rgb_list[2])
+
+
+def set_hsv_color(node, hsv, linear=True):
+    """
+    Sets the override color of the given node as HSV
+    :param node: str or list(str)
+    :param hsv: tuple(float, float, float), HSV color
+    :param linear: bool, Whether or not the RGB should be set in linear space (matches viewport color)
+    """
+
+    rgb = color.convert_hsv_to_rgb(hsv)
+    set_rgb_color(node, rgb, linear=linear)
+
+
+def filter_nodes_by_rgb_color(nodes_list, rgb_color, tolerance=0.05, query_shapes=True):
+    """
+    Returns nodes with the given color from the given list of nodes
+    :param nodes_list: list(str), list of Maya nodes we want to to select
+    :param rgb_color: tuple(float, float, float), color to find
+    :param tolerance: float, margin for errors when comparing RGB float color values
+    :param query_shapes: bool, Whether or not nodes shapes should be check to find color of
+    :return: list(str), list of filtered nodes
+    """
+
+    # Import here to avoid cyclic imports
+    from tpDcc.dccs.maya.core import shape as shape_utils
+
+    colored_nodes = list()
+    for i, node in enumerate(nodes_list):
+        nodes_to_check = [nodes_list[i]]
+        if query_shapes:
+            nodes_to_check = shape_utils.filter_shapes_in_list([node])
+        if nodes_to_check:
+            if color.compare_rgb_colors_tolerance(get_rgb_color(nodes_to_check[0]), rgb_color, tolerance=tolerance):
+                colored_nodes.append(node)
+
+    return colored_nodes
+
+
+def select_nodes_by_rgb_color(nodes_list, rgb_color, tolerance=0.05, query_shapes=True):
+    """
+    Selects nodes with the given color from the given list of nodes
+    :param nodes_list: list(str), list of Maya nodes we want to to select
+    :param rgb_color: tuple(float, float, float), color to find
+    :param tolerance: float, margin for errors when comparing RGB float color values
+    :param query_shapes: bool, Whether or not nodes shapes should be check to find color of
+    :return: list(str), list of filtered nodes
+    """
+
+    colored_nodes = filter_nodes_by_rgb_color(nodes_list, rgb_color, tolerance=tolerance, query_shapes=query_shapes)
+    if not colored_nodes:
+        return None
+    maya.cmds.select(colored_nodes, replace=True)
+
+    return colored_nodes

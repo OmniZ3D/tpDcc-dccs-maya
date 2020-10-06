@@ -783,9 +783,9 @@ def set_rotate_pivot(transform_name, rotate_pivot_vector, world_space=False):
     """
 
     if world_space:
-        maya.cmds.xform(transform_name, rp=rotate_pivot_vector, ws=True)
+        return maya.cmds.xform(transform_name, rp=rotate_pivot_vector, ws=True)
 
-    maya.cmds.xform(transform_name, rp=rotate_pivot_vector, os=True)
+    return maya.cmds.xform(transform_name, rp=rotate_pivot_vector, os=True)
 
 
 def get_scale_pivot(transform_name, world_space=False):
@@ -1514,7 +1514,13 @@ def create_buffer_group(node_name, buffer_name=None, suffix='buffer', use_duplic
         maya.cmds.setAttr('{}.scaleY'.format(buffer_grp, orig_scale[1]))
         maya.cmds.setAttr('{}.scaleZ'.format(buffer_grp, orig_scale[2]))
 
-    attribute.connect_group_with_message(buffer_grp, node_name, suffix)
+    node_name_split = node_name.split('|')
+    if len(node_name_split) == 1:
+        attribute.connect_group_with_message(buffer_grp, node_name, suffix)
+    else:
+        node_root_name = '|'.join(node_name_split[:-1])
+        buffer_node_name = '{}|{}|{}'.format(node_root_name, buffer_grp, node_name_split[-1])
+        attribute.connect_group_with_message(buffer_grp, buffer_node_name, suffix)
 
     return buffer_grp
 

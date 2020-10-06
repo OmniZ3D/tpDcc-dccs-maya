@@ -7,12 +7,9 @@ Module that contains functions and classes related to shapes
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-
+import tpDcc as tp
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import node, exceptions
-
-LOGGER = logging.getLogger()
+from tpDcc.dccs.maya.core import node, exceptions, filtertypes
 
 
 TYPE_DICT = {
@@ -88,6 +85,18 @@ def is_shape(obj):
         return False
 
     return True
+
+
+def get_shapes_types_with_color():
+    """
+    Returns a list Maya shapes types that can contain color
+    :return: list(str)
+    """
+
+    shapes_with_color = ['nurbsCurve', 'locator', 'mesh', 'nurbsSurface', 'camera', 'light']
+    shapes_with_color.extend(tp.Dcc.TYPE_FILTERS.get(filtertypes.DEFORMER_FILTER_TYPE, list()))
+
+    return shapes_with_color
 
 
 def has_intermediate(geo):
@@ -367,13 +376,13 @@ def find_input_shape(obj, recursive=False, print_exceptions=False):
             input_shape = find_input_shape_1(obj)
         except Exception as e:
             if print_exceptions:
-                LOGGER.debug('Caught exception: {}'.format(str(e)))
+                maya.logger.exception('Caught exception: {}'.format(str(e)))
     if not input_shape:
         try:
             input_shape = find_input_shape_2(obj)
         except Exception as e:
             if print_exceptions:
-                LOGGER.debug('Caught exception: {}'.format(str(e)))
+                maya.logger.exception('Caught exception: {}'.format(str(e)))
 
     # Check if input shape is valid
     if not input_shape:
@@ -617,3 +626,36 @@ def scale_shapes(node, scale, use_pivot=True, relative=True):
                 maya.cmds.scale(scale, scale, scale, comps, pivot=pivot, r=True)
             else:
                 maya.cmds.scale(scale, scale, scale, comps, pivot=pivot, a=True)
+
+
+def filter_shapes_in_list(nodes_list, shapes_node_type_list=None):
+    """
+    Filters given Maya nodes leaving only shapes and filtered by the given shapes_node_list
+    :param nodes_list: list(str), list of Maya nodes list
+    :param shapes_node_type_list: list(str), filtered shape nodes list
+    :return: list(str)
+    """
+
+    shapes_list = list()
+    if not nodes_list:
+        return shapes_list
+
+    shapes_node_type_list = shapes_node_type_list or get_shapes_types_with_color()
+    shapes_child_list = maya.cmds.listRelatives(nodes_list, shapes=True, type=shapes_node_type_list, fullPath=True)
+
+    shapes_node_list = list()
+    for node in nodes_list:
+        node_type = maya.cmds.nodeType(node)
+        if node_type in shapes_node_type_list:
+            shapes_node_list.append(node)
+
+    if shapes_node_list:
+        if shapes_child_list:
+            all_nodes = list(set(shapes_node_list + shapes_child_list))
+            shapes_list.extend(all_nodes)
+        else:
+            shapes_list.extend(shapes_node_list)
+    elif shapes_child_list:
+        shapes_list.extend(shapes_child_list)
+
+    return shapes_list

@@ -10,10 +10,22 @@ from __future__ import print_function, division, absolute_import
 import tpDcc
 from tpDcc.libs.python import python
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import camera
 
-ALL_FILTER_TYPE = 'ALL'
-GROUP_FILTER_TYPE = 'GROUP'
+ALL_FILTER_TYPE = 'All Node Types'
+GROUP_FILTER_TYPE = 'Group'
+GEOMETRY_FILTER_TYPE = 'Geometry'
+POLYGON_FILTER_TYPE = 'Polygon'
+NURBS_FILTER_TYPE = 'Nurbs'
+JOINT_FILTER_TYPE = 'Joint'
+CURVE_FILTER_TYPE = 'Curve'
+LOCATOR_FILTER_TYPE = 'Locator'
+LIGHT_FILTER_TYPE = 'Light'
+CAMERA_FILTER_TYPE = 'Camera'
+CLUSTER_FILTER_TYPE = 'Cluster'
+FOLLICLE_FILTER_TYPE = 'Follicle'
+DEFORMER_FILTER_TYPE = 'Deformer'
+TRANSFORM_FILTER_TYPE = 'Transform'
+CONTROLLER_FILTER_TYPE = 'Controller'
 
 PROTECTED_NODES = [
     "layerManager", "renderLayerManager", "poseInterpolatorManager", "defaultRenderLayer",
@@ -32,6 +44,9 @@ def filter_all_node_types(
     :param remove_maya_defaults:
     :return:
     """
+
+    # Import here to avoid cyclic imports
+    from tpDcc.dccs.maya.core import camera
 
     if not selection_only:
         all_objs = maya.cmds.ls(long=True, dagObjects=search_hierarchy, dag=dag)
@@ -145,7 +160,7 @@ def filter_dag_transforms(filter_types, search_hierarchy=False, selection_only=T
             filter_types=filter_types, objs_list=sel_objs, search_hierarchy=search_hierarchy, dag=dag)
     else:
         filtered_shapes = filter_list_by_types(
-            filter_types=filter_types, search_hierarchy=search_hierarchy, selection_only=True, dag=dag)
+            filter_types=filter_types, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag)
 
     if not transforms_only:
         return filtered_shapes
@@ -155,7 +170,7 @@ def filter_dag_transforms(filter_types, search_hierarchy=False, selection_only=T
 
 def filter_by_type(
         filter_type, search_hierarchy=False, selection_only=True, dag=False, remove_maya_defaults=True,
-        transforms_only=True):
+        transforms_only=True, keep_order=False):
     """
     Returns a list of objects that match the given node type
     :param filter_type: str
@@ -164,6 +179,7 @@ def filter_by_type(
     :param dag: bool, Whether to return only DAG nodes
     :param remove_maya_defaults: Whether to ignore Maya default nodes or not
     :param transforms_only: bool, Whether to return only transform nodes or not
+    :param keep_order: bool, Whether or not take into account the order of selection and hierarchy
     :return:
     """
 
@@ -175,18 +191,32 @@ def filter_by_type(
         maya.logger.warning('Filter Type "{}" is not supported in Maya!'.format(filter_type))
         return None
 
-    if obj_type_list == ALL_FILTER_TYPE:
-        return filter_all_node_types(
-            selection_only=selection_only, search_hierarchy=search_hierarchy, transforms_only=transforms_only,
-            dag=dag, remove_maya_defaults=remove_maya_defaults)
-    elif obj_type_list == GROUP_FILTER_TYPE:
-        return filter_by_group(selection_only=selection_only, search_hierarchy=search_hierarchy, dag=dag)
+    if keep_order:
+        if selection_only:
+            sel_objs = maya.cmds.ls(sl=True, long=True, dagObjects=search_hierarchy)
+            filtered_result = filter_by_type(
+                filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
+                remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only, keep_order=False)
+            remove_result = [obj for obj in sel_objs if obj not in filtered_result]
+            return [obj for obj in sel_objs if obj not in remove_result]
+        else:
+            return filter_by_type(
+                filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
+                remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only, keep_order=False)
     else:
-        return filter_dag_transforms(
-            filter_types=obj_type_list, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag)
+        if obj_type_list == ALL_FILTER_TYPE:
+            return filter_all_node_types(
+                selection_only=selection_only, search_hierarchy=search_hierarchy, transforms_only=transforms_only,
+                dag=dag, remove_maya_defaults=remove_maya_defaults)
+        elif obj_type_list == GROUP_FILTER_TYPE:
+            return filter_by_group(selection_only=selection_only, search_hierarchy=search_hierarchy, dag=dag)
+        else:
+            return filter_dag_transforms(
+                filter_types=obj_type_list, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag)
 
 
-def filter_list_by_types(filter_types, objs_list=None, search_hierarchy=False, selection_only=True, dag=False):
+def filter_list_by_types(
+        filter_types, objs_list=None, search_hierarchy=False, selection_only=True, dag=False):
     """
     Returns a list of objecst that match the given node type
     :param filter_types: list(str), list of node types to filter by

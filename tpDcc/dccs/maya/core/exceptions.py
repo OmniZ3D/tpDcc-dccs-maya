@@ -121,6 +121,11 @@ class ShapeValidDeformerAffectedException(MayaLibException):
 
 # ======================================================================== BLENDSHAPE
 
+class BlendShapeExistsException(MayaLibException):
+    def __init__(self, node):
+        super(BlendShapeExistsException, self).__init__('BlendShape "{}" does not exists!'.format(node))
+
+
 class BlendShapeBaseGeometryException(MayaLibException):
     def __init__(self, base, blendshape):
         super(BlendShapeBaseGeometryException, self).__init__(
