@@ -7,10 +7,13 @@ This module include data class for blendshapes
 
 from __future__ import print_function, division, absolute_import
 
+import string
 import logging
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import exceptions
+from tpDcc.libs.python import python, name as core_name
+from tpDcc.dccs.maya.core import exceptions, deformer, shape, component, name as name_utils, attribute as attr_utils
+from tpDcc.dccs.maya.core import geometry as geo_utils
 
 LOGGER = logging.getLogger()
 
@@ -28,6 +31,295 @@ class BlendShapeDeformerOrder(object):
     Foc = 'foc'
 
 
+class BlendShapeTarget(object):
+    def __init__(self, alias, index):
+        self._name = alias
+        self._index = index
+        self._connection = None
+        self._value = 0
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def alias(self):
+        return self._name
+
+    @alias.setter
+    def alias(self, value):
+        self._name = value
+
+    @property
+    def index(self):
+        return self._index
+
+    @index.setter
+    def index(self, value):
+        self._index = value
+
+    @property
+    def connection(self):
+        return self._connection
+
+    @connection.setter
+    def connection(self, value):
+        self._connection = value
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+
+class BlendShape(object):
+    def __init__(self, blendshape_name):
+        self._blendshape = blendshape_name
+        self._meshes = list()
+        self._targets = dict()
+        self._targets_list = list()
+        self._weight_indices = list()
+        self._mesh_index = 0
+        self._prune_compare_mesh = None
+        self._prune_distance = -1
+
+    def create(self, mesh, front_of_chain=True):
+        """
+        Creates an empty deformer on the given mesh
+        :param mesh: str, the name of a mesh transform
+        :return: str, newly created blendshape
+        """
+
+        new_blendshape = maya.cmds.deformer(mesh, type='blendShape', frontOfChain=front_of_chain)[0]
+        mesh_name = name_utils.get_basename(mesh)
+        if not self._blendshape:
+            base_mesh_name = name_utils.get_basename(mesh_name, remove_namespace=True)
+            new_name = 'blendshape_{}'.format(base_mesh_name)
+            self._blendshape = maya.cmds.rename(new_blendshape, new_name)
+
+        self._store_targets()
+        self._store_meshes()
+
+        return new_blendshape
+
+    def set(self, blendshape_node):
+        """
+        Sets the blendshape node to work on
+        :param blendshape_node: str
+        """
+
+        self._blendshape = blendshape_node
+        self._store_targets()
+        self._store_meshes()
+
+    def rename(self, new_name):
+        """
+        Returns wrapped blendshape node
+        :param new_name: str, new name of the blendshape
+        """
+
+        self._blendshape = maya.cmds.rename(self._blendshape, new_name)
+        self.set(self._blendshape)
+
+    def set_envelope(self, value):
+        """
+        Sets the envelope value of the blendshape node
+        :param value: float
+        """
+
+        maya.cmds.setAttr('{}.envelope'.format(self._blendshape), value)
+
+    def get_mesh_index(self, mesh):
+        # TODO: Finish
+        meshes = maya.cmds.blendShape(self._blendshape, query=True, geometry=True)
+        raise NotImplementedError()
+
+    def set_mesh_index(self, index):
+        self._mesh_index = index
+
+    def get_mesh_count(self):
+        """
+        Returns the total meshes of the wrapped blendshape node
+        :return: int
+        """
+
+        meshes = maya.cmds.blendShape(self._blendshape, query=True, geometry=True)
+        self._meshes = meshes
+
+        return len(meshes)
+
+    def set_prune_distance(self, distance, comparison_mesh):
+        self._prune_distance = distance
+        self._prune_compare_mesh = comparison_mesh
+
+    def is_target(self, target_name):
+        """
+        Returns whether given node is a target of the wrapped blendshape node
+        :param target_name: str
+        :return: bool
+        """
+
+        if not self._targets:
+            self._store_targets()
+
+        target_name = name_utils.get_basename(target_name)
+
+        return target_name in self._targets
+
+    def is_target_connected(self, target_name):
+        target_attr = self._get_target_attribute(target_name)
+        input_value = attr_utils.get_attribute_input(target_attr)
+        if input_value:
+            return True
+
+        return False
+
+    def get_target_names(self):
+        if not self._targets:
+            self._store_targets()
+
+        return self._targets_list
+
+    def get_weights(self, target_name=None, mesh_index=0):
+        weights = list()
+
+        if not self._meshes:
+            self._store_meshes()
+        if not self._meshes:
+            return weights
+
+        mesh = self._meshes[mesh_index]
+        vertex_count = component.get_component_count(mesh)
+
+        if target_name is None:
+            for i in range(vertex_count):
+                weight_attr = self._get_input_target_base_weights_attribute(mesh_index)
+                weight = maya.cmds.getAttr('{}[{}]'.format(weight_attr, i))
+                weights.append(weight)
+        else:
+            for i in range(vertex_count):
+                weight_attr = self._get_input_target_group_weights_attribute(mesh_index)
+                weight = maya.cmds.getAttr('{}[{}]'.format(weight_attr, i))
+                weights.append(weight)
+
+        return weights
+
+    def set_weights(self, weights, target_name=None, mesh_index=0):
+        """
+        Sets the vertex weights on the wrapped blendShape node. If no target name is given, base weights are set.
+        :param weights: list(float), list of weight values. If a float is given, the float will be converted into a
+            list of the same float with the same number of vertices.
+        :param target_name: str, name of the target. If not given, base weights will be set.
+        :param mesh_index: int, the index of the mesh in the wrapped blendShape node.
+        """
+
+        weights = python.force_list(weights)
+        weight_count = len(weights)
+
+        if weight_count == 1:
+            if not self._meshes:
+                self._store_meshes()
+            if not self._meshes:
+                return False
+            mesh = self._meshes[mesh_index]
+            vertex_count = component.get_component_count(mesh)
+            weights = weights * vertex_count
+
+        if target_name:
+            attribute = self._get_input_target_group_weights_attribute(target_name, mesh_index=mesh_index)
+        else:
+            attribute = self._get_input_target_base_weights_attribute(mesh_index=mesh_index)
+
+        # TODO: Check whether this can be done faster using Maya API
+        """
+        plug = api.get_plug(attribute)
+        for i in range(weight_count):
+            plug.elementByLogicalIndex(inc).setFloat(weights[inc])
+        """
+
+        try:
+            maya.cmds.setAttr(attribute + '[*}', *weights)
+        except Exception:
+            for i in range(weight_count):
+                attribute_name = attribute + '[{}]'.format(i)
+                maya.cmds.setAttr(attribute_name, weights[i])
+
+        return True
+
+    def _get_input_target(self, mesh_index=0):
+        attribute = [self._blendshape, 'inputTarget[{}]'.format(mesh_index)]
+        attribute = string.join(attribute, '.')
+
+        return attribute
+
+    def _get_input_target_group(self, name, mesh_index=0):
+        if not self._targets:
+            self._store_targets()
+        if not self._targets or name not in self._targets:
+            return
+
+        target_index = self._targets[name].index
+        input_attribute = self._get_input_target(mesh_index)
+        attribute = [input_attribute, 'inputTargetGroup[{}]'.format(target_index)]
+        attribute = string.join(attribute, '.')
+
+        return attribute
+
+    def _get_input_target_base_weights_attribute(self, mesh_index=0):
+        input_attribute = self._get_input_target(mesh_index)
+        attribute = [input_attribute, 'baseWeights']
+        attribute = string.join(attribute, '.')
+
+        return attribute
+
+    def _get_input_target_group_weights_attribute(self, name, mesh_index=0):
+        input_attribute = self._get_input_target_group(name, mesh_index=mesh_index)
+        attribute = [input_attribute, 'targetWeights']
+        attribute = string.join(attribute, '.')
+
+        return attribute
+
+    def _store_target(self, alias, index):
+        target = BlendShapeTarget(alias, index)
+        self._targets[alias] = target
+        self._targets_list.append(alias)
+        self._weight_indices.append(index)
+        self._weight_indices.sort()
+
+    def _store_targets(self):
+        if not self._blendshape:
+            return
+
+        target_attrs = list()
+        if maya.cmds.objExists(self._get_input_target(0)):
+            target_attrs = maya.cmds.listAttr(self._get_input_target(0), multi=True)
+        if not target_attrs:
+            return
+
+        alias_index_map = map_blend_target_alias_to_index(self._blendshape)
+        if not alias_index_map:
+            return
+
+        for index, alias in alias_index_map.items():
+            self._store_target(alias, index)
+
+    def _store_meshes(self):
+        if not self._blendshape:
+            return
+
+        self._meshes = maya.cmds.deformer(self._blendshape, query=True, geometry=True)
+
+    def _get_target_attribute(self, target_name):
+        return '{}.{}'.format(self._blendshape, target_name)
+
+
 def check_blendshape(blend_shape):
     """
     Check sif a node is a valid blendshape and raise an exception if the blenshape is not valid
@@ -36,7 +328,7 @@ def check_blendshape(blend_shape):
     """
 
     if not is_blendshape(blend_shape):
-        raise exceptions.BlendShapeException(blend_shape)
+        raise exceptions.BlendShapeExistsException(blend_shape)
 
 
 def is_blendshape(blend_shape):
@@ -61,8 +353,6 @@ def get_base_geo(blend_shape):
     :param blend_shape: str, blendshape to get base geometry from
     :return: list<str>
     """
-
-    from tpDcc.dccs.maya.core import deformer
 
     check_blendshape(blend_shape)
 
@@ -94,8 +384,6 @@ def get_base_index(blend_shape, base):
     :param base: str, base geometry to get the input geometry index for
     :return: str
     """
-
-    from tpDcc.dccs.maya.core import deformer
 
     check_blendshape(blend_shape)
     if not has_base(blend_shape, base):
@@ -170,8 +458,6 @@ def get_target_geo(blend_shape, target, base_geo=''):
     :return: str
     """
 
-    from tpDcc.dccs.maya.core import deformer
-
     target_index = get_target_index(blend_shape, target)
     geo_index = 0
     if base_geo:
@@ -232,8 +518,6 @@ def get_target_name(blend_shape, target_geo):
     :param target_geo: str, blendshape target geometry to get alias name for
     :return: str
     """
-
-    from tpDcc.dccs.maya.core import shape
 
     check_blendshape(blend_shape)
     if not maya.cmds.objExists(target_geo):
@@ -430,8 +714,6 @@ def get_target_weights(blend_shape, target, geometry=''):
     :return: str
     """
 
-    from tpDcc.dccs.maya.core import deformer
-
     check_blendshape(blend_shape)
     if not maya.cmds.objExists(blend_shape + '.' + target):
         raise Exception('BlendShape "{}" has no "{}" target attribute!'.format(blend_shape, target))
@@ -459,8 +741,6 @@ def set_target_weights(blend_shape, target, wt, geometry=''):
     :param wt: list<float>, weight value list to apply to the given blendshape target
     :param geometry: str, name of blendshape driven geometry to set weights on
     """
-
-    from tpDcc.dccs.maya.core import deformer, component
 
     check_blendshape(blend_shape)
     if not maya.cmds.objExists(blend_shape + '.' + target):
@@ -493,8 +773,6 @@ def connect_to_target(blend_shape, target_geo, target_name, base_geo, weight=1.0
     :param weight: float, blendshape target weight value to connect geometry to
     :param force: bool, force connection
     """
-
-    from tpDcc.dccs.maya.core import deformer
 
     check_blendshape(blend_shape)
     if not has_target(blend_shape, target_name):
@@ -604,3 +882,73 @@ def remove_unconnected_targets(blend_shape, base):
                 deleted_target_list.append(target)
 
     return deleted_target_list
+
+
+def map_blend_target_alias_to_index(blendshape_node):
+    """
+    Returns the aliases for blendshape weight targets and the index of the target
+    :param blendshape_node: str, name of the blendshape
+    :return: dict(str, index), dict[alias] = target index
+    """
+
+    alias_map = dict()
+
+    aliases = maya.cmds.aliasAttr(blendshape_node, query=True)
+    if not aliases:
+        return alias_map
+
+    for i in range(0, len(aliases), 2):
+        alias = aliases[i]
+        weight = aliases[i + 1]
+        target_index = core_name.get_end_number(weight)
+        alias_map[alias] = target_index
+
+    return alias_map
+
+
+def map_blend_to_target_alias(blendshape_node):
+    """
+    Returns a map between the target index and its alias name on the given blendshape
+    :param blendshape_node: str, name of the blendshape
+    :return: dict(int, str), dict[target_index] = weight alias
+    """
+
+    alias_map = dict()
+
+    aliases = maya.cmds.aliasAttr(blendshape_node, query=True)
+    if not aliases:
+        return alias_map
+
+    for i in range(0, len(aliases), 2):
+        alias = aliases[i]
+        weight = aliases[i + 1]
+        target_index = core_name.get_end_number(weight)
+        alias_map[target_index] = alias
+
+    return alias_map
+
+
+def get_index_at_alias(alias, blendshape_node):
+    """
+    Returns corresponding target index from the given blendshape weight alias
+    :param alias: str, name of the weight alias
+    :param blendshape_node: str, name of the blendshape
+    :return: int, corresponding target index to the alias
+    """
+
+    map_dict = map_blend_target_alias_to_index(blendshape_node)
+    if not map_dict:
+        return
+
+    return map_dict.get(alias, None)
+
+
+def is_mesh_blendshape_compatible(base, target):
+    """
+    Checks whether the given target mesh is compatible with base geometry (have same vertices, edges and face count)
+    :param base: str
+    :param target: str
+    :return: bool
+    """
+
+    return geo_utils.is_mesh_compatible(base, target)
