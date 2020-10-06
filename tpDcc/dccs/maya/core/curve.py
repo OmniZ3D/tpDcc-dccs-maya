@@ -8,8 +8,9 @@ Utility methods related to Maya Curves
 from __future__ import print_function, division, absolute_import
 
 import tpDcc.dccs.maya as maya
-from tpDcc.libs.python import mathlib
-from tpDcc.dccs.maya.core import exceptions, api, transform, decorators, name as name_utils, shape as shape_utils
+from tpDcc.libs.python import python, mathlib
+from tpDcc.dccs.maya.core import exceptions, api, transform, component
+from tpDcc.dccs.maya.core import decorators, name as name_utils, shape as shape_utils
 
 
 def check_curve(curve):
@@ -52,6 +53,20 @@ def is_curve(curve):
         return False
 
     return True
+
+
+def is_cv_count_same(source_curve, target_curve):
+    """
+    Returns whether or not given curves have the same amount of CVs
+    :param source_curve: str
+    :param target_curve: str
+    :return: bool
+    """
+
+    source_cvs = len(maya.cmds.ls('{}.cv[*]'.format(source_curve)), flatten=True)
+    target_cvs = len(maya.cmds.ls('{}.cv[*]'.format(target_curve)), flatten=True)
+
+    return source_cvs == target_cvs
 
 
 def get_curve_fn(curve):
@@ -467,3 +482,90 @@ def set_shapes_as_text_curve(transform, text_string):
             maya.cmds.parent(shape, transform, r=True, s=True)
     maya.cmds.delete(text)
     shape_utils.rename_shapes(transform)
+
+
+def get_curve_shape(curve, shape_index=0):
+    """
+    Returns the shape for a curve transform
+    :param curve: str
+    :param shape_index: int
+    :return: str or None
+    """
+
+    if curve.find('.vtx'):
+        curve = curve.split('.')[0]
+    if maya.cmds.nodeType(curve) == 'nurbsCurve':
+        curve = maya.cmds.listRelatives(curve, p=True)[0]
+
+    shapes = shape_utils.get_shapes(curve)
+    if not shapes:
+        return
+    if not maya.cmds.nodeType(shapes[0]) == 'nurbsCurve':
+        return
+
+    shape_count = len(shapes)
+    if shape_index < shape_count:
+        return shapes[0]
+    elif shape_index >= shape_count:
+        maya.logger.warning(
+            'Curve {} does not have a shape count up to {}. Returning last shape'.format(curve, shape_index))
+        return shapes[-1]
+
+    return shapes[shape_index]
+
+
+def get_curves_in_list(dg_nodes_list):
+    """
+    Given a list of DG nodes, returns any transform that has a curve shape node
+    :param dg_nodes_list: list(str)
+    :return: list(str)
+    """
+
+    found_curves = list()
+
+    for dg_node in dg_nodes_list:
+        if maya.cmds.nodeType(dg_node) == 'nurbsCurve':
+            found_curve = maya.cmds.listRelatives(dg_node, p=True)
+            found_curves.append(found_curve)
+        if maya.cmds.nodeType(dg_node) == 'transform':
+            shapes = get_curve_shape(dg_node)
+            if shapes:
+                found_curves.append(dg_node)
+
+    return found_curves
+
+
+def get_selected_curves():
+    """
+    Returns all selected curves from current selection
+    :return: list(str)
+    """
+
+    selection = maya.cmds.ls(sl=True)
+
+    return get_curves_in_list(selection)
+
+
+def move_cvs(curves, position, pivot_at_center=False):
+    """
+    Moves given curves CVs together and maintaining their offset n world position
+    :param curves: list(str)
+    :param position:
+    :param pivot_at_center: bool
+    """
+
+    curves = python.force_list(curves)
+    for curve in curves:
+        if curve.find('.cv[') > -1:
+            curve_cvs = curve
+            curve = component.get_curve_from_cv(curve)
+        else:
+            curve_cvs = '{}.cv[*]'.format(curve)
+        if shape_utils.is_a_shape(curve):
+            curve = maya.cmds.listRelatives(curve, p=True)[0]
+        if pivot_at_center:
+            center_position = transform.get_center(curve_cvs)
+        else:
+            center_position = maya.cmds.xform(curve, query=True, ws=True, rp=True)
+        offset = mathlib.vector_sub(position, center_position)
+        maya.cmds.move(offset[0], offset[1], offset[2], curve_cvs, ws=True, r=True)

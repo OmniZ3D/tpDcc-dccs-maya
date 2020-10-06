@@ -8,7 +8,6 @@ Utility methods related to Maya Deformer nodes
 from __future__ import print_function, division, absolute_import
 
 import re
-import logging
 
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.python import python, mathlib, name as name_utils
