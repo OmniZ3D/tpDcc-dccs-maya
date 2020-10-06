@@ -34,23 +34,23 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         Close = 'No'
 
     TYPE_FILTERS = OrderedDict([
-        ('All Node Types', filtertypes.ALL_FILTER_TYPE),
-        ('Group', filtertypes.GROUP_FILTER_TYPE),
-        ('Geometry', ['mesh', 'nurbsSurface']),
-        ('Polygon', ['Polygon']),
-        ('Nurbs', ['nurbsSurface']),
-        ('Joint', ['joint']),
-        ('Curve', ['nurbsCurve']),
-        ('Locator', ['locator']),
-        ('Light', ['light']),
-        ('Camera', ['camera']),
-        ('Cluster', ['cluster']),
-        ('Follicle', ['follicle']),
-        ('Deformer', [
+        (filtertypes.ALL_FILTER_TYPE, 'All'),
+        (filtertypes.GROUP_FILTER_TYPE, 'Group'),
+        (filtertypes.GEOMETRY_FILTER_TYPE, ['mesh', 'nurbsSurface']),
+        (filtertypes.POLYGON_FILTER_TYPE, ['Polygon']),
+        (filtertypes.NURBS_FILTER_TYPE, ['nurbsSurface']),
+        (filtertypes.JOINT_FILTER_TYPE, ['joint']),
+        (filtertypes.CURVE_FILTER_TYPE, ['nurbsCurve']),
+        (filtertypes.LOCATOR_FILTER_TYPE, ['locator']),
+        (filtertypes.LIGHT_FILTER_TYPE, ['light']),
+        (filtertypes.CAMERA_FILTER_TYPE, ['camera']),
+        (filtertypes.CLUSTER_FILTER_TYPE, ['cluster']),
+        (filtertypes.FOLLICLE_FILTER_TYPE, ['follicle']),
+        (filtertypes.DEFORMER_FILTER_TYPE, [
             'clusterHandle', 'baseLattice', 'lattice', 'softMod', 'deformBend', 'sculpt',
             'deformTwist', 'deformWave', 'deformFlare']),
-        ('Transform', ['transform']),
-        ('Controllers', ['control'])
+        (filtertypes.TRANSFORM_FILTER_TYPE, ['transform']),
+        (filtertypes.CONTROLLER_FILTER_TYPE, ['control'])
     ])
 
     SIDE_LABELS = ['Center', 'Left', 'Right', 'None']
@@ -250,7 +250,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return is_type
 
     @staticmethod
-    def create_empty_group(name, parent=None):
+    def create_empty_group(name='grp', parent=None):
         """
         Creates a new empty group node
         Creates a new empty group node
@@ -471,9 +471,13 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         relative = kwargs.get('relative', False)
         object_space = kwargs.get('object_space', False)
+        world_space = kwargs.get('world_space', True)
         world_space_distance = kwargs.get('world_space_distance', False)
+        if object_space:
+            world_space = False
 
-        return maya.cmds.move(x, y, z, node, relative=relative, os=object_space, wd=world_space_distance)
+        return maya.cmds.move(
+            x, y, z, node, relative=relative, os=object_space, ws=world_space, wd=world_space_distance)
 
     @staticmethod
     def translate_node_in_world_space(node, translation_list, **kwargs):
@@ -521,8 +525,12 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         relative = kwargs.get('relative', False)
+        object_space = kwargs.get('object_space', False)
+        world_space = kwargs.get('world_space', True)
+        if object_space:
+            world_space = False
 
-        return maya.cmds.rotate(x, y, z, node, relative=relative)
+        return maya.cmds.rotate(x, y, z, node, relative=relative, os=object_space, ws=world_space)
 
     @staticmethod
     def rotate_node_in_world_space(node, rotation_list, **kwargs):
@@ -799,7 +807,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.showHidden(node)
 
     @staticmethod
-    def select_object(node, replace_selection=True, **kwargs):
+    def select_node(node, replace_selection=True, **kwargs):
         """
         Selects given object in the current scene
         :param replace_selection: bool
@@ -807,6 +815,18 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.select(node, replace=replace_selection, add=not replace_selection, **kwargs)
+
+    @staticmethod
+    def select_nodes_by_rgb_color(node_rgb_color, nodes_to_select=None):
+        """
+        Selects all nodes with the given color
+        :param node_rgb_color: list(float, float, float)
+        :param nodes_to_select: list(str), list of nodes to select.
+        If not given, all scene nodes will be taken into account
+        """
+
+        nodes_to_select = nodes_to_select if nodes_to_select else MayaDcc.all_scene_objects()
+        return maya_node.select_nodes_by_rgb_color(nodes_to_select, node_rgb_color)
 
     @staticmethod
     def select_hierarchy(root=None, add=False):
@@ -827,7 +847,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             maya.cmds.select(root, hi=True, add=add)
 
     @staticmethod
-    def deselect_object(node):
+    def deselect_node(node):
         """
         Deselects given node from current selection
         :param node: str
@@ -844,16 +864,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.select(clear=True)
 
     @staticmethod
-    def duplicate_object(node, name='', only_parent=False):
+    def duplicate_object(node, name='', only_parent=False, return_roots_only=False):
         """
         Duplicates given object in current scene
         :param node: str
         :param name: str
         :param only_parent: bool, If True, only given node will be duplicated (ignoring its children)
-        :return: str
+        :param return_roots_only: bool, If True, only the root nodes of the new hierarchy will be returned
+        :return: list(str)
         """
 
-        return maya.cmds.duplicate(node, name=name, po=only_parent)[0]
+        return maya.cmds.duplicate(node, name=name, parentOnly=only_parent, returnRootsOnly=return_roots_only)
 
     @staticmethod
     def delete_object(node):
@@ -1155,6 +1176,17 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return attribute.get_color(node)
+
+    @staticmethod
+    def node_rgb_color(node, linear=True):
+        """
+        Returns color of the given node
+        :param node: str
+        :param linear: bool, Whether or not the RGB should be in linear space (matches viewport color)
+        :return:
+        """
+
+        return maya_node.get_rgb_color(node, linear=linear)
 
     @staticmethod
     def set_node_color(node, color):
@@ -2477,6 +2509,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
             '{}.{}'.format(source_node, source_attribute), '{}.{}'.format(target_node, target_attribute), force=force)
 
     @staticmethod
+    def disconnect_attribute(node, attribute_name):
+        """
+        Disconnects source attribute to given target attribute
+        :param node: str
+        :param attribute: str
+        """
+
+        return attribute.disconnect_attribute('{}.{}'.format(node, attribute_name))
+
+    @staticmethod
     def connect_multiply(source_node, source_attribute, target_node, target_attribute, value=0.1, multiply_name=None):
         """
         Connects source attribute into target attribute with a multiply node inbetween
@@ -2812,6 +2854,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.selectMode(query=True, component=True)
 
     @staticmethod
+    def set_workspace(workspace_path):
+        """
+        Sets current workspace to the given path
+        :param workspace: str
+        """
+
+        return maya.mel.eval('setProject \"' + workspace_path + '\"')
+        # return maya.cmds.workspace(workspace_path, openWorkspace=True)
+
+    @staticmethod
     def scene_name():
         """
         Returns the name of the current scene
@@ -2862,6 +2914,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
                         return maya.cmds.SaveScene()
                     else:
                         return maya.cmds.file(save=True, type=maya_scene_type)
+
+    @staticmethod
+    def force_rename_to_save_scene():
+        """
+        Forces current scene to be renamed before it can be saved
+        """
+
+        return maya.cmds.file(renameToSave=True)
 
     @staticmethod
     def confirm_dialog(title, message, button=None, cancel_button=None, default_button=None, dismiss_string=None):
@@ -3802,7 +3862,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         maintain_offset = kwargs.get('maintain_offset', False)
 
-        return maya.cmds.pointConstraint(constraint_to, source, mo=maintain_offset)
+        return maya.cmds.pointConstraint(constraint_to, source, mo=maintain_offset)[0]
 
     @staticmethod
     def create_orient_constraint(source, constraint_to, **kwargs):
@@ -3815,8 +3875,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         maintain_offset = kwargs.get('maintain_offset', False)
+        skip = kwargs.get('skip', 'none')
 
-        return maya.cmds.orientConstraint(constraint_to, source, mo=maintain_offset)
+        return maya.cmds.orientConstraint(constraint_to, source, skip=skip, mo=maintain_offset)[0]
 
     @staticmethod
     def create_scale_constraint(source, constraint_to, **kwargs):
@@ -3830,7 +3891,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         maintain_offset = kwargs.get('maintain_offset', False)
 
-        return maya.cmds.scaleConstraint(constraint_to, source, mo=maintain_offset)
+        return maya.cmds.scaleConstraint(constraint_to, source, mo=maintain_offset)[0]
 
     @staticmethod
     def create_parent_constraint(source, constraint_to, **kwargs):
@@ -3844,7 +3905,18 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         maintain_offset = kwargs.get('maintain_offset', False)
 
-        return maya.cmds.parentConstraint(constraint_to, source, mo=maintain_offset)
+        return maya.cmds.parentConstraint(constraint_to, source, mo=maintain_offset)[0]
+
+    @staticmethod
+    def delete_constraints(node, constraint_type=None):
+        """
+        Deletes all constraints applied to the given node
+        :param node: str
+        :param constraint_type: str
+        :return: str
+        """
+
+        return constraint_utils.delete_constraints(node, constraint_type=constraint_type)
 
     @staticmethod
     def get_axis_aimed_at_child(transform_node):
@@ -5090,6 +5162,26 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return MayaDcc.set_attribute_value(node, 'drawLabel', bool(draw_type_label))
 
     @staticmethod
+    def get_joint_radius(node):
+        """
+        Sets given joint radius
+        :param node: str
+        :return: float
+        """
+
+        return maya.cmds.getAttr('{}.radius'.format(node))
+
+    @staticmethod
+    def set_joint_radius(node, radius_value):
+        """
+        Sets given joint radius
+        :param node: str
+        :param radius_value: float
+        """
+
+        return maya.cmds.setAttr('{}.radius'.format(node), radius_value)
+
+    @staticmethod
     def get_up_axis_name():
         """
         Returns the name of the current DCC up axis
@@ -5129,7 +5221,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return MayaProgessBar
 
     @staticmethod
-    def get_undo_decorator():
+    def undo_decorator():
         """
         Returns undo decorator for current DCC
         """
@@ -5137,12 +5229,20 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya_decorators.undo_chunk
 
     @staticmethod
-    def get_repeat_last_decorator(command_name=None):
+    def repeat_last_decorator(command_name=None):
         """
         Returns repeat last decorator for current DCC
         """
 
         return maya_decorators.repeat_static_command(command_name)
+
+    @staticmethod
+    def suspend_refresh_decorator():
+        """
+        Returns suspend refresh decorator for current DCC
+        """
+
+        return maya_decorators.suspend_refresh
 
 
 class MayaProgessBar(progressbar.AbstractProgressBar, object):
