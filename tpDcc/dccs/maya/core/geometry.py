@@ -10,8 +10,8 @@ from __future__ import print_function, division, absolute_import
 from tpDcc.libs.python import mathlib, python
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import api, exceptions, shape, transform as xform_utils, name as name_utils
-from tpDcc.dccs.maya.core import joint as joint_utils
+from tpDcc.dccs.maya.core import helpers, api, exceptions, shape, transform as xform_utils, name as name_utils
+from tpDcc.dccs.maya.core import scene, joint as joint_utils, component as cmp_utils, shape as shape_utils
 
 
 class MeshTopologyCheck(object):
@@ -118,8 +118,8 @@ class MeshTopologyCheck(object):
         :return: bool
         """
 
-        face1 = faces_to_vertices('%s.f[0]' % self.mesh1)
-        face2 = faces_to_vertices('%s.f[0]' % self.mesh2)
+        face1 = cmp_utils.faces_to_vertices('%s.f[0]' % self.mesh1)
+        face2 = cmp_utils.faces_to_vertices('%s.f[0]' % self.mesh2)
 
         vertex_indices1 = get_vertex_indices(face1)
         vertex_indices2 = get_vertex_indices(face2)
@@ -213,19 +213,6 @@ def component_type(geometry):
     return com_type[geo_type]
 
 
-def is_a_vertex(node):
-    """
-    Returns whether given object is a vertex or not
-    :param node: str
-    :return: bool
-    """
-
-    if maya.cmds.objExists(node) and node.find('.vtx[') > -1:
-        return True
-
-    return False
-
-
 def is_mesh_compatible(mesh1, mesh2):
     """
     Checks whether two meshes to see if they have thet same vertices, edge and face count
@@ -242,7 +229,7 @@ def is_mesh_compatible(mesh1, mesh2):
 
     check_value = check.check_first_face_verts()
 
-    return check_value
+    return bool(check_value)
 
 
 def replace(source_geometry, target_geometry):
@@ -523,6 +510,45 @@ def transforms_to_nurbs_surface(transforms, name, spans=-1, offset_axis='Y', off
     return loft[0]
 
 
+def curve_to_nurbs_surface(curve, description='', spans=-1, offset_axis='X', offset_amount=5):
+    """
+    Creates a new NURBS surface from the given curve
+    :param curve: str, name of the curve
+    :param description: str, name of the generate NURBS surface
+    :param spans: int, surface spans
+    :param offset_axis: str, offset axis
+    :param offset_amount: float, offset amount
+    :return: str, name of the newly created NURBS surface
+    """
+
+    description = description or curve
+    curve_1 = maya.cmds.duplicate(curve)[0]
+    curve_2 = maya.cmds.duplicate(curve)[0]
+    offset_axis = offset_axis.upper()
+    positive_move = mathlib.get_axis_vector(offset_axis, offset_amount)
+    negative_move = mathlib.get_axis_vector(offset_axis, -offset_amount)
+    maya.cmds.move(positive_move[0], positive_move[1], positive_move[2], curve_1)
+    maya.cmds.move(negative_move[0], negative_move[1], negative_move[2], curve_2)
+
+    curves = [curve_1, curve_2]
+    if not spans == -1:
+        for curve in curves:
+            maya.cmds.rebuildCurve(
+                curve, ch=False, rpo=True, rt=0, end=1, kr=False, kcp=False,
+                kep=True, kt=False, spans=spans, degree=3, tol=0.01)
+
+    loft = maya.cmds.loft(
+        curve_1, curve_2,
+        n=name_utils.find_unique_name('nurbsSurface_{}'.format(description)), ss=1, degree=1, ch=False)
+
+    spans = maya.cmds.getAttr('{}.spans'.format(curve_1))
+    maya.cmds.rebuildSurface(
+        loft, ch=False, rpo=1, rt=0, end=1, kr=0, kcp=0, kc=0, su=1, du=1, sv=spans, dv=3, tol=0.01, fr=0, dir=2)
+    maya.cmds.delete(curve_1, curve_2)
+
+    return loft[0]
+
+
 def nurbs_surface_u_to_transforms(surface, description='', count=4, value=0.5):
     """
     Creates joints along the U axis of the given surface
@@ -684,6 +710,36 @@ def get_mesh_shape(mesh, shape_index=0):
     return shapes[shape_index]
 
 
+def get_surface_shape(surface, shape_index=0):
+    """
+    Returns the shape of a surface transform
+    :param surface: str
+    :param shape_index: int
+    :return: str or None
+    """
+
+    if surface.find('.vtx'):
+        surface = surface.split('.')[0]
+    if maya.cmds.nodeType(surface) == 'nurbsSurface':
+        surface = maya.cmds.listRelatives(surface, p=True)
+
+    shapes = shape_utils.get_shapes(surface)
+    if not shapes:
+        return
+    if not maya.cmds.nodeType(shapes[0]) == 'nurbsSurface':
+        return
+
+    shape_count = len(shapes)
+    if shape_index < shape_count:
+        return shapes[0]
+    elif shape_index >= shape_count:
+        maya.logger.warning(
+            'Surface {} does not have a shape count up to {}. Returning last shape'.format(surface, shape_index))
+        return shapes[-1]
+
+    return shapes[shape_index]
+
+
 def get_vertices(geo_obj):
     """
     Returns list of vertices of the given geometry
@@ -699,25 +755,6 @@ def get_vertices(geo_obj):
         verts = maya.cmds.ls('{}.vtx[*]'.format(mesh), flatten=True)
         if verts:
             found += verts
-
-    return found
-
-
-def get_faces(geo_obj):
-    """
-    Returns list of faces of the given geometry
-    :param geo_obj: str, name of the geometry
-    :return: list<str>
-    """
-
-    mesh = get_mesh_shape(geo_obj)
-    meshes = shape.get_shapes_of_type(mesh, 'mesh', no_intermediate=True)
-
-    found = list()
-    for mesh in meshes:
-        faces = maya.cmds.ls('{}.f[*]'.format(mesh), flatten=True)
-        if faces:
-            found += faces
 
     return found
 
@@ -738,25 +775,23 @@ def get_vertex_indices(list_of_vertex_names):
     return vertex_indices
 
 
-def faces_to_vertices(faces):
+def get_faces(geo_obj):
     """
-    Converts given faces to vertices
-    :param faces: list<str>
+    Returns list of faces of the given geometry
+    :param geo_obj: str, name of the geometry
     :return: list<str>
     """
 
-    faces = maya.cmds.ls(faces, flatten=True)
-    verts = list()
+    mesh = get_mesh_shape(geo_obj)
+    meshes = shape.get_shapes_of_type(mesh, 'mesh', no_intermediate=True)
 
-    mesh = faces[0].split('.')[0]
-    for face in faces:
-        info = maya.cmds.polyInfo(face, faceToVertex=True)[0].split()
-        sub_verts = info[2:]
-        for sub_vert in sub_verts:
-            if sub_vert not in verts:
-                verts.append('{}.vtx[{}]'.format(mesh, sub_vert))
+    found = list()
+    for mesh in meshes:
+        faces = maya.cmds.ls('{}.f[*]'.format(mesh), flatten=True)
+        if faces:
+            found += faces
 
-    return verts
+    return found
 
 
 def get_closest_parameter_on_surface(surface, vector):
@@ -811,6 +846,48 @@ def get_point_from_surface_parameter(surface, u_value, v_value):
     return position
 
 
+def get_triangles(mesh):
+    """
+    Returns the triangles of a mesh
+    :param mesh: str
+    :return: list(str)
+    """
+
+    found_faces = list()
+
+    mesh = get_mesh_shape(mesh)
+    meshes = shape_utils.get_shapes_of_type(mesh, 'mesh', no_intermediate=True)
+    for mesh in meshes:
+        mesh_fn = api.MeshFunction(mesh)
+        triangles = mesh_fn.get_triangle_ids()
+        faces = cmp_utils.get_face_names_from_indices(mesh, triangles)
+        if faces:
+            found_faces.extend(faces)
+
+    return found_faces
+
+
+def get_non_triangle_non_quad(mesh):
+    """
+    Returns faces that are neither quad or triangles
+    :param mesh: str
+    :return: list(str)
+    """
+
+    found_faces = list()
+
+    mesh = get_mesh_shape(mesh)
+    meshes = shape_utils.get_shapes_of_type(mesh, 'mesh')
+    for mesh in meshes:
+        mesh_fn = api.MeshFunction(mesh)
+        ids = mesh_fn.get_non_tri_quad_ids()
+        faces = cmp_utils.get_face_names_from_indices(mesh, ids)
+        if faces:
+            found_faces.extend(faces)
+
+    return found_faces
+
+
 def get_face_center(mesh, face_id):
     """
     Returns the center position of a face
@@ -836,3 +913,130 @@ def get_face_centers(mesh):
     face_iter = api.IteratePolygonFaces(mesh)
 
     return face_iter.get_face_center_vectors()
+
+
+def get_meshes_in_list(dg_nodes_list):
+    """
+    Given a list of DG nodes, returns any transform that has a mesh shape node
+    :param dg_nodes_list: list(str)
+    :return: list(str)
+    """
+
+    found_meshes = list()
+
+    if not dg_nodes_list:
+        return found_meshes
+
+    for dg_node in dg_nodes_list:
+        if maya.cmds.nodeType(dg_node) == 'mesh':
+            found_mesh = maya.cmds.listRelatives(dg_node, p=True)
+            if not found_mesh:
+                continue
+            found_meshes.append(found_mesh[0])
+        if maya.cmds.nodeType(dg_node) == 'transform':
+            shapes = get_mesh_shape(dg_node)
+            if not shapes:
+                continue
+            found_meshes.append(dg_node)
+
+    return found_meshes
+
+
+def get_surfaces_in_list(dg_nodes_list):
+    """
+    Given a list of DG nodes, returns any transform that has a surface shape node
+    :param dg_nodes_list: list(str)
+    :return: list(str)
+    """
+
+    found_surfaces = list()
+
+    for dg_node in dg_nodes_list:
+        if maya.cmds.nodeType(dg_node) == 'nurbsSurface':
+            found_surface = maya.cmds.listRelatives(dg_node, p=True)
+            found_surfaces.append(found_surface)
+        if maya.cmds.nodeType(dg_node) == 'transform':
+            shapes = get_surface_shape(dg_node)
+            if shapes:
+                found_surfaces.append(dg_node)
+
+    return found_surfaces
+
+
+def get_selected_meshes():
+    """
+    Returns all selected meshes from current selection
+    :return: list(str)
+    """
+
+    selection = maya.cmds.ls(sl=True)
+
+    return get_meshes_in_list(selection)
+
+
+def get_selected_surfaces():
+    """
+    Returns all selected surfaces from current selection
+    :return: list(str)
+    """
+
+    selection = maya.cmds.ls(sl=True)
+
+    return get_surfaces_in_list(selection)
+
+
+def add_poly_smooth(mesh, divisions=1):
+    """
+    Creates a new polySmooth node on the given mesh
+    :param mesh: str, name of a mesh
+    :param divisions: int, smooth divisions
+    :return: str, name of the poly smooth node
+    """
+
+    if helpers.get_maya_version() < 2017:
+        poly_smooth = maya.cmds.polySmooth(
+            mesh, mth=0, dv=divisions, bnr=1, c=1, kb=0, khe=0, kt=1,
+            kmb=1, suv=1, peh=0, sl=1, dpe=1, ps=0.1, ro=1, ch=1)[0]
+    else:
+        poly_smooth = maya.cmds.polySmooth(
+            mesh, sdt=2, mth=0, dv=divisions, bnr=1, c=1, kb=0, khe=0, kt=1,
+            kmb=1, suv=1, peh=0, sl=1, dpe=1, ps=0.1, ro=1, ch=1)[0]
+
+    return poly_smooth
+
+
+def smooth_preview(mesh, flag=True):
+    """
+    Sets whether or not mesh smooth preview is enabled
+    :param mesh: str, mesh to set smooth preview of
+    :param flag: bool
+    """
+
+    if flag:
+        maya.cmds.setAttr('{}.displaySmoothMesh'.format(mesh), 2)
+    else:
+        maya.cmds.setAttr('{}.displaySmoothMesh'.format(mesh), 0)
+
+
+def smooth_preview_all(flag=True):
+    """
+    Sets whether or not smooth previews is enabled in all meshes in current scene
+    :param flag: bool
+    """
+
+    if scene.is_batch():
+        return
+
+    meshes = maya.cmds.ls(type='mesh')
+    for mesh in meshes:
+        intermediate = maya.cmds.getAttr('{}.intermediateObject'.format(mesh))
+        if not intermediate:
+            smooth_preview(mesh, flag=flag)
+
+
+def polygon_plane_to_curves(plane, count=5, u=True, description=''):
+    description = description or plane
+    if count == 0:
+        return
+
+    dup_curve = maya.cmds.duplicate(plane)[0]

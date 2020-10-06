@@ -481,7 +481,7 @@ def create_skeleton(character_name='Character1', attrs_dict=None):
     reset_current_source()
 
     # If we have no characters yet, select the newly created character to refresh both the character and sources list
-    tp.Dcc.select_object(current_name)
+    tp.Dcc.select_node(current_name)
     update_current_character_from_scene()
     update_definition_ui()
     select_skeleton_tab()
