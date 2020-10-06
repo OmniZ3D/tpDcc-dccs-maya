@@ -2674,7 +2674,7 @@ def multi_index_list(attr):
 def get_connection_index(attr, as_source=True, connected_to=None):
     """
     Return the index of the connection
-    :param attr: name, attribte we want to check connection index of
+    :param attr: name, attribute we want to check connection index of
     :param as_source: bool, Whether to check source connection
     :param connected_to:
     :return: int
@@ -2684,7 +2684,7 @@ def get_connection_index(attr, as_source=True, connected_to=None):
 
     # Get connectced plugs
     attr_plug_connections = maya.OpenMaya.MPlugArray()
-    connected = attr_plug.connectedTo(attr_plug_connections, not(as_source), as_source)
+    connected = attr_plug.connectedTo(attr_plug_connections, not as_source, as_source)
     if not connected:
         connection_type = 'outgoinhg' if as_source else 'incoming'
         raise Exception('No {} connections found for attribute "{}"'.format(connection_type, attr))
@@ -2698,6 +2698,35 @@ def get_connection_index(attr, as_source=True, connected_to=None):
         return connected_plug.logicalIndex()
 
     return -1
+
+
+def get_connected_nodes(attr, as_source=True, connected_to=None):
+    """
+    Returns a list of all connected nodes to given attribute
+    :param attr: str
+    :param as_source: bool
+    :param connected_to: str or None
+    :return: list(str)
+    """
+
+    connected_nodes = list()
+
+    attr_plug = get_attr_mplug(attr)
+    attr_plug_connections = maya.OpenMaya.MPlugArray()
+    connected = attr_plug.connectedTo(attr_plug_connections, not as_source, as_source)
+    if not connected:
+        return connected_nodes
+
+    num_connections = len(
+        attr_plug_connections) if maya.is_new_api() else attr_plug_connections.length()
+    for i in range(num_connections):
+        connected_plug = attr_plug_connections[i]
+        connected_node = connected_plug.partialName(True, False, False, False, False)
+        if connected_to and not connected_to == connected_node:
+            continue
+        connected_nodes.append(connected_node)
+
+    return connected_nodes
 
 
 def next_available_multi_index(attr, start=0, use_connected_only=True, max_index=10000000):
@@ -3681,6 +3710,7 @@ def create_title(node, name, name_list=None):
     if not maya.cmds.objExists(node):
         maya.logger.warning('{} does not exists to create title on'.format(node))
 
+    name = name.replace(' ', '')
     title = EnumAttribute(name)
     if name_list:
         title.set_enum_names(name_list)
@@ -3877,9 +3907,9 @@ def get_color(shape_node):
     if maya.cmds.getAttr('{}.overrideRGBColors'.format(shape_node)):
         color = list(maya.cmds.getAttr('{}.overrideColorRGB'.format(shape_node))[0])
 
-        color[0] *= 255
-        color[1] *= 255
-        color[2] *= 255
+        color[0] = color[0] if color[0] > 1 else (color[0] * 255)
+        color[1] = color[1] if color[1] > 1 else (color[1] * 255)
+        color[2] = color[2] if color[2] > 1 else (color[2] * 255)
 
         return color
 
