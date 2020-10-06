@@ -12,7 +12,7 @@ import cStringIO
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.python import python, mathlib
 from tpDcc.dccs.maya.core import decorators, exceptions, api, node as node_utils, mesh as mesh_utils
-from tpDcc.dccs.maya.core import joint as jnt_utils, transform as xform_utils, shape as shape_utils
+from tpDcc.dccs.maya.core import joint as jnt_utils, transform as xform_utils, shape as shape_utils, name as name_utils
 
 
 class ShowJointInfluence(object):
@@ -707,6 +707,9 @@ class SkinJointSurface(SkinJointObject, object):
         self._last_joint_pivot_at_end = True
         self._maya_type = None
         self._joint_u = True
+        self._create_mid_joint = False
+        self._orient_start_to = None
+        self._orient_end_to = None
 
         if shape_utils.has_shape_of_type(self._geometry, 'nurbsCurve'):
             self._maya_type = 'nurbsCurve'
@@ -797,6 +800,30 @@ class SkinJointSurface(SkinJointObject, object):
 
         self._joint_u = flag
 
+    def set_create_mid_joint(self, flag):
+        """
+        Sets whether or not a mid joint should be created
+        :param flag: bool
+        """
+
+        self._create_mid_joint = flag
+
+    def set_orient_start(self, node):
+        """
+        Sets which node start joint should be oriented to
+        :param node: str
+        """
+
+        self._orient_start_to = node
+
+    def set_orient_end(self, node):
+        """
+        Sets which node end joint should be oriented to
+        :param node: str
+        """
+
+        self._orient_end_to = node
+
     # ==============================================================================================
     # INTERNAL
     # ==============================================================================================
@@ -874,10 +901,11 @@ class SkinJointSurface(SkinJointObject, object):
 
     def _skin(self):
         self._skin_cluster = maya.cmds.skinCluster(self._joints, self._geometry, tsb=True)[0]
-        for joint, cvs in self._cvs_dict.items():
-            for cv in cvs:
-                maya.cmds.skinPercent(self._skin_cluster, cv, transformValue=[(joint, 1)])
-        maya.cmds.setAttr('{}.skinningMethod'.format(self._skin_cluster), 1)
+        if not self._create_mid_joint:
+            for joint, cvs in self._cvs_dict.items():
+                for cv in cvs:
+                    maya.cmds.skinPercent(self._skin_cluster, cv, transformValue=[(joint, 1)])
+            maya.cmds.setAttr('{}.skinningMethod'.format(self._skin_cluster), 1)
 
 
 class SkinJointCurve(SkinJointSurface, object):
@@ -906,7 +934,20 @@ class SkinJointCurve(SkinJointSurface, object):
             joint = self._create_joint('{}.cv[{}]'.format(self._geometry, i))
             self._joints.append(joint)
 
+        if self._orient_start_to:
+            maya.cmds.delete(maya.cmds.orientConstraint(self._orient_start_to, self._joints[0]))
+        if self._orient_end_to and self._join_ends:
+            maya.cmds.delete(maya.cmds.orientConstraint(self._orient_end_to, last_joint))
+
         if self._join_ends:
+            if self._create_mid_joint:
+                start_joint = self._joints[0]
+                maya.cmds.select(clear=True)
+                mid_joint = maya.cmds.joint(n=name_utils.find_unique_name('joint_mid'), radius=self._joint_radius)
+                maya.cmds.delete(maya.cmds.pointConstraint(start_joint, last_joint, mid_joint))
+                maya.cmds.delete(maya.cmds.orientConstraint(start_joint, last_joint, mid_joint))
+                self._joints.append(mid_joint)
+
             self._joints.append(last_joint)
 
         self._skin()
@@ -917,10 +958,12 @@ class SkinJointCurve(SkinJointSurface, object):
         joint = self._create_joint('{}.cv[0:1]'.format(self._geometry))
         self._joints.append(joint)
         position = maya.cmds.xform('{}.cv[0]'.format(self._geometry), query=True, ws=True, t=True)
-        maya.cmds.xform(joint, ws=True, rp=position, sp=position)
+        # maya.cmds.xform(joint, ws=True, rp=position, sp=position)
+        maya.cmds.xform(joint, ws=True, t=position)
         last_joint = self._create_joint('{}.cv[{}:{}]'.format(self._geometry, self._cvs_count - 2, self._cvs_count - 1))
-        position = maya.cmds.xform('{}.cv[{}]'.format(self._geometry, self._cvs_count - 1), q=True, ws=True, t=True)
-        maya.cmds.xform(last_joint, ws=True, rp=position, sp=position)
+        position = maya.cmds.xform('{}.cv[{}]'.format(self._geometry, self._cvs_count), q=True, ws=True, t=True)
+        # maya.cmds.xform(last_joint, ws=True, rp=position, sp=position)
+        maya.cmds.xform(last_joint, ws=True, t=position)
 
         return last_joint
 
