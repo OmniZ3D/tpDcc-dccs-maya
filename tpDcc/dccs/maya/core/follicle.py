@@ -11,7 +11,7 @@ import tpDcc as tp
 
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import shape, geometry, constraint as constraint_utils, transform as transform_utils
-from tpDcc.dccs.maya.core import mesh as mesh_utils
+from tpDcc.dccs.maya.core import mesh as mesh_utils, attribute as attr_utils
 
 
 def create_empty_follicle(description, uv=None):
@@ -47,9 +47,7 @@ def create_mesh_follicle(mesh, description=None, uv=None):
     :return: str, name of the created follicle
     """
 
-    if uv is None:
-        uv = [0, 0]
-
+    uv = uv if uv is not None else [0, 0]
     follicle = create_empty_follicle(description, uv)
     shape = maya.cmds.listRelatives(follicle, shapes=True)[0]
     maya.cmds.connectAttr('{}.outMesh'.format(mesh), '{}.inputMesh'.format(follicle))
@@ -69,9 +67,7 @@ def create_surface_follicle(surface, description=None, uv=None):
     :return: str, name of the created follicle
     """
 
-    if uv is None:
-        uv = [0, 0]
-
+    uv = uv if uv is not None else [0, 0]
     follicle = create_empty_follicle(description, uv)
     shape = maya.cmds.listRelatives(follicle, shapes=True)[0]
     maya.cmds.connectAttr('{}.local'.format(surface), '{}.inputSurface'.format(follicle))
@@ -149,3 +145,23 @@ def follicle_to_surface(transform, surface, u=None, v=None, constraint=False):
         maya.cmds.parent(transform, follicle)
 
     return follicle
+
+
+def get_follicle_output_curve(follicle):
+    """
+    Returns the attached output curve of the given follicle node
+    :param follicle: str
+    :return: str or None
+    """
+
+    return attr_utils.get_outputs('{}.outCurve'.format(follicle), node_only=True)
+
+
+def get_follicle_input_curve(follicle):
+    """
+    Returns the attached input curve of the given follicle node
+    :param follicle: str
+    :return: str or None
+    """
+
+    return attr_utils.get_inputs('{}.startPosition'.format(follicle), node_only=True)
