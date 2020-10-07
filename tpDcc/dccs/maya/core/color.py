@@ -9,6 +9,8 @@ from __future__ import print_function, division, absolute_import
 
 from Qt.QtGui import *
 
+import tpDcc.dccs.maya as maya
+
 
 # ==== Control Colors
 CONTROL_COLORS = [(.467, .467, .467), [.000, .000, .000], (.247, .247, .247), (.498, .498, .498), (0.608, 0, 0.157),
@@ -45,6 +47,11 @@ MAYA_COLORS_LINEAR_RGB = [(0.0000, 0.0012, 0.1169), (0.0000, 0.0000, 0.0000), (0
                           (0.3559, 0.1444, 0.0295), (0.3424, 0.3559, 0.0295), (0.1378, 0.3559, 0.0295),
                           (0.0295, 0.3559, 0.1096), (0.0295, 0.3559, 0.3559), (0.0295, 0.1357, 0.3559),
                           (0.1587, 0.0295, 0.3559), (0.3559, 0.0295, 0.1444)]
+
+
+TRACKER_COLOR_ATTR_NAME = 'colorTrack'
+TRACKER_COLOR_DEFAULT_ATTR_NAME = 'colorTrackDefault'
+ALL_COLOR_TRACKER_ATTRIBUTE_NAMES = [TRACKER_COLOR_ATTR_NAME, TRACKER_COLOR_DEFAULT_ATTR_NAME]
 
 
 class MayaWireColors(object):
@@ -202,3 +209,24 @@ def convert_maya_color_string_to_rgb(color_nice_name, linear=True):
     color_index = convert_maya_color_string_to_index(color_nice_name)
 
     return convert_maya_color_index_to_rgb(color_index, linear=linear) if color_index is not None else None
+
+
+def add_color_tracker_attributes(node_name, rgb_color):
+    """
+    Adds color tracker attributes to the given node
+    :param node_name: str, name of Maya node to track color of
+    :param rgb_color: tuple(float, float, float), initial color as linear float
+    """
+
+    for i, attr_name in enumerate(ALL_COLOR_TRACKER_ATTRIBUTE_NAMES):
+        if not maya.cmds.attributeQuery(attr_name, node=node_name, exists=True):
+            maya.cmds.addAttr(node_name, longName=attr_name, attributeType='double3')
+            for color_channel in 'RGB':
+                axis_attr = '{}{}'.format(attr_name, color_channel)
+                if not maya.cmds.attributeQuery(axis_attr, node=node_name, exists=True):
+                    maya.cmds.addAttr(node_name, longName=axis_attr, attributeType='double', parent=attr_name)
+
+    if rgb_color:
+        maya.cmds.setAttr('.'.join([node_name, TRACKER_COLOR_ATTR_NAME]), rgb_color[0], rgb_color[1], rgb_color[2])
+        maya.cmds.setAttr(
+            '.'.join([node_name, TRACKER_COLOR_DEFAULT_ATTR_NAME]), rgb_color[0], rgb_color[1], rgb_color[2])

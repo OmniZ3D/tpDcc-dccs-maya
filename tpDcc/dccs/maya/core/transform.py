@@ -36,10 +36,22 @@ TRANSFORM_BASE_ATTRS = (
     '.v'
 )
 
+TRACKER_TRANSLATE_ATTR_NAME = 'translateTrack'
+TRACKER_TRANSLATE_DEFAULT_ATTR_NAME = 'translateTrackDefault'
+TRACKER_ROTATE_ATTR_NAME = 'rotateTrack'
+TRACKER_ROTATE_DEFAULT_ATTR_NAME = 'rotateTrackDefault'
+TRACKER_SCALE_ATTR_NAME = 'scaleTrack'
+TRACKER_SCALE_DEFAULT_ATTR_NAME = 'scaleTrackDefault'
+ALL_TRANSFORM_TRACKER_ATTRIBUTE_NAMES = [
+    TRACKER_TRANSLATE_ATTR_NAME, TRACKER_ROTATE_DEFAULT_ATTR_NAME,
+    TRACKER_ROTATE_ATTR_NAME, TRACKER_ROTATE_DEFAULT_ATTR_NAME,
+    TRACKER_SCALE_ATTR_NAME, TRACKER_SCALE_DEFAULT_ATTR_NAME
+]
+
 
 class PinTransform(object):
     """
-    Class that allows to pin a transform so its parent and childs are not affected by any edits
+    Class that allows to pin a transform so its parent and children are not affected by any edits
     """
 
     def __init__(self, transform_name):
@@ -318,7 +330,6 @@ class BoundingBox(mathlib.BoundingBox, object):
         """
         Constructor
         :param transform_node: str, name of a transform in Maya. If given, bounding box is automatically created from it
-        :param components: bool, If True, bounding box of transform shape components will be returned
         """
 
         self._node = transform_node
@@ -1118,9 +1129,9 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
                     other_shape = maya.cmds.createNode(shape_type)
                     if shape_lib.is_a_shape(other_shape):
                         temp_parent = maya.cmds.listRelatives(other_shape, p=True, f=True)
-                    maya.cmds.parent(other_shape, other, r=True, s=True)
-                    maya.cmds.rename(other_shape, '{}Shape'.format(other))
-                    maya.cmds.delete(temp_parent)
+                        maya.cmds.parent(other_shape, other, r=True, s=True)
+                        maya.cmds.rename(other_shape, '{}Shape'.format(other))
+                        maya.cmds.delete(temp_parent)
 
             created = True
             parent = maya.cmds.listRelatives(xform, p=True)
@@ -1354,7 +1365,7 @@ def zero_transform_channels(xform):
 
 def get_transforms(shapes_list, full_path=True):
     """
-    Returns all transforms from a list of shape ndoes
+    Returns all transforms from a list of shape nodes
     :param shapes_list: list(str), list of shape nodes to retrieve transform nodes from
     :param full_path: bool, Whether to return full path of shape nodes or not
     :return: list(str)
@@ -1430,7 +1441,7 @@ def get_upstream_nodes(n):
     """
     Return a list with all upstream nodes of the given Maya node
     :param n: str, name of the node
-    :return: lsitzstr>
+    :return: list(str)
     """
 
     upstream_nodes = list()
@@ -1447,8 +1458,7 @@ def get_upstream_nodes(n):
 def delete_all_incoming_nodes(node_name):
     """
     Delete all incoming nodes from the given Maya node
-    :param n: str
-    :param attrs: list<str>
+    :param node_name: str
     """
 
     upstream_nodes = list()
@@ -1484,8 +1494,8 @@ def create_buffer_group(node_name, buffer_name=None, suffix='buffer', use_duplic
     if not full_name:
         full_name = '{}_{}'.format(basename, suffix)
 
+    orig_scale = maya.cmds.getAttr('{}.scale'.format(node_name))
     if copy_scale:
-        orig_scale = maya.cmds.getAttr('{}.scale'.format(node_name))
         try:
             maya.cmds.setAttr('{}.scaleX'.format(node_name), 1)
             maya.cmds.setAttr('{}.scaleY'.format(node_name), 1)
@@ -1525,16 +1535,16 @@ def create_buffer_group(node_name, buffer_name=None, suffix='buffer', use_duplic
     return buffer_grp
 
 
-def get_buffer_group(node, suffix='buffer'):
+def get_buffer_group(node_name, suffix='buffer'):
     """
     Returns buffer group above given node
-    :param node: str
+    :param node_name: str
     :param suffix: str, suffix given when creating buffer group
     :return: str
     """
 
     attr_name = '{}_group'.format(suffix)
-    node_and_attr = '{}.{}'.format(node, attr_name)
+    node_and_attr = '{}.{}'.format(node_name, attr_name)
     if not maya.cmds.objExists(node_and_attr):
         return
     input_node = attribute.get_attribute_input(node_and_attr, node_only=True)
@@ -1682,15 +1692,15 @@ def get_middle_transform(transform_list):
     """
 
     count = len(transform_list)
-    division = count / 2
+    total_division = count / 2
 
     if count == 0:
         return
 
-    if (division + division) == count:
-        mid_point = mathlib.get_mid_point(transform_list[division - 1], transform_list[division])
+    if (total_division + total_division) == count:
+        mid_point = mathlib.get_mid_point(transform_list[total_division - 1], transform_list[total_division])
     else:
-        mid_point = maya.cmds.xform(transform_list[division], q=True, t=True, ws=True)
+        mid_point = maya.cmds.xform(transform_list[total_division], q=True, t=True, ws=True)
 
     return mid_point
 
@@ -1810,20 +1820,20 @@ def get_transform_list_from_distance(source_transform, transform_list):
     return found
 
 
-def delete_history(node):
+def delete_history(transform):
     """
     Deletes the construction history of the given node
-    :param node: str
+    :param transform: str
     """
 
-    return maya.cmds.delete(node, constructionHistory=True)
+    return maya.cmds.delete(transform, constructionHistory=True)
 
 
 def freeze_transforms(
-        node, translate=True, rotate=True, scale=True, normal=False, preserve_normals=True, clean_history=False):
+        transform, translate=True, rotate=True, scale=True, normal=False, preserve_normals=True, clean_history=False):
     """
     Freezes the transformations of the given node and its children
-    :param node: bool
+    :param transform: bool
     :param translate: bool
     :param rotate: bool
     :param scale: bool
@@ -1834,10 +1844,10 @@ def freeze_transforms(
     """
 
     if clean_history:
-        delete_history(node)
+        delete_history(transform)
 
     return maya.cmds.makeIdentity(
-        node, apply=True,
+        transform, apply=True,
         translate=translate, rotate=rotate, scale=scale, normal=normal, pn=preserve_normals
     )
 
@@ -1973,7 +1983,7 @@ def set_rotate_z_limit(transform, min_value=None, max_value=None):
     maya.cmds.transformLimits(transform, rz=[min_value, max_value], erz=[min_bool, max_bool])
 
 
-def randomize_transform(translate=[0.1, 0.1, 0.1], rotate=[1, 1, 1], scale=[0.1, 0.1, 0.1], transforms=None):
+def randomize_transform(translate=None, rotate=None, scale=None, transforms=None):
     """
     Generates random transforms taking into account the given amounts
     :param translate: list(float, float, float), positive and negative amount values used to generate random translation
@@ -1982,6 +1992,10 @@ def randomize_transform(translate=[0.1, 0.1, 0.1], rotate=[1, 1, 1], scale=[0.1,
     :param transforms: list(list(float, float, float), transforms to apply randomization. If not given, current
         viewport selected transforms will be randomized
     """
+
+    translate = translate or [0.1, 0.1, 0.1]
+    rotate = rotate or [1, 1, 1]
+    scale = scale or [0.1, 0.1, 0.1]
 
     transforms = transforms if transforms else maya.cmds.ls(sl=True, type='transform')
     for xform in transforms:
@@ -2045,3 +2059,128 @@ def create_locators_along_curve(curve, count, description, attach=True):
         percent += segment
 
     return locators
+
+
+def duplicate_transform_without_children(transform_node, node_name='', delete_shapes=False, delete_shape_type=''):
+    """
+    Duplicates given transform node without their children and keeping the shape node intact
+    NOTE: During this process, the original shapes nodes are temporally parented out of the original transform
+    NOTE: User attributes are lost because transform is rebuilt from scratch
+    :param transform_node: str, transform node we want to duplicate
+    :param node_name: str, name of the new transform node
+    :param delete_shapes: bool, Whether or not delete the shape nodes of the original transform node
+    :param delete_shape_type: str, only shapes of the given types will be duplicated. If not given, all shapes
+        will be duplicated onto the new transform
+    :return: str, name of the duplicated transform
+    """
+
+    # Import here to avoid cyclic imports
+    from tpDcc.dccs.maya.core import shape as shape_utils
+
+    # Create temporal group and matches original transform offset
+    rot_offset = list()
+
+    if maya.cmds.objectType(transform_node) == 'transform':
+        rot_offset = maya.cmds.getAttr('{}.rotatePivot'.format(transform_node))[0]
+    node_short_name = name_utils.get_short_name(transform_node)
+    temp_node = maya.cmds.group(empty=True, name='{}_tempNode'.format(node_short_name))
+    maya.cmds.matchTransform([temp_node, transform_node], pos=True, rot=True, scl=True, piv=False)
+
+    # Parent all shapes node of the original node to the temporal group
+    if delete_shape_type:
+        shapes_list = maya.cmds.listRelatives(transform_node, shapes=True, type=delete_shape_type, fullPath=True)
+    else:
+        shapes_list = maya.cmds.listRelatives(transform_node, shapes=True, fullPath=True)
+    if shapes_list:
+        for i, shape in enumerate(shapes_list):
+            shapes_list[i] = maya.cmds.parent(shape, temp_node, shape=True, relative=True)[0]
+    shapes_list = maya.cmds.listRelatives(temp_node, shapes=True, fullPath=True)
+
+    if not delete_shapes:
+        temp_dup = maya.cmds.duplicate(temp_node, name='{}_duplicate'.format(node_short_name), renameChildren=True)[0]
+        if shapes_list:
+            for i, shape in enumerate(shapes_list):
+                shapes_list[i] = maya.cmds.parent(shape, transform_node, shape=True, relative=True)[0]
+        maya.cmds.delete(temp_node)
+    else:
+        temp_dup = temp_node
+        if not node_name:
+            temp_dup = maya.cmds.rename(temp_dup, '{}_duplicate'.format(node_short_name))
+
+    if rot_offset and (rot_offset[0] or rot_offset[1] or rot_offset[2]):
+        maya.cmds.move(-rot_offset[0], -rot_offset[1], rot_offset[2], temp_dup, relative=True, objectSpace=True)
+        maya.cmds.matchTransform([temp_dup, node], pos=False, rot=False, scl=False, piv=True)
+
+    if node_name:
+        temp_dup = maya.cmds.rename(temp_dup, name_utils.get_basename(node_name))
+
+    shape_utils.rename_shapes(temp_dup)
+
+    return temp_dup
+
+
+def parent_transforms_shapes(
+        target_transform, transform_nodes_to_parent, delete_original=False, rename_shapes=True, delete_shape_type=''):
+    """
+    Shapes all shapes of the given transform nodes to the given target transform node
+    :param target_transform: str
+    :param transform_nodes_to_parent: list(str)
+    :param delete_original: bool
+    :param rename_shapes: bool
+    :param delete_shape_type: str
+    :return:
+    """
+
+    # Import here to avoid cyclic imports
+    from tpDcc.dccs.maya.core import shape as shape_utils
+
+    if delete_original:
+        if delete_shape_type:
+            shapes_to_delete = maya.cmds.listRelatives(
+                target_transform, shapes=True, fullPath=True, type=delete_shape_type)
+        else:
+            shapes_to_delete = maya.cmds.listRelatives(target_transform, shapes=True, fullPath=True)
+        if shapes_to_delete:
+            maya.cmds.delete(shapes_to_delete)
+
+    for transform_node in transform_nodes_to_parent:
+        transform_node = maya.cmds.parent(transform_node, target_transform)
+        maya.cmds.makeIdentity(transform_node, apply=True, translate=True, rotate=True, scale=True)
+        transform_node = maya.cmds.parent(transform_node, world=True)
+        source_shapes = maya.cmds.listRelatives(transform_node, shapes=True, fullPath=True)
+        if source_shapes:
+            for shape in source_shapes:
+                maya.cmds.parent(shape, target_transform, s=True, r=True)
+            maya.cmds.delete(transform_node)
+
+    if rename_shapes:
+        shape_utils.rename_shapes(target_transform)
+
+    return target_transform
+
+
+def add_transform_tracker_attributes(
+        transform_node, translate=(0.0, 0.0, 0.0), rotate=(0.0, 0.0, 0.0), scale=(1.0, 1.0, 1.0)):
+    """
+    Adds transform tracker attributes to the given transform node
+    :param transform_node: str, name of the transform to track transforms of
+    :param translate: tuple(float, float, float), initial translation values
+    :param rotate: tuple(float, float, float), initial rotation values
+    :param scale: tuple(float, float, float), initial scale values
+    """
+
+    for i, attr_name in enumerate(ALL_TRANSFORM_TRACKER_ATTRIBUTE_NAMES):
+        if not maya.cmds.attributeQuery(attr_name, node=transform_node, exists=True):
+            maya.cmds.addAttr(transform_node, longName=attr_name, attributeType='double3')
+            for axis in 'XYZ':
+                axis_attr = '{}{}'.format(attr_name, axis)
+                if not maya.cmds.attributeQuery(axis_attr, node=transform_node, exists=True):
+                    maya.cmds.addAttr(transform_node, longName=axis_attr, attributeType='double', parent=attr_name)
+
+    maya.cmds.setAttr('.'.join([transform_node, TRACKER_TRANSLATE_ATTR_NAME]), translate[0], translate[1], translate[2])
+    maya.cmds.setAttr(
+        '.'.join([transform_node, TRACKER_TRANSLATE_DEFAULT_ATTR_NAME]), translate[0], translate[1], translate[2])
+    maya.cmds.setAttr('.'.join([transform_node, TRACKER_ROTATE_ATTR_NAME]), rotate[0], rotate[1], rotate[2])
+    maya.cmds.setAttr('.'.join([transform_node, TRACKER_ROTATE_DEFAULT_ATTR_NAME]), rotate[0], rotate[1], rotate[2])
+    maya.cmds.setAttr('.'.join([transform_node, TRACKER_SCALE_ATTR_NAME]), scale[0], scale[1], scale[2])
+    maya.cmds.setAttr('.'.join([transform_node, TRACKER_SCALE_DEFAULT_ATTR_NAME]), scale[0], scale[1], scale[2])
