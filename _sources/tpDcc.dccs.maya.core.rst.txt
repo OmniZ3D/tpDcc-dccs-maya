@@ -46,7 +46,10 @@ Submodules
    tpDcc.dccs.maya.core.modelpanel
    tpDcc.dccs.maya.core.name
    tpDcc.dccs.maya.core.namespace
+   tpDcc.dccs.maya.core.ncloth
+   tpDcc.dccs.maya.core.nhair
    tpDcc.dccs.maya.core.node
+   tpDcc.dccs.maya.core.nucleus
    tpDcc.dccs.maya.core.parser
    tpDcc.dccs.maya.core.playblast
    tpDcc.dccs.maya.core.qtutils

@@ -11,7 +11,6 @@ Submodules
    tpDcc.dccs.maya.data.curve
    tpDcc.dccs.maya.data.deformer
    tpDcc.dccs.maya.data.mesh
-   tpDcc.dccs.maya.data.skin
 
 Module contents
 ---------------

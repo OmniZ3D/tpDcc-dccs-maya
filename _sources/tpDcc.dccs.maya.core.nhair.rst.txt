@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.nhair module
+=================================
+
+.. automodule:: tpDcc.dccs.maya.core.nhair
+   :members:
+   :undoc-members:
+   :show-inheritance:
