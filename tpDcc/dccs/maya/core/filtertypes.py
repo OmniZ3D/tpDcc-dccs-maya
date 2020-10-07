@@ -244,3 +244,58 @@ def filter_list_by_types(
             filtered_objs += maya.cmds.ls(objs_list, type=filter_type, long=True, dagObjects=search_hierarchy, dag=dag)
 
     return list(set(filtered_objs))
+
+
+def filter_transforms_with_shapes(transforms_list, children=False, shape_type='nurbsCurve', return_as_shapes=False):
+    """
+    Returns a list of transforms or shapes, returns only those nodes that have shapes nodes of the given type
+    :param transforms_list: list(str), list of Maya transform nodes
+    :param children: bool, Whether or not children should be taken into consideration
+    :param shape_type: str, shape to filter by
+    :param return_as_shapes: bool, whether shapes or transforms should be returned
+    :return: list(str), list of transform nodes that contain shapes of the given type
+    """
+
+    transforms_with_shapes_of_type = list()
+    transforms_shapes = list()
+    full_objs_list = python.force_list(transforms_list)
+    if children:
+        joints = maya.cmds.listRelatives(transforms_list, children=True, allDescendents=True, f=True, type='joint')
+        if joints:
+            full_objs_list += joints
+        transforms = maya.cmds.listRelatives(
+            transforms_list, children=True, allDescendents=True, f=True, type='transform')
+        if transforms:
+            full_objs_list += joints
+        full_objs_list = list(set(full_objs_list))
+
+    for obj in full_objs_list:
+        shapes = maya.cmds.listRelatives(obj, shapes=True, fullPath=True, type=shape_type)
+        if shapes:
+            transforms_with_shapes_of_type.append(obj)
+            transforms_shapes.extend(shapes)
+
+    if not return_as_shapes:
+        return list(set(transforms_with_shapes_of_type))
+
+    return list(set(transforms_shapes))
+
+
+def filter_nodes_with_shapes(nodes_list, shape_type='nurbsCurve'):
+    """
+    Returns a list of shapes filtered by the given type from a list that can include transforms or shapes
+    :param nodes_list: list(str), list of Maya nodes
+    :param shape_type: str, the shape type we want to filter by
+    :return: list(str), list of shape nodes
+    """
+
+    shapes_found = list()
+
+    nodes_list = python.force_list(nodes_list)
+    for node in nodes_list:
+        if maya.cmds.objectType(node, isType='transform') or maya.cmds.objectType(node, isType='joint'):
+            shapes_found += filter_transforms_with_shapes([node], shape_type=shape_type, return_as_shapes=True)
+        elif maya.cmds.objectType(node, isType=shape_type):
+            shapes_found.append(node)
+
+    return shapes_found

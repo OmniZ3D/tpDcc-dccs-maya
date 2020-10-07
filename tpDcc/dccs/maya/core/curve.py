@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 import tpDcc.dccs.maya as maya
 from tpDcc.libs.python import python, mathlib
 from tpDcc.dccs.maya.core import exceptions, api, transform, component
-from tpDcc.dccs.maya.core import decorators, name as name_utils, shape as shape_utils
+from tpDcc.dccs.maya.core import decorators, filtertypes, name as name_utils, shape as shape_utils
 
 
 def check_curve(curve):
@@ -569,3 +569,29 @@ def move_cvs(curves, position, pivot_at_center=False):
             center_position = maya.cmds.xform(curve, query=True, ws=True, rp=True)
         offset = mathlib.vector_sub(position, center_position)
         maya.cmds.move(offset[0], offset[1], offset[2], curve_cvs, ws=True, r=True)
+
+
+def get_curve_line_thickness(curve_transform):
+    """
+    Returns the line thickness of the first curve shape under the given transform node
+    :param curve_transform: str, transform we want to retrieve line width of
+    :return: float, width of the given curve line
+    """
+
+    curve_shapes = filtertypes.filter_nodes_with_shapes(curve_transform, shape_type='nurbsCurve')
+    if not curve_shapes:
+        return 0
+
+    return maya.cmds.getAttr('{}.lineWidth'.format(curve_shapes[0]))
+
+
+def set_curve_line_thickness(curve_transforms, line_width):
+    """
+    Sets the line width of the given curves
+    :param curve_transforms: str or list(str), curves we want to modify line width of
+    :param line_width: float, new line width of the curves
+    """
+
+    curve_shapes = filtertypes.filter_nodes_with_shapes(curve_transforms, shape_type='nurbsCurve')
+    for curve in curve_shapes:
+        maya.cmds.setAttr('{}.lineWidth'.format(curve), line_width)

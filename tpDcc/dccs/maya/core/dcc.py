@@ -60,7 +60,11 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         'Pinky Finger', 'Extra Finger', 'Big Toe', 'Index Toe', 'Middle Toe', 'Ring Toe', 'Pinky Toe', 'Foot Thumb'
     ]
 
+    AXES = ['x', 'y', 'z']
     ROTATION_AXES = ['xyz', 'yzx', 'zxy', 'xzy', 'yxz', 'zyx']
+    TRANSLATION_ATTR_NAME = 'translate'
+    ROTATION_ATTR_NAME = 'rotate'
+    SCALE_ATT_NAME = 'scale'
 
     @staticmethod
     def get_name():
@@ -607,6 +611,23 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.xform(node, objectSpace=True, s=scale_list, relative=relative)
 
     @staticmethod
+    def scale_transform_shapes(node, scale_value, **kwargs):
+        """
+        Scales given node by given scale value
+        :param node: str
+        :param scale_value: float
+        :param kwargs:
+        """
+
+        if not isinstance(scale_value, (list, tuple)):
+            scale_value = (scale_value, scale_value, scale_value)
+
+        shapes = shape_utils.get_shapes(node) if transform.is_transform(node) else node
+        components = shape_utils.get_components_from_shapes(shapes)
+        pivot = maya.cmds.xform(node, query=True, rp=True, ws=True)
+        maya.cmds.scale(scale_value[0], scale_value[1], scale_value[2], components, p=pivot, r=True)
+
+    @staticmethod
     def node_world_space_pivot(node):
         """
         Returns node pivot in world space
@@ -648,11 +669,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         # TODO: Add option to cleanup all nodes that are not joints after mirrror (such as constraints)
 
         if mirror_plane == 'YZ':
-            return maya.cmds.mirrorJoint(joint, mirrorYZ=True, mirrorBehavior=mirror_behavior, searchReplace=search_replace)
+            return maya.cmds.mirrorJoint(
+                joint, mirrorYZ=True, mirrorBehavior=mirror_behavior, searchReplace=search_replace)
         elif mirror_plane == 'XY':
-            return maya.cmds.mirrorJoint(joint, mirrorXY=True, mirrorBehavior=mirror_behavior, searchReplace=search_replace)
+            return maya.cmds.mirrorJoint(
+                joint, mirrorXY=True, mirrorBehavior=mirror_behavior, searchReplace=search_replace)
         else:
-            return maya.cmds.mirrorJoint(joint, mirrorXZ=True, mirrorBehavior=mirror_behavior, searchReplace=search_replace)
+            return maya.cmds.mirrorJoint(
+                joint, mirrorXZ=True, mirrorBehavior=mirror_behavior, searchReplace=search_replace)
 
     @staticmethod
     def orient_joints(joints_to_orient=None, **kwargs):
@@ -864,13 +888,14 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.select(clear=True)
 
     @staticmethod
-    def duplicate_object(node, name='', only_parent=False, return_roots_only=False):
+    def duplicate_object(node, name='', only_parent=False, return_roots_only=False, rename_children=False):
         """
         Duplicates given object in current scene
         :param node: str
         :param name: str
         :param only_parent: bool, If True, only given node will be duplicated (ignoring its children)
         :param return_roots_only: bool, If True, only the root nodes of the new hierarchy will be returned
+        :param rename_children: bool, Whether or not children nodes are renamed
         :return: list(str)
         """
 
@@ -1571,13 +1596,89 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.listRelatives(shape_node, parent=True, fullPath=full_path)
 
     @staticmethod
-    def rename_shapes(node):
+    def parent_shapes_to_transforms(shapes_list, transforms_list):
         """
+        Parents given shapes into given transforms
+        :param shapes_list: list(str)
+        :param transforms_list: list(str)
+        :return: list(str)
+        """
+
+        replaced_shapes = list()
+
+        shapes = python.force_list(shapes_list)
+        transforms = python.force_list(transforms_list)
+        if len(shapes) != len(transforms):
+            return False
+
+        for shape, transform in zip(shapes, transforms):
+            shapes = maya.cmds.listRelatives(shape, children=True, shapes=True, ni=True, fullPath=True)
+            combined_shape = maya.cmds.parent(shapes, transform, shape=True, add=True)[0]
+            combined_transform = maya.cmds.listRelatives(combined_shape, parent=True)[0]
+            if len(shapes) == 1:
+                maya.cmds.rename(shapes, '{}Shape'.format(shape))
+            else:
+                for i, shp in enumerate(shapes):
+                    maya.cmds.rename(shp, '%sShape%02d' % (transform, i))
+            # delete old transform
+            maya.cmds.delete(shape)
+            replaced_shapes.append(combined_transform)
+
+        replaced_shapes = list()
+
+    @staticmethod
+    def rename_shapes(node):
+        """node_name_without_namespace
         Rename all shapes of the given node with a standard DCC shape name
         :param node: str
         """
 
         return shape_utils.rename_shapes(node)
+
+    @staticmethod
+    def combine_shapes(target_node, nodes_to_combine_shapes_of, delete_after_combine=True):
+        """
+        Combines all shapes of the given node
+        :param target_node: str
+        :param nodes_to_combine_shapes_of: str
+        :param delete_after_combine: bool, Whether or not combined shapes should be deleted after
+        :return: str, combined shape
+        """
+
+        nodes_to_combine_shapes_of = python.force_list(nodes_to_combine_shapes_of)
+        for obj in nodes_to_combine_shapes_of:
+            if shape_utils.is_shape(obj):
+                shapes = obj
+            else:
+                shapes = maya.cmds.listRelatives(obj, s=True, ni=True, f=True)
+            maya.cmds.parent(shapes, target_node, s=True, add=True)
+            # maya.cmds.delete(obj)
+        if delete_after_combine:
+            maya.cmds.delete(nodes_to_combine_shapes_of)
+
+    @staticmethod
+    def scale_shapes(target_node, scale_value, relative=False):
+        """
+        Scales given shapes
+        :param target_node: str
+        :param scale_value: float
+        :return: relative, bool
+        """
+
+        return shape_utils.scale_shapes(target_node, scale_value, relative=relative)
+
+    @staticmethod
+    def node_bounding_box_size(node):
+        """
+        Returns the bounding box size of the given node
+        :param node: str
+        :return: float
+        """
+
+        bounding = transform.BoundingBox(node).get_shapes_bounding_box()
+        size = bounding.get_size()
+
+        return size
 
     @staticmethod
     def node_bounding_box_pivot(node):
@@ -2519,6 +2620,24 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return attribute.disconnect_attribute('{}.{}'.format(node, attribute_name))
 
     @staticmethod
+    def enable_overrides(node):
+        """
+        Enables overrides in the given node
+        :param node: str
+        """
+
+        return maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
+
+    @staticmethod
+    def disable_overrides(node):
+        """
+        Disables in the given node
+        :param node: str
+        """
+
+        return maya.cmds.setAttr('{}.overrideEnabled'.format(node), False)
+
+    @staticmethod
     def connect_multiply(source_node, source_attribute, target_node, target_attribute, value=0.1, multiply_name=None):
         """
         Connects source attribute into target attribute with a multiply node inbetween
@@ -3160,7 +3279,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         maya.cmds.refresh()
 
     @staticmethod
-    def set_key_frame(node, attribute_name, **kwargs):
+    def set_keyframe(node, attribute_name=None, **kwargs):
         """
         Sets keyframe in given attribute in given node
         :param node: str
@@ -3169,7 +3288,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return:
         """
 
-        return maya.cmds.setKeyframe('{}.{}'.format(node, attribute_name), **kwargs)
+        if attribute_name:
+            return maya.cmds.setKeyframe('{}.{}'.format(node, attribute_name), **kwargs)
+        else:
+            return maya.cmds.setKeyframe(node, **kwargs)
 
     @staticmethod
     def copy_key(node, attribute_name, time=None):
@@ -4127,24 +4249,24 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         Removes the history of the given node
         """
 
-        return transform.delete_history(node=node)
+        return transform.delete_history(transform=node)
 
     @staticmethod
-    def freeze_transforms(node, **kwargs):
+    def freeze_transforms(node, translate=True, rotate=True, scale=True, **kwargs):
         """
         Freezes the transformations of the given node and its children
         :param node: str
+        :param translate: bool
+        :param rotate: bool
+        :param scale: str
         """
 
-        translate = kwargs.get('translate', True)
-        rotate = kwargs.get('rotate', True)
-        scale = kwargs.get('scale', True)
         normal = kwargs.get('normal', False)
         preserve_normals = kwargs.get('preserve_normals', True)
         clean_history = kwargs.get('clean_history', False)
 
         return transform.freeze_transforms(
-            node=node, translate=translate, rotate=rotate, scale=scale, normal=normal,
+            transform=node, translate=translate, rotate=rotate, scale=scale, normal=normal,
             preserve_normals=preserve_normals, clean_history=clean_history)
 
     @staticmethod
@@ -4544,6 +4666,89 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.cylinder(
             name=name, ax=axis, ssw=0, esw=360, r=radius, hr=height_ratio, d=3,
             ut=0, tol=0.01, s=8, nsp=1, ch=construction_history)[0]
+
+    @staticmethod
+    def node_is_curve(node):
+        """
+        Returns whether or not given node is a valid curve node
+        :param node: str
+        :return: bool
+        """
+
+        curve_shapes = MayaDcc.get_curve_shapes(node)
+
+        return bool(curve_shapes)
+
+    @staticmethod
+    def get_curve_shapes(node):
+        """
+        Returns all shapes of the given curve
+        :param node: str
+        :return: list(str)
+        """
+
+        curve_shapes = None
+        if maya.cmds.nodeType(node) == 'transform':
+            curve_shapes = maya.cmds.listRelatives(node, c=True, s=True)
+            if curve_shapes:
+                if maya.cmds.nodeType(curve_shapes[0]) == 'nurbsCurve':
+                    curve_shapes = maya.cmds.listRelatives(node, c=True, s=True)
+        elif maya.cmds.nodeType(node) == 'nurbsCurve':
+            curve_shapes = maya.cmds.listRelatives(maya.cmds.listRelatives(node, p=True)[0], c=True, s=True)
+
+        return curve_shapes
+
+    @staticmethod
+    def get_curve_degree(curve_node):
+        """
+        Returns given curve degree
+        :param curve_node: str
+        :return: int
+        """
+
+        return maya.cmds.getAttr('{}.degree'.format(curve_node))
+
+    @staticmethod
+    def get_curve_spans(curve_node):
+        """
+        Returns given curve degree
+        :param curve_node: str
+        :return: int
+        """
+
+        return maya.cmds.getAttr('{}.spans'.format(curve_node))
+
+    @staticmethod
+    def get_curve_form(curve_node):
+        """
+        Returns given curve form
+        :param curve_node: str
+        :return: int
+        """
+
+        return maya.cmds.getAttr('{}.f'.format(curve_node))
+
+    @staticmethod
+    def get_curve_cv_position_in_world_space(curve_node, cv_index):
+        """
+        Returns position of the given CV index in given curve node
+        :param curve_node: str
+        :param cv_index: int
+        :return: list(float, float, float)
+        """
+
+        return maya.cmds.xform('{}.cv[[]}'.format(curve_node, cv_index), query=True, translation=True, worldSpace=True)
+
+    @staticmethod
+    def get_curve_cv_position_in_object_space(curve_node, cv_index):
+        """
+        Returns object space position of the given CV index in given curve node
+        :param curve_node: str
+        :param cv_index: int
+        :return: list(float, float, float)
+        """
+
+        return maya.cmds.xform('{}.cv[[]}'.format(curve_node, cv_index), query=True, translation=True, objectSpace=True)
 
     @staticmethod
     def rebuild_curve(curve, spans, **kwargs):
@@ -5036,6 +5241,34 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya_color.CONTROL_COLORS
+
+    @staticmethod
+    def set_control_color(control_node, color=None):
+        """
+        Sets the color of the given control node
+        :param control_node: str
+        :param color: int or list(float, float, float)
+        """
+
+        shapes = maya.cmds.listRelatives(control_node, s=True, ni=True, f=True)
+        for shp in shapes:
+            if maya.cmds.attributeQuery('overrideEnabled', node=shp, exists=True):
+                maya.cmds.setAttr(shp + '.overrideEnabled', True)
+            if color is not None:
+                if maya.cmds.attributeQuery('overrideRGBColors', node=shp, exists=True) and type(color) != int:
+                    maya.cmds.setAttr(shp + '.overrideRGBColors', True)
+                    if type(color) in [list, tuple]:
+                        maya.cmds.setAttr(shp + '.overrideColorRGB', color[0], color[1], color[2])
+                elif maya.cmds.attributeQuery('overrideColor', node=shp, exists=True):
+                    if type(color) == int and -1 < color < 32:
+                        maya.cmds.setAttr(shp + '.overrideColor', color)
+            else:
+                if name.startswith('l_') or name.endswith('_l') or '_l_' in name:
+                    maya.cmds.setAttr(shp + '.overrideColor', 6)
+                elif name.startswith('r_') or name.endswith('_r') or '_r_' in name:
+                    maya.cmds.setAttr(shp + '.overrideColor', 13)
+                else:
+                    maya.cmds.setAttr(shp + '.overrideColor', 22)
 
     @staticmethod
     def get_all_fonts():

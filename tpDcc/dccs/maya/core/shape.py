@@ -8,8 +8,9 @@ Module that contains functions and classes related to shapes
 from __future__ import print_function, division, absolute_import
 
 import tpDcc as tp
+from tpDcc.libs.python import python
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import node, exceptions, filtertypes
+from tpDcc.dccs.maya.core import exceptions, filtertypes, node as node_utils, name as name_utils
 
 
 TYPE_DICT = {
@@ -80,7 +81,7 @@ def is_shape(obj):
     if not maya.cmds.objectType(obj, isAType='shape'):
         return False
 
-    mobj = node.get_mobject(obj)
+    mobj = node_utils.get_mobject(obj)
     if not mobj.hasFn(maya.OpenMaya.MFn.kShape):
         return False
 
@@ -198,7 +199,7 @@ def get_shapes_of_type(node_name, shape_type=None, full_path=True, no_intermedia
     :return: list
     """
 
-    if node.is_a_shape(node_name):
+    if node_utils.is_a_shape(node_name):
         parent = maya.cmds.listRelatives(node_name, p=True, f=full_path)
         return maya.cmds.listRelatives(parent, s=True, f=full_path, ni=no_intermediate)
 
@@ -245,7 +246,7 @@ def get_transform(mobj):
 
     import maya.OpenMaya as OpenMaya
 
-    if not node.is_dag_node(mobj):
+    if not node_utils.is_dag_node(mobj):
         return mobj
 
     path = OpenMaya.MDagPath.getAPathTo(mobj)
@@ -411,7 +412,7 @@ def find_input_shape_1(shape):
     import maya.OpenMayaAnim as OpenMayaAnim
 
     # Get MObject for shape
-    shape_obj = node.get_mobject(shape)
+    shape_obj = node_utils.get_mobject(shape)
 
     # Get inMesh connection attribute
     in_conn = maya.cmds.listConnections(shape, source=True, destination=False)
@@ -422,7 +423,7 @@ def find_input_shape_1(shape):
     deformer_history = maya.cmds.ls(maya.cmds.listHistory(shape), type='geometryFilter')
     if not deformer_history:
         raise exceptions.ShapeValidDeformerAffectedException(shape)
-    deformer_obj = node.get_mobject(deformer_history[0])
+    deformer_obj = node_utils.get_mobject(deformer_history[0])
 
     # Get deformer function set
     deformer_fn = OpenMayaAnim.MFnGeometryFilter(deformer_obj)
@@ -443,7 +444,7 @@ def find_input_shape_2(shape):
 
     transform = maya.cmds.listRelatives(shape, parent=True, path=True) or []
 
-    if node.is_type(shape, 'transform'):
+    if node_utils.is_type(shape, 'transform'):
         transform = [shape]
         shapes = maya.cmds.listRelatives(shape, shapes=True, noIntermediate=True, path=True)
         if not shapes:
@@ -510,23 +511,29 @@ def get_components_from_shapes(shapes=None):
     return comps
 
 
-def rename_shapes(transform_node):
+def rename_shapes(transform_node=None):
     """
     Rename all shapes under the given transform to match the name of the transform
     :param transform_node: str, name of a transform
     """
 
-    shapes = get_shapes(transform_node)
-    if shapes:
-        maya.cmds.rename(shapes[0], '{}Shape'.format(transform_node))
+    renamed_shapes = list()
 
-    if not shapes or len(shapes) == 1:
-        return
+    transform_node = python.force_list(transform_node or tp.Dcc.selected_nodes())
+    for node in transform_node:
+        node_shapes = list()
+        short_name = name_utils.get_short_name(node)
+        shapes = get_shapes(node)
+        if shapes:
+            node_shapes.append(maya.cmds.rename(shapes[0], '{}Shape'.format(short_name)))
+            if len(shapes) > 1:
+                i = 1
+                for s in shapes[1:]:
+                    node_shapes.append(maya.cmds.rename(s, '{}Shape{}'.format(short_name, i)))
+                    i += 1
+            renamed_shapes.append(node_shapes)
 
-    i = 1
-    for s in shapes[1:]:
-        maya.cmds.rename(s, '{}Shape{}'.format(transform_node, i))
-        i += 1
+    return renamed_shapes
 
 
 def get_shapes_in_hierarchy(
