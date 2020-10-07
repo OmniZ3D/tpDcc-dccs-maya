@@ -33,4 +33,3 @@ def create_nucleus(name=''):
     maya.cmds.setAttr('{}.spaceScale'.format(nucleus_node), 0.01)
 
     return nucleus_node
-

@@ -701,7 +701,8 @@ class OrientJoint(object):
             mid = self._get_triangle_group(self._orient_values['triangleMid'])
             btm = self._get_triangle_group(self._orient_values['triangleBottom'])
             if not top or not mid or not btm:
-                maya.logger.warning('Could not orient {} fully with current triangle plane settings'.format(self._joint))
+                maya.logger.warning(
+                    'Could not orient {} fully with current triangle plane settings'.format(self._joint))
                 return
 
             plane_grp = xform_utils.create_group_in_plane(top, mid, btm)

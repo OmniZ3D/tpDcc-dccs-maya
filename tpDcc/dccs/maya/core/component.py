@@ -210,7 +210,7 @@ def edge_to_vertex(edges):
         vert2 = info[3]
         if vert1 not in found_vertices:
             found_vertices.append('{}.vtx[{}]'.format(mesh, vert1))
-        if not vert2 in found_vertices:
+        if vert2 not in found_vertices:
             found_vertices.append('{}.vtx[{}]'.format(mesh, vert2))
 
     return found_vertices

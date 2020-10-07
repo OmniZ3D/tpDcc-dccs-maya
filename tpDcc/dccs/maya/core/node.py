@@ -150,7 +150,7 @@ def get_node_types(nodes, return_shape_type=True):
                 shapes = shape.get_shapes(n)
                 if shapes:
                     node_type = maya.cmds.nodeType(shapes[0])
-        if not node_type in found_type:
+        if node_type not in found_type:
             found_type[node_type] = list()
 
         found_type[node_type].append(n)
