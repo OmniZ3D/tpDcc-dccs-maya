@@ -191,7 +191,7 @@ class MetaDataManager(window.MainWindow, object):
             n.__name__ for n in inspect.getmro(meta_class)]
 
         return True
-    
+
     @staticmethod
     def register_meta_types(node_types=None):
 
