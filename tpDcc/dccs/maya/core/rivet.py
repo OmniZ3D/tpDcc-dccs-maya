@@ -11,7 +11,8 @@ import tpDcc as tp
 from tpDcc.libs.python import mathlib, python, name as name_utils
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import api, geometry, attribute, transform as transform_utils
+from tpDcc.dccs.maya import api
+from tpDcc.dccs.maya.core import geometry, attribute, transform as transform_utils
 from tpDcc.dccs.maya.core import mesh as mesh_utils, constraint as constraint_utils
 
 

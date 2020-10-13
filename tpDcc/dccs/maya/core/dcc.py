@@ -17,54 +17,73 @@ import tpDcc
 from tpDcc.libs.python import python
 import tpDcc.dccs.maya as maya
 from tpDcc.abstract import dcc as abstract_dcc, progressbar
+from tpDcc.core import consts
 from tpDcc.dccs.maya.core import helpers, name, namespace, scene, playblast, transform, attribute, gui, mathutils
 from tpDcc.dccs.maya.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
 from tpDcc.dccs.maya.core import sequencer, animation, qtutils, decorators as maya_decorators, shape as shape_utils
 from tpDcc.dccs.maya.core import filtertypes, joint as joint_utils, space as space_utils, curve as curve_utils
 from tpDcc.dccs.maya.core import geometry as geo_utils, ik as ik_utils, deformer as deform_utils, color as maya_color
 from tpDcc.dccs.maya.core import follicle as follicle_utils, rivet as rivet_utils, constraint as constraint_utils
+from tpDcc.dccs.maya.core import constants as maya_constants, node as node_utils
 
 
 class MayaDcc(abstract_dcc.AbstractDCC, object):
 
-    class DialogResult(object):
-        Yes = 'Yes'
-        No = 'No'
-        Cancel = 'No'
-        Close = 'No'
-
-    TYPE_FILTERS = OrderedDict([
-        (filtertypes.ALL_FILTER_TYPE, 'All'),
-        (filtertypes.GROUP_FILTER_TYPE, 'Group'),
-        (filtertypes.GEOMETRY_FILTER_TYPE, ['mesh', 'nurbsSurface']),
-        (filtertypes.POLYGON_FILTER_TYPE, ['Polygon']),
-        (filtertypes.NURBS_FILTER_TYPE, ['nurbsSurface']),
-        (filtertypes.JOINT_FILTER_TYPE, ['joint']),
-        (filtertypes.CURVE_FILTER_TYPE, ['nurbsCurve']),
-        (filtertypes.LOCATOR_FILTER_TYPE, ['locator']),
-        (filtertypes.LIGHT_FILTER_TYPE, ['light']),
-        (filtertypes.CAMERA_FILTER_TYPE, ['camera']),
-        (filtertypes.CLUSTER_FILTER_TYPE, ['cluster']),
-        (filtertypes.FOLLICLE_FILTER_TYPE, ['follicle']),
-        (filtertypes.DEFORMER_FILTER_TYPE, [
-            'clusterHandle', 'baseLattice', 'lattice', 'softMod', 'deformBend', 'sculpt',
-            'deformTwist', 'deformWave', 'deformFlare']),
-        (filtertypes.TRANSFORM_FILTER_TYPE, ['transform']),
-        (filtertypes.CONTROLLER_FILTER_TYPE, ['control'])
+    # Dictionary that provides a mapping between tpDcc object types and  OpenMaya/cmds object types
+    # Can be the situation where a tpDcc object maps maps to more than one MFn object
+    # None values are ignored. This is because either do not exists or there is not equivalent type in Maya
+    OBJECT_TYPES = OrderedDict([
+        (consts.ObjectTypes.Geometry, [maya.OpenMaya.MFn.kMesh, 'mesh']),
+        (consts.ObjectTypes.Light, [maya.OpenMaya.MFn.kLight, 'light']),
+        (consts.ObjectTypes.Camera, [maya.OpenMaya.MFn.kCamera, 'camera']),
+        (consts.ObjectTypes.Model, [maya.OpenMaya.MFn.kTransform, 'transform']),
+        (consts.ObjectTypes.Group, [maya.OpenMaya.MFn.kTransform, 'transform']),
+        (consts.ObjectTypes.Bone, [maya.OpenMaya.MFn.kJoint, 'joint']),
+        (consts.ObjectTypes.Particle, [
+            (maya.OpenMaya.MFn.kParticle, maya.OpenMaya.MFn.kNParticle), ('particle', 'particle')]),
+        (consts.ObjectTypes.Curve, [maya.OpenMaya.MFn.kCurve, 'curve']),
+        (consts.ObjectTypes.PolyMesh, [maya.OpenMaya.MFn.kPolyMesh, 'polyMesh']),
+        (consts.ObjectTypes.NurbsSurface, [maya.OpenMaya.MFn.kNurbsSurface, 'nurbsSurface']),
+        (consts.ObjectTypes.Network, [maya.OpenMaya.MFn.kAffect, 'network']),
+        (consts.ObjectTypes.Null, [maya.OpenMaya.MFn.kLocator, 'locator']),
     ])
 
-    SIDE_LABELS = ['Center', 'Left', 'Right', 'None']
-    TYPE_LABELS = [
-        'None', 'Root', 'Hip', 'Knee', 'Foot', 'Toe', 'Spine', 'Neck', 'Head', 'Collar', 'Shoulder', 'Elbow', 'Hand',
-        'Finger', 'Thumb', 'PropA', 'PropB', 'PropC', 'Other', 'Index Finger', 'Middle Finger', 'Ring Finger',
-        'Pinky Finger', 'Extra Finger', 'Big Toe', 'Index Toe', 'Middle Toe', 'Ring Toe', 'Pinky Toe', 'Foot Thumb'
-    ]
+    def node_tpdcc_type(self, node, as_string=False):
+        """
+        Returns the DCC object type as a string given a specific tpDcc object type
+        :param node: str
+        :param as_string: bool
+        :return: str
+        """
 
-    AXES = ['x', 'y', 'z']
-    ROTATION_AXES = ['xyz', 'yzx', 'zxy', 'xzy', 'yxz', 'zyx']
-    TRANSLATION_ATTR_NAME = 'translate'
-    ROTATION_ATTR_NAME = 'rotate'
-    SCALE_ATT_NAME = 'scale'
+        if as_string:
+            node_type = maya.cmds.objectType(node)
+            if node_type == 'transform':
+                return 'transform'
+
+            if node_type in self.DCC_TO_ABSTRACT_STR_TYPES:
+                maya_type = self.DCC_TO_ABSTRACT_STR_TYPES[node_type]
+                return MayaDcc.OBJECT_TYPES[maya_type][1]
+        else:
+            maya_node = node_utils.get_mobject(node)
+            maya_api_type = maya_node.apiType()
+
+            # TODO: We are hardcoding node type returns. Maybe we should return a generic transform and let user
+            # TODO: to handle shape types by itself.
+            if maya_api_type == maya.OpenMaya.MFn.kTransform:
+                node_shape = node_utils.get_shape(node)
+                if node_shape == maya_node:
+                    return consts.ObjectTypes.Generic
+                else:
+                    if node_shape.hasFn(maya.OpenMaya.MFn.kLocator):
+                        return consts.ObjectTypes.Null
+                    else:
+                        return consts.ObjectTypes.Geometry
+
+            if maya_api_type in self.DCC_TO_ABSTRACT_TYPES.keys():
+                return self.DCC_TO_ABSTRACT_TYPES[maya_api_type]
+
+        return super(MayaDcc, self).node_tpdcc_type(node)
 
     @staticmethod
     def get_name():
@@ -134,6 +153,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.about(batch=True)
+
+    @staticmethod
+    def root_node():
+        """
+        Returns DCC scene root node
+        :return: str
+        """
+
+        return scene.get_root_node()
 
     @staticmethod
     def enable_component_selection():
@@ -225,7 +253,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: bool
         """
 
-        return maya.cmds.objExists(node)
+        return node_utils.check_node(node)
 
     @staticmethod
     def object_type(node):
@@ -368,6 +396,32 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya_node.is_empty(node_name=node, no_user_attributes=no_user_attributes, no_connections=no_connections)
 
     @staticmethod
+    def node_is_root(node):
+        """
+        Returns whether or not given node is a DCC scene root node
+        :return: bool
+        """
+
+        if python.is_string(node):
+            node = node_utils.get_mobject(node)
+
+        return node.apiType() == maya.OpenMaya.MFn.kWorld
+
+    @staticmethod
+    def node_is_selected(node):
+        """
+        Returns whether or not given node is currently selected
+        :return: bool
+        """
+
+        current_selection = maya.cmds.ls(sl=True, long=True)
+        for obj in current_selection:
+            if maya.OpenMaya.MFnDependencyNode(obj).name() == maya.OpenMaya.MFnDependencyNode(node).name():
+                return True
+
+        return False
+
+    @staticmethod
     def node_is_transform(node):
         """
         Returns whether or not given node is a transform node
@@ -396,6 +450,213 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return maya.cmds.nodeType(node) == 'locator' or shape_utils.get_shape_node_type(node) == 'locator'
+
+    @staticmethod
+    def node_is_hidden(node):
+        """
+        Returns whether or not given node is hidden
+        :param node: str
+        :return: bool
+        """
+
+        if python.is_string(node):
+            return not maya.cmds.getAttr('{}.visibility'.format(node))
+
+        return not maya.cmds.getAttr('{}.visibility'.format(node_utils.get_name(node)))
+
+    @staticmethod
+    def set_node_normal_display(node, flag):
+        """
+        Sets whether or not given node is displayed in normal mode
+        :param node: str
+        :param flag: bool
+        """
+
+        if flag:
+            maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
+        maya.cmds.setAttr('{}.overrideDisplayType'.format(node), 0)
+
+    @staticmethod
+    def set_node_template_display(node, flag):
+        """
+        Sets whether or not given node is displayed in template mode
+        :param node: str
+        :param flag: bool
+        """
+
+        if flag:
+            maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
+        maya.cmds.setAttr('{}.overrideDisplayType'.format(node), 1)
+
+    @staticmethod
+    def set_node_reference_display(node, flag):
+        """
+        Sets whether or not given node is displayed in reference mode
+        :param node: str
+        :param flag: bool
+        """
+
+        if flag:
+            maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
+        maya.cmds.setAttr('{}.overrideDisplayType'.format(node), 2)
+
+    @staticmethod
+    def set_node_renderable(node, flag):
+        """
+        Sets the given node not be renderable or not
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.castsShadows'.format(shape), flag)
+            maya.cmds.setAttr('{}.receiveShadows'.format(shape), flag)
+            maya.cmds.setAttr('{}.holdOut'.format(shape), flag)
+            maya.cmds.setAttr('{}.motionBlur'.format(shape), flag)
+            maya.cmds.setAttr('{}.primaryVisibility'.format(shape), flag)
+            maya.cmds.setAttr('{}.smoothShading'.format(shape), flag)
+            maya.cmds.setAttr('{}.visibleInReflections'.format(shape), flag)
+            maya.cmds.setAttr('{}.visibleInRefractions'.format(shape), flag)
+            maya.cmds.setAttr('{}.doubleSided'.format(shape), flag)
+
+    @staticmethod
+    def set_node_cast_shadows(node, flag):
+        """
+        Sets whether or not given node can cast shadows
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.castsShadows'.format(shape), flag)
+
+    @staticmethod
+    def set_node_receive_shadows(node, flag):
+        """
+        Sets whether or not given node can receive shadows
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.receiveShadows'.format(shape), flag)
+
+    @staticmethod
+    def set_node_light_interaction(node, flag):
+        """
+        Sets whether or not given node can interact with lights
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.holdOut'.format(shape), flag)
+
+    @staticmethod
+    def set_node_has_motion_blur(node, flag):
+        """
+        Sets whether or not given node can have motion blur
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.motionBlur'.format(shape), flag)
+
+    @staticmethod
+    def set_node_is_visible_to_cameras(node, flag):
+        """
+        Sets whether or not given node is visible by cameras
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.primaryVisibility'.format(shape), flag)
+
+    @staticmethod
+    def set_node_smooth_shading(node, flag):
+        """
+        Sets whether or not given node has smooth shading
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.smoothShading'.format(shape), flag)
+
+    @staticmethod
+    def set_node_is_visible_in_reflections(node, flag):
+        """
+        Sets whether or not given node is visible in reflections
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.visibleInReflections'.format(shape), flag)
+
+    @staticmethod
+    def set_node_is_visible_in_refractions(node, flag):
+        """
+        Sets whether or not given node is visible in refractions
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.visibleInRefractions'.format(shape), flag)
+
+    @staticmethod
+    def set_node_double_sided(node, flag):
+        """
+        Sets whether or not given node polygons can be renderer in both back and front directions
+        :param node: str
+        :param flag: bool
+        """
+
+        nodes = python.force_list(node)
+        shapes_list = list()
+        for node in nodes:
+            shapes_list.extend(shape_utils.get_shapes(node) or list())
+        for shape in shapes_list:
+            maya.cmds.setAttr('{}.doubleSided'.format(shape), flag)
 
     @staticmethod
     def get_closest_transform(source_transform, targets):
@@ -458,7 +719,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         if python.is_string(rotation_axis):
-            rotation_axis = MayaDcc.ROTATION_AXES.index(rotation_axis)
+            rotation_axis = maya_constants.ROTATION_AXES.index(rotation_axis)
 
         MayaDcc.set_attribute_value(node, 'rotateOrder', rotation_axis)
 
@@ -908,7 +1169,15 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param node: str
         """
 
-        return maya.cmds.delete(node)
+        nodes = python.force_list(node)
+
+        objects_to_delete = list()
+        for node in nodes:
+            if not python.is_string(node):
+                node = node_utils.get_name(node, fullname=True)
+            objects_to_delete.append(node)
+
+        return maya.cmds.delete(objects_to_delete)
 
     @staticmethod
     def clean_construction_history(node):
@@ -1000,6 +1269,35 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         nodes = nodes or MayaDcc.selected_nodes()
 
         return maya.cmds.filterExpand(nodes, selectionMask=filter_type, fullPath=full_path)
+
+    @staticmethod
+    def find_node_by_name(node_name):
+        """
+        Returns node by its given node.
+        This function makes sure that the returned node is an existing node
+        :param node_name: str
+        :return: str
+        """
+
+        if not node_utils.check_node(node_name):
+            return None
+
+        return node_utils.get_mobject(node_name)
+
+    @staticmethod
+    def find_node_by_id(unique_id):
+        """
+        Returns node by its given id.
+        This function makes sure that the returned node is an existing node
+        :param unique_id: str
+        :return: str
+        """
+
+        node = node_utils.get_node_by_id(unique_id)
+        if not node:
+            return None
+
+        return node_utils.get_mobject(node)
 
     @staticmethod
     def all_shapes_nodes(full_path=True):
@@ -1121,6 +1419,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param clean: bool
         :return: str
         """
+
+        if not python.is_string(node):
+            node = node_utils.get_name(node, fullname=True)
 
         if MayaDcc.node_is_referenced(node):
             try:
@@ -1378,7 +1679,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param node: str
         """
 
-        return maya.cmds.parent(node, world=True)
+        return maya.cmds.parent(node, world=True)[0]
 
     @staticmethod
     def node_nodes(node):
@@ -2638,6 +2939,18 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.setAttr('{}.overrideEnabled'.format(node), False)
 
     @staticmethod
+    def disable_transforms_inheritance(node, lock=False):
+        """
+        Disables transforms inheritance from given node
+        :param node: str
+        :param lock: bool
+        """
+
+        maya.cmds.setAttr('{}.inheritsTransform'.format(node), False)
+        if lock:
+            attribute.lock_attributes(node, ['inheritsTransform'], hide=False)
+
+    @staticmethod
     def connect_multiply(source_node, source_attribute, target_node, target_attribute, value=0.1, multiply_name=None):
         """
         Connects source attribute into target attribute with a multiply node inbetween
@@ -2924,7 +3237,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: bool
         """
 
-        return maya.cmds.pluginInfo(plugin_name, query=True, loaded=True)
+        return helpers.is_plugin_loaded(plugin_name)
 
     @staticmethod
     def load_plugin(plugin_path, quiet=True):
@@ -2943,16 +3256,16 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param plugin_path: str
         """
 
-        maya.cmds.unloadPlugin(plugin_path)
+        return helpers.unload_plugin(plugin_path)
 
     @staticmethod
     def list_old_plugins():
         """
         Returns a list of old plugins in the current scene
-        :return: list<str>
+        :return: list(str)
         """
 
-        return maya.cmds.unknownPlugin(query=True, list=True)
+        return helpers.list_old_plugins()
 
     @staticmethod
     def remove_old_plugin(plugin_name):
@@ -2961,7 +3274,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param plugin_name: str
         """
 
-        return maya.cmds.unknownPlugin(plugin_name, remove=True)
+        return helpers.remove_old_plugin(plugin_name)
 
     @staticmethod
     def is_component_mode():
@@ -4651,21 +4964,67 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         return maya.cmds.sphere(name=name, radius=radius, axis=axis, constructionHistory=construction_history)[0]
 
     @staticmethod
-    def create_nurbs_cylinder(name='cylinder', radius=1.0, **kwargs):
+    def create_nurbs_cylinder(name='cylinder', radius=1.0, height=1.0, **kwargs):
         """
         Creates a new NURBS cylinder
         :param name: str
         :param radius: float
+        :param height: float
         :return: str
         """
 
         axis = kwargs.get('axis', (0, 1, 0))
-        height_ratio = kwargs.get('height_ratio', 1)
         construction_history = kwargs.get('construction_history', True)
 
         return maya.cmds.cylinder(
-            name=name, ax=axis, ssw=0, esw=360, r=radius, hr=height_ratio, d=3,
+            name=name, ax=axis, ssw=0, esw=360, r=radius, hr=height, d=3,
             ut=0, tol=0.01, s=8, nsp=1, ch=construction_history)[0]
+
+    @staticmethod
+    def create_nurbs_plane(name='plane', width=1.0, length=1.0, patches_u=1, patches_v=1, **kwargs):
+        """
+        Creates a new NURBS plane
+        :param name: str
+        :param width: int
+        :param length: int
+        :param patches_u: float
+        :param patches_v: float
+        :param kwargs:
+        :return:
+        """
+
+        axis = kwargs.get('axis', (0, 1, 0))
+        construction_history = kwargs.get('construction_history', True)
+
+        return maya.cmds.nurbsPlane(
+            name=name, axis=axis, width=width, lengthRatio=length / width, patchesU=patches_u,
+            patchesV=patches_v, ch=construction_history)[0]
+
+    @staticmethod
+    def create_lambert_material(name='lambert', color=None, transparency=None, **kwargs):
+        """
+        Creates a new lambert material
+        :param name: str
+        :param color: tuple(float, float, float)
+        :param transparency: float
+        :param kwargs:
+        :return: str
+        """
+
+        no_surface_shader = kwargs.get('no_surface_shader', False)
+        shading_group_name = kwargs.get('shading_group_name', '{}SG'.format(name))
+
+        new_material = maya.cmds.shadingNode('lambert', asShader=True, name=name)
+        render_set = maya.cmds.sets(
+            renderable=True, noSurfaceShader=no_surface_shader, empty=True, name=shading_group_name)
+        maya.cmds.connectAttr('{}.outColor'.format(new_material), '{}.surfaceShader'.format(render_set))
+        maya.cmds.setAttr('{}.outColor'.format(new_material), type='double3', *color)
+        if color:
+            maya.cmds.setAttr('{}.color'.format(new_material), type='double3', *color)
+        if transparency:
+            maya.cmds.setAttr('{}.transparency'.format(new_material), type='double3', *transparency)
+
+        return new_material
 
     @staticmethod
     def node_is_curve(node):
@@ -4689,10 +5048,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         curve_shapes = None
         if maya.cmds.nodeType(node) == 'transform':
-            curve_shapes = maya.cmds.listRelatives(node, c=True, s=True)
+            curve_shapes = maya.cmds.listRelatives(node, c=True, s=True, f=True)
             if curve_shapes:
                 if maya.cmds.nodeType(curve_shapes[0]) == 'nurbsCurve':
-                    curve_shapes = maya.cmds.listRelatives(node, c=True, s=True)
+                    curve_shapes = maya.cmds.listRelatives(node, c=True, s=True, f=True)
         elif maya.cmds.nodeType(node) == 'nurbsCurve':
             curve_shapes = maya.cmds.listRelatives(maya.cmds.listRelatives(node, p=True)[0], c=True, s=True)
 
@@ -4737,7 +5096,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list(float, float, float)
         """
 
-        return maya.cmds.xform('{}.cv[[]}'.format(curve_node, cv_index), query=True, translation=True, worldSpace=True)
+        return maya.cmds.xform('{}.cv[{}]'.format(curve_node, cv_index), query=True, translation=True, worldSpace=True)
 
     @staticmethod
     def get_curve_cv_position_in_object_space(curve_node, cv_index):
@@ -4748,7 +5107,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :return: list(float, float, float)
         """
 
-        return maya.cmds.xform('{}.cv[[]}'.format(curve_node, cv_index), query=True, translation=True, objectSpace=True)
+        return maya.cmds.xform('{}.cv[{}]'.format(curve_node, cv_index), query=True, translation=True, objectSpace=True)
 
     @staticmethod
     def rebuild_curve(curve, spans, **kwargs):
@@ -5263,9 +5622,9 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
                     if type(color) == int and -1 < color < 32:
                         maya.cmds.setAttr(shp + '.overrideColor', color)
             else:
-                if name.startswith('l_') or name.endswith('_l') or '_l_' in name:
+                if control_node.startswith('l_') or control_node.endswith('_l') or '_l_' in control_node:
                     maya.cmds.setAttr(shp + '.overrideColor', 6)
-                elif name.startswith('r_') or name.endswith('_r') or '_r_' in name:
+                elif control_node.startswith('r_') or control_node.endswith('_r') or '_r_' in control_node:
                     maya.cmds.setAttr(shp + '.overrideColor', 13)
                 else:
                     maya.cmds.setAttr(shp + '.overrideColor', 22)
@@ -5292,7 +5651,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         side_index = MayaDcc.get_attribute_value(node, 'side')
 
-        return MayaDcc.SIDE_LABELS[side_index]
+        return maya_constants.SIDE_LABELS[side_index]
 
     @staticmethod
     def set_side_labelling(node, side_label):
@@ -5302,10 +5661,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param side_label: str
         """
 
-        if not side_label or side_label not in MayaDcc.SIDE_LABELS or not MayaDcc.attribute_exists(node, 'side'):
+        if not side_label or side_label not in maya_constants.SIDE_LABELS or not MayaDcc.attribute_exists(node, 'side'):
             return False
 
-        side_index = MayaDcc.SIDE_LABELS.index(side_label)
+        side_index = maya_constants.SIDE_LABELS.index(side_label)
 
         return MayaDcc.set_attribute_value(node, 'side', side_index)
 
@@ -5322,7 +5681,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
 
         type_index = MayaDcc.get_attribute_value(node, 'type')
 
-        return MayaDcc.TYPE_LABELS[type_index]
+        return maya_constants.TYPE_LABELS[type_index]
 
     @staticmethod
     def set_type_labelling(node, type_label):
@@ -5332,10 +5691,10 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param type_label: str
         """
 
-        if not type_label or type_label not in MayaDcc.TYPE_LABELS or not MayaDcc.attribute_exists(node, 'type'):
+        if not type_label or type_label not in maya_constants.TYPE_LABELS or not MayaDcc.attribute_exists(node, 'type'):
             return False
 
-        type_index = MayaDcc.TYPE_LABELS.index(type_label)
+        type_index = maya_constants.TYPE_LABELS.index(type_label)
 
         return MayaDcc.set_attribute_value(node, 'type', type_index)
 
@@ -5452,6 +5811,42 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         return MayaProgessBar
+
+    @staticmethod
+    def get_dialog_result_yes():
+        """
+        Returns output when a DCC dialog result is accepted
+        :return:
+        """
+
+        return maya_constants.DialogResult.Yes
+
+    @staticmethod
+    def get_dialog_result_no():
+        """
+        Returns output when a DCC dialog result is rejected
+        :return:
+        """
+
+        return maya_constants.DialogResult.No
+
+    @staticmethod
+    def get_dialog_result_cancel():
+        """
+        Returns output when a DCC dialog result is cancelled
+        :return:
+        """
+
+        return maya_constants.DialogResult.Cancel
+
+    @staticmethod
+    def get_dialog_result_close():
+        """
+        Returns output when a DCC dialog result is close
+        :return:
+        """
+
+        return maya_constants.DialogResult.Close
 
     @staticmethod
     def undo_decorator():

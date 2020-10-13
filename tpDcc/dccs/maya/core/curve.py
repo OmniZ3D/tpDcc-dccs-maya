@@ -8,9 +8,11 @@ Utility methods related to Maya Curves
 from __future__ import print_function, division, absolute_import
 
 import tpDcc.dccs.maya as maya
+from tpDcc.dccs.maya import api
 from tpDcc.libs.python import python, mathlib
-from tpDcc.dccs.maya.core import exceptions, api, transform, component
-from tpDcc.dccs.maya.core import decorators, filtertypes, name as name_utils, shape as shape_utils
+from tpDcc.dccs.maya.api import curves as api_curves
+from tpDcc.dccs.maya.core import exceptions, transform, component
+from tpDcc.dccs.maya.core import decorators, filtertypes, name as name_utils, shape as shape_utils, node as node_utils
 
 
 def check_curve(curve):
@@ -250,6 +252,16 @@ def rebuild_curve(curve, spans=-1, degree=3):
 
 
 def rebulid_curve_at_distance(curve, min_length, max_length, min_spans=3, max_spans=10):
+    """
+    Rebuilds a curve with given parameter and in the given distance
+    :param curve: str
+    :param min_length: float
+    :param max_length: float
+    :param min_spans: int
+    :param max_spans: int
+    :return: str
+    """
+
     curve_length = maya.cmds.arcLen(curve, ch=False)
     spans = mathlib.remap_value(curve_length, min_length, max_length, min_spans, max_spans)
 
@@ -592,6 +604,21 @@ def set_curve_line_thickness(curve_transforms, line_width):
     :param line_width: float, new line width of the curves
     """
 
+    curve_transforms = python.force_list(curve_transforms)
     curve_shapes = filtertypes.filter_nodes_with_shapes(curve_transforms, shape_type='nurbsCurve')
     for curve in curve_shapes:
         maya.cmds.setAttr('{}.lineWidth'.format(curve), line_width)
+
+
+def get_curve_data(curve_shape, space=maya.OpenMaya.MSpace.kObject):
+    """
+    Returns curve dat from the given shape node
+    :param curve_shape: str, node that represents nurbs curve shape
+    :param space:
+    :return: dict
+    """
+
+    if python.is_string(curve_shape):
+        curve_shape = node_utils.get_mobject(curve_shape)
+
+    return api_curves.get_curve_data(curve_shape, space)

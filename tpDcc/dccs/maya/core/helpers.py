@@ -454,6 +454,16 @@ def clean_student_line(filename=None):
     return True
 
 
+def is_plugin_loaded(plugin_name):
+    """
+    Return whether given plugin is loaded or not
+    :param plugin_name: str
+    :return: bool
+    """
+
+    return maya.cmds.pluginInfo(plugin_name, query=True, loaded=True)
+
+
 def load_plugin(plugin_name, quiet=True):
     """
     Loads plugin with the given name (full path)
@@ -461,7 +471,7 @@ def load_plugin(plugin_name, quiet=True):
     :param quiet: bool, Whether to show info to user that plugin has been loaded or not
     """
 
-    if not maya.cmds.pluginInfo(plugin_name, query=True, loaded=True):
+    if not is_plugin_loaded(plugin_name):
         try:
             maya.cmds.loadPlugin(plugin_name, quiet=quiet)
         except Exception as exc:
@@ -469,6 +479,36 @@ def load_plugin(plugin_name, quiet=True):
             return False
 
     return True
+
+
+def unload_plugin(plugin_name):
+    """
+    Unloads the given plugin
+    :param plugin_name: str
+    """
+
+    if not is_plugin_loaded(plugin_name):
+        return False
+
+    return maya.cmds.unloadPlugin(plugin_name)
+
+
+def list_old_plugins():
+    """
+    Returns a list of old plugins in the current scene
+    :return: list(str)
+    """
+
+    return maya.cmds.unknownPlugin(query=True, list=True)
+
+
+def remove_old_plugin(plugin_name):
+    """
+    Removes given old plugin from current scene
+    :param plugin_name: str
+    """
+
+    return maya.cmds.unknownPlugin(plugin_name, remove=True)
 
 
 def get_project_rule(rule):

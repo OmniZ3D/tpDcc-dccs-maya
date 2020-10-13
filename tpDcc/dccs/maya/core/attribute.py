@@ -4428,3 +4428,28 @@ def connect_equal_condition(source_attr, target_attr, equal_value):
     connect_plus('{}.outColorR'.format(condition), target_attr)
 
     return condition
+
+
+def get_locked_and_connected_attributes(node, attributes=None):
+    """
+    Returns all the lock or connected attributes from all keyable attributes of an object is not attributes is given
+    or for the given attributes.
+    :param node: str, Maya object name to check attributes of
+    :param attributes: list(str) or None, list of attributes to check
+    :return: list(str), list of locked or connected attributes
+    """
+
+    locked_connected_attributes = list()
+
+    if attributes:
+        for attr in attributes:
+            if not maya.cmds.attributeQuery(attr, node=node, exists=True):
+                continue
+            if not maya.cmds.getAttr('.'.join([node, attr]), settable=True):
+                locked_connected_attributes.append('.'.join([node, attr]))
+    else:
+        for attr in maya.cmds.listAttr(node, keyable=True):
+            if not maya.cmds.getAttr('.'.join([node, attr]), settable=True):
+                locked_connected_attributes.append('.'.join([node, attr]))
+
+    return locked_connected_attributes

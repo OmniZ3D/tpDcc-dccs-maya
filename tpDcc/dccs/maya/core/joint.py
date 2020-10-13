@@ -10,8 +10,9 @@ from __future__ import print_function, division, absolute_import
 import math
 
 import tpDcc.dccs.maya as maya
+from tpDcc.dccs.maya import api
 from tpDcc.libs.python import strings, python, name as python_name, mathlib as math_utils
-from tpDcc.dccs.maya.core import exceptions, decorators, mathutils, scene, attribute, transform, node, api
+from tpDcc.dccs.maya.core import exceptions, decorators, mathutils, scene, attribute, transform, node
 from tpDcc.dccs.maya.core import transform as xform_utils, constraint as cns_utils, matrix as matrix_utils
 from tpDcc.dccs.maya.core import name as name_utils, shape as shape_utils, ik as ik_utils
 

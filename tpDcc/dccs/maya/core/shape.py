@@ -95,7 +95,7 @@ def get_shapes_types_with_color():
     """
 
     shapes_with_color = ['nurbsCurve', 'locator', 'mesh', 'nurbsSurface', 'camera', 'light']
-    shapes_with_color.extend(tp.Dcc.TYPE_FILTERS.get(filtertypes.DEFORMER_FILTER_TYPE, list()))
+    shapes_with_color.extend(filtertypes.TYPE_FILTERS.get(filtertypes.DEFORMER_FILTER_TYPE, list()))
 
     return shapes_with_color
 
@@ -666,3 +666,122 @@ def filter_shapes_in_list(nodes_list, shapes_node_type_list=None):
         shapes_list.extend(shapes_child_list)
 
     return shapes_list
+
+
+def translate_shape_cvs(nurbs_shape, translate_list):
+    """
+    Translates given shape node by the given XYZ translation without affecting shape transform
+    :param nurbs_shape: str, shape node name
+    :param translate_list: list(float, float, float), XYZ translation as list
+    """
+
+    return maya.cmds.move(
+        translate_list[0], translate_list[1], translate_list[2], '{}.cv[*]'.format(nurbs_shape),
+        relative=True, objectSpace=True, worldSpaceDistance=True)
+
+
+def rotate_shape_cvs(nurbs_shape, rotate_list, relative=True, object_center_pivot=True):
+    """
+    Rotates given shape node by the given XYZ rotation without affecting shape transform
+    :param nurbs_shape: str, shape node name
+    :param rotate_list: list(float, float, float), XYZ rotation as list
+    :param relative: bool, Whether to rotate CVs relative to the object space or not
+    :param object_center_pivot: bool, Whether to rotate the objects with the pivot centered in the object or the world
+    """
+
+    return maya.cmds.rotate(
+        rotate_list[0], rotate_list[1], rotate_list[2], '{}.cv[*]'.format(nurbs_shape),
+        objectCenterPivot=object_center_pivot, relative=relative)
+
+
+def scale_shape_cvs(nurbs_shape, scale_list):
+    """
+    Scales given node by the given XYZ scale without affecting shape transform
+    :param nurbs_shape: str, shape node name
+    :param scale_list: list(float, float, float), XYZ scale as list
+    """
+
+    return maya.cmds.scale(scale_list[0], scale_list[1], scale_list[2], '{}.cv[*]'.format(nurbs_shape))
+
+
+def translate_node_shape_cvs(node_name, translate_list):
+    """
+    Translates given node shape CVSs by the given XYZ translation without affecting shape transform
+    :param node_name: str, node name
+    :param translate_list: list(float, float, float), XYZ translation as list
+    """
+
+    node_names = python.force_list(node_name)
+    shapes_list = filtertypes.filter_transforms_shapes(node_names, shape_type='nurbsCurve')
+    for shape in shapes_list:
+        translate_shape_cvs(shape, translate_list)
+
+
+def rotate_node_shape_cvs(node_name, rotate_list, relative=True, object_center_pivot=True):
+    """
+    Rotates given node shape CVs by the given XYZ rotation without affecting shape transform
+    :param node_name: str, node name
+    :param rotate_list: list(float, float, float), XYZ rotation as list
+    :param relative: bool, Whether to rotate CVs relative to the object space or not
+    :param object_center_pivot: bool, Whether to rotate the objects with the pivot centered in the object or the world
+    """
+
+    node_names = python.force_list(node_name)
+    shapes_list = filtertypes.filter_transforms_shapes(node_names, shape_type='nurbsCurve')
+    for shape in shapes_list:
+        rotate_shape_cvs(shape, rotate_list, relative=relative, object_center_pivot=object_center_pivot)
+
+
+def scale_node_shape_cvs(node_name, scale_list):
+    """
+    Scales given node shape CVs by the given XYZ scale without affecting shape transform
+    :param node_name: str, node name
+    :param scale_list: list(float, float, float), XYZ scale as list
+    """
+
+    node_names = python.force_list(node_name)
+    shapes_list = filtertypes.filter_transforms_shapes(node_names, shape_type='nurbsCurve')
+    for shape in shapes_list:
+        scale_shape_cvs(shape, scale_list)
+
+
+def translate_selected_nodes_shape_cvs(translate_list):
+    """
+    Translates current selected nodes shapes CVSs by the given XYZ translation without affecting shape transform
+    :param translate_list: list(float, float, float), XYZ translation as list
+    """
+
+    selected_nodes = maya.cmds.ls(sl=True, long=True)
+    if not selected_nodes:
+        return
+
+    return translate_node_shape_cvs(selected_nodes, translate_list)
+
+
+def rotate_selected_node_shape_cvs(rotate_list, relative=True, object_center_pivot=True):
+    """
+    Rotates current selected nodes shapes CVs by the given XYZ rotation without affecting shape transform
+    :param rotate_list: list(float, float, float), XYZ rotation as list
+    :param relative: bool, Whether to rotate CVs relative to the object space or not
+    :param object_center_pivot: bool, Whether to rotate the objects with the pivot centered in the object or the world
+    """
+
+    selected_nodes = maya.cmds.ls(sl=True, long=True)
+    if not selected_nodes:
+        return
+
+    return rotate_node_shape_cvs(
+        selected_nodes, rotate_list, relative=relative, object_center_pivot=object_center_pivot)
+
+
+def scale_selected_node_shape_cvs(scale_list):
+    """
+    Scales current selected nodes shapes CVs by the given XYZ scale without affecting shape transform
+    :param scale_list: list(float, float, float), XYZ scale as list
+    """
+
+    selected_nodes = maya.cmds.ls(sl=True, long=True)
+    if not selected_nodes:
+        return
+
+    return scale_node_shape_cvs(selected_nodes, scale_list)

@@ -8,7 +8,7 @@ Module that contains functions and classes related with maths
 from __future__ import print_function, division, absolute_import
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import api
+from tpDcc.dccs.maya import api
 
 
 def magnitude(vector=(0, 0, 0)):

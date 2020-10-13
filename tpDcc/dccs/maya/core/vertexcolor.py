@@ -9,7 +9,8 @@ from __future__ import print_function, division, absolute_import
 
 from tpDcc.libs.python import python
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import api, node
+from tpDcc.dccs.maya import api
+from tpDcc.dccs.maya.core import node
 
 
 def get_mesh_vertex_colors(mesh):

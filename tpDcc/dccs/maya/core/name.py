@@ -7,6 +7,8 @@ Module that contains functions and classes related to names
 
 from __future__ import print_function, division, absolute_import
 
+import re
+
 import tpDcc
 from tpDcc.libs.python import python, strings
 from tpDcc.libs.python import name as naming_utils
@@ -1049,6 +1051,34 @@ def renumber_objects_by_filter(
     return renumber_objects(
         obj_names=filtered_obj_list, remove_trailing_numbers=remove_trailing_numbers, padding=padding,
         add_underscore=add_underscore, rename_shape=rename_shape)
+
+
+def wildcard_to_regex(wildcard):
+    """
+    Converts a * syntax into a parsed regular expression
+
+    Maya wildcard validation:
+        1. Maya does not support '-' characters so we change those characters by '_'
+        2. Maya uses | as separators, so we scape them
+        3. We need to replace any '*' into .+'
+        4. Expression must end with $
+
+    :param wildcard: str, wildcard to parse. If not wildcard is provided, we match everything.
+    :return: str
+    """
+
+    if not wildcard:
+        expression = '.*'
+    else:
+        wildcard = wildcard.replace('-', '_')
+        expression = re.sub(r'(?<!\\)\|', r'\|', wildcard)
+        expression = re.sub(r'(?<!\\)\*', r'.*', expression)
+        if not expression[-1] == '$':
+            expression += '$'
+
+    regex = re.compile(expression, flags=re.I)
+
+    return regex
 
 
 short = get_short_name

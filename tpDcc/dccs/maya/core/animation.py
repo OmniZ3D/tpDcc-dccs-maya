@@ -14,7 +14,8 @@ import traceback
 from tpDcc.libs.python import python
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import api, attribute, scene
+from tpDcc.dccs.maya import api
+from tpDcc.dccs.maya.core import attribute, scene
 
 LOGGER = logging.getLogger()
 

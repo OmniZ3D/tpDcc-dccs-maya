@@ -135,11 +135,11 @@ def get_maya_window(window_name=None, wrap_instance=True):
                 qt_obj = qtutils.to_qt_object(window_name)
                 if qt_obj is not None:
                     return qt_obj
-            ptr = maya.OpenMayaUI.MQtUtil.findControl(window_name)
+            ptr = maya.api1['OpenMayaUI'].MQtUtil.findControl(window_name)
             if ptr is not None:
                 return qtutils.wrapinstance(ptr, QMainWindow)
         else:
-            ptr = maya.OpenMayaUI.MQtUtil.mainWindow()
+            ptr = maya.api1['OpenMayaUI'].MQtUtil.mainWindow()
             if ptr is not None:
                 return qtutils.wrapinstance(ptr, QMainWindow)
 
@@ -483,11 +483,11 @@ def to_qt_object(maya_name, qobj=None):
 
     if not qobj:
         qobj = QWidget
-    ptr = maya.OpenMayaUI.MQtUtil.findControl(maya_name)
+    ptr = maya.api1['OpenMayaUI'].MQtUtil.findControl(maya_name)
     if ptr is None:
-        ptr = maya.OpenMayaUI.MQtUtil.findLayout(maya_name)
+        ptr = maya.api1['OpenMayaUI'].MQtUtil.findLayout(maya_name)
     if ptr is None:
-        ptr = maya.OpenMayaUI.MQtUtil.findMenuItem(maya_name)
+        ptr = maya.api1['OpenMayaUI'].MQtUtil.findMenuItem(maya_name)
     if ptr is not None:
         return qtutils.wrapinstance(long(ptr), qobj)
     return None
@@ -498,7 +498,7 @@ def to_maya_object(qt_object):
     Returns a QtObject as Maya object
     """
 
-    return maya.OpenMayaUI.MQtUtil.fullName(qtutils.unwrapinstance(qt_object))
+    return maya.api1['OpenMayaUI'].MQtUtil.fullName(qtutils.unwrapinstance(qt_object))
 
 
 def get_parent_widget(widget):
@@ -508,7 +508,7 @@ def get_parent_widget(widget):
     :return: QWidget
     """
 
-    ptr = maya.OpenMayaUI.MQtUtil.getParent(qtutils.unwrapinstance(widget))
+    ptr = maya.api1['OpenMayaUI'].MQtUtil.getParent(qtutils.unwrapinstance(widget))
     return qtutils.wrapinstance(long(ptr))
 
 

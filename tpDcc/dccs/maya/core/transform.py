@@ -43,7 +43,7 @@ TRACKER_ROTATE_DEFAULT_ATTR_NAME = 'rotateTrackDefault'
 TRACKER_SCALE_ATTR_NAME = 'scaleTrack'
 TRACKER_SCALE_DEFAULT_ATTR_NAME = 'scaleTrackDefault'
 ALL_TRANSFORM_TRACKER_ATTRIBUTE_NAMES = [
-    TRACKER_TRANSLATE_ATTR_NAME, TRACKER_ROTATE_DEFAULT_ATTR_NAME,
+    TRACKER_TRANSLATE_ATTR_NAME, TRACKER_TRANSLATE_DEFAULT_ATTR_NAME,
     TRACKER_ROTATE_ATTR_NAME, TRACKER_ROTATE_DEFAULT_ATTR_NAME,
     TRACKER_SCALE_ATTR_NAME, TRACKER_SCALE_DEFAULT_ATTR_NAME
 ]
@@ -2122,7 +2122,7 @@ def duplicate_transform_without_children(transform_node, node_name='', delete_sh
 def parent_transforms_shapes(
         target_transform, transform_nodes_to_parent, delete_original=False, rename_shapes=True, delete_shape_type=''):
     """
-    Shapes all shapes of the given transform nodes to the given target transform node
+    Parents all shapes of the given transform nodes to the given target transform node
     :param target_transform: str
     :param transform_nodes_to_parent: list(str)
     :param delete_original: bool
@@ -2133,6 +2133,28 @@ def parent_transforms_shapes(
 
     # Import here to avoid cyclic imports
     from tpDcc.dccs.maya.core import shape as shape_utils
+
+    transform_nodes_to_parent = python.force_list(transform_nodes_to_parent)
+    use_locked_attr_parent = False
+    obj_parents = node.get_all_parents(transform_nodes_to_parent[-1])
+    for obj in transform_nodes_to_parent[:-1]:
+        obj_unsettable_attrs = attribute.get_locked_and_connected_attributes(obj)
+        if obj_unsettable_attrs:
+            use_locked_attr_parent = True
+            break
+        if obj in obj_parents:
+            use_locked_attr_parent = True
+            break
+        if maya.cmds.listRelatives(obj, children=True, type='transform'):
+            use_locked_attr_parent = True
+            break
+
+    if use_locked_attr_parent:
+        for i, obj in enumerate(transform_nodes_to_parent[:-1]):
+            new_obj = duplicate_transform_without_children(obj, delete_shapes=True)
+            if not maya.cmds.listRelatives(obj, children=True):
+                maya.cmds.delete(transform_nodes_to_parent[i])
+            transform_nodes_to_parent[i] = new_obj
 
     if delete_original:
         if delete_shape_type:
@@ -2184,3 +2206,48 @@ def add_transform_tracker_attributes(
     maya.cmds.setAttr('.'.join([transform_node, TRACKER_ROTATE_DEFAULT_ATTR_NAME]), rotate[0], rotate[1], rotate[2])
     maya.cmds.setAttr('.'.join([transform_node, TRACKER_SCALE_ATTR_NAME]), scale[0], scale[1], scale[2])
     maya.cmds.setAttr('.'.join([transform_node, TRACKER_SCALE_DEFAULT_ATTR_NAME]), scale[0], scale[1], scale[2])
+
+
+def freeze_scale_tracker(transform_node):
+    """
+    Freezes the scale tracker attribute setting to a scale of 1.0 no matter the current scale of the given transform
+    :param transform_node: str, transform node we want to freeze scale tracker of
+    """
+
+    if not maya.cmds.attributeQuery(TRACKER_SCALE_ATTR_NAME, node=transform_node, exists=True):
+        return False
+
+    current_scale = maya.cmds.getAttr('.'.join([transform_node, TRACKER_SCALE_ATTR_NAME]))[0]
+    maya.cmds.setAttr(
+        '.'.join([transform_node, TRACKER_SCALE_DEFAULT_ATTR_NAME]),
+        current_scale[0], current_scale[1], current_scale[2])
+
+    return True
+
+
+def freeze_scale_tracker_list(transform_nodes):
+    """
+    Freezes the scale tracker attribute setting to a scale of 1.0 no matter the current scale of the given transforms
+    :param transform_nodes: list(str), transform nodes we want to freeze scale tracker of
+    """
+
+    frozen_transforms = list()
+    for transform_to_freeze in transform_nodes:
+        valid_feeze = freeze_scale_tracker(transform_to_freeze)
+        if valid_feeze:
+            frozen_transforms.append(transform_to_freeze)
+
+    return frozen_transforms
+
+
+def delete_transform_tracker_attributes(transform_node):
+    """
+    Removes transform tracking attributes from the given transform node
+    :param transform_node: str, name of the transform we want to remove tracker attributes of
+    :return:
+    """
+
+    transform_node = python.force_list(transform_node)
+    for node_to_delete_attrs in transform_node:
+        for tracker_attr in ALL_TRANSFORM_TRACKER_ATTRIBUTE_NAMES:
+            attribute.delete_attribute(node_to_delete_attrs, tracker_attr)

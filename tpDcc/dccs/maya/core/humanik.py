@@ -814,11 +814,11 @@ def load_human_ik_plugin():
 
     # Load HumanIK plugins
     if not tp.Dcc.is_plugin_loaded('mayaHIK'):
-        tp.Dcc.load_plugin('mayaHIK')
+        tp.Dcc.register_plugin('mayaHIK')
     if not tp.Dcc.is_plugin_loaded('mayaCharacterization'):
-        tp.Dcc.load_plugin('mayaCharacterization')
+        tp.Dcc.register_plugin('mayaCharacterization')
     if not tp.Dcc.is_plugin_loaded('retargeterNodes'):
-        tp.Dcc.load_plugin('retargeterNodes')
+        tp.Dcc.register_plugin('retargeterNodes')
 
     # HIK Character Controls Tool
     maya.eval('HIKCharacterControlsTool')

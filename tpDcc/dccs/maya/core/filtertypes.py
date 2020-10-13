@@ -7,6 +7,8 @@ Module that contains functions and classes related to maya filter types
 
 from __future__ import print_function, division, absolute_import
 
+from collections import OrderedDict
+
 import tpDcc
 from tpDcc.libs.python import python
 import tpDcc.dccs.maya as maya
@@ -15,9 +17,14 @@ ALL_FILTER_TYPE = 'All Node Types'
 GROUP_FILTER_TYPE = 'Group'
 GEOMETRY_FILTER_TYPE = 'Geometry'
 POLYGON_FILTER_TYPE = 'Polygon'
+SPHERE_FILTER_TYPE = 'Sphere'
+BOX_FILTER_TYPE = 'Box'
+CYLINDER_FILTER_TYPE = 'Cylinder'
+CAPSULE_FILTER_TYPE = 'Capsule'
 NURBS_FILTER_TYPE = 'Nurbs'
 JOINT_FILTER_TYPE = 'Joint'
 CURVE_FILTER_TYPE = 'Curve'
+CIRCLE_FILTER_TYPE = 'Circle'
 LOCATOR_FILTER_TYPE = 'Locator'
 LIGHT_FILTER_TYPE = 'Light'
 CAMERA_FILTER_TYPE = 'Camera'
@@ -26,6 +33,36 @@ FOLLICLE_FILTER_TYPE = 'Follicle'
 DEFORMER_FILTER_TYPE = 'Deformer'
 TRANSFORM_FILTER_TYPE = 'Transform'
 CONTROLLER_FILTER_TYPE = 'Controller'
+PARTICLE_FILTER_TYPE = 'Particle'
+NETWORK_FILTER_TYPE = 'Network'
+
+TYPE_FILTERS = OrderedDict([
+    (ALL_FILTER_TYPE, 'All'),
+    (GROUP_FILTER_TYPE, 'Group'),
+    (GEOMETRY_FILTER_TYPE, ['mesh', 'nurbsSurface']),
+    (POLYGON_FILTER_TYPE, ['polygon']),
+    (SPHERE_FILTER_TYPE, ['sphere']),
+    (BOX_FILTER_TYPE, ['box']),
+    (CYLINDER_FILTER_TYPE, ['cylinder']),
+    (CAPSULE_FILTER_TYPE, ['capsule']),
+    (NURBS_FILTER_TYPE, ['nurbsSurface']),
+    (JOINT_FILTER_TYPE, ['joint']),
+    (CURVE_FILTER_TYPE, ['nurbsCurve']),
+    (CIRCLE_FILTER_TYPE, ['circle']),
+    (LOCATOR_FILTER_TYPE, ['locator']),
+    (LIGHT_FILTER_TYPE, ['light']),
+    (CAMERA_FILTER_TYPE, ['camera']),
+    (CLUSTER_FILTER_TYPE, ['cluster']),
+    (FOLLICLE_FILTER_TYPE, ['follicle']),
+    (DEFORMER_FILTER_TYPE, [
+        'clusterHandle', 'baseLattice', 'lattice', 'softMod', 'deformBend', 'sculpt',
+        'deformTwist', 'deformWave', 'deformFlare']),
+    (TRANSFORM_FILTER_TYPE, ['transform']),
+    (CONTROLLER_FILTER_TYPE, ['control']),
+    (PARTICLE_FILTER_TYPE, ['particle']),
+    (NETWORK_FILTER_TYPE, ['network'])
+])
+
 
 PROTECTED_NODES = [
     "layerManager", "renderLayerManager", "poseInterpolatorManager", "defaultRenderLayer",
@@ -186,7 +223,7 @@ def filter_by_type(
     if not selection_only:
         search_hierarchy = False
 
-    obj_type_list = tpDcc.Dcc.TYPE_FILTERS.get(filter_type, None)
+    obj_type_list = TYPE_FILTERS.get(filter_type, None)
     if not obj_type_list:
         maya.logger.warning('Filter Type "{}" is not supported in Maya!'.format(filter_type))
         return None
@@ -279,6 +316,19 @@ def filter_transforms_with_shapes(transforms_list, children=False, shape_type='n
         return list(set(transforms_with_shapes_of_type))
 
     return list(set(transforms_shapes))
+
+
+def filter_transforms_shapes(transforms_list, children=False, shape_type='nurbsCurve'):
+    """
+    Returns a list of shapes in the given list of transforms
+    :param transforms_list: list(str), list of Maya transform nodes
+    :param children: bool, Whether or not children should be taken into consideration
+    :param shape_type: str, shape to filter by
+    :return: list(str), list of shape nodes of the given type
+    """
+
+    return filter_transforms_with_shapes(
+        transforms_list=transforms_list, children=children, shape_type=shape_type, return_as_shapes=True)
 
 
 def filter_nodes_with_shapes(nodes_list, shape_type='nurbsCurve'):

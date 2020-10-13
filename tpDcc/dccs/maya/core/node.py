@@ -12,7 +12,8 @@ import uuid
 
 from tpDcc.libs.python import python, name, color
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import exceptions, color as maya_color
+from tpDcc.dccs.maya.api import plugs, node as api_node
+from tpDcc.dccs.maya.core import exceptions, helpers, color as maya_color
 
 
 def is_a_shape(node_name):
@@ -191,13 +192,13 @@ def check_node(node):
      :return: bool, True if the given node is valid
     """
 
-    if isinstance(node, str):
+    if python.is_string(node):
         if not maya.cmds.objExists(node):
-            raise exceptions.NodeExistsException(node)
+            return False
     elif isinstance(node, maya.OpenMaya.MObject):
-        return node.isNull()
+        return not node.isNull()
 
-    return False
+    return True
 
 
 def is_type(node_name, node_type):
@@ -325,6 +326,8 @@ def get_name(mobj, fullname=True):
     """
 
     try:
+        if not mobj or mobj.isNull():
+            return None
         if is_dag_node(mobj):
             dag_path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
             if fullname:
@@ -332,14 +335,21 @@ def get_name(mobj, fullname=True):
             return dag_path.partialPathName().split('|')[-1]
         return maya.OpenMaya.MFnDependencyNode(mobj).name()
     except Exception as e:
-        maya.cmds.warning('Ipmossible to get name from MObject: {} - {}'.format(mobj, str(e)))
+        maya.cmds.warning('Impossible to get name from MObject: {} - {}'.format(mobj, str(e)))
         return None
 
 
 def set_names(nodes, names):
+    """
+    Renames given list of nodes with the given list of names
+    :param nodes: list(MObject)
+    :param names: list(str)
+    """
+
     nodes = python.force_list(nodes)
     names = python.force_list(names)
 
+    # TODO: Check why after calling this function, the undo does not allow to undo the renaming operation
     for node, name in zip(nodes, names):
         maya.OpenMaya.MFnDagNode(node).setName(name)
 
@@ -1075,19 +1085,27 @@ def set_index_color_as_rgb(node, index, linear=True):
     set_rgb_color(node, rgb_list=rgb_list)
 
 
-def set_rgb_color(node, rgb_list, linear=True):
+def set_rgb_color(node, rgb_list, linear=True, color_shapes=True):
     """
     Sets the override RGB color of the given nodes
     NOTE: This function only works for versions of Maya greater than 2015
     :param node: str or list(str)
     :param linear: bool, Whether or not the RGB should be set in linear space (matches viewport color)
+    :param color_shapes: bool, Whether to apply color to the given node or its shapes
     :param rgb_list: list(float, float, float)
     """
+
+    from tpDcc.dccs.maya.core import shape
 
     if not linear:
         rgb_list = color.convert_color_linear_to_srgb(rgb_list)
 
     nodes = python.force_list(node)
+    if color_shapes:
+        nodes = shape.filter_shapes_in_list(nodes)
+    if not nodes:
+        return
+
     for node in nodes:
         if not maya.cmds.objExists(
                 '{}.overrideRGBColors'.format(node)) or not maya.cmds.objExists('{}.overrideEnabled'.format(node)):
@@ -1101,16 +1119,17 @@ def set_rgb_color(node, rgb_list, linear=True):
         maya.cmds.setAttr('{}.overrideColorRGB'.format(node), rgb_list[0], rgb_list[1], rgb_list[2])
 
 
-def set_hsv_color(node, hsv, linear=True):
+def set_hsv_color(node, hsv, linear=True, color_shapes=True):
     """
     Sets the override color of the given node as HSV
     :param node: str or list(str)
     :param hsv: tuple(float, float, float), HSV color
     :param linear: bool, Whether or not the RGB should be set in linear space (matches viewport color)
+    :param color_shapes: bool, Whether to apply color to the given node or its shapes
     """
 
     rgb = color.convert_hsv_to_rgb(hsv)
-    set_rgb_color(node, rgb, linear=linear)
+    set_rgb_color(node, rgb, linear=linear, color_shapes=color_shapes)
 
 
 def filter_nodes_by_rgb_color(nodes_list, rgb_color, tolerance=0.05, query_shapes=True):
@@ -1138,7 +1157,7 @@ def filter_nodes_by_rgb_color(nodes_list, rgb_color, tolerance=0.05, query_shape
     return colored_nodes
 
 
-def select_nodes_by_rgb_color(nodes_list, rgb_color, tolerance=0.05, query_shapes=True):
+def select_nodes_by_rgb_color(nodes_list, rgb_color, tolerance=0.05, query_shapes=False):
     """
     Selects nodes with the given color from the given list of nodes
     :param nodes_list: list(str), list of Maya nodes we want to to select
@@ -1154,3 +1173,50 @@ def select_nodes_by_rgb_color(nodes_list, rgb_color, tolerance=0.05, query_shape
     maya.cmds.select(colored_nodes, replace=True)
 
     return colored_nodes
+
+
+def get_node_by_id(node_id, full_path=True):
+    """
+    Returns a node by its UUID (support starting from Maya 2016)
+    :param node_id: str
+    :param full_path: bool
+    :return: str
+    """
+
+    if helpers.get_maya_version() >= 2016:
+        maya_nodes = maya.cmds.ls(node_id, long=full_path)
+        if maya_nodes and len(maya_nodes) > 1:
+            maya.logger.warning('Multiple Maya nodes found with same IDs (this can happen when using heavy references')
+        return maya_nodes[0]
+
+    return None
+
+
+def get_node_color_data(node):
+    """
+    Returns the color data in the given Maya node
+    :param node: str or OpenMaya.MObject
+    :return: dict
+    """
+
+    if python.is_string(node):
+        node = get_mobject(node)
+
+    return api_node.get_node_color_data(node)
+
+
+def get_all_parents(node, full_path=True):
+    """
+    Returns all parents of the given node
+    :param node: str, Maya DAG object name
+    :param full_path: bool, Whether or not to return parent full names
+    :return: list(str)
+    """
+
+    parents = maya.cmds.ls(node, long=True)[0].split('|')[1:-1]
+    if full_path:
+        parents = ['|'.join(parents[:i]) for i in range(1, 1 + len(parents))]
+        for i, obj in enumerate(parents):
+            parents[i] = '|{}'.format(obj)
+
+    return parents
