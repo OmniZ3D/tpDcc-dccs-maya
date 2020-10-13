@@ -13,6 +13,7 @@ import inspect
 import logging
 
 import tpDcc.register as core_register
+from tpDcc.libs.python import path as path_utils
 from tpDcc.dccs.maya import register
 
 # =================================================================================
@@ -45,7 +46,7 @@ except Exception:
     new_api = False
 
 try:
-    api = {
+    api1 = {
         'OpenMaya': OpenMaya,
         'OpenMayaUI': OpenMayaUI,
         'OpenMayaAnim': OpenMayaAnim,
@@ -60,7 +61,7 @@ try:
             'OpenMayaRender': OpenMayaRenderV2
         }
     else:
-        api2 = api
+        api2 = api1
 except Exception:
     # NOTE: We use this empty try/catch to avoid errors during CI/CD
     pass
@@ -73,6 +74,11 @@ def use_new_api(flag=False):
 
     from tpDcc.dccs.maya import register
 
+    global OpenMaya
+    global OpenMayaUI
+    global OpenMayaAnim
+    global OpenMayaRender
+
     if new_api:
         if flag:
             OpenMaya = api2['OpenMaya']
@@ -80,15 +86,15 @@ def use_new_api(flag=False):
             OpenMayaAnim = api2['OpenMayaAnim']
             OpenMayaRender = api2['OpenMayaRender']
         else:
-            OpenMaya = api['OpenMaya']
-            OpenMayaUI = api['OpenMayaUI']
-            OpenMayaAnim = api['OpenMayaAnim']
-            OpenMayaRender = api['OpenMayaRender']
+            OpenMaya = api1['OpenMaya']
+            OpenMayaUI = api1['OpenMayaUI']
+            OpenMayaAnim = api1['OpenMayaAnim']
+            OpenMayaRender = api1['OpenMayaRender']
     else:
-        OpenMaya = api['OpenMaya']
-        OpenMayaUI = api['OpenMayaUI']
-        OpenMayaAnim = api['OpenMayaAnim']
-        OpenMayaRender = api['OpenMayaRender']
+        OpenMaya = api1['OpenMaya']
+        OpenMayaUI = api1['OpenMayaUI']
+        OpenMayaAnim = api1['OpenMayaAnim']
+        OpenMayaRender = api1['OpenMayaRender']
 
     register.register_class('OpenMaya', OpenMaya)
     register.register_class('OpenMayaUI', OpenMayaUI)
@@ -102,10 +108,12 @@ def is_new_api():
     :return: bool
     """
 
-    return not OpenMaya == api['OpenMaya']
+    return not OpenMaya == api1['OpenMaya']
 
 
 def register_maya_classes():
+    register.register_class('api1', api1)
+    register.register_class('api2', api2)
     register.register_class('is_new_api', is_new_api)
     register.register_class('use_news_api', use_new_api)
     register.register_class('cmds', cmds)
@@ -122,7 +130,7 @@ register_maya_classes()
 
 # =================================================================================
 
-from tpDcc.dccs.maya.core import dcc, callback, menu, shelf
+from tpDcc.dccs.maya.core import dcc, callback, menu, shelf, scenewrapper, scene, sceneobject
 from tpDcc.dccs.maya.ui import completer, dialog, window
 
 # =================================================================================
@@ -163,8 +171,6 @@ def update_paths():
     Adds path to system paths at startup
     """
 
-    import maya.cmds as cmds
-
     ext_path = externals_path()
     python_path = os.path.join(ext_path, 'python')
     maya_path = os.path.join(python_path, str(cmds.about(v=True)))
@@ -174,6 +180,23 @@ def update_paths():
     for p in paths_to_update:
         if os.path.isdir(p) and p not in sys.path:
             sys.path.append(p)
+
+    # Update custom tpDcc.dccs.maya plugins path
+    tpdcc_maya_plugins_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'plugins')
+    if not os.path.isdir(tpdcc_maya_plugins_path):
+        return False
+    tpdcc_maya_plugins_path = path_utils.clean_path(tpdcc_maya_plugins_path)
+
+    maya_plugin_path = os.getenv('MAYA_PLUG_IN_PATH', None)
+    if not maya_plugin_path:
+        os.environ['MAYA_PLUG_IN_PATH'] = tpdcc_maya_plugins_path
+    else:
+        current_plugin_paths = os.environ['MAYA_PLUG_IN_PATH'].split(os.pathsep)
+        for current_plugin_path in current_plugin_paths:
+            if path_utils.clean_path(current_plugin_path) == tpdcc_maya_plugins_path:
+                return True
+        os.environ['MAYA_PLUG_IN_PATH'] = '{}{}{}'.format(
+            os.environ['MAYA_PLUG_IN_PATH'], os.pathsep, tpdcc_maya_plugins_path)
 
 
 def create_logger(dev=False):
@@ -214,8 +237,9 @@ def init_dcc(dev=False):
     logger = create_logger(dev=dev)
     register.register_class('logger', logger)
 
-    use_new_api()
+    use_new_api(True)
 
+    load_plugins()
     create_metadata_manager()
 
 
@@ -228,6 +252,35 @@ def init_dcc(dev=False):
 #     use_new_api()
 #
 #     create_metadata_manager()
+
+
+def get_tpdcc_maya_plugins_path():
+    """
+    Returns path where tpdcc Maya plugins are located
+    :return: str
+    """
+
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), 'plugins')
+
+
+def load_plugins(do_reload=True):
+    from tpDcc.dccs.maya.core import helpers
+
+    plugins_path = get_tpdcc_maya_plugins_path()
+    if not os.path.isdir(plugins_path):
+        return False
+
+    for plugin_file in os.listdir(plugins_path):
+        if not plugin_file:
+            continue
+        plugin_ext = os.path.splitext(plugin_file)[-1]
+        if not plugin_ext == '.py':
+            continue
+        plugin_path = path_utils.clean_path(os.path.join(plugins_path, plugin_file))
+        if do_reload:
+            if helpers.is_plugin_loaded(plugin_path):
+                helpers.unload_plugin(plugin_path)
+        helpers.load_plugin(plugin_path)
 
 
 def create_metadata_manager():
@@ -244,7 +297,7 @@ def create_metadata_manager():
 
 def register_resources():
     """
-    Registers tpDcc.libs.qt resources path
+    Registers tpDcc.dccs.maya resources path
     """
 
     import tpDcc
@@ -255,7 +308,10 @@ def register_resources():
 
 
 def register_classes():
-    core_register.register_class('Dcc', dcc.MayaDcc)
+    core_register.register_class('Dcc', dcc.MayaDcc())
+    core_register.register_class('SceneWrapper', scenewrapper.MayaSceneWrapper)
+    core_register.register_class('Scene', scene.MayaScene)
+    core_register.register_class('SceneObject', sceneobject.MayaSceneObject)
     core_register.register_class('DccProgressBar', dcc.MayaProgessBar)
     core_register.register_class('Callbacks', callback.MayaCallback)
     core_register.register_class('Menu', menu.MayaMenu)
