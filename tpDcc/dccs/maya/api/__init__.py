@@ -181,8 +181,13 @@ class DoubleArray(ApiObject, object):
 
 
 class PointArray(ApiObject, object):
+    def __init__(self, elems_list=None):
+        self._elems_list = elems_list
+        super(PointArray, self).__init__()
 
     def _set_api_object(self):
+        if maya.is_new_api() and self._elems_list:
+            return maya.OpenMaya.MPointArray(self._elems_list)
         return maya.OpenMaya.MPointArray()
 
     def get(self):
@@ -196,8 +201,12 @@ class PointArray(ApiObject, object):
         return values
 
     def set(self, positions):
-        for i in range(len(positions)):
-            self.obj.set(i, positions[i][0], positions[i][1], positions[i][2])
+        if maya.is_new_api():
+            for i in range(len(positions)):
+                self.obj.append(positions[i])
+        else:
+            for i in range(len(positions)):
+                self.obj.set(i, positions[i][0], positions[i][1], positions[i][2])
 
     def length(self):
         if maya.is_new_api():
@@ -314,6 +323,68 @@ class DagPath(ApiObject, object):
         return self.obj.hasFn(fn)
 
 
+class DagNode(ApiObject, object):
+    def __init__(self, mobj):
+        if python.is_string(mobj):
+            mobj = node_name_to_mobject(mobj)
+
+        if mobj:
+            self.obj = self._set_api_object(mobj)
+        else:
+            self.obj = maya.OpenMaya.MFnDagNode(mobj)
+
+    def _set_api_object(self, mobj):
+        return maya.OpenMaya.MFnDagNode(mobj)
+
+    def is_intermediate_object(self):
+        if maya.is_new_api():
+            return self.obj.isIntermediateObject
+        else:
+            return self.obj.isIntermediateObject()
+
+    def get_name(self):
+        return self.obj.name()
+
+    def get_path(self):
+        return self.obj.getPath()
+
+    def get_partial_path(self):
+        return self.obj.partialPathName()
+
+    def get_full_path(self):
+        return self.obj.fullPathName()
+
+    def get_all_paths(self):
+        return self.obj.getAllPaths()
+
+
+class DependencyNode(ApiObject, object):
+    def __init__(self, mobj):
+        if python.is_string(mobj):
+            mobj = node_name_to_mobject(mobj)
+
+        if mobj:
+            self.obj = self._set_api_object(mobj)
+        else:
+            self.obj = maya.OpenMaya.MFnDependencyNode(mobj)
+
+    def _set_api_object(self, mobj):
+        return maya.OpenMaya.MFnDependencyNode(mobj)
+
+    def get_name(self):
+        return self.obj.name()
+
+    def find_plug(self, attr, want_networked_plug=False):
+        """
+        Returns a plug for the given attribute, which may be specified either by name or by MObject
+        :param attr: string or MObject
+        :param want_networked_plug: bool
+        :return: MPlug
+        """
+
+        return self.obj.findPlug(attr, want_networked_plug)
+
+
 class SelectionList(ApiObject, object):
     def __init__(self, sel_list=None):
         self._sel_list = sel_list
@@ -419,6 +490,21 @@ class SelectionList(ApiObject, object):
         component = MayaObject(maya_component)
 
         return mesh_dag, component
+
+    def get_plug(self, index=0):
+        """
+        Returns the Plug at the given index
+        :param index: int
+        :return: MPlug
+        """
+
+        if maya.is_new_api():
+            plug = self.obj.getPlug(index)
+        else:
+            plug = maya.OpenMaya.MPlug()
+            self.obj.getPlug(plug, index)
+
+        return plug
 
 
 class SelectionListIterator(ApiObject, object):
@@ -997,24 +1083,30 @@ class NurbsCurveFunction(MayaFunction, object):
     def _set_api_object(self, mobj):
         return maya.OpenMaya.MFnNurbsCurve(mobj)
 
+    def get_length(self):
+        return self.obj.length()
+
     def get_degree(self):
-        return self.obj.degree()
+        return self.obj.degree if maya.is_new_api() else self.obj.degree()
 
     def get_cv_count(self):
         return self.obj.numCVs()
 
-    def get_cv_positions(self):
-        point = PointArray()
-        point = point.get_api_object()
-        self.obj.getCVs(point)
-        found = list()
-        for i in range(point.length()):
-            x = point[i][0]
-            y = point[i][1]
-            z = point[i][2]
-            found.append([x, y, z])
-
-        return found
+    def get_cv_positions(self, space=None):
+        if maya.is_new_api():
+            return self.obj.cvPositions(space)
+        else:
+            space = space or maya.OpenMaya.MSpace.kObject
+            point = PointArray()
+            point = point.get_api_object()
+            self.obj.getCVs(point, space)
+            found = list()
+            for i in range(point.length()):
+                x = point[i][0]
+                y = point[i][1]
+                z = point[i][2]
+                found.append([x, y, z])
+            return found
 
     def set_cv_positions(self, positions):
         point_array = PointArray()
@@ -1022,7 +1114,7 @@ class NurbsCurveFunction(MayaFunction, object):
         self.obj.setCVs(point_array)
 
     def get_form(self):
-        return self.obj.form()
+        return self.obj.form if maya.is_new_api() else self.obj.form()
 
     def get_knot_count(self):
         return self.obj.numKnots()
@@ -1031,14 +1123,20 @@ class NurbsCurveFunction(MayaFunction, object):
         return self.obj.numSpans()
 
     def get_knot_values(self):
-        knots = DoubleArray()
-        self.obj.getKnots(knots.get_api_object())
+        if maya.is_new_api():
+            return self.obj.knots()
+        else:
+            knots = DoubleArray()
+            self.obj.getKnots(knots.get_api_object())
+            return knots.get()
 
-        return knots.get()
-
-    def get_position_at_parameter(self, param):
-        point = Point()
-        self.obj.getPointAtParam(param, point.get_api_object())
+    def get_position_at_parameter(self, param, space=None):
+        space = space or maya.OpenMaya.MSpace.kObject
+        if maya.is_new_api():
+            point = maya.OpenMaya.MVector(self.obj.getPointAtParam(param, space=space))
+        else:
+            point = Point()
+            self.obj.getPointAtParam(param, point.get_api_object(), space=space)
 
         return point.get()[0:3]
 
@@ -1061,6 +1159,26 @@ class NurbsCurveFunction(MayaFunction, object):
 
     def get_parameter_at_length(self, value):
         return self.obj.findParamFromLength(value)
+
+    def get_normal(self, value, space=None):
+        space = space or maya.OpenMaya.MSpace.kObject
+        if maya.is_new_api():
+            normal = self.obj.normal(value, space=space)
+        else:
+            normal = maya.OpenMaya.MVector()
+            self.obj.normal(value, normal, space=space)
+
+        return normal
+
+    def get_tangent(self, value, space=None):
+        space = space or maya.OpenMaya.MSpace.kObject
+        if maya.is_new_api():
+            normal = self.obj.tangent(value, space=space)
+        else:
+            normal = maya.OpenMaya.MVector()
+            self.obj.tangent(value, normal, space=space)
+
+        return normal
 
 
 class ScriptUtils(ApiObject, object):
