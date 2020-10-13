@@ -218,7 +218,7 @@ def match_curves(driver, targets, space=None):
 
 def create_curve_shape(
         curve_data, parent=None, space=None, curve_size=1.0, translate_offset=(0.0, 0.0, 0.0),
-        scale=(1.0, 1.0, 1.0), axis_order='XYZ', mirror=None):
+        scale=(1.0, 1.0, 1.0), axis_order='XYZ', color=None, mirror=None):
     """
     Creates a NURBS curve based on the given curve data
     :param curve_data: dict, data, {"shapeName": {"cvs": [], "knots":[], "degree": int, "form": int, "matrix": []}}
@@ -264,7 +264,7 @@ def create_curve_shape(
         if not knots:
             knots = tuple([float(i) for i in range(-degree + 1, cvs.length())])
 
-        enabled = curve_data.get('overrideEnabled', False)
+        enabled = curve_data.get('overrideEnabled', False) or color is not None
         if space == maya.OpenMaya.MSpace.kWorld and parent != maya.OpenMaya.MObject.kNullObj:
             for i in range(len(cvs.obj)):
                 cvs.obj[i] *= parent_inverse_matrix
@@ -273,9 +273,10 @@ def create_curve_shape(
         if parent == maya.OpenMaya.MObject.kNullObj and shape.apiType() == maya.OpenMaya.MFn.kTransform:
             parent = shape
         if enabled:
-            plugs.set_plug_value(new_curve.findPlug('overrideEnabled', False), int(curve_data['overrideEnabled']))
-            colors = curve_data['overrideColorRGB']
-            outliner_color = curve_data.get('outlinerColor')
+            plugs.set_plug_value(
+                new_curve.findPlug('overrideEnabled', False), int(curve_data.get('overrideEnabled', bool(color))))
+            colors = color or curve_data['overrideColorRGB']
+            outliner_color = curve_data.get('outlinerColor', None)
             use_outliner_color = curve_data.get('useOutlinerColor', False)
             node_api.set_node_color(
                 new_curve.object(), colors, outliner_color=outliner_color, use_outliner_color=use_outliner_color)

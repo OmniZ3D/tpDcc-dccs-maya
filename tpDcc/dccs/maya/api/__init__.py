@@ -322,6 +322,13 @@ class DagPath(ApiObject, object):
 
         return self.obj.hasFn(fn)
 
+    def get_a_path_to(self, mobj):
+        if maya.is_new_api():
+            return self.obj.getAPathTo(mobj)
+        else:
+            dag_path = maya.OpenMaya.MDagPath()
+            return self.obj.getAPathTo(mobj, dag_path)
+
 
 class DagNode(ApiObject, object):
     def __init__(self, mobj):
@@ -356,6 +363,16 @@ class DagNode(ApiObject, object):
 
     def get_all_paths(self):
         return self.obj.getAllPaths()
+
+    def find_plug(self, attr, want_networked_plug=False):
+        """
+        Returns a plug for the given attribute, which may be specified either by name or by MObject
+        :param attr: string or MObject
+        :param want_networked_plug: bool
+        :return: MPlug
+        """
+
+        return self.obj.findPlug(attr, want_networked_plug)
 
 
 class DependencyNode(ApiObject, object):
