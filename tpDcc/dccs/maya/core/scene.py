@@ -14,8 +14,95 @@ import contextlib
 
 from Qt.QtWidgets import *
 
+import tpDcc as tp
+from tpDcc.abstract import scene
+from tpDcc.libs.python import python, path as path_utils
+
 import tpDcc.dccs.maya as maya
-from tpDcc.libs.python import path
+from tpDcc.dccs.maya.core import helpers, name as name_utils, node as node_utils
+
+
+class MayaScene(scene.AbstractScene, object):
+    def __init__(self):
+        super(MayaScene, self).__init__()
+
+    # ==============================================================================================
+    # OVERRIDES
+    # ==============================================================================================
+
+    def _objects(self, from_selection=False, wildcard='', object_type=None):
+        """
+        Internal function that returns a list of all the objects in the current scene wrapped inside a SceneObject
+        :param from_selection: bool
+        :param wildcard: str
+        :param object_type: int
+        :return: list(SceneObject)
+        """
+
+        maya_objects = list()
+
+        for obj in self._dcc_objects(from_selection=from_selection, wildcard=wildcard, object_type=object_type):
+            if obj.apiType() == maya.OpenMaya.MFn.kWorld:
+                continue
+            maya_objects.append(tp.SceneObject(self, obj))
+
+        return maya_objects
+
+    # ==============================================================================================
+    # ABSTRACT IMPLEMENTATION
+    # ==============================================================================================
+
+    def _dcc_objects(self, from_selection=False, wildcard='', object_type=None):
+        """
+        Returns DCC objects from current scene
+        :param from_selection: bool, Whether to return only selected DCC objects or all objects in the scene
+        :param wildcard: str, filter objects by its name
+        :param object_type: int
+        :return: list(variant)
+        """
+
+        expression_regex = name_utils.wildcard_to_regex(wildcard)
+
+        if from_selection:
+            objects = helpers.get_selection_iterator()
+        else:
+            if python.is_string(object_type):
+                objects = maya.cmds.ls(type=object_type, long=True)
+            else:
+                maya_type = tp.Dcc.OBJECT_TYPES.get(
+                    object_type, (maya.OpenMaya.MFn.kDagNode, maya.OpenMaya.MFn.kCharacter))
+                objects = list(helpers.get_objects_of_mtype_iterator(maya_type))
+
+        if (object_type is not None and object_type != 0) or wildcard:
+            objects_list = list()
+            for obj in objects:
+                if python.is_string(object_type):
+                    type_check = True if not object_type else tp.Dcc.node_tpdcc_type(obj, as_string=True) == object_type
+                else:
+                    type_check = True if not object_type else tp.Dcc.node_tpdcc_type(obj) == object_type
+                if wildcard:
+                    obj_name = node_utils.get_name(mobj=obj, fullname=False)
+                    wildcard_check = expression_regex.match(obj_name)
+                else:
+                    wildcard_check = False
+                if type_check and wildcard_check:
+                    if python.is_string(obj):
+                        obj = node_utils.get_mobject(obj)
+                    objects_list.append(obj)
+            objects = objects_list
+
+        return objects
+
+    def _rename_dcc_objects(self, dcc_native_objects, names, display=True):
+        """
+        Rename given DCC objects with the given new names
+        :param dcc_native_objects: variant or list(variant)
+        :param names: list(str)
+        :param display: bool, Whether or not we want to rename internal dcc name or display name
+        :return: bool, True if the operation is successful; False otherwise
+        """
+
+        return node_utils.set_names(dcc_native_objects, names)
 
 
 class TrackNodes(object):
@@ -84,7 +171,7 @@ def get_scene_file(directory=False):
 
     scene_path = maya.cmds.file(q=True, sn=True)
     if directory and scene_path:
-        scene_path = path.get_dirname(scene_path)
+        scene_path = path_utils.get_dirname(scene_path)
 
     return scene_path
 
