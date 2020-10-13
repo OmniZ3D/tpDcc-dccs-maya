@@ -190,7 +190,7 @@ def get_node_color_data(mobj):
     :return: dict
     """
 
-    depend_node = maya.OpenMaya.MFnDagNode(maya.OpenMaya.MFnDagNode(mobj).getPath())
+    depend_node = maya.OpenMaya.MFnDagNode(api.DagNode(mobj).get_path())
     plug = depend_node.findPlug('overrideColorRGB', False)
     enabled_plug = depend_node.findPlug('overrideEnabled', False)
     override_rgb_colors = depend_node.findPlug('overrideRGBColors', False)
@@ -203,6 +203,32 @@ def get_node_color_data(mobj):
         'useOutlinerColor': plugs.get_plug_value(use_outliner),
         'outlinerColor': plugs.get_plug_value(depend_node.findPlug('outlinerColor', False))
     }
+
+
+def set_node_color(mobj, color, outliner_color=None, use_outliner_color=False):
+    """
+    Sets the given Maya object its override color. MObject can represent an object or a shape
+    :param mobj: MObject, Maya object we want to change color of
+    :param color: MColor or tuple(float, float, float), RGB color to set
+    :param outliner_color: MColor or tuple(float, float, float) or None, RGB color to set to outliner item
+    :param use_outliner_color: bool, Whether or not to apply outliner color
+    """
+
+    depend_node = maya.OpenMaya.MFnDagNode(api.DagNode(mobj).get_path())
+    plug = depend_node.findPlug('overrideColorRGB', False)
+    enabled_plug = depend_node.findPlug('overrideEnabled', False)
+    override_rgb_colors = depend_node.findPlug('overrideRGBColors', False)
+    if not enabled_plug.asBool():
+        enabled_plug.setBool(True)
+    if not override_rgb_colors.asBool():
+        depend_node.findPlug('overrideRGBColors', False).setBool(True)
+    plugs.set_plug_value(plug, color)
+
+    if outliner_color:
+        use_outliner = depend_node.findPlug('useOutlinerColor', False)
+        if use_outliner_color:
+            use_outliner.setBool(True)
+        plugs.set_plug_value(depend_node.findPlug('outlinerColor', False), outliner_color)
 
 
 def iterate_shapes(dag_path, filter_types=None):
