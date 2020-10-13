@@ -208,7 +208,7 @@ def set_plug_value(plug, value, mod=None, apply=True):
         if count != len(value):
             return
         for i in range(count):
-            set_plug_value(plug.child(o), value[i], mod=mod)
+            set_plug_value(plug.child(i), value[i], mod=mod)
         return
 
     obj = plug.attribute()

@@ -9,6 +9,9 @@ MetaNode class implementation for Maya
 # So we do not use unicode laterals
 from __future__ import print_function, division, absolute_import
 
+# TODO: For now, here we are forcing the usage of OpenMaya1. At some point we will need to update this code to make
+# TODO: it work in both OpenMaya1 and OpenMaya2
+
 import sys
 import json
 import time
@@ -536,13 +539,13 @@ class MetaNode(object):
 
                 mobj = object.__getattribute__(self, '_MObject')
 
-                if maya.OpenMaya.MObject.hasFn(mobj, maya.OpenMaya.MFn.kDagNode):
-                    dag_path = maya.OpenMaya.MDagPath()
-                    maya.OpenMaya.MDagPath.getAPathTo(mobj, dag_path)
+                if maya.api1['OpenMaya'].MObject.hasFn(mobj, maya.api1['OpenMaya'].MFn.kDagNode):
+                    dag_path = maya.api1['OpenMaya'].MDagPath()
+                    maya.api1['OpenMaya'].MDagPath.getAPathTo(mobj, dag_path)
                     # maya.logger.debug(' --- Maya Node DAG --- \n\tPath: {}'.format(dag_path.fullPathName()))
                     _result = dag_path.fullPathName()
                 else:
-                    dep_node_func = maya.OpenMaya.MFnDependencyNode(mobj)
+                    dep_node_func = maya.api1['OpenMaya'].MFnDependencyNode(mobj)
                     # maya.logger.debug(' --- Maya Node DG --- \n\tName: {}'.format(dep_node_func.name()))
                     _result = dep_node_func.name()
 
@@ -557,18 +560,18 @@ class MetaNode(object):
     def meta_node(self, node):
         if node:
             try:
-                mobj = maya.OpenMaya.MObject()
-                sel = maya.OpenMaya.MSelectionList()
+                mobj = maya.api1['OpenMaya'].MObject()
+                sel = maya.api1['OpenMaya'].MSelectionList()
                 sel.add(node)
                 sel.getDependNode(0, mobj)
 
                 maya.logger.debug(
                     'Updating Meta Node: \n\tMObject=>{} \n\tMObjectHandle=>{} \n\tMFnDependencyNode=>{}'.format(
-                        mobj, maya.OpenMaya.MObjectHandle(mobj), maya.OpenMaya.MFnDependencyNode(mobj)))
+                        mobj, maya.api1['OpenMaya'].MObjectHandle(mobj), maya.api1['OpenMaya'].MFnDependencyNode(mobj)))
 
                 object.__setattr__(self, '_MObject', mobj)
-                object.__setattr__(self, '_MObjectHandle', maya.OpenMaya.MObjectHandle(mobj))
-                object.__setattr__(self, '_MFnDependencyNode', maya.OpenMaya.MFnDependencyNode(mobj))
+                object.__setattr__(self, '_MObjectHandle', maya.api1['OpenMaya'].MObjectHandle(mobj))
+                object.__setattr__(self, '_MFnDependencyNode', maya.api1['OpenMaya'].MFnDependencyNode(mobj))
             except StandardError as e:
                 raise StandardError(e)
         else:
@@ -954,8 +957,8 @@ class MetaNode(object):
                 if not result:
                     # Must rewrap the mobj, if you don't it kills the existing mNode and corrupts its cache entry
                     # 2011 bails because it lacks the api call anyway, 2012 and up work with this
-                    mobj = maya.OpenMaya.MObject()
-                    sel_list = maya.OpenMaya.MSelectionList()
+                    mobj = maya.api1['OpenMaya'].MObject()
+                    sel_list = maya.api1['OpenMaya'].MSelectionList()
                     sel_list.add(self._MObject)
                     sel_list.getDependNode(0, mobj)
                     result = self._MFnDependencyNode.findAlias(attr, mobj)
@@ -981,14 +984,14 @@ class MetaNode(object):
         :return: list<str>
         """
 
-        dep_node_fn = maya.OpenMaya.MFnDependencyNode(self.meta_node_mobj)
+        dep_node_fn = maya.api1['OpenMaya'].MFnDependencyNode(self.meta_node_mobj)
         attr_count = dep_node_fn.attributeCount()
         ret = list()
         for i in range(attr_count):
             attr_object = dep_node_fn.attribute(i)
             if attr_type:
                 if attr_type == 'message':
-                    if not attr_object.hasFn(maya.OpenMaya.MFn.kMessageAttribute):
+                    if not attr_object.hasFn(maya.api1['OpenMaya'].MFn.kMessageAttribute):
                         continue
             mplug = dep_node_fn.findPlug(attr_object)
             ret.append(mplug.name().split('.')[1])
@@ -1784,8 +1787,8 @@ def get_mobject(meta_node):
     Base method to get the MObject from node
     """
 
-    mobj = maya.OpenMaya.MObject()
-    sel = maya.OpenMaya.MSelectionList()
+    mobj = maya.api1['OpenMaya'].MObject()
+    sel = maya.api1['OpenMaya'].MSelectionList()
     sel.add(meta_node)
     sel.getDependNode(0, mobj)
     return mobj
