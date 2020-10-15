@@ -39,7 +39,7 @@ class MetaObject(metanode.MetaNode, object):
     # HIERARCHY
     # =============================================================================================
 
-    def get_parent(self, as_meta=False, full_path=True):
+    def get_parent(self, as_meta=True, full_path=True):
         """
         Return MetaNode parent node
         :param as_meta: bool, Whether if the returned object should be returned as Meta object or as string
@@ -64,7 +64,7 @@ class MetaObject(metanode.MetaNode, object):
 
     parent = property(get_parent, set_parent)
 
-    def get_children(self, as_meta=False, full_path=True):
+    def get_children(self, as_meta=True, full_path=True):
         """
         Returns children of the MetaNode
         :param as_meta: bool, Whether to return children as meta or not
