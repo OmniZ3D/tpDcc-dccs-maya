@@ -2505,6 +2505,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :param attribute_name: str
         """
 
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), keyable=False)
         return maya.cmds.setAttr('{}.{}'.format(node, attribute_name), channelBox=False)
 
     @staticmethod
