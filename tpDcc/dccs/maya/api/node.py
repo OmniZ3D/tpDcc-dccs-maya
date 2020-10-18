@@ -84,6 +84,24 @@ def rename_mobject(mobj, new_name):
     return mobj
 
 
+def set_matrix(mobj, matrix, space=None):
+    """
+    Sets the object matrix using MTransform
+    :param mobj: MObject, the transform MObject to modify
+    :param matrix: MMatrix, MMatrix to set
+    :param space: MSpace, coordinate space to set the matrix by
+    :return:
+    """
+
+    space = space or maya.OpenMaya.MSpace.kTransform
+    dag = maya.OpenMaya.MFnDagNode(mobj)
+    transform = maya.OpenMaya.MFnTransform(dag.getPath())
+    transform_matrix = maya.OpenMaya.MTransformationMatrix(matrix)
+    transform.setTranslation(transform_matrix.translation(space), space)
+    transform.setRotation(transform_matrix.rotation(asQuaternion=True), space)
+    transform.setScale(transform_matrix.scale(space))
+
+
 def get_world_matrix_plug(mobj):
     """
     Returns the MPlug pointing worldMatrix of the given MObject pointing a DAG node
@@ -153,6 +171,38 @@ def get_parent_inverse_matrix(mobj):
 
     parent_inverse_matrix_plug = get_parent_inverse_matrix_plug(mobj)
     return plugs.get_plug_value(parent_inverse_matrix_plug)
+
+
+def set_parent(child, new_parent=None, maintain_offset=False, mod=None, apply=True):
+    """
+    Sets the parent of the given child
+    :param child: MObject, child node which will have its parent changed
+    :param new_parent: MObject, new parent for the child
+    :param maintain_offset: bool, Whether or not current transformation is maintained relative to the new parent
+    :param mod: MDagModifier, MDagModifier to add to; if None, a new will be created
+    :param apply: bool, Whether or not to apply modifier immediately
+    :return:
+    """
+
+    new_parent = new_parent or maya.OpenMaya.MObject.kNullObj
+    if child == new_parent:
+        return False
+
+    mod = mod or maya.OpenMaya.MDagModifier()
+    if maintain_offset:
+        if new_parent == maya.OpenMaya.MObject.kNullObj:
+            offset = get_world_matrix(child)
+        else:
+            start = get_world_matrix(new_parent)
+            end = get_world_matrix(child)
+            offset = end * start.inverse()
+    mod.reparentNode(child, new_parent)
+    if apply:
+        mod.doIt()
+    if maintain_offset:
+        set_matrix(child, offset)
+
+    return mod
 
 
 def decompose_transform_matrix(matrix, rotation_order, space=None):
@@ -256,3 +306,54 @@ def get_shapes(dag_path, filter_types):
     """
 
     return list(iterate_shapes(dag_path, filter_types=filter_types))
+
+
+def get_child_path_at_index(path, index):
+    """
+    Returns MDagPath of the child node at given index from given MDagPath
+    :param path: MDagPath
+    :param index: int
+    :return: MDagPath, child path at given index
+    """
+
+    existing_child_count = path.childCount()
+    if existing_child_count < 1:
+        return None
+    index = index if index >= 0 else path.childCount() - abs(index)
+    copy_path = maya.OpenMaya.MDagPath(path)
+    copy_path.push(path.child(index))
+
+    return copy_path
+
+
+def get_child_paths(path):
+    """
+    Returns all MDagPaths that are child of the given MDagPath
+    :param path: MDagPath
+    :return: list(MDagPath)
+    """
+
+    out_paths = [get_child_path_at_index(path, i) for i in range(path.childCount())]
+
+    return out_paths
+
+
+def get_child_paths_by_fn(path, fn):
+    """
+    Returns all children paths of the given MDagPath that supports given MFn type
+    :param path: MDagPath
+    :param fn: MFn
+    :return: list(MDagPath)
+    """
+
+    return [child_path for child_path in get_child_paths(path) if child_path.hasFn(fn)]
+
+
+def get_child_transforms(path):
+    """
+    Returns all the child transforms of the given MDagPath
+    :param path: MDagPath
+    :return: list(MDagPath), list of all transforms below given path
+    """
+
+    return get_child_paths_by_fn(path, maya.OpenMaya.MFn.kTransform)
