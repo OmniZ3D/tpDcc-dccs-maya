@@ -239,6 +239,7 @@ def init_dcc(dev=False):
 
     use_new_api(True)
 
+    register_commands()
     load_plugins()
     create_metadata_manager()
 
@@ -263,6 +264,15 @@ def get_tpdcc_maya_plugins_path():
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), 'plugins')
 
 
+def get_tpdcc_maya_api_commands_path():
+    """
+    Returns path where tpdcc Maya plugins are located
+    :return: str
+    """
+
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), 'api', 'commands')
+
+
 def load_plugins(do_reload=True):
     from tpDcc.dccs.maya.core import helpers
 
@@ -281,6 +291,22 @@ def load_plugins(do_reload=True):
             if helpers.is_plugin_loaded(plugin_path):
                 helpers.unload_plugin(plugin_path)
         helpers.load_plugin(plugin_path)
+
+
+def register_commands():
+    from tpDcc.core import command
+
+    commands_path = get_tpdcc_maya_api_commands_path()
+    if not os.path.isdir(commands_path):
+        return False
+
+    runner = command.CommandRunner()
+    if not runner:
+        return False
+
+    runner.manager().register_path(commands_path, package_name='tpDcc')
+
+    return True
 
 
 def create_metadata_manager():
