@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that contains functions and classes related with maths
+Module that contains functions and classes related with Maya API maths
 """
 
 from __future__ import print_function, division, absolute_import
@@ -106,23 +106,7 @@ def offset_vector(point1=[0.0, 0.0, 0.0], point2=[0.0, 0.0, 0.0]):
     pnt2 = maya.OpenMaya.MVector(point2[0], point2[1], point2[2])
     vec = pnt2 - pnt1
 
-    return (vec.x, vec.y, vec.z)
-
-
-def average_position(pos1=(0.0, 0.0, 0.0), pos2=(0.0, 0.0, 0.0), weight=0.5):
-    """
-    Returns the average of the two given positions. You can weight between 0 (first input) or 1 (second_input)
-    :param pos1: tuple, first input position
-    :param pos2: tuple, second input position
-    :param weight: float, amount to weight between the two input positions
-    :return: tuple
-    """
-
-    return (
-        pos1[0] + ((pos2[0] - pos1[0]) * weight),
-        pos1[1] + ((pos2[1] - pos1[1]) * weight),
-        pos1[2] + ((pos2[2] - pos1[2]) * weight)
-    )
+    return vec.x, vec.y, vec.z
 
 
 def closest_point_on_line(pnt, line1, line2, clamp_segment=False):
@@ -149,102 +133,6 @@ def closest_point_on_line(pnt, line1, line2, clamp_segment=False):
 
     # Project Vector
     return [line1[0] + (line_offset[0] * dot), line1[1] + (line_offset[1] * dot), line1[2] + (line_offset[2] * dot)]
-
-
-def smooth_step(value, range_start=0.0, range_end=1.0, smooth=1.0):
-    """
-    Interpolates between 2 float values using hermite interpolation
-    :param value: float, value to smooth
-    :param range_start: float, minimum value of interpolation range
-    :param range_end: float, maximum value of interpolation range
-    :param smooth: float, strength of the smooth applied to the value
-    :return: float
-    """
-
-    # Get normalized value
-    range_val = range_end - range_start
-    normalized_val = value / range_val
-
-    # Get smooth value
-    smooth_val = pow(normalized_val, 2) * (3 - (normalized_val * 2))
-    smooth_val = normalized_val + ((smooth_val - normalized_val) * smooth)
-    value = range_start + (range_val * smooth_val)
-
-    return value
-
-
-def distribute_value(samples, spacing=1.0, range_start=0.0, range_end=1.0):
-    """
-    Returns a list of values distributed between a start and end range
-    :param samples: int, number of values to sample across the value range
-    :param spacing: float, incremental scale for each sample distance
-    :param range_start: float, minimum value in the sample range
-    :param range_end: float, maximum value in the sample range
-    :return: list<float>
-    """
-
-    # Get value range
-    value_list = [range_start]
-    value_dst = abs(range_end - range_start)
-    unit = 1.0
-
-    # Find unit distance
-    factor = 1.0
-    for i in range(samples - 2):
-        unit += factor * spacing
-        factor *= spacing
-    unit = value_dst / unit
-    total_unit = unit
-
-    # Build Sample list
-    for i in range(samples - 2):
-        mult_factor = total_unit / value_dst
-        value_list.append(range_start - ((range_start - range_end) * mult_factor))
-        unit *= spacing
-        total_unit += unit
-
-    # Append final sample
-    value_list.append(range_end)
-
-    return value_list
-
-
-def inverse_distance_weight_1d(value_array, sample_value, value_domain=(0, 1), cycle_value=False):
-    """
-    Returns the inverse distance weight for a given sample point given an array of scalar values
-    :param value_array: list<float>, value array to calculate weights from
-    :param sample_value: float, sample point to calculate weights for
-    :param value_domain: variant, tuple || list, minimum and maximum range of the value array
-    :param cycle_value: bool, Whether to calculate or not the distance based on a closed loop of values
-    :return: float
-    """
-
-    dst_array = list()
-    total_inv_dst = 0.0
-
-    # Calculate inverse distance weight
-    for v in range(len(value_array)):
-        dst = abs(sample_value - value_array[v])
-        if cycle_value:
-            value_domain_len = value_domain[1] - value_domain[0]
-            f_cyc_dst = abs(sample_value - (value_array[v] + value_domain_len))
-            r_cyc_dst = abs(sample_value - (value_array[v] - value_domain_len))
-            if f_cyc_dst < dst:
-                dst = f_cyc_dst
-            if r_cyc_dst < dst:
-                dst = r_cyc_dst
-
-        # Check zero distance
-        if dst < 0.00001:
-            dst = 0.00001
-
-        dst_array.append(dst)
-        total_inv_dst += 1.0 / dst
-
-    # Normalize value weights
-    weight_array = [(1.0 / d) / total_inv_dst for d in dst_array]
-
-    return weight_array
 
 
 def inverse_distance_weight_3d(point_array, sample_point):
