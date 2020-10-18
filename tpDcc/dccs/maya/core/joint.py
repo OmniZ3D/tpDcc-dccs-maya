@@ -8,11 +8,14 @@ Module that contains functions and classes related with joints
 from __future__ import print_function, division, absolute_import
 
 import math
+import random
 
+import tpDcc as tp
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya import api
+from tpDcc.dccs.maya.api import mathlib
 from tpDcc.libs.python import strings, python, name as python_name, mathlib as math_utils
-from tpDcc.dccs.maya.core import exceptions, decorators, mathutils, scene, attribute, transform, node
+from tpDcc.dccs.maya.core import exceptions, decorators, scene, attribute, transform, node
 from tpDcc.dccs.maya.core import transform as xform_utils, constraint as cns_utils, matrix as matrix_utils
 from tpDcc.dccs.maya.core import name as name_utils, shape as shape_utils, ik as ik_utils
 
@@ -194,7 +197,7 @@ class OrientJointAttributes(object):
             self._create_attributes()
 
     @staticmethod
-    @decorators.undo_chunk
+    @decorators.undo
     def add_orient_attributes(obj):
         """
         Adds orient attributes to the given joint node
@@ -211,7 +214,7 @@ class OrientJointAttributes(object):
             ori.set_default_values()
 
     @staticmethod
-    @decorators.undo_chunk
+    @decorators.undo
     def zero_orient_joint(joint):
         """
         Move orientation to orient joint attributes and zero out orient attributes from the given joint node
@@ -231,7 +234,7 @@ class OrientJointAttributes(object):
         return True
 
     @staticmethod
-    @decorators.undo_chunk
+    @decorators.undo
     def remove_orient_attributes(joint):
         """
         Removes orient attributes from the given joint node
@@ -248,7 +251,7 @@ class OrientJointAttributes(object):
             ori.delete()
 
     @classmethod
-    @decorators.undo_chunk
+    @decorators.undo
     def orient_with_attributes(cls, objects_to_orient=None, force_orient_attributes=False):
         """
         Orients all joints and transforms with OrientJointAttribute added on them
@@ -982,8 +985,8 @@ def get_length(joint):
     for child_jnt in child_joints:
         pt1 = transform.get_position(joint)
         pt2 = transform.get_position(child_jnt)
-        offset = mathutils.offset_vector(pt1, pt2)
-        length = mathutils.magnitude(offset)
+        offset = mathlib.offset_vector(pt1, pt2)
+        length = mathlib.magnitude(offset)
         if length > max_length:
             max_length = length
 
@@ -1225,7 +1228,7 @@ def orient(joint, aim_axis='x', up_axis='y', up_vector=(0, 1, 0)):
         # Aim Vector
         aim_point_1 = transform.get_position(joint)
         aim_point_2 = transform.get_position(child_joint_list[0])
-        aim_vector = mathutils.offset_vector(aim_point_1, aim_point_2)
+        aim_vector = mathlib.offset_vector(aim_point_1, aim_point_2)
 
         target_matrix = matrix_utils.build_rotation(aim_vector, up_vector, aim_axis, up_axis)
         orient_matrix = target_matrix * parent_matrix.inverse()
@@ -1485,7 +1488,7 @@ def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
     return '{}.scale'.format(inverse_scale_object)
 
 
-@decorators.undo_chunk
+@decorators.undo
 def create_joint_at_points(points, name, joint_radius=1.0):
     """
     Creates a new joint in the middle center of the given points. If only 1 point is given, the joint
@@ -1502,7 +1505,7 @@ def create_joint_at_points(points, name, joint_radius=1.0):
     return joint
 
 
-@decorators.undo_chunk
+@decorators.undo
 def create_joints_on_cvs(curve, parented=True):
     """
     Creates a joint in each CV of the given curve.
@@ -1530,7 +1533,7 @@ def create_joints_on_cvs(curve, parented=True):
     return joints
 
 
-@decorators.undo_chunk
+@decorators.undo
 def create_joints_on_faces(mesh, faces=None, follow=True, name=None):
     """
     Creates joints on the faces of the given mesh
@@ -1584,7 +1587,7 @@ def create_joints_on_faces(mesh, faces=None, follow=True, name=None):
     return joints
 
 
-@decorators.undo_chunk
+@decorators.undo
 def create_joint_on_center():
     """
     Creates a new joint on center of the selected objects or components
@@ -1607,7 +1610,7 @@ def create_joint_on_center():
     return new_joint
 
 
-@decorators.undo_chunk
+@decorators.undo
 def create_joints_on_selected_components():
     """
     Creates joints on current selected components (vertices, faces or edges)
@@ -1661,7 +1664,7 @@ def create_joints_on_selected_components():
     maya.cmds.select(clear=True)
 
 
-@decorators.undo_chunk
+@decorators.undo
 def create_oriented_joints_along_curve(curve, count=20, description='curve', attach=False):
     """
     Create joints on curve that are oriented to aim at child
@@ -1806,7 +1809,7 @@ def create_joint_buffer(joint, connect_inverse=True):
     return buffer_joint
 
 
-@decorators.undo_chunk
+@decorators.undo
 def insert_joints(joints=None, joint_count=1):
     """
     Inserts joints evenly spaced along a bone
@@ -1835,9 +1838,9 @@ def insert_joints(joints=None, joint_count=1):
 
         name = joint
         end_joint = children[0]
-        dst = mathutils.distance_between_nodes(joint, end_joint)
+        dst = mathlib.distance_between_nodes(joint, end_joint)
         increment = dst / (joint_count + 1)
-        direction = mathutils.direction_vector_between_nodes(joint, end_joint)
+        direction = mathlib.direction_vector_between_nodes(joint, end_joint)
         direction.normalize()
         direction *= increment
 
@@ -1852,7 +1855,7 @@ def insert_joints(joints=None, joint_count=1):
     return result
 
 
-@decorators.undo_chunk
+@decorators.undo
 def subdivide_joint(joint1=None, joint2=None, count=1, prefix='joint', name='sub_1', duplicate=False):
     """
     Adds evenly spaced joints between joint1 and joint2
@@ -1951,7 +1954,7 @@ def get_joints_chain_length(list_of_joints_in_chain):
     return length
 
 
-@decorators.undo_chunk
+@decorators.undo
 def create_oriented_joints_on_curve(curve, count=20, description=None, attach=False):
     """
     Create joints on curve that are oriented to aim at child
@@ -1995,3 +1998,144 @@ def create_oriented_joints_on_curve(curve, count=20, description=None, attach=Fa
         maya.cmds.makeIdentity(created_joints[0], apply=True, r=True)
 
     return created_joints
+
+
+def check_joint_labels(joints=None):
+    """
+    Checks whether or not all given joints have labels applied
+    :param joints: list(str)
+    :return: bool
+    """
+
+    from tpDcc.dccs.maya.core import skin
+
+    joints = joints or maya.cmds.ls(sl=True, type='joint')
+    joints = python.force_list(joints)
+    if not joints:
+        meshes = list()
+        transforms = tp.Dcc.selected_nodes_of_type('transform')
+        if transforms:
+            for xform in transforms:
+                shapes = tp.Dcc.list_shapes_of_type(xform, 'mesh')
+                if not shapes:
+                    continue
+                meshes.extend(shapes)
+        if meshes:
+            for mesh in meshes:
+                influences = skin.get_influencing_joints(mesh) or list()
+                joints.extend(influences)
+    if not joints:
+        return False
+    joints = list(set(joints))
+
+    if maya.cmds.getAttr('{}.type'.format(joints[random.randint(0, len(joints) - 1)])) == 0:
+        return False
+
+    return True
+
+
+@decorators.undo
+def auto_label_joints(joints=None, input_left='*_l_*', input_right='*_r_*'):
+    """
+    Automatically adds labels to given joints
+    :param joints: list(str) or None, list of joints to set labels of. If not given, selected joints will be used.
+    :param input_left: str, string to identify all joints that are on the left side
+    :param input_right: str, string to identify all joints that are on the right side
+    """
+
+    def _set_attrs(side, joint_type, name):
+        try:
+            maya.cmds.setAttr('{}.side'.format(joint), lock=0)
+            maya.cmds.setAttr('{}.type'.format(joint), lock=0)
+            maya.cmds.setAttr('{}.otherType'.format(joint), lock=0)
+            maya.cmds.setAttr('{}.drawLabel'.format(joint), lock=0)
+        except Exception:
+            pass
+
+        maya.cmds.setAttr('{}.side'.format(joint), side)
+        maya.cmds.setAttr('{}.type'.format(joint), joint_type)
+        maya.cmds.setAttr('{}.otherType'.format(joint), name, type='string')
+        maya.cmds.setAttr('{}.drawLabel'.format(joint), 1)
+
+    all_joints = joints or maya.cmds.ls(sl=True, type='joint') or maya.cmds.ls(type='joint')
+    all_found_joints = all_joints[:]
+    if not all_joints:
+        return False
+
+    percentage = 99.0 / len(all_joints)
+    progress_value = 0.0
+
+    if '*' not in input_left:
+        input_left = '*{}*'.format(input_left)
+    if '*' not in input_right:
+        input_right = '*{}*'.format(input_right)
+
+    left_joints = maya.cmds.ls(str(input_left), type='joint')
+    right_joints = maya.cmds.ls(str(input_right), type='joint')
+
+    for i, joint in enumerate(left_joints):
+        _set_attrs(1, 18, str(joint).replace(str(input_left).strip('*'), ''))
+        all_joints.remove(joint)
+        progress_value += ((i + 1) * percentage)
+
+    for j, joint in enumerate(right_joints):
+        _set_attrs(2, 18, str(joint).replace(str(input_right).strip('*'), ''))
+        all_joints.remove(joint)
+        progress_value += (j * percentage)
+
+    for k, joint in enumerate(all_joints):
+        _set_attrs(0, 18, str(joint))
+        progress_value += (k * percentage)
+
+    for joint in all_found_joints:
+        maya.cmds.setAttr('{}.drawLabel'.format(joint), 0)
+
+    progress_value = 100
+
+    return True
+
+
+@decorators.undo
+def auto_assign_labels_to_mesh_influences(skinned_mesh, input_left=None, input_right=None, check_labels=True):
+    """
+    Auto assigns labels to all joint influences of the given skinned mesh
+    :param skinned_mesh: str or list(str)
+    :param check_labels: bool
+    """
+
+    from tpDcc.dccs.maya.core import skin
+
+    skinned_mesh = skinned_mesh or tp.Dcc.selected_nodes_of_type('transform')
+    skinned_mesh = python.force_list(skinned_mesh)
+    if not skinned_mesh:
+        return False
+
+    input_left = input_left or '*_l_*'
+    input_right = input_right or '*_r_*'
+
+    all_joints = list()
+    all_shapes = list()
+    for mesh in skinned_mesh:
+        if tp.Dcc.node_type(mesh) == 'mesh':
+            all_shapes.append(mesh)
+        else:
+            target_shapes = tp.Dcc.list_shapes_of_type(mesh, 'mesh')
+            if target_shapes:
+                all_shapes.append(target_shapes[0])
+    if not all_shapes:
+        return False
+
+    for shape in all_shapes:
+        influences = skin.get_influencing_joints(shape) or list()
+        all_joints.extend(influences)
+
+    if not all_joints:
+        return False
+
+    if check_labels:
+        if check_joint_labels(all_joints):
+            return True
+
+    success = auto_label_joints(all_joints, input_left=input_left, input_right=input_right)
+
+    return success

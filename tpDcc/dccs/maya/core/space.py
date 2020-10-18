@@ -186,9 +186,9 @@ def create_multi_follow(
     state on/off. Constraints will be "directly" added on the target transform
     :param source_list: list(str), list of transforms that the target should be constrained by
     :param target_transform: str, name of a transform node that should follow the transforms in source_list
-    :param node: str, name of the node to add the swtich attribute to
+    :param node: str, name of the node to add the switch attribute to
     :param constraint_type: str, Maya constraint type ('parentConstraint', 'pointConstraint' or 'orientConstraint')
-    :param attribute_name: str, name of the swtich attribute t oadd to the the node
+    :param attribute_name: str, name of the switch attribute to add to the the node
     :param value: float, value to give the switch attribute on the node
     :param create_title: bool
     :return: str, name of the new group

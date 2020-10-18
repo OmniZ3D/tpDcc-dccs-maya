@@ -454,7 +454,7 @@ def smooth_preview_all(smooth_flag=True):
             smooth_preview(mesh, smooth_flag)
 
 
-def transforms_to_nurbs_surface(transforms, name, spans=-1, offset_axis='Y', offset_amount=1):
+def transforms_to_nurbs_surface(transforms, name='from_transforms', spans=-1, offset_axis='Y', offset_amount=1):
     """
     Creates a NURBS surface from a list of transforms
     Useful for creating a NURBS surface that follows a spine or tail

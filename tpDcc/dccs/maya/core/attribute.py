@@ -16,10 +16,10 @@ import string
 import traceback
 
 import tpDcc as tp
-from tpDcc.libs.python import python, decorators, name as name_utils
+from tpDcc.libs.python import python, decorators, mathlib, name as name_utils
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import exceptions, mathutils, node as node_utils, shape as shape_utils
+from tpDcc.dccs.maya.core import exceptions, node as node_utils, shape as shape_utils
 from tpDcc.dccs.maya.core import name as maya_name_utils
 
 
@@ -2880,13 +2880,13 @@ def distribute_attr_value(target_list, target_attr, range_start=0.0, range_end=1
         if not maya.cmds.objExists(target_list[i] + '.' + target_attr):
             raise Exception('Object "{}" has no ".{}" attribute!'.format(target_list[i], target_attr))
 
-    value_list = mathutils.distribute_value(
+    value_list = mathlib.distribute_value(
         samples=len(target_list), spacing=1.0, range_start=range_start, range_end=range_end)
 
     for i in range(len(target_list)):
         val = value_list[i]
         if smooth_step:
-            val = mathutils.smooth_step(value=val, range_start=range_start, range_end=range_end, smooth=smooth_step)
+            val = mathlib.smooth_step(value=val, range_start=range_start, range_end=range_end, smooth=smooth_step)
         maya.cmds.setAttr('{}.{}'.format(target_list[i], target_attr), val)
 
 

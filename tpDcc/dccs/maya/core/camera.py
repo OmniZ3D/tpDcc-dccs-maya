@@ -8,7 +8,8 @@ Module that contains functions and classes related with cameras
 from __future__ import print_function, division, absolute_import
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import node, transform, mathutils
+from tpDcc.dccs.maya.api import mathlib
+from tpDcc.dccs.maya.core import node, transform
 
 
 class CameraTypes(object):
@@ -288,7 +289,7 @@ def get_distance_to_camera(transform_node, camera_node):
 
     cam_pt = get_eye_point(camera_node)
     node_pt = maya.cmds.xform(transform_node, query=True, ws=True, rp=True)
-    distance = mathutils.distance_between(cam_pt, node_pt)
+    distance = mathlib.distance_between(cam_pt, node_pt)
 
     return distance
 

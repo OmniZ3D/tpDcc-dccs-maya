@@ -11,7 +11,8 @@ import tpDcc as tp
 from tpDcc.libs.python import python
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import attribute, mathutils, name as name_utils, transform as transform_utils
+from tpDcc.dccs.maya.api import mathlib
+from tpDcc.dccs.maya.core import attribute, name as name_utils, transform as transform_utils
 from tpDcc.dccs.maya.core import shape as shape_utils
 
 
@@ -367,7 +368,7 @@ class MatrixConstraint(MatrixConstraintNodes, object):
         target_matrix = maya.cmds.getAttr('{}.worldMatrix', self._target)
         if self._maintain_offset:
             source_inverse_matrix = maya.cmds.getAttr('{}.worldInverseMatrix'.format(self._main_source))
-            offset = mathutils.multiply_matrix(target_matrix, source_inverse_matrix)
+            offset = mathlib.multiply_matrix(target_matrix, source_inverse_matrix)
             maya.cmds.setAttr('{}.offsetMatrix'.format(mult), offset, type='matrix')
 
         if self._use_target_parent_matrix:

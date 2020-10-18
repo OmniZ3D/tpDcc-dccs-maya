@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 import math
 
 import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.core import mathutils
+from tpDcc.dccs.maya.api import mathlib
 
 
 def create_matrix_from_list(values_list):
@@ -175,25 +175,25 @@ def build_rotation(aim_vector, up_vector=(0, 1, 0), aim_axis='x', up_axis='y'):
     cross_axis = axis_list[0]
 
     # Normalize vectors
-    aim_vector = mathutils.normalize_vector(aim_vector)
+    aim_vector = mathlib.normalize_vector(aim_vector)
     if negative_aim:
         aim_vector = (-aim_vector[0], -aim_vector[1], -aim_vector[2])
-    up_vector = mathutils.normalize_vector(up_vector)
+    up_vector = mathlib.normalize_vector(up_vector)
     if negative_aim:
         aim_vector = (-aim_vector[0], -aim_vector[1], -aim_vector[2])
 
     # Get cross product vector
     cross_vector = (0, 0, 0)
     if (aim_axis == 'x' and up_axis == 'z') or (aim_axis == 'z' and up_axis == 'y'):
-        cross_vector = mathutils.cross_product(up_vector, aim_vector)
+        cross_vector = mathlib.cross_product(up_vector, aim_vector)
     else:
-        cross_vector = mathutils.cross_product(aim_vector, up_vector)
+        cross_vector = mathlib.cross_product(aim_vector, up_vector)
 
     # Ortogonalize up vector
     if (aim_axis == 'x' and up_axis == 'z') or (aim_axis == 'z' and up_axis == 'y'):
-        up_vector = mathutils.cross_product(aim_vector, cross_vector)
+        up_vector = mathlib.cross_product(aim_vector, cross_vector)
     else:
-        up_vector = mathutils.cross_product(cross_vector, aim_vector)
+        up_vector = mathlib.cross_product(cross_vector, aim_vector)
 
     # Build rotation matrix
     axis_dict = {aim_axis: aim_vector, up_axis: up_vector, cross_axis: cross_vector}
