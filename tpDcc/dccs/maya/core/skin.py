@@ -7,13 +7,22 @@ Module that contains functions and classes related with skins
 
 from __future__ import print_function, division, absolute_import
 
+import traceback
 import cStringIO
 
+import tpDcc as tp
+from tpDcc.libs.python import python, mathlib, kdtree
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya import api
-from tpDcc.libs.python import python, mathlib
+from tpDcc.dccs.maya.api import mathlib as api_mathlib, skin as api_skin
 from tpDcc.dccs.maya.core import decorators, exceptions, node as node_utils, mesh as mesh_utils
 from tpDcc.dccs.maya.core import joint as jnt_utils, transform as xform_utils, shape as shape_utils, name as name_utils
+
+PYMEL_AVAILABLE = True
+try:
+    from pymel.core.general import PyNode
+except ImportError:
+    PYMEL_AVAILABLE = False
 
 
 class ShowJointInfluence(object):
@@ -39,7 +48,7 @@ class ShowJointInfluence(object):
             self.joint = joint
             self.enable()
 
-    @decorators.undo_chunk
+    @decorators.undo
     def enable(self):
         """
         Enables show vertex skin influences of the wrapped joint
@@ -48,7 +57,7 @@ class ShowJointInfluence(object):
         self._cleanup()
         self._display_weighted_verts()
 
-    @decorators.undo_chunk
+    @decorators.undo
     def disable(self):
         """
         Internal function used to unshow the weighted vertices of the wrapped joint
@@ -283,14 +292,14 @@ class StoreSkinWeight(object):
             self._hilite_nodes = mesh_utils.get_meshes_from_nodes(
                 nodes=self._hilite_nodes, full_path=True, search_child_node=True)
             add_node = mesh_utils.get_meshes_from_nodes(
-                maya.cmds.ls(slong=True, long=True, tr=True), full_path=True, search_child_node=True)
+                maya.cmds.ls(sl=True, long=True, tr=True), full_path=True, search_child_node=True)
             if add_node:
                 self._hilite_nodes += add_node
             if add_nodes:
                 self._hilite_nodes += add_nodes
         else:
             self._hilite_nodes = maya.cmds.ls(
-                slong=True, long=True, tr=True) + maya.cmds.ls(hlong=True, long=True, tr=True)
+                sl=True, long=True, tr=True) + maya.cmds.ls(hlong=True, long=True, tr=True)
             self._hilite_nodes = mesh_utils.get_meshes_from_nodes(
                 nodes=self._hilite_nodes, full_path=True, search_child_node=True)
             if add_nodes:
@@ -369,14 +378,14 @@ class StoreSkinWeight(object):
         if not skin_cluster:
             return None, None
 
-        cluster_name = skin_cluster[0]
+        skin_name = skin_cluster[0]
         selection_list = api.SelectionList()
-        selection_list.create_by_name(cluster_name)
+        selection_list.create_by_name(skin_name)
 
         skin_node = selection_list.get_depend_node(0)
         skin_fn = api.SkinCluster(skin_node)
 
-        return skin_fn, cluster_name
+        return skin_fn, skin_name
 
     def get_skin_weight(self):
 
@@ -477,152 +486,6 @@ class StoreSkinWeight(object):
         """
 
         return [[weights[i + j * shape] for i in range(shape)] for j in range(int(len(weights) / shape))]
-
-
-def check_skin(skin_cluster):
-    """
-    Checks if a node is valid skin cluster and raise and exception if the node is not valid
-    :param skin_cluster: str, name of the node to be checked
-    :return: bool, True if the given node is a skin cluster node
-    """
-
-    if not is_skin_cluster(skin_cluster):
-        raise exceptions.SkinClusterException(skin_cluster)
-
-
-def is_skin_cluster(skin_cluster):
-    """
-    Checks if the given node is a valid skinCluster
-    :param skin_cluster:  str, name of the node to be checked
-    :return: bool, True if the given node is a skin cluster node
-    """
-
-    if not maya.cmds.objExists(skin_cluster):
-        maya.logger.error('SkinCluster "{}" does not exists!'.format(skin_cluster))
-        return False
-    if maya.cmds.objectType(skin_cluster) != 'skinCluster':
-        maya.logger.error('Object "{}" is not a valid skinCluster node!'.format(skin_cluster))
-        return False
-
-    return True
-
-
-def find_related_skin_cluster(geo):
-    """
-    Returns the skinCluster node attached to the specified geometry
-    :param geo: str, geometry
-    :return: variant, None || str
-    """
-
-    node_utils.check_node(node=geo)
-
-    shape_node = node_utils.get_shape(node=geo)
-    if not shape_node:
-        return None
-
-    skin_cluster = maya.mel.eval('findRelatedSkinCluster("{}")'.format(shape_node))
-    if not skin_cluster:
-        skin_cluster = maya.cmds.ls(maya.cmds.listHistory(shape_node), type='skinCluster')
-        if skin_cluster:
-            skin_cluster = skin_cluster[0]
-    if not skin_cluster:
-        return None
-
-    return skin_cluster
-
-
-@decorators.undo
-def average_vertex(selection, use_distance):
-    """
-    Generates an average weight from all selected vertices to apply to the last selected vertex
-    :param selection: list<Vertex>, list of vertices to average
-    :param use_distance:
-    :return:
-    """
-
-    total_vertices = len(selection)
-    if total_vertices < 2:
-        maya.logger.warning('Not enough vertices selected! Select a minimum of 2 vertices')
-        return
-
-    obj = selection[0]
-    if '.' in selection[0]:
-        obj = selection[0].split('.')[0]
-
-    is_edge_selection = False
-    if '.e[' in selection[0]:
-        is_edge_selection = True
-
-    skin_cluster_name = find_related_skin_cluster(obj)
-    maya.cmds.setAttr('{0}.envelope'.format(skin_cluster_name), 0)
-    succeeded = True
-
-    try:
-        maya.cmds.skinCluster(obj, edit=True, normalizeWeights=True)
-        if total_vertices == 2 or is_edge_selection:
-            base_list = [selection]
-            if is_edge_selection:
-                base_list = mesh_utils.edges_to_smooth(edges_list=selection)
-
-            percentage = 99.0 / len(base_list)
-        else:
-            last_selected = selection[-1]
-            point_list = [x for x in selection if x != last_selected]
-            mesh_name = last_selected.split('.')[0]
-
-            list_joint_influences = maya.cmds.skinCluster(mesh_name, query=True, weightedInfluence=True)
-            influence_size = len(list_joint_influences)
-
-            temp_vertex_joints = list()
-            temp_vertex_weights = list()
-            for pnt in point_list:
-                for jnt in range(influence_size):
-                    point_weights = maya.cmds.skinPercent(
-                        skin_cluster_name, pnt, transform=list_joint_influences[jnt], query=True, value=True)
-                    if point_weights < 0.000001:
-                        continue
-                    temp_vertex_joints.append(list_joint_influences[jnt])
-                    temp_vertex_weights.append(point_weights)
-
-            total_values = 0.0
-            average_values = list()
-            clean_list = list()
-            for i in temp_vertex_joints:
-                if i not in clean_list:
-                    clean_list.append(i)
-
-            for i in range(len(clean_list)):
-                working_value = 0.0
-                for j in range(len(temp_vertex_joints)):
-                    if not temp_vertex_joints[j] == clean_list[i]:
-                        continue
-                    working_value += temp_vertex_weights[j]
-                num_points = len(point_list)
-                average_values.append(working_value / num_points)
-                total_values += average_values[i]
-
-            summary = 0
-            for value in range(len(average_values)):
-                temp_value = average_values[value] / total_values
-                average_values[value] = temp_value
-                summary += average_values[value]
-
-            cmd = cStringIO.StringIO()
-            cmd.write('maya.cmds.skinPercent("%s","%s", transformValue=[' % (skin_cluster_name, last_selected))
-
-            for count, skin_joint in enumerate(clean_list):
-                cmd.write('("%s", %s)' % (skin_joint, average_values[count]))
-                if not count == len(clean_list) - 1:
-                    cmd.write(', ')
-            cmd.write('])')
-            eval(cmd.getvalue())
-    except Exception as e:
-        maya.logger.warning(str(e))
-        succeeded = False
-    finally:
-        maya.cmds.setAttr('{0}.envelope'.format(skin_cluster_name), 1)
-
-    return succeeded
 
 
 class SkinJointObject(object):
@@ -931,9 +794,10 @@ class SkinJointCurve(SkinJointSurface, object):
             cvs_count = len(self._cvs[2:self._cvs_count])
             start_index = 2
 
-        for i in range(start_index, cvs_count):
-            joint = self._create_joint('{}.cv[{}]'.format(self._geometry, i))
-            self._joints.append(joint)
+        if not self._create_mid_joint:
+            for i in range(start_index, cvs_count):
+                joint = self._create_joint('{}.cv[{}]'.format(self._geometry, i))
+                self._joints.append(joint)
 
         if self._orient_start_to:
             maya.cmds.delete(maya.cmds.orientConstraint(self._orient_start_to, self._joints[0]))
@@ -969,18 +833,1285 @@ class SkinJointCurve(SkinJointSurface, object):
         return last_joint
 
 
-def apply_smooth_bind(geo=None, show_options=True):
+def check_skin(skin_cluster):
+    """
+    Checks if a node is valid skin cluster and raise and exception if the node is not valid
+    :param skin_cluster: str, name of the node to be checked
+    :return: bool, True if the given node is a skin cluster node
+    """
+
+    if not is_skin_cluster(skin_cluster):
+        raise exceptions.SkinClusterException(skin_cluster)
+
+
+def is_skin_cluster(skin_cluster):
+    """
+    Checks if the given node is a valid skinCluster
+    :param skin_cluster:  str, name of the node to be checked
+    :return: bool, True if the given node is a skin cluster node
+    """
+
+    if not maya.cmds.objExists(skin_cluster):
+        maya.logger.error('SkinCluster "{}" does not exists!'.format(skin_cluster))
+        return False
+    if maya.cmds.objectType(skin_cluster) != 'skinCluster':
+        maya.logger.error('Object "{}" is not a valid skinCluster node!'.format(skin_cluster))
+        return False
+
+    return True
+
+
+def find_related_skin_cluster(geo):
+    """
+    Returns the skinCluster node attached to the specified geometry
+    :param geo: str, geometry
+    :return: variant, None || str
+    """
+
+    node_utils.check_node(node=geo)
+
+    shape_node = node_utils.get_shape(node=geo)
+    if not shape_node:
+        return None
+
+    skin_cluster = maya.mel.eval('findRelatedSkinCluster("{}")'.format(shape_node))
+    if not skin_cluster:
+        skin_cluster = maya.cmds.ls(maya.cmds.listHistory(shape_node), type='skinCluster')
+        if skin_cluster:
+            skin_cluster = skin_cluster[0]
+    if not skin_cluster:
+        return None
+
+    return skin_cluster
+
+
+def compare_influences_in_meshes_skin_clusters(skinned_meshes, query=False):
+    """
+    Returns whether or not given skin clusters have the same influencing joints
+    :param skinned_meshes: list(str), list of skinned meshes we want to compare
+    :param query: bool
+    :return: bool
+    """
+
+    compares_list = list()
+
+    for skinned_mesh in skinned_meshes:
+        skin_cluster_name = find_related_skin_cluster(skinned_mesh)
+        if not skin_cluster_name:
+            continue
+        joints = maya.cmds.skinCluster(skin_cluster_name, query=True, inf=True)
+        compares_list.append([skinned_mesh, joints])
+
+    if len(compares_list) < 2:
+        maya.logger.error('At least 2 skinned geometries are needed to compare skin clusters.')
+        return False
+
+    total_compares = len(compares_list)
+    missing_joints_list = list()
+
+    for i in range(total_compares):
+        for compare_list in compares_list:
+            if compare_list == compares_list[i]:
+                continue
+            missed_joints = list()
+            for match in compare_list[1]:
+                if not any(match in value for value in compares_list[i][1]):
+                    missed_joints.append(match)
+            missing_joints_list.append([compares_list[i][0], missed_joints])
+
+    if query:
+        joints = list()
+        for missing_list in missing_joints_list:
+            for joint in missing_list[1]:
+                joints.append(joint)
+        if not joints:
+            return None
+        return True
+    else:
+        for missing_joints in missing_joints_list:
+            skin_cluster_name = find_related_skin_cluster(missing_joints[0])
+            if not skin_cluster_name:
+                continue
+            for joint in missing_joints[1]:
+                try:
+                    maya.cmds.skinCluster(
+                        skin_cluster_name, query=True, lockWeights=False, weight=0.0, addInfluence=joint)
+                except Exception:
+                    pass
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def restore_to_bind_pose(skinned_mesh=None):
+    """
+    Reset the given skinned meshes back to bind pose without the need of the bind pose node
+    It uses the prebind matrix of the joints to calculate the bind pose
+    :param skinned_mesh: list(str), list of skinned meshes to reset to bind pose
+    :return: bool
+    """
+
+    skinned_meshes = skinned_mesh or tp.Dcc.selected_nodes_of_type('transform')
+    skinned_meshes = python.force_list(skinned_meshes)
+    if not skinned_meshes:
+        skinned_meshes = list()
+        meshes = tp.Dcc.list_nodes(node_type='mesh')
+        for mesh in meshes:
+            skinned_meshes.append(maya.cmds.listRelatives(mesh, parent=True)[0])
+    if not skinned_meshes:
+        return False
+
+    for skin_mesh in skinned_meshes:
+        if maya.cmds.objectType(skin_mesh) == 'joint':
+            continue
+        mesh_shapes = maya.cmds.listRelatives(shapes=True)
+        if not mesh_shapes:
+            continue
+        if maya.cmds.objectType(mesh_shapes[0]) != 'mesh':
+            continue
+
+        skin_cluster_name = find_related_skin_cluster(skin_mesh)
+        if not skin_cluster_name:
+            continue
+
+        influence_joints = maya.cmds.skinCluster(skin_cluster_name, query=True, influence=True)
+        if not influence_joints:
+            continue
+        bind_pose_node = maya.cmds.dagPose(influence_joints[0], query=True, bindPose=True)
+        if bind_pose_node:
+            maya.cmds.select(skin_mesh)
+            maya.mel.eval('gotoBindPose;')
+        else:
+            for i, joint in enumerate(influence_joints):
+                prebind_matrix = maya.cmds.getAttr('{}.bindPreMatrix[{}]'.format(skin_cluster_name, i))
+                api_matrix = api.Matrix(prebind_matrix).inverse()
+                matrix_list = api_matrix.to_list()
+                maya.cmds.xform(joint, ws=True, m=matrix_list)
+
+    return True
+
+
+@decorators.undo
+def remove_all_bind_poses_in_scene():
+    """
+    Deletes all bind poses nodes from current scene
+    :return: bool
+    """
+
+    dag_poses = maya.cmds.ls(type='dagPose') or list()
+    for dag_pose in dag_poses:
+        if not maya.cmds.getAttr('{}.bindPose'.format(dag_pose)):
+            continue
+        maya.cmds.delete(dag_pose)
+
+    return True
+
+
+@decorators.undo
+def average_vertices_weights(selection, use_distance):
+    """
+    Generates an average weight from all selected vertices to apply to the last selected vertex
+    :param selection: list<Vertex>, list of vertices to average
+    :param use_distance:
+    :return:
+    """
+
+    total_vertices = len(selection)
+    if total_vertices < 2:
+        maya.logger.warning('Not enough vertices selected! Select a minimum of 2 vertices')
+        return
+
+    obj = selection[0]
+    if '.' in selection[0]:
+        obj = selection[0].split('.')[0]
+
+    is_edge_selection = False
+    if '.e[' in selection[0]:
+        is_edge_selection = True
+
+    skin_cluster_name = find_related_skin_cluster(obj)
+    maya.cmds.setAttr('{0}.envelope'.format(skin_cluster_name), 0)
+    succeeded = True
+
+    # TODO: Support for multiple geometry types
+    poly = True
+    added = 0.0
+
+    try:
+        maya.cmds.skinCluster(obj, edit=True, normalizeWeights=True)
+        if total_vertices == 2 or is_edge_selection:
+            base_list = [selection]
+            if is_edge_selection:
+                base_list = mesh_utils.edges_to_smooth(edges_list=selection)
+
+            percentage = 99.0 / len(base_list)
+            for i, vert_list in enumerate(base_list):
+                start = vert_list[0]
+                end = vert_list[-1]
+                order = mesh_utils.find_shortest_vertices_path_between_vertices(vert_list)
+                if order:
+                    order = order[:-1]      # we are not interested in the last vertex
+                    amount = len(order) + 1
+                    total_distance = api_mathlib.distance_between_nodes(order[-1], end)
+                    list_bone_influences = maya.cmds.skinCluster(obj, query=True, inf=True)
+                    weights_start = maya.cmds.skinPercent(skin_cluster_name, start, query=True, v=True)
+                    weights_end = maya.cmds.skinPercent(skin_cluster_name, end, query=True, v=True)
+
+                    lengths = list()
+                    if use_distance:
+                        for j, vertex in enumerate(order):
+                            if j == 0:
+                                length = api_mathlib.distance_between_nodes(start, vertex)
+                            else:
+                                length = api_mathlib.distance_between_nodes(order[j - 1], vertex)
+                            if poly:
+                                total_distance += length
+                            lengths.append(length)
+
+            percentage = float(1.0) / (amount + added)
+            current_length = 0.0
+
+            for i, vertex in enumerate(order):
+                if use_distance:
+                    current_length += lengths[i]
+                    current_percentage = (current_length / total_distance)
+                else:
+                    current_percentage = i * percentage
+                    if poly:
+                        current_percentage = (i + 1) * percentage
+
+                new_weight_list = list()
+                for j, weight in enumerate(weights_start):
+                    value1 = weights_end[j] * current_percentage
+                    value2 = weights_end[j] * (1 - current_percentage)
+                    new_weight_list.append((list_bone_influences[j], value1 + value2))
+
+                maya.cmds.skinPercent(skin_cluster_name, vertex, transformValue=new_weight_list)
+
+        else:
+            last_selected = selection[-1]
+            point_list = [x for x in selection if x != last_selected]
+            mesh_name = last_selected.split('.')[0]
+
+            list_joint_influences = maya.cmds.skinCluster(mesh_name, query=True, weightedInfluence=True)
+            influence_size = len(list_joint_influences)
+
+            temp_vertex_joints = list()
+            temp_vertex_weights = list()
+            for pnt in point_list:
+                for jnt in range(influence_size):
+                    point_weights = maya.cmds.skinPercent(
+                        skin_cluster_name, pnt, transform=list_joint_influences[jnt], query=True, value=True)
+                    if point_weights < 0.000001:
+                        continue
+                    temp_vertex_joints.append(list_joint_influences[jnt])
+                    temp_vertex_weights.append(point_weights)
+
+            total_values = 0.0
+            average_values = list()
+            clean_list = list()
+            for i in temp_vertex_joints:
+                if i not in clean_list:
+                    clean_list.append(i)
+
+            for i in range(len(clean_list)):
+                working_value = 0.0
+                for j in range(len(temp_vertex_joints)):
+                    if not temp_vertex_joints[j] == clean_list[i]:
+                        continue
+                    working_value += temp_vertex_weights[j]
+                num_points = len(point_list)
+                average_values.append(working_value / num_points)
+                total_values += average_values[i]
+
+            summary = 0
+            for value in range(len(average_values)):
+                temp_value = average_values[value] / total_values
+                average_values[value] = temp_value
+                summary += average_values[value]
+
+            cmd = cStringIO.StringIO()
+            cmd.write('maya.cmds.skinPercent("%s","%s", transformValue=[' % (skin_cluster_name, last_selected))
+
+            for count, skin_joint in enumerate(clean_list):
+                cmd.write('("%s", %s)' % (skin_joint, average_values[count]))
+                if not count == len(clean_list) - 1:
+                    cmd.write(', ')
+            cmd.write('])')
+            eval(cmd.getvalue())
+    except Exception:
+        maya.logger.warning(str(traceback.format_exc()))
+        succeeded = False
+    finally:
+        maya.cmds.setAttr('{0}.envelope'.format(skin_cluster_name), 1)
+
+    return succeeded
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def apply_smooth_bind(geo=None, show_options=False):
     """
     Applies smooth bind to given nodes
     :param geo: str or list(str) or None
+    :param show_options: bool
+    :return: bool
     """
 
+    geo = geo or maya.cmds.ls(sl=True)
     if not geo:
-        geo = maya.cmds.ls(slong=True)
-    if not geo:
-        return
+        return False
+    geo = python.force_list(geo)
 
     if show_options:
         maya.cmds.SmoothBindSkinOptions()
     else:
-        print('Applying smooth skin')
+        raise NotImplementedError('Apply Smooth Bind Skin without options is not implemented yet!')
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def apply_rigid_skin(geo=None, show_options=False):
+    """
+    Applies smooth bind to given nodes
+    :param geo: str or list(str) or None
+    :param show_options: bool
+    :return: bool
+    """
+
+    geo = geo or maya.cmds.ls(sl=True)
+    if not geo:
+        return False
+    geo = python.force_list(geo)
+
+    if show_options:
+        maya.cmds.RigidBindSkinOptions()
+    else:
+        raise NotImplementedError('Apply Rigid Bind Skin without options is not implemented yet!')
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def detach_bind_skin(geo=None, show_options=False):
+    """
+    Detaches bind skin of the given nodes
+    :param geo: str or list(str) or None
+    :param show_options: bool
+    :return: bool
+    """
+
+    geo = geo or maya.cmds.ls(sl=True)
+    geo = python.force_list(geo)
+
+    if show_options:
+        maya.cmds.DetachSkinOptions()
+    else:
+        if not geo:
+            return False
+        maya.cmds.DetachSkin()
+
+    return True
+
+
+def open_pain_skin_weights_tool(show_options=True):
+    """
+    Opens Maya Paint Skin Weights Tool
+    :param show_options: bool
+    :return: bool
+    """
+
+    if show_options:
+        maya.cmds.ArtPaintSkinWeightsToolOptions()
+    else:
+        maya.cmds.ArtPaintSkinWeightsTool()
+
+    return True
+
+
+def reset_skinned_joints(skinned_joints, skin_cluster_name=None):
+    """
+    Reset skin deformation for given joints by recomputing all prebind matrices in current pose
+    Similar to Move Skinned Joints tool but works even with constrained joints.
+    Call this function after moving/rotating a skinned joint to reset the mesh deformation to its non-deformed state
+    while maintaining the transformed joint in its new position/rotation
+    http://leftbulb.blogspot.com/2012/09/resetting-skin-deformation-for-joint.html
+    :param skinned_joints: list(str), list of skinned joints to reset
+    :param skin_cluster_name: str, name of the skin cluster joint is skinned to
+    """
+
+    for joint in skinned_joints:
+        skin_cluster_plugs = maya.cmds.listConnections(
+            '{}.worldMatrix[0]'.format(joint), type='skinCluster', plugs=True)
+        if skin_cluster_name and skin_cluster_plugs:
+            for skin_cluster_plug in skin_cluster_plugs:
+                if skin_cluster_name in skin_cluster_plug:
+                    skin_cluster_plugs = [skin_cluster_plug]
+
+        if skin_cluster_plugs:
+            for skin_cluster_plug in skin_cluster_plugs:
+                index = skin_cluster_plug[skin_cluster_plug.index('[') + 1:-1]
+                skin_cluster = skin_cluster_plug[:skin_cluster_plug.index('.')]
+                inverse_matrix = maya.cmds.getAttr('{}.worldInverseMatrix'.format(joint))
+                maya.cmds.setAttr('{}.bindPreMatrix[{}]'.format(skin_cluster, index), type='matrix', *inverse_matrix)
+                if tp.Dcc.get_version() >= 2016:
+                    maya.cmds.skinCluster(skin_cluster, edit=True, recacheBindMatrices=True)
+                    maya.cmds.dgdirty(skin_cluster)
+        else:
+            maya.logger.warning(
+                'Impossible to reset skinned joint "{}" bind matrix because no skin cluster found!'.format(joint))
+            continue
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def move_skin_weights(source_joint=None, target_joint=None, mesh=None):
+    """
+    Transfers skin weights from source joint to target joint
+    :param source_joint: str
+    :param target_joint: str
+    :param mesh: str
+    """
+
+    selection = tp.Dcc.selected_nodes()
+    source_joint = source_joint or (selection[0] if python.index_exists_in_list(selection, 0) else None)
+    target_joint = target_joint or (selection[1] if python.index_exists_in_list(selection, 1) else None)
+    mesh = mesh or (selection[2] if python.index_exists_in_list(selection, 2) else None)
+
+    skin_cluster_name = find_related_skin_cluster(mesh)
+    if not skin_cluster_name:
+        maya.logger.warning('Given mesh "{}" has no skin cluster attached to it!'.format(mesh))
+        return False
+
+    source_joint_short = tp.Dcc.node_short_name(source_joint)
+    target_joint_short = tp.Dcc.node_short_name(target_joint)
+
+    if source_joint_short == target_joint_short:
+        return True
+
+    # Make sure that given joints are influences of the skin cluster
+    influence_joints = maya.cmds.skinCluster(skin_cluster_name, query=True, inf=True)
+    if source_joint_short not in influence_joints:
+        maya.cmds.skinCluster(skin_cluster_name, edit=True, lockWeights=False, weight=0.0, addInfluence=source_joint)
+    if target_joint_short not in influence_joints:
+        maya.cmds.skinCluster(skin_cluster_name, edit=True, lockWeights=False, weight=0.0, addInfluence=target_joint)
+    total_influences = len(influence_joints)
+
+    mesh_shape_name = shape_utils.get_shapes(mesh)[0]
+    out_weights_array = api_skin.get_skin_weights(skin_cluster_name, mesh_shape_name)
+    total_weights = len(out_weights_array)
+
+    source_joint_index = 0
+    target_joint_index = 0
+    for i in range(total_influences):
+        if influence_joints[i] == source_joint_short:
+            source_joint_index = i
+        if influence_joints[i] == target_joint_short:
+            target_joint_index = i
+
+    amount_to_loop = int(total_weights / total_influences)
+
+    for i in range(amount_to_loop):
+        new_value = out_weights_array[(i * total_influences) + target_joint_index] + \
+                    out_weights_array[(i * total_influences) + source_joint_index]
+        out_weights_array[(i * total_influences) + target_joint_index] = new_value
+        out_weights_array[(i * total_influences) + source_joint_index] = 0.0
+
+    api_skin.set_skin_weights(skin_cluster_name, mesh_shape_name, out_weights_array)
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def swap_skin_weights(source_joint=None, target_joint=None, mesh=None):
+    """
+    Swaps skin weights from source joint to target joint by reconnecting matrices in given mesh skin cluster node
+    NOTE: Due to matrix reconnection, this swapping is only applicable in bind pose (but its fast)
+    :param source_joint: str
+    :param target_joint: str
+    :param mesh: str
+    """
+
+    # TODO: Implement another function (a slower one) that allow us to the the swapping in non bind pose
+
+    selection = tp.Dcc.selected_nodes()
+    source_joint = source_joint or (selection[0] if python.index_exists_in_list(selection, 0) else None)
+    target_joint = target_joint or (selection[1] if python.index_exists_in_list(selection, 1) else None)
+    mesh = mesh or (selection[2] if python.index_exists_in_list(selection, 2) else None)
+
+    skin_cluster_name = find_related_skin_cluster(mesh)
+    if not skin_cluster_name:
+        maya.logger.warning('Given mesh "{}" has no skin cluster attached to it!'.format(mesh))
+        return False
+
+    source_connections = maya.cmds.listConnections(
+        '{}.worldMatrix'.format(source_joint), source=False, destination=True,
+        connections=True, plugs=True, type='skinCluster')
+    target_connections = maya.cmds.listConnections(
+        '{}.worldMatrix'.format(target_joint), source=False, destination=True,
+        connections=True, plugs=True, type='skinCluster')
+
+    source_same_skin_cluster = False
+    target_same_skin_cluster = False
+    source_current_connection = ''
+    target_current_connection = ''
+
+    for source_connection in source_connections:
+        if source_connection.split('.')[0] == skin_cluster_name:
+            source_same_skin_cluster = True
+            source_current_connection = source_connection
+    for target_connection in target_connections:
+        if target_connection.split('.')[0] == skin_cluster_name:
+            target_same_skin_cluster = True
+            target_current_connection = target_connection
+
+    if not source_same_skin_cluster:
+        maya.logger.warning(
+            'Joint "{}" is not part of the given skin cluster node "{}"'.format(source_joint, skin_cluster_name))
+        return False
+    if not target_same_skin_cluster:
+        maya.logger.warning(
+            'Joint "{}" is not part of the given skin cluster node "{}"'.format(target_joint, skin_cluster_name))
+        return False
+
+    try:
+        source_orig_connection = source_current_connection.split('matrix')[-1]
+        target_orig_connection = target_current_connection.split('matrix')[-1]
+
+        maya.cmds.disconnectAttr('{}.worldMatrix'.format(source_joint), source_current_connection)
+        maya.cmds.disconnectAttr('{}.worldMatrix'.format(target_joint), target_current_connection)
+        maya.cmds.disconnectAttr(
+            '{}.lockInfluenceWeights'.format(source_joint),
+            '{}.lockWeights{}'.format(skin_cluster_name, source_orig_connection))
+        maya.cmds.disconnectAttr(
+            '{}.lockInfluenceWeights'.format(target_joint),
+            '{}.lockWeights{}'.format(skin_cluster_name, target_orig_connection))
+
+        maya.cmds.connectAttr('{}.worldMatrix'.format(source_joint), target_current_connection, force=True)
+        maya.cmds.connectAttr('{}.worldMatrix'.format(target_joint), source_current_connection, force=True)
+        maya.cmds.connectAttr(
+            '{}.lockInfluenceWeights'.format(source_joint),
+            '{}.lockWeights{}'.format(skin_cluster_name, target_orig_connection), force=True)
+        maya.cmds.connectAttr(
+            '{}.lockInfluenceWeights'.format(target_joint),
+            '{}.lockWeights{}'.format(skin_cluster_name, source_orig_connection), force=True)
+
+        reset_skinned_joints([source_joint, target_joint], skin_cluster_name=skin_cluster_name)
+
+    except Exception as exc:
+        maya.logger.exception('Error while swapping joints: "{}"'.format(exc))
+        return False
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def mirror_skin_weights(mesh=None, show_options=False, **kwargs):
+    """
+    Mirrors skin weights
+    :param mesh: s
+    :param show_options: bool
+    """
+
+    transforms = mesh or tp.Dcc.selected_nodes_of_type('transform')
+    transforms = python.force_list(transforms)
+    if not transforms:
+        return False
+
+    if kwargs.pop('auto_assign_labels', False):
+        jnt_utils.auto_assign_labels_to_mesh_influences(
+            transforms, input_left=kwargs.pop('left_side_label', None),
+            input_right=kwargs.pop('right_side_label', None), check_labels=True)
+
+    if show_options:
+        maya.cmds.optionVar(stringValue=( "mirrorSkinAxis", "YZ"))
+        maya.cmds.optionVar(intValue=("mirrorSkinWeightsSurfaceAssociationOption", 3))
+        maya.cmds.optionVar(intValue=("mirrorSkinWeightsInfluenceAssociationOption1", 3))
+        maya.cmds.optionVar(intValue=("mirrorSkinWeightsInfluenceAssociationOption2", 2))
+        maya.cmds.optionVar(intValue=("mirrorSkinWeightsInfluenceAssociationOption3", 1))
+        maya.cmds.optionVar(intValue=("mirrorSkinNormalize", 1))
+        maya.cmds.MirrorSkinWeightsOptions()
+    else:
+        raise NotImplementedError('Mirror Skin Weights with no options not implemented yet!')
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def copy_skin_weights(
+        source_mesh=None, target_mesh=None, show_options=False, **kwargs):
+    """
+    Copy skin weights
+    :param source_mesh: str, name of the mesh we want to copy skin weights from
+    :param target_mesh: str, name of the mesh we want to paste skin weights to
+    :param show_options: bool
+    """
+
+    selection = tp.Dcc.selected_nodes_of_type('transform')
+    source_transform = source_mesh or (selection[0] if python.index_exists_in_list(selection, 1) else None)
+    target_transform = target_mesh or (selection[1] if python.index_exists_in_list(selection, 1) else None)
+    if not source_transform or not target_transform:
+        maya.logger.warning('Select source mesh and target mesh before executing Copy Skin Weights')
+        return False
+
+    if kwargs.pop('auto_assign_labels', False):
+        jnt_utils.auto_assign_labels_to_mesh_influences(
+            [source_transform, target_transform], input_left=kwargs.pop('left_side_label', None),
+            input_right=kwargs.pop('right_side_label', None))
+
+    if show_options:
+        maya.cmds.optionVar(intValue=("copySkinWeightsSurfaceAssociationOption", 3))
+        maya.cmds.optionVar(intValue=("copySkinWeightsInfluenceAssociationOption1", 4))
+        maya.cmds.optionVar(intValue=("copySkinWeightsInfluenceAssociationOption2", 4))
+        maya.cmds.optionVar(intValue=("copySkinWeightsInfluenceAssociationOption3", 6))
+        maya.cmds.optionVar(intValue=("copySkinWeightsNormalize", 1))
+        maya.cmds.CopySkinWeightsOptions()
+    else:
+        raise NotImplementedError('Copy Skin Weights with no options not implemented yet!')
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def transfer_skinning(source_mesh, target_meshes, in_place=True, component_association=True, uv_space=False):
+    """
+    Transfers skinning from one skinned mesh to other meshes using native Maya copySkinWweights command
+    :param source_mesh: str, mesh to copy skinning information from
+    :param target_meshes: list(str), list of messes that will gather weight skin cluster information from source mesh
+    :param in_place: bool, If True, will make sure to cleanup the mesh and apply the skinning; Ohterwise it assumes
+        that skinning is already applied to target meshes and just copies the the weights
+    :param component_association: bool, Whether closesCompnent association is used or closestPoint
+    :param uv_space: bool, Whether UV space is used to transfer the skinning data
+    :return: bool
+    """
+
+    source_skin_cluster = find_related_skin_cluster(source_mesh)
+    if not source_skin_cluster:
+        return False
+
+    surface_association = 'closestComponent' if component_association else 'closestPoint'
+
+    for target_mesh in target_meshes:
+        if in_place:
+            maya.cmds.delete(target_mesh, ch=True)
+        else:
+            target_skin_cluster = find_related_skin_cluster(target_mesh)
+            if not target_skin_cluster:
+                continue
+            maya.cmds.skinCluster(target_skin_cluster, edit=True, unbind=True)
+
+        join_influences = maya.cmds.skinCluster(source_skin_cluster, query=True, influence=True)
+        max_influences = maya.cmds.skinCluster(source_skin_cluster, query=True, maximumInfluences=True)
+        remove_all_bind_poses_in_scene()
+        new_skin_cluster = maya.cmds.skinCluster(join_influences, target_mesh, maximumInfluences=max_influences)[0]
+        if uv_space:
+            maya.cmds.copySkinWeights(
+                sourceSkin=source_skin_cluster, destinationSkin=new_skin_cluster, noMirror=True,
+                surfaceAssociation=surface_association, uv=['map1', 'map1'],
+                influenceAssociation=['label', 'oneToOne', 'name'], normalize=True)
+        else:
+            maya.cmds.copySkinWeights(
+                sourceSkin=source_skin_cluster, destinationSkin=new_skin_cluster, noMirror=True,
+                surfaceAssociation=surface_association, influenceAssociation=['label', 'oneToOne', 'name'],
+                normalize=True)
+
+        return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def prune_skin_weights(geo=None, show_options=False):
+    geo = geo or maya.cmds.ls(sl=True)
+    geo = python.force_list(geo)
+
+    if show_options:
+        maya.cmds.PruneSmallWeightsOptions()
+    else:
+        if not geo:
+            return False
+        raise NotImplementedError('Prune Weights with no options not implemented yet!')
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def transfer_uvs_to_skinned_geometry(source_mesh=None, target_mesh=None, use_intermediate_shape=False, **kwargs):
+    """
+    Transfer UVs from one skinned mesh to another one
+    :param source_mesh: str, name of the mesh we want to copy skin weights from
+    :param target_mesh: str, name of the mesh we want to paste skin weights to
+    :param use_intermediate_shape: bool, Whether to use intermediate shape instead of final shapes. In some scenarios,
+        this can give cleaner transfers and no deformation with bind movement
+    """
+
+    selection = tp.Dcc.selected_nodes_of_type('transform')
+    source_transform = source_mesh or (selection[0] if python.index_exists_in_list(selection, 0) else None)
+    target_transform = target_mesh or (selection[1] if python.index_exists_in_list(selection, 1) else None)
+    if not source_transform or not target_transform:
+        maya.logger.warning('Select source mesh and target mesh before executing Copy Skin Weights')
+        return False
+
+    if kwargs.pop('auto_assign_labels', False):
+        jnt_utils.auto_assign_labels_to_mesh_influences(
+            [source_mesh, target_mesh], input_left=kwargs.pop('left_side_label', None),
+            input_right=kwargs.pop('right_side_label', None))
+
+    if tp.Dcc.node_type(source_transform) == 'transform':
+        source_shapes = tp.Dcc.list_shapes_of_type(source_transform, shape_type='mesh', intermediate_shapes=False)
+    else:
+        source_shapes = maya.cmds.listRelatives(source_mesh, ad=True, type='mesh')
+    if not source_shapes:
+        maya.logger.error(
+            'Impossible to transfer skin UVs from "{}" to "{}" because source object has no shapes!'.format(
+                source_transform, target_transform))
+        return False
+    source_shape = source_shapes[0]
+
+    if tp.Dcc.node_type(target_transform) == 'transform':
+        target_shapes = tp.Dcc.list_shapes_of_type(
+            target_transform, shape_type='mesh', intermediate_shapes=use_intermediate_shape)
+    else:
+        target_shapes = maya.cmds.listRelatives(target_mesh, ad=True, type='mesh')
+    if not target_shapes:
+        maya.logger.error(
+            'Impossible to transfer skin UVs from "{}" to "{}" because target object has no shapes!'.format(
+                source_transform, target_transform))
+        return False
+
+    if use_intermediate_shape:
+        target_mesh = None
+        target_mesh_orig = None
+        for target_shape in target_shapes:
+            if maya.cmds.getAttr('{}.intermediateObject'.format(target_shape)) == 0:
+                continue
+            target_mesh = target_shape
+            target_mesh_orig = target_shape
+        if not target_mesh_orig:
+            maya.logger.error(
+                'Impossible to transfer skin UVs from "{}" to "{}" because no intermediate shape '
+                'found in target shape!'.format(source_transform, target_transform))
+            return False
+
+        maya.cmds.setAttr('{}.intermediateObject'.format(target_mesh), 0)
+        maya.cmds.transferAttributes(
+            source_shape, target_mesh_orig, transferPositions=False, transferNormals=False, transferUVs=2,
+            transferColors=2, sampleSpace=4, sourceUvSpace='map1', targetUvSpace='map1', searchMethod=3, flipUVs=False,
+            colorBorders=True)
+        maya.cmds.setAttr('{}.intermediateObject'.format(target_mesh), 1)
+        maya.cmds.delete(target_mesh_orig, ch=True)
+    else:
+        maya.cmds.transferAttributes(
+            source_shape, target_shapes[0], transferPositions=False, transferNormals=False, transferUVs=2,
+            transferColors=2, sampleSpace=4, sourceUvSpace='map1', targetUvSpace='map1', searchMethod=3, flipUVs=False,
+            colorBorders=True)
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def freeze_skinned_mesh(skinned_mesh, **kwargs):
+    """
+    Freezes the transformations and deletes the history of the given skinned meshes
+    :param skinned_mesh: str or list(str)
+    :return: bool
+    """
+
+    meshes = skinned_mesh or tp.Dcc.selected_nodes_of_type('transform')
+    meshes = python.force_list(meshes)
+    if not meshes:
+        return False
+
+    if kwargs.pop('auto_assign_labels', False):
+        jnt_utils.auto_assign_labels_to_mesh_influences(
+            meshes, input_left=kwargs.pop('left_side_label', None),
+            input_right=kwargs.pop('right_side_label', None), check_labels=True)
+
+    percentage = 100.0 / len(meshes)
+    progress_value = 0.0
+
+    try:
+        for i, mesh in enumerate(meshes):
+            skin_cluster_name = find_related_skin_cluster(mesh)
+            if not skin_cluster_name:
+                continue
+            attached_joints = maya.cmds.skinCluster(skin_cluster_name, query=True, inf=True)
+            mesh_shape_name = maya.cmds.listRelatives(mesh, shapes=True)[0]
+            out_influences_array = api_skin.get_skin_weights(skin_cluster_name, mesh_shape_name)
+            maya.cmds.skinCluster(mesh_shape_name, edit=True, unbind=True)
+            maya.cmds.delete(mesh, ch=True)
+            maya.cmds.makeIdentity(mesh, apply=True)
+            new_skin_cluster_name = maya.cmds.skinCluster(
+                attached_joints, mesh, toSelectedBones=True, bindMethod=0, normalizeWeights=True)[0]
+            api_skin.set_skin_weights(new_skin_cluster_name, mesh_shape_name, out_influences_array)
+
+            progress_value += (percentage * (i + 1))
+
+        tp.Dcc.select_node(meshes)
+
+    except Exception:
+        maya.logger.error('Error while freezing skinned mesh "{}" : {}'.format(mesh, traceback.format_exc()))
+        return False
+
+    return True
+
+
+def get_influencing_joints(mesh_node):
+    """
+    Returns all the joints that influence the mesh
+    :param mesh_node: str, mesh to retrieve influenced joints of
+    :return: list(str)
+    """
+
+    skin_cluster_name = find_related_skin_cluster(mesh_node)
+    if not skin_cluster_name:
+        return list()
+
+    influencing_joints = maya.cmds.skinCluster(skin_cluster_name, query=True, inf=True)
+
+    return influencing_joints
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def select_influencing_joints(mesh_node=None):
+    """
+    Selects all the joints that are influencing the given mesh
+    :param mesh_node: str, mesh to retrieve influenced joints of
+    """
+
+    if not mesh_node:
+        selected_transforms = tp.Dcc.selected_nodes_of_type(node_type='transform')
+        mesh_node = selected_transforms[0] if selected_transforms else None
+    if not mesh_node:
+        return False
+
+    influencing_joints = get_influencing_joints(mesh_node)
+    if not influencing_joints:
+        return False
+
+    maya.cmds.select(influencing_joints, replace=True)
+
+    return True
+
+
+def get_influence_vertices(joint_nodes, mesh_name):
+    """
+    Returns the vertices of the given mesh that are skinned to the given influence of the mesh skin cluster
+    :param joint_nodes: str or list(str), name of the joint we want o retrieve influencing vertices of
+    :param mesh_name: str, name of the mesh that has the skin cluster attached
+    :return: list(str)
+    """
+
+    selected_transforms = tp.Dcc.selected_nodes_of_type('transform')
+    selected_joints = tp.Dcc.selected_nodes_of_type('joint')
+    joint_nodes = joint_nodes or selected_joints
+    if not mesh_name:
+        mesh_names = [xform for xform in selected_transforms if xform not in selected_joints]
+        mesh_name = mesh_names[0] if mesh_names else None
+    if not joint_nodes or not mesh_name:
+        return False
+    joint_nodes = python.force_list(joint_nodes)
+    joint_nodes_short = [tp.Dcc.node_short_name(joint_node) for joint_node in joint_nodes]
+
+    skin_cluster_name = find_related_skin_cluster(mesh_name)
+    if not skin_cluster_name:
+        maya.logger.warning('Given mesh "{}" has no skin cluster attached to it!'.format(mesh_name))
+        return False
+
+    selection = list()
+    percentage = 100.0 / len(joint_nodes)
+    progress_value = 0.0
+
+    for i, joint in enumerate(joint_nodes):
+        if PYMEL_AVAILABLE:
+            joints_attached = maya.cmds.skinCluster(skin_cluster_name, query=True, inf=True)
+            if joint_nodes_short[i] not in joints_attached:
+                continue
+            skin_node = PyNode(skin_cluster_name)
+            vertices_list, values = skin_node.getPointsAffectedByInfluence(joint)
+            found_vertices = vertices_list.getSelectionStrings()
+            if len(found_vertices) == 0:
+                continue
+            selected_vertices = mesh_utils.convert_to_vertices(found_vertices)
+        else:
+            maya.cmds.select(clear=True)
+            maya.cmds.skinCluster(mesh_name, edit=True, normalizeWeights=True)
+            maya.cmds.select(joint, deselect=True)
+            mesh_utils.fix_mesh_components_selection_visualization(mesh_name)
+            maya.cmds.select(clear=True)
+            maya.cmds.skinCluster(skin_cluster_name, edit=True, selectInfluenceVerts=True)
+            selected_vertices = maya.cmds.ls(sl=True, flatten=True)
+
+        if not selected_vertices:
+            continue
+
+        for selected_vertex in selected_vertices:
+            if '.' not in selected_vertex:
+                continue
+            selection.append(selected_vertex)
+
+        progress_value += (percentage * i)
+
+    mesh_utils.fix_mesh_components_selection_visualization(mesh_name)
+
+    return selection
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def select_influence_vertices(joint_nodes=None, mesh_name=None):
+    """
+    Selects the vertices of the given mesh that are skinned to the given influence of the mesh skin cluster
+    :param joint_nodes: str or list(str), name of the joint we want o retrieve influencing vertices of
+    :param mesh_name: str, name of the mesh that has the skin cluster attached
+    """
+
+    selected_influence_vertices = get_influence_vertices(joint_nodes=joint_nodes, mesh_name=mesh_name)
+    if not selected_influence_vertices:
+        return False
+
+    maya.cmds.select(selected_influence_vertices, replace=True)
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def unbind_influences_quick(skinned_objects=None, influences_to_unbind=None, delete=False):
+    """
+    Unbind given influences from given meshes and stores the unbind influences weights into other influences
+    The weights reassignation is handled by Maya
+    :param skinned_objects: list(str), meshes which joints need to be removed
+    :param influences_to_unbind: list(str), list of joints that need to be unbind
+    :param delete: bool, Whether or not to delete unbind influences after unbind process is completed
+    :return: bool
+    """
+
+    selected_transforms = tp.Dcc.selected_nodes_of_type('transform')
+    selected_joints = tp.Dcc.selected_nodes_of_type('joint')
+    influences_to_unbind = influences_to_unbind or selected_joints
+    if not skinned_objects:
+        skinned_objects = [xform for xform in selected_transforms if xform not in selected_joints]
+    if not skinned_objects or not influences_to_unbind:
+        return False
+    skinned_objects = python.force_list(skinned_objects)
+    influences_to_unbind = python.force_list(influences_to_unbind)
+    influences_to_unbind_short = [tp.Dcc.node_short_name(joint_node) for joint_node in influences_to_unbind]
+
+    skin_clusters = list()
+    skin_percentage = 100.0 / len(skinned_objects)
+    progress_value = 0.0
+
+    for i, skin_object in enumerate(skinned_objects):
+        skin_cluster_name = find_related_skin_cluster(skin_object)
+        if not skin_cluster_name:
+            continue
+        joints_attached = maya.cmds.skinCluster(skin_cluster_name, query=True, inf=True)
+
+        influence_verts = get_influence_vertices(influences_to_unbind, skin_object)
+        if not influence_verts:
+            continue
+
+        joints = list()
+        for joint_to_remove in influences_to_unbind_short:
+            if joint_to_remove not in joints_attached:
+                continue
+            joints.append((joint_to_remove, 0.0))
+
+        maya.cmds.select(influence_verts, replace=True)
+        maya.cmds.skinPercent(skin_cluster_name, transformValue=joints, normalize=True)
+
+        progress_value += (i * skin_percentage)
+
+        skin_clusters.append(skin_cluster_name)
+
+    for skin_cluster in skin_clusters:
+        joints_attached = maya.cmds.skinCluster(skin_cluster, query=True, inf=True)
+        for jnt in influences_to_unbind_short:
+            if jnt not in joints_attached:
+                continue
+            maya.cmds.skinCluster(skin_cluster, edit=True, removeInfluence=jnt)
+
+    if delete:
+        for joint_to_remove in influences_to_unbind:
+            child_joints = maya.cmds.listRelatives(joint_to_remove, children=True)
+            parent = maya.cmds.listRelatives(joint_to_remove, parent=True)
+            if not child_joints:
+                continue
+            if not parent:
+                maya.cmds.parent(child_joints, world=True)
+                continue
+            maya.cmds.parent(child_joints, parent)
+        maya.cmds.delete(influences_to_unbind)
+
+    progress_value = 100.0
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def unbind_influences(skinned_objects=None, influences_to_unbind=None, delete=False, use_parent=True):
+    """
+    Unbind given influences from given meshes and stores the unbind influences weights into other influences
+
+    :param skinned_objects: list(str), meshes which joints need to be removed
+    :param influences_to_unbind: list(str), list of joints that need to be unbind
+    :param delete: bool, Whether or not to delete unbind influences after unbind process is completed
+    :param use_parent: bool, If True, removed influences weights will be stored on its parent; if False it will look
+        for the closest joint using a point cloud system
+    :return: bool
+    """
+
+    selected_transforms = tp.Dcc.selected_nodes_of_type('transform')
+    selected_joints = tp.Dcc.selected_nodes_of_type('joint')
+    influences_to_unbind = influences_to_unbind or selected_joints
+    if not skinned_objects:
+        skinned_objects = [xform for xform in selected_transforms if xform not in selected_joints]
+    if not skinned_objects or not influences_to_unbind:
+        return False
+    skinned_objects = python.force_list(skinned_objects)
+    influences_to_unbind = python.force_list(influences_to_unbind)
+    influences_to_unbind_short = [tp.Dcc.node_short_name(joint_node) for joint_node in influences_to_unbind]
+
+    skin_clusters = list()
+    skin_percentage = 100.0 / len(skinned_objects)
+    progress_value = 0.0
+
+    for skin_index, skin_object in enumerate(skinned_objects):
+        skin_cluster_name = find_related_skin_cluster(skin_object)
+        if not skin_cluster_name:
+            continue
+        joints_attached = maya.cmds.skinCluster(skin_cluster_name, query=True, inf=True)
+
+        if not use_parent:
+            for joint_to_remove in influences_to_unbind_short:
+                if joint_to_remove in joints_attached:
+                    joints_attached.remove(joint_to_remove)
+
+        source_positions = list()
+        source_joints = list()
+        for joint_attached in joints_attached:
+            pos = maya.cmds.xform(joint_attached, query=True, worldSpace=True, t=True)
+            source_positions.append(pos)
+            source_joints.append([joint_attached, pos])
+
+        source_kdtree = kdtree.KDTree.construct_from_data(source_positions)
+
+        joint_percentage = skin_percentage / len(influences_to_unbind)
+        for joint_index, jnt in enumerate(influences_to_unbind):
+            jnt1 = jnt
+            if use_parent:
+                jnt2 = maya.cmds.listRelatives(jnt, parent=True)
+                jnt2 = jnt2[0] if jnt2 else None
+                if jnt2 is None:
+                    remove_pos = maya.cmds.xform(jnt, query=True, worldSpace=True, t=True)
+                    points = source_kdtree.query(query_point=remove_pos, t=1)
+                    for index, position in enumerate(source_joints):
+                        if position[1] != points[0]:
+                            continue
+                        jnt2 = position[0]
+            else:
+                remove_pos = maya.cmds.xform(jnt, query=True, worldSpace=True, t=True)
+                points = source_kdtree.query(query_point=remove_pos, t=True)
+                for index, position in enumerate(source_joints):
+                    if position[1] != points[0]:
+                        continue
+                    jnt2 = position[0]
+
+            move_skin_weights(jnt1, jnt2, skin_object)
+
+            progress_value += ((joint_index + 1) * joint_percentage) + (skin_index * skin_percentage)
+
+        skin_clusters.append(skin_cluster_name)
+
+    for skin_cluster in skin_clusters:
+        joints_attached = maya.cmds.skinCluster(skin_cluster, query=True, inf=True)
+        for jnt in influences_to_unbind_short:
+            if jnt not in joints_attached:
+                continue
+            maya.cmds.skinCluster(skin_cluster, edit=True, removeInfluence=jnt)
+
+    if delete:
+        for joint_to_remove in influences_to_unbind:
+            child_joints = maya.cmds.listRelatives(joint_to_remove, children=True)
+            parent = maya.cmds.listRelatives(joint_to_remove, parent=True)
+            if not child_joints:
+                continue
+            if not parent:
+                maya.cmds.parent(child_joints, world=True)
+                continue
+            maya.cmds.parent(child_joints, parent)
+        maya.cmds.delete(influences_to_unbind)
+
+    progress_value = 100.0
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def delete_influences(skinned_objects=None, influences_to_remove=None, fast=True):
+    """
+    Deletes given influences from given meshes and stores the unbind influences weights into other influences
+    :param skinned_objects: list(str), meshes which joints need to be removed
+    :param influences_to_remove: list(str), list of joints that need to be removed
+    :param fast: list(str), bool, Whether to do the deletion using quick unbind method or not
+    :return: bool
+    """
+
+    if fast:
+        valid_deletion = unbind_influences_quick(
+            skinned_objects=skinned_objects, influences_to_unbind=influences_to_remove, delete=True)
+    else:
+        valid_deletion = unbind_influences(
+            skinned_objects=skinned_objects, influences_to_unbind=influences_to_remove, delete=True
+        )
+
+    return valid_deletion
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def delete_unused_influences(skinned_objects=None):
+    """
+    Deletes all unused influences of the given skinned meshes
+    :param skinned_objects: list(str), lisf of skinned meshes to remove unused influences of
+    :return: bool
+    """
+
+    skinned_objects = skinned_objects or tp.Dcc.selected_nodes()
+
+    percentage = 100.0 / len(skinned_objects)
+    progress_value = 0.0
+
+    for i, mesh in enumerate(skinned_objects):
+        skin_cluster_name = find_related_skin_cluster(mesh)
+        if not skin_cluster_name:
+            shape = maya.cmds.listRelatives(mesh, shapes=True) or None
+            progress_value = percentage * (i + 1)
+            if shape:
+                maya.logger.warning(
+                    'Impossible to delete unused influences because mesh "{}" '
+                    'has no skin cluster attached to it!'.format(mesh))
+            continue
+
+        attached_joints = maya.cmds.skinCluster(skin_cluster_name, query=True, influence=True)
+        weighted_joints = maya.cmds.skinCluster(skin_cluster_name, query=True, weightedInfluence=True)
+
+        non_influenced = list()
+        for attached in attached_joints:
+            if attached in weighted_joints:
+                continue
+            non_influenced.append(attached)
+
+        for joint in non_influenced:
+            maya.cmds.skinCluster(skin_cluster_name, edit=True, removeInfluence=joint)
+
+        progress_value = percentage * (i + 1)
+
+    progress_value = 100.0
+
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def combine_skinned_meshes(meshes=None):
+    """
+    Combine given meshes and keeps skin cluster weights information intact
+    :param meshes: list(str), list of meshes to combine
+    :return: bool
+    """
+
+    meshes = meshes or tp.Dcc.selected_nodes_of_type('transform')
+    if not meshes:
+        return False
+
+    if tp.Dcc.get_version() < 2015:
+        maya.logger.warning('Combine Skinned meshes functionality is only available in Maya 2015 or higher')
+        return False
+
+    maya.cmds.polyUniteSkinned(meshes, ch=False, mergeUVSets=True)
+    return True
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def extract_skinned_selected_components(selected_components=None, **kwargs):
+    """
+    Extracts selected components as a new mesh but keeping all the skin cluster information
+    If no skin cluster is found, only the mesh is extracted
+    :param selected_components: list(str), list of components to extract
+    """
+
+    components = selected_components or tp.Dcc.selected_nodes(flatten=True)
+    components = python.force_list(components)
+    if not components:
+        return False
+
+    mesh = components[0]
+    if '.' in mesh:
+        mesh = mesh.split('.')[0]
+
+    if kwargs.pop('auto_assign_labels', False):
+        jnt_utils.auto_assign_labels_to_mesh_influences(
+            mesh, input_left=kwargs.pop('left_side_label', None),
+            input_right=kwargs.pop('right_side_label', None), check_labels=True)
+
+    faces = mesh_utils.convert_to_faces(components)
+    duplicated_mesh = maya.cmds.duplicate(mesh)[0]
+    all_faces = mesh_utils.convert_to_faces(duplicated_mesh)
+
+    new_selection = list()
+    for face in faces:
+        new_selection.append('{}.{}'.format(duplicated_mesh, face.split('.')[-1]))
+
+    maya.cmds.delete(list(set(all_faces) ^ set(new_selection)))
+    maya.cmds.delete(duplicated_mesh, ch=True)
+    if find_related_skin_cluster(mesh):
+        transfer_skinning(mesh, [duplicated_mesh], in_place=True)
+
+    for xform in 'trs':
+        for axis in 'xyz':
+            tp.Dcc.unlock_attribute(duplicated_mesh, '{}{}'.format(xform, axis))
+
+    tp.Dcc.select_node(duplicated_mesh)
+
+    return duplicated_mesh
+
+
+@decorators.undo
+@decorators.repeat_static_command(__name__, skip_arguments=True)
+def hammer_vertices(vertices_to_hammer=None, return_as_list=True):
+    """
+    Hammer given vertices and returns a list with the ones that have been hammered
+    :param vertices_to_hammer: list(str), list of vertices to hammer weights of
+    :param return_as_list: bool
+    :return: bool or list(str)
+    """
+
+    components = vertices_to_hammer or tp.Dcc.selected_nodes(flatten=True)
+    components = python.force_list(components)
+    if not components:
+        return False
+
+    maya.cmds.select(components)
+    maya.mel.eval('weightHammerVerts;')
+
+    if return_as_list:
+        return mesh_utils.convert_to_vertices(components)
+
+    return True
