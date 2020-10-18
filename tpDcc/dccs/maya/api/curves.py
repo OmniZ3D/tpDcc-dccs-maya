@@ -8,6 +8,7 @@ Module that contains functions and classes related with Maya API nodes
 from __future__ import print_function, division, absolute_import
 
 from copy import copy
+from collections import OrderedDict
 
 from tpDcc.libs.python import python
 import tpDcc.dccs.maya as maya
@@ -241,47 +242,39 @@ def create_curve_shape(
     scale = CurveCV(scale)
     order = [{'X': 0, 'Y': 1, 'Z': 2}[x] for x in axis_order]
 
-    new_curve = maya.OpenMaya.MFnNurbsCurve()
-    new_shapes = list()
-    for shape_name, curve_data in iter(curve_data.items()):
+    curves_to_create = OrderedDict()
+    for shape_name, shape_data in curve_data.items():
+        curves_to_create[shape_name] = list()
+        shape_parent = shape_data.get('shape_parent', None)
+        if shape_parent:
+            if shape_parent in curves_to_create:
+                curves_to_create[shape_parent].append(shape_name)
 
-        # transform cvs
-        curve_cvs = curve_data['cvs']
-        transformed_cvs = list()
-        cvs = [CurveCV(pt) for pt in copy(curve_cvs)]
-        for i, cv in enumerate(cvs):
-            cv *= curve_size * scale.reorder(order)
-            cv += translate_offset.reorder(order)
-            cv *= CurveCV.mirror_vector()[mirror]
-            cv = cv.reorder(order)
-            transformed_cvs.append(cv)
+    created_curves = list()
+    all_shapes = list()
+    created_parents = dict()
 
-        cvs = api.PointArray()
-        cvs.set(transformed_cvs)
-        degree = curve_data['degree']
-        form = curve_data['form']
-        knots = curve_data.get('knots', None)
-        if not knots:
-            knots = tuple([float(i) for i in range(-degree + 1, cvs.length())])
+    for shape_name, shape_children in curves_to_create.items():
+        if shape_name not in created_curves:
+            shape_name, parent, new_shapes, new_curve = _create_curve(
+                shape_name, curve_data[shape_name], space, curve_size, translate_offset, scale, order, color,
+                mirror, parent, parent_inverse_matrix)
+            created_curves.append(shape_name)
+            all_shapes.extend(new_shapes)
+            created_parents[shape_name] = parent
 
-        enabled = curve_data.get('overrideEnabled', False) or color is not None
-        if space == maya.OpenMaya.MSpace.kWorld and parent != maya.OpenMaya.MObject.kNullObj:
-            for i in range(len(cvs.obj)):
-                cvs.obj[i] *= parent_inverse_matrix
-        shape = new_curve.create(cvs.obj, knots, degree, form, False, False, parent)
-        new_shapes.append(shape)
-        if parent == maya.OpenMaya.MObject.kNullObj and shape.apiType() == maya.OpenMaya.MFn.kTransform:
-            parent = shape
-        if enabled:
-            plugs.set_plug_value(
-                new_curve.findPlug('overrideEnabled', False), int(curve_data.get('overrideEnabled', bool(color))))
-            colors = color or curve_data['overrideColorRGB']
-            outliner_color = curve_data.get('outlinerColor', None)
-            use_outliner_color = curve_data.get('useOutlinerColor', False)
-            node_api.set_node_color(
-                new_curve.object(), colors, outliner_color=outliner_color, use_outliner_color=use_outliner_color)
+        for child_name in shape_children:
+            if child_name not in created_curves:
+                to_parent = created_parents[shape_name] if shape_name in created_parents else parent
+                child_name, child_parent, new_shapes, new_curve = _create_curve(
+                    child_name, curve_data[child_name], space, curve_size, translate_offset, scale, order, color,
+                    mirror, maya.OpenMaya.MObject.kNullObj, parent_inverse_matrix)
+                created_curves.append(child_name)
+                all_shapes.extend(new_shapes)
+                created_parents[child_name] = child_parent
+                node_api.set_parent(new_curve.parent(0), to_parent)
 
-    return parent, new_shapes
+    return parent, all_shapes
 
 
 def create_curve_from_points(name, points, shape_dict=None, parent=None):
@@ -310,3 +303,49 @@ def create_curve_from_points(name, points, shape_dict=None, parent=None):
     shape_dict['knots'] = knots
 
     return create_curve_shape({name: shape_dict}, parent)
+
+
+def _create_curve(
+        shape_name, shape_data, space, curve_size, translate_offset, scale, order, color, mirror,
+        parent, parent_inverse_matrix):
+    new_curve = maya.OpenMaya.MFnNurbsCurve()
+    new_shapes = list()
+
+    # transform cvs
+    curve_cvs = shape_data['cvs']
+    transformed_cvs = list()
+    cvs = [CurveCV(pt) for pt in copy(curve_cvs)]
+    for i, cv in enumerate(cvs):
+        cv *= curve_size * scale.reorder(order)
+        cv += translate_offset.reorder(order)
+        cv *= CurveCV.mirror_vector()[mirror]
+        cv = cv.reorder(order)
+        transformed_cvs.append(cv)
+
+    cvs = api.PointArray()
+    cvs.set(transformed_cvs)
+    degree = shape_data['degree']
+    form = shape_data['form']
+    knots = shape_data.get('knots', None)
+    if not knots:
+        knots = tuple([float(i) for i in range(-degree + 1, cvs.length())])
+
+    enabled = shape_data.get('overrideEnabled', False) or color is not None
+    if space == maya.OpenMaya.MSpace.kWorld and parent != maya.OpenMaya.MObject.kNullObj:
+        for i in range(len(cvs.obj)):
+            cvs.obj[i] *= parent_inverse_matrix
+    shape = new_curve.create(cvs.obj, knots, degree, form, False, False, parent)
+    new_shapes.append(shape)
+    if parent == maya.OpenMaya.MObject.kNullObj and shape.apiType() == maya.OpenMaya.MFn.kTransform:
+        parent = shape
+    if enabled:
+        plugs.set_plug_value(
+            new_curve.findPlug('overrideEnabled', False), int(shape_data.get('overrideEnabled', bool(color))))
+        colors = color or shape_data['overrideColorRGB']
+        outliner_color = shape_data.get('outlinerColor', None)
+        use_outliner_color = shape_data.get('useOutlinerColor', False)
+        node_api.set_node_color(
+            new_curve.object(), colors, outliner_color=outliner_color, use_outliner_color=use_outliner_color)
+
+    return shape_name, parent, new_shapes, new_curve
+
