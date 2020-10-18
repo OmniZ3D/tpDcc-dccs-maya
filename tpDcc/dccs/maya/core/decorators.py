@@ -239,8 +239,8 @@ def undo(f):
         maya.cmds.undoInfo(openChunk=True)
         try:
             ret = f(*args, **kwargs)
-        except Exception as e:
-            raise e
+        except Exception as exc:
+            raise Exception(traceback.format_exc())
         finally:
             maya.cmds.undoInfo(closeChunk=True)
         return ret
@@ -345,10 +345,11 @@ def toggle_scrub(f):
     return wrapper
 
 
-def repeat_static_command(class_name):
+def repeat_static_command(class_name, skip_arguments=False):
     """
-    Decorator that will make static functions repeteable for Maya
+    Decorator that will make static functions repeatable for Maya
     :param class_name, str, path to the Python module where function we want to repeat is located
+    :param skip_arguments, bool, Whether or not force the execution of the repeat function without passing any argument
     """
 
     def repeat_command(fn):
@@ -357,12 +358,16 @@ def repeat_static_command(class_name):
             if args:
                 for each in args:
                     arg_str += str(each) + ', '
+                    arg_str += '"{}", '.format(each)
 
             if kwargs:
                 for k, v in kwargs.items():
                     arg_str += str(k) + '=' + str(v) + ', '
 
-            cmd = 'python("' + class_name + '.' + fn.__name__ + '(' + arg_str + ')")'
+            if not skip_arguments:
+                cmd = 'python("' + class_name + '.' + fn.__name__ + '(' + arg_str + ')")'
+            else:
+                cmd = 'python("' + class_name + '.' + fn.__name__ + '()")'
             fn_return = fn(*args, **kwargs)
             try:
                 maya.cmds.repeatLast(ac=cmd, acl=fn.__name__)

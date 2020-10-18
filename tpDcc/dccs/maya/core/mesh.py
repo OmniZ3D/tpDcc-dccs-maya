@@ -11,6 +11,7 @@ from collections import defaultdict
 
 import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya import api
+from tpDcc.dccs.maya.api import mathlib
 from tpDcc.libs.python import python
 from tpDcc.dccs.maya.core import helpers, exceptions, node
 
@@ -458,7 +459,7 @@ def get_connected_vertices(mesh, vertex_selection_set):
 def convert_to_vertices(obj):
     """
     Converts every poly selection to vertices
-    :param obj: variant, can be the mesh transform, the mesh shape or component base selection
+    :param obj: variant, can be the mesh transform, the mesh shape or component based selection
     """
 
     check_object = obj
@@ -497,6 +498,16 @@ def convert_to_vertices(obj):
             return maya.cmds.filterExpand(obj, selectionMask=helpers.SelectionMasks.LatticePoints)
         else:
             return maya.cmds.filterExpand(obj, selectionMask=helpers.SelectionMasks.LatticePoints)
+
+
+def convert_to_faces(obj):
+    """
+    Converts every poly selection to faces
+    :param obj: variant, can be the mesh transform, the mesh shape or component based selection
+    """
+
+    converted_faces = maya.cmds.polyListComponentConversion(obj, toFace=True)
+    return maya.cmds.filterExpand(converted_faces, selectionMask=helpers.SelectionMasks.PolygonFace)
 
 
 def convert_to_indices(vert_list):
@@ -648,3 +659,94 @@ def get_closest_uv_on_mesh(mesh, value_list):
     closest_uv = mesh.get_uv_at_point(value_list)
 
     return closest_uv
+
+
+def find_shortest_vertices_path_between_vertices(vertices_list):
+
+    start = vertices_list[0]
+    end = vertices_list[-1]
+    mesh = start.split('.')[0]
+
+    obj_type = maya.cmds.objectType(start)
+    if obj_type != 'mesh':
+        return None
+
+    first_extended_edges = maya.cmds.polyListComponentConversion(start, toEdge=True)
+    first_extended = maya.cmds.filterExpand(first_extended_edges, selectionMask=helpers.SelectionMasks.PolygonEdges)
+    second_extended_edges = maya.cmds.polyListComponentConversion(end, toEdge=True)
+    second_extended = maya.cmds.filterExpand(second_extended_edges, selectionMask=helpers.SelectionMasks.PolygonEdges)
+
+    found = list()
+    for e1 in first_extended:
+        for e2 in second_extended:
+            e1_num = int(e1.split('.e[')[-1].split(']')[0])
+            e2_num = int(e2.split('.e[')[-1].split(']')[0])
+            edge_sel = maya.cmds.polySelect(mesh, edgeLoopPath=[e1_num, e2_num], noSelection=True)
+            if edge_sel is None:
+                continue
+            found.append(edge_sel)
+
+    total_found = len(found)
+    if total_found != 0:
+        edge_selection = found[0]
+        if total_found != 1:
+            for sep_list in found:
+                if not len(sep_list) < len(edge_selection):
+                    continue
+                edge_selection = sep_list
+    else:
+        vtx_num1 = int(start.split('vtx[')[-1].split(']')[0])
+        vtx_num2 = int(end.split('vtx[')[-1].split(']')[0])
+        edge_selection = maya.cmds.polySelect(mesh, shortestEdgePath=[vtx_num1, vtx_num2])
+        if edge_selection is None:
+            maya.logger.error('Selected vertices are not parte of the same polyShell!')
+            return None
+
+    all_edges = list()
+    new_vertex_selection = list()
+    for edge in edge_selection:
+        all_edges.append('{}.e[{}]'.format(mesh, edge))
+        mid_expand = convert_to_vertices('{}.e[{}]'.format(mesh, edge))
+        new_vertex_selection.append(mid_expand)
+
+    reverse = False if start in new_vertex_selection[0] else True
+    in_order = list()
+    last_vertex = None
+    for list_vertices in new_vertex_selection:
+        if start in list_vertices:
+            list_vertices.remove(start)
+        if last_vertex is not None and last_vertex in list_vertices:
+            list_vertices.remove(last_vertex)
+        if end in list_vertices:
+            list_vertices.remove(end)
+        if len(list_vertices) != 0:
+            last_vertex = list_vertices[0]
+            in_order.append(last_vertex)
+
+    if end not in in_order:
+        in_order.insert(0, end)
+
+    if reverse:
+        in_order.reverse()
+
+    return in_order
+
+
+def fix_mesh_components_selection_visualization(mesh):
+    """
+    Cleanup selection details in Maya so given mesh selection components visualization is correct
+    :param mesh: str, name of the mesh (shape or transform) components we want to visualize
+    """
+
+    object_type = maya.cmds.objectType(mesh)
+    if object_type == 'transform':
+        shape = maya.cmds.listRelatives(mesh, children=True, shapes=True)[0]
+        object_type = maya.cmds.objectType(shape)
+
+    maya.mel.eval('if( !`exists doMenuComponentSelection` ) eval( "source dagMenuProc" );')
+    if object_type == "nurbsSurface" or object_type == "nurbsCurve":
+        maya.mel.eval('doMenuNURBComponentSelection("%s", "controlVertex");' % mesh)
+    elif object_type == "lattice":
+        maya.mel.eval('doMenuLatticeComponentSelection("%s", "latticePoint");' % mesh)
+    elif object_type == "mesh":
+        maya.mel.eval('doMenuComponentSelection("%s", "vertex");' % mesh)
