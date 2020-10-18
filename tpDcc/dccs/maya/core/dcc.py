@@ -18,7 +18,8 @@ from tpDcc.libs.python import python
 import tpDcc.dccs.maya as maya
 from tpDcc.abstract import dcc as abstract_dcc, progressbar
 from tpDcc.core import consts
-from tpDcc.dccs.maya.core import helpers, name, namespace, scene, playblast, transform, attribute, gui, mathutils
+from tpDcc.dccs.maya.api import mathlib
+from tpDcc.dccs.maya.core import helpers, name, namespace, scene, playblast, transform, attribute, gui
 from tpDcc.dccs.maya.core import node as maya_node, reference as ref_utils, camera as cam_utils, shader as shader_utils
 from tpDcc.dccs.maya.core import sequencer, animation, qtutils, decorators as maya_decorators, shape as shape_utils
 from tpDcc.dccs.maya.core import filtertypes, joint as joint_utils, space as space_utils, curve as curve_utils
@@ -1199,6 +1200,21 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         flatten = kwargs.get('flatten', False)
 
         return maya.cmds.ls(sl=True, long=full_path, flatten=flatten)
+
+    @staticmethod
+    def selected_nodes_in_order(full_path=True, **kwargs):
+        """
+        Returns a list of selected nodes in order of selection
+        :param full_path: bool
+        :return: list<str>
+        """
+
+        flatten = kwargs.get('flatten', False)
+
+        try:
+            return maya.cmds.ls(sl=True, long=full_path, flatten=flatten, orderedSelection=True)
+        except RuntimeError:
+            return maya.cmds.ls(sl=True, long=full_path, flatten=flatten)
 
     @staticmethod
     def selected_nodes_of_type(node_type, full_path=True):
@@ -4340,8 +4356,11 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         """
 
         maintain_offset = kwargs.get('maintain_offset', False)
+        skip_translate = kwargs.get('skip_translate', 'none')
+        skip_rotate = kwargs.get('skip_rotate', 'none')
 
-        return maya.cmds.parentConstraint(constraint_to, source, mo=maintain_offset)[0]
+        return maya.cmds.parentConstraint(
+            constraint_to, source, st=skip_translate, sr=skip_rotate, mo=maintain_offset)[0]
 
     @staticmethod
     def delete_constraints(node, constraint_type=None):
@@ -5566,7 +5585,7 @@ class MayaDcc(abstract_dcc.AbstractDCC, object):
         :rtype: float
         """
 
-        return mathutils.distance_between_nodes(source_node, target_node)
+        return mathlib.distance_between_nodes(source_node, target_node)
 
     @staticmethod
     def dock_widget(widget, *args, **kwargs):
