@@ -7,7 +7,9 @@ Module that contains functions and classes related with Maya API
 
 from __future__ import print_function, division, absolute_import
 
-from tpDcc.libs.python import mathlib, python
+from tpDcc.libs.python import python
+# IMPORTANT: use namespace to avoid clash with our mathlib Maya api module
+from tpDcc.libs.python import mathlib as python_mathlib
 
 import tpDcc.dccs.maya as maya
 
@@ -62,16 +64,16 @@ class FloatPoint(ApiObject, object):
 
 
 class Matrix(ApiObject, object):
-    def __init__(self, matrix_list=None):
+    def __init__(self, matrix_list=None, matrix_object=None):
         if matrix_list is None:
             matrix_list = list()
-        self.obj = self._set_api_object(matrix_list)
+        self.obj = self._set_api_object(matrix_list, matrix_object)
 
-    def _set_api_object(self, matrix_list):
-        matrix = maya.OpenMaya.MMatrix()
+    def _set_api_object(self, matrix_list, matrix_object):
+        matrix = matrix_object or maya.OpenMaya.MMatrix()
         if matrix_list:
             if maya.is_new_api():
-                matrix = maya.OpenMaya.MScriptUtil.createMatrixFromList(matrix_list)
+                matrix = maya.OpenMaya.MMatrix(matrix_list)
             else:
                 maya.OpenMaya.MScriptUtil.createMatrixFromList(matrix_list, matrix)
 
@@ -79,9 +81,38 @@ class Matrix(ApiObject, object):
 
     def set_matrix_from_list(self, matrix_list):
         if maya.is_new_api():
-            self.obj = maya.OpenMaya.MScriptUtil.createMatrixFromList(matrix_list)
+            self.obj = maya.OpenMaya.MMatrix(matrix_list)
         else:
             maya.OpenMaya.MScriptUtil.createMatrixFromList(matrix_list, self.obj)
+
+    def inverse(self):
+        """
+        Inverses Maya matrix
+        :return:
+        """
+
+        inverse_matrix = self.obj.inverse()
+
+        return Matrix(matrix_object=inverse_matrix)
+
+    def to_list(self):
+        """
+        Returns Maya matrix as list
+        :return: list
+        """
+
+        matrix_list = list()
+
+        if maya.is_new_api():
+            for x in range(4):
+                for y in range(4):
+                    matrix_list.append(self.obj.getElement(x, y))
+        else:
+            for x in range(4):
+                for y in range(4):
+                    matrix_list.append(self.obj(x, y))
+
+        return matrix_list
 
 
 class IntArray(ApiObject, object):
@@ -726,6 +757,18 @@ class SkinCluster(ApiObject, object):
             api_double_array = DoubleArray(weights)
             return api_double_array
 
+    def set_weights(self, shape, components, influence, weights):
+        """
+        Sets skin cluster weights
+        :param shape: MDagPath
+        :param components: MObject
+        :param influence: MIntArray
+        :param weights: list
+        :return:
+        """
+
+        return self.obj.setWeights(shape, components, influence, weights, False)
+
 
 class TransformFunction(MayaFunction, object):
 
@@ -943,7 +986,7 @@ class MeshFunction(MayaFunction, object):
         self.obj.getClosestNormal(point_base, new_point, space, None, accelerator)
 
         if at_source_position:
-            position = mathlib.vector_add(source_vector, new_point)
+            position = python_mathlib.vector_add(source_vector, new_point)
             return position
         else:
             return [new_point.x, new_point.y, new_point.z]
@@ -1065,16 +1108,20 @@ class NurbsSurfaceFunction(MayaFunction, object):
 
     def get_closest_parameter(self, vector):
         point = Point(vector[0], vector[1], vector[2])
-        u = maya.OpenMaya.MScriptUtil()
-        u_ptr = u.asDoublePtr()
-        maya.OpenMaya.MScriptUtil.setDouble(u_ptr, 0.0)
-        v = maya.OpenMaya.MScriptUtil()
-        v_ptr = v.asDoublePtr()
-        maya.OpenMaya.MScriptUtil.setDouble(v_ptr, 0.0)
         space = maya.OpenMaya.MSpace.kWorld
-        self.obj.closestPoint(point.get_api_object(), 0, u_ptr, v_ptr, 0, 0.00001, space)
-        u = maya.OpenMaya.MScriptUtil.getDouble(u_ptr)
-        v = maya.OpenMaya.MScriptUtil.getDouble(v_ptr)
+
+        if maya.is_new_api():
+            _, u, v = self.obj.closestPoint(point.get_api_object(), 0.0, 0.0, False, 0.00001, space)
+        else:
+            u = maya.OpenMaya.MScriptUtil()
+            u_ptr = u.asDoublePtr()
+            maya.OpenMaya.MScriptUtil.setDouble(u_ptr, 0.0)
+            v = maya.OpenMaya.MScriptUtil()
+            v_ptr = v.asDoublePtr()
+            maya.OpenMaya.MScriptUtil.setDouble(v_ptr, 0.0)
+            self.obj.closestPoint(point.get_api_object(), 0, u_ptr, v_ptr, 0, 0.00001, space)
+            u = maya.OpenMaya.MScriptUtil.getDouble(u_ptr)
+            v = maya.OpenMaya.MScriptUtil.getDouble(v_ptr)
 
         return u, v
 
@@ -1092,7 +1139,7 @@ class NurbsSurfaceFunction(MayaFunction, object):
         if not at_source_position:
             return vector
         else:
-            position = mathlib.vector_add(source_vector, vector)
+            position = python_mathlib.vector_add(source_vector, vector)
             return position
 
 
@@ -1437,7 +1484,7 @@ class IteratePolygonFaces(MayaIterator, object):
 
         while not self.obj.isDone():
             center = self.obj.center()
-            distance = mathlib.get_distance_between_vectors(vector, [center.x, center.y, center.z])
+            distance = python_mathlib.get_distance_between_vectors(vector, [center.x, center.y, center.z])
             if distance < 0.001:
                 closest_face = self.obj.index()
                 self.obj.reset()
