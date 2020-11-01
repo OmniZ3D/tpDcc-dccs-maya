@@ -10,7 +10,8 @@ import pprint
 import logging
 import traceback
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.dccs.maya.core import common, attribute as attr_utils, name as name_utils, shape as shape_utils
 
 LOGGER = logging.getLogger('tpDcc-dccs-maya')
@@ -1638,7 +1639,7 @@ class MetaAttributeUtils(object):
     def rename_nice_name(node=None, attr=None, name=None):
         """
         Set the nice name of the given attribute
-        :param ndoe: str
+        :param node: str
         :param attr: str
         :param name: str, new name. If None, assumes obj argument is combined and uses attr. If False, clears the nice
         name

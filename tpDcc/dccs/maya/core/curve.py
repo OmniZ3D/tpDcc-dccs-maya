@@ -7,12 +7,18 @@ Utility methods related to Maya Curves
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import logging
+
+import maya.cmds
+import maya.api.OpenMaya
+
 from tpDcc.dccs.maya import api
 from tpDcc.libs.python import python, mathlib
 from tpDcc.dccs.maya.api import curves as api_curves
 from tpDcc.dccs.maya.core import exceptions, transform, component
 from tpDcc.dccs.maya.core import decorators, filtertypes, name as name_utils, shape as shape_utils, node as node_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 def check_curve(curve):
@@ -83,15 +89,9 @@ def get_curve_fn(curve):
     if maya.cmds.objectType(curve) == 'transform':
         curve = maya.cmds.listRelatives(curve, shapes=True, noIntermediate=True)[0]
 
-    if maya.is_new_api():
-        curve_sel = maya.OpenMaya.getSelectionListByName(curve)
-        curve_path = curve_sel.getDagPath(0)
-    else:
-        curve_sel = maya.OpenMaya.MSelectionList()
-        maya.OpenMaya.MGlobal.getSelectionListByName(curve, curve_sel)
-        curve_path = maya.OpenMaya.MDagPath()
-        curve_sel.getDagPath(0, curve_path)
-    curve_fn = maya.OpenMaya.MFnNurbsCurve(curve_path)
+    curve_sel = maya.api.OpenMaya.getSelectionListByName(curve)
+    curve_path = curve_sel.getDagPath(0)
+    curve_fn = maya.api.OpenMaya.MFnNurbsCurve(curve_path)
 
     return curve_fn
 
@@ -127,7 +127,7 @@ def transforms_to_curve(transforms, spans=None, name='from_transforms'):
     """
 
     if not transforms:
-        maya.logger.warning('Impossible to create curve from transforms because no transforms given!')
+        LOGGER.warning('Impossible to create curve from transforms because no transforms given!')
         return None
 
     transform_positions = list()
@@ -519,7 +519,7 @@ def get_curve_shape(curve, shape_index=0):
     if shape_index < shape_count:
         return shapes[0]
     elif shape_index >= shape_count:
-        maya.logger.warning(
+        LOGGER.warning(
             'Curve {} does not have a shape count up to {}. Returning last shape'.format(curve, shape_index))
         return shapes[-1]
 
@@ -610,13 +610,15 @@ def set_curve_line_thickness(curve_transforms, line_width):
         maya.cmds.setAttr('{}.lineWidth'.format(curve), line_width)
 
 
-def get_curve_data(curve_shape, space=maya.OpenMaya.MSpace.kObject):
+def get_curve_data(curve_shape, space=None):
     """
     Returns curve dat from the given shape node
     :param curve_shape: str, node that represents nurbs curve shape
     :param space:
     :return: dict
     """
+
+    space = space or maya.api.OpenMaya.MSpace.kObject
 
     if python.is_string(curve_shape):
         curve_shape = node_utils.get_mobject(curve_shape)

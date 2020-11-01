@@ -7,7 +7,8 @@ Module that contains functions related with Maya MPlugs
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.api.OpenMaya
+
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.api import attributetypes
 
@@ -39,48 +40,48 @@ def get_numeric_value(plug):
     """
 
     obj = plug.attribute()
-    n_attr = maya.OpenMaya.MFnNumericAttribute(obj)
+    n_attr = maya.api.OpenMaya.MFnNumericAttribute(obj)
     data_type = n_attr.numericType()
-    if data_type == maya.OpenMaya.MFnNumericData.kBoolean:
+    if data_type == maya.api.OpenMaya.MFnNumericData.kBoolean:
         return attributetypes.kMFnNumericBoolean, plug.asBool()
-    elif data_type == maya.OpenMaya.MFnNumericData.kByte:
+    elif data_type == maya.api.OpenMaya.MFnNumericData.kByte:
         return attributetypes.kMFnNumericByte, plug.asBool()
-    elif data_type == maya.OpenMaya.MFnNumericData.kShort:
+    elif data_type == maya.api.OpenMaya.MFnNumericData.kShort:
         return attributetypes.kMFnNumericShort, plug.asShort()
-    elif data_type == maya.OpenMaya.MFnNumericData.kInt:
+    elif data_type == maya.api.OpenMaya.MFnNumericData.kInt:
         return attributetypes.kMFnNumericInt, plug.asInt()
-    elif data_type == maya.OpenMaya.MFnNumericData.kLong:
+    elif data_type == maya.api.OpenMaya.MFnNumericData.kLong:
         return attributetypes.kMFnNumericLong, plug.asInt()
-    elif data_type == maya.OpenMaya.MFnNumericData.kDouble:
+    elif data_type == maya.api.OpenMaya.MFnNumericData.kDouble:
         return attributetypes.kMFnNumericDouble, plug.asDouble()
-    elif data_type == maya.OpenMaya.MFnNumericData.kFloat:
+    elif data_type == maya.api.OpenMaya.MFnNumericData.kFloat:
         return attributetypes.kMFnNumericFloat, plug.asFloat()
-    elif data_type == maya.OpenMaya.MFnNumericData.kAddr:
+    elif data_type == maya.api.OpenMaya.MFnNumericData.kAddr:
         return attributetypes.kMFnNumericAddr, plug.asAddr()
-    elif data_type == maya.OpenMaya.MFnNumericData.kChar:
+    elif data_type == maya.api.OpenMaya.MFnNumericData.kChar:
         return attributetypes.kMFnNumericChar, plug.asChar()
-    elif data_type == maya.OpenMaya.MFnNumericData.k2Double:
-        return attributetypes.kMFnNumeric2Double, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k2Float:
-        return attributetypes.kMFnNumeric2Float, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k2Int:
-        return attributetypes.kMFnNumeric2Int, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k2Long:
-        return attributetypes.kMFnNumeric2Long, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k2Short:
-        return attributetypes.kMFnNumeric2Short, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k3Double:
-        return attributetypes.kMFnNumeric3Double, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k3Float:
-        return attributetypes.kMFnNumeric3Float, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k3Int:
-        return attributetypes.kMFnNumeric3Int, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k3Long:
-        return attributetypes.kMFnNumeric3Long, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k3Short:
-        return attributetypes.kMFnNumeric3Short, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
-    elif data_type == maya.OpenMaya.MFnNumericData.k4Double:
-        return attributetypes.kMFnNumeric4Double, maya.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k2Double:
+        return attributetypes.kMFnNumeric2Double, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k2Float:
+        return attributetypes.kMFnNumeric2Float, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k2Int:
+        return attributetypes.kMFnNumeric2Int, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k2Long:
+        return attributetypes.kMFnNumeric2Long, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k2Short:
+        return attributetypes.kMFnNumeric2Short, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k3Double:
+        return attributetypes.kMFnNumeric3Double, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k3Float:
+        return attributetypes.kMFnNumeric3Float, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k3Int:
+        return attributetypes.kMFnNumeric3Int, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k3Long:
+        return attributetypes.kMFnNumeric3Long, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k3Short:
+        return attributetypes.kMFnNumeric3Short, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
+    elif data_type == maya.api.OpenMaya.MFnNumericData.k4Double:
+        return attributetypes.kMFnNumeric4Double, maya.api.OpenMaya.MFnNumericData(plug.asMObject()).getData()
 
     return None, None
 
@@ -92,30 +93,30 @@ def get_typed_value(plug):
     :return: Maya type
     """
 
-    typed_attr = maya.OpenMaya.MFnTypedAttribute(plug.attribute())
+    typed_attr = maya.api.OpenMaya.MFnTypedAttribute(plug.attribute())
     data_type = typed_attr.attrType()
-    if data_type == maya.OpenMaya.MFnData.kInvalid:
+    if data_type == maya.api.OpenMaya.MFnData.kInvalid:
         return None, None
-    elif data_type == maya.OpenMaya.MFnData.kString:
+    elif data_type == maya.api.OpenMaya.MFnData.kString:
         return attributetypes.kMFnDataString, plug.asString()
-    elif data_type == maya.OpenMaya.MFnData.kNumeric:
+    elif data_type == maya.api.OpenMaya.MFnData.kNumeric:
         return get_numeric_value(plug)
-    elif data_type == maya.OpenMaya.MFnData.kMatrix:
-        return attributetypes.kMFnDataMatrix, maya.OpenMaya.MFnMatrixData(plug.asMObject()).matrix()
-    elif data_type == maya.OpenMaya.MFnData.kFloatArray:
-        return attributetypes.kMFnDataFloatArray, maya.OpenMaya.MFnFloatArrayData(plug.asMObject()).array()
-    elif data_type == maya.OpenMaya.MFnData.kDoubleArray:
-        return attributetypes.kMFnDataDoubleArray, maya.OpenMaya.MFnDoubleArrayData(plug.asMObject()).array()
-    elif data_type == maya.OpenMaya.MFnData.kIntArray:
-        return attributetypes.kMFnDataIntArray, maya.OpenMaya.MFnIntArrayData(plug.asMObject()).array()
-    elif data_type == maya.OpenMaya.MFnData.kPointArray:
-        return attributetypes.kMFnDataPointArray, maya.OpenMaya.MFnPointArrayData(plug.asMObject()).array()
-    elif data_type == maya.OpenMaya.MFnData.kVectorArray:
-        return attributetypes.kMFnDataVectorArray, maya.OpenMaya.MFnVectorArrayData(plug.asMObject()).array()
-    elif data_type == maya.OpenMaya.MFnData.kStringArray:
-        return attributetypes.kMFnDataStringArray, maya.OpenMaya.MFnStringArrayData(plug.asMObject()).array()
-    elif data_type == maya.OpenMaya.MFnData.kMatrixArray:
-        return attributetypes.kMFnDataMatrixArray, maya.OpenMaya.MFnMatrixArrayData(plug.asMObject()).array()
+    elif data_type == maya.api.OpenMaya.MFnData.kMatrix:
+        return attributetypes.kMFnDataMatrix, maya.api.OpenMaya.MFnMatrixData(plug.asMObject()).matrix()
+    elif data_type == maya.api.OpenMaya.MFnData.kFloatArray:
+        return attributetypes.kMFnDataFloatArray, maya.api.OpenMaya.MFnFloatArrayData(plug.asMObject()).array()
+    elif data_type == maya.api.OpenMaya.MFnData.kDoubleArray:
+        return attributetypes.kMFnDataDoubleArray, maya.api.OpenMaya.MFnDoubleArrayData(plug.asMObject()).array()
+    elif data_type == maya.api.OpenMaya.MFnData.kIntArray:
+        return attributetypes.kMFnDataIntArray, maya.api.OpenMaya.MFnIntArrayData(plug.asMObject()).array()
+    elif data_type == maya.api.OpenMaya.MFnData.kPointArray:
+        return attributetypes.kMFnDataPointArray, maya.api.OpenMaya.MFnPointArrayData(plug.asMObject()).array()
+    elif data_type == maya.api.OpenMaya.MFnData.kVectorArray:
+        return attributetypes.kMFnDataVectorArray, maya.api.OpenMaya.MFnVectorArrayData(plug.asMObject()).array()
+    elif data_type == maya.api.OpenMaya.MFnData.kStringArray:
+        return attributetypes.kMFnDataStringArray, maya.api.OpenMaya.MFnStringArrayData(plug.asMObject()).array()
+    elif data_type == maya.api.OpenMaya.MFnData.kMatrixArray:
+        return attributetypes.kMFnDataMatrixArray, maya.api.OpenMaya.MFnMatrixArrayData(plug.asMObject()).array()
     
     return None, None
 
@@ -137,28 +138,28 @@ def get_plug_value_and_type(plug):
             res[1][i] = data[i][1]
         return res
 
-    if obj.hasFn(maya.OpenMaya.MFn.kNumericAttribute):
+    if obj.hasFn(maya.api.OpenMaya.MFn.kNumericAttribute):
         return get_numeric_value(plug)
-    elif obj.hasFn(maya.OpenMaya.MFn.kUnitAttribute):
-        unit_attr = maya.OpenMaya.MFnUnitAttribute(obj)
+    elif obj.hasFn(maya.api.OpenMaya.MFn.kUnitAttribute):
+        unit_attr = maya.api.OpenMaya.MFnUnitAttribute(obj)
         unit_type = unit_attr.unitType()
-        if unit_type == maya.OpenMaya.MFnUnitAttribute.kDistance:
+        if unit_type == maya.api.OpenMaya.MFnUnitAttribute.kDistance:
             return attributetypes.kMFnUnitAttributeDistance, plug.asMDistance()
-        elif unit_type == maya.OpenMaya.MFnUnitAttribute.kAngle:
+        elif unit_type == maya.api.OpenMaya.MFnUnitAttribute.kAngle:
             return attributetypes.kMFnUnitAttributeAngle, plug.asMAngle()
-        elif unit_type == maya.OpenMaya.MFnUnitAttribute.kTime:
+        elif unit_type == maya.api.OpenMaya.MFnUnitAttribute.kTime:
             return attributetypes.kMFnUnitAttributeTime, plug.asMTime()
-    elif obj.hasFn(maya.OpenMaya.MFn.kEnumAttribute):
+    elif obj.hasFn(maya.api.OpenMaya.MFn.kEnumAttribute):
         return attributetypes.kMFnkEnumAttribute, plug.asInt()
-    elif obj.hasFn(maya.OpenMaya.MFn.kTypedAttribute):
+    elif obj.hasFn(maya.api.OpenMaya.MFn.kTypedAttribute):
         return get_typed_value(plug)
-    elif obj.hasFn(maya.OpenMaya.MFn.kMessageAttribute):
+    elif obj.hasFn(maya.api.OpenMaya.MFn.kMessageAttribute):
         source = plug.source()
         if source is not None:
             return attributetypes.kMFnMessageAttribute, source.node()
         return attributetypes.kMFnMessageAttribute, None
-    elif obj.hasFn(maya.OpenMaya.MFn.kMatrixAttribute):
-        return attributetypes.kMFnDataMatrix, maya.OpenMaya.MFnMatrixData(plug.asMObject()).matrix()
+    elif obj.hasFn(maya.api.OpenMaya.MFn.kMatrixAttribute):
+        return attributetypes.kMFnDataMatrix, maya.api.OpenMaya.MFnMatrixData(plug.asMObject()).matrix()
 
     if plug.isCompound:
         count = plug.numChildren()
@@ -191,10 +192,10 @@ def set_plug_value(plug, value, mod=None, apply=True):
     :param apply: bool, Whether to apply the modifier instantly or leave it to the caller
     """
 
-    mod = mod or maya.OpenMaya.MDagModifier()
+    mod = mod or maya.api.OpenMaya.MDagModifier()
 
-    is_array = plug.isArray if maya.is_new_api() else plug.isArray()
-    is_compound = plug.isCompound if maya.is_new_api() else plug.isCompound()
+    is_array = plug.isArray
+    is_compound = plug.isCompound
 
     if is_array:
         count = plug.evaluateNumElements()
@@ -212,103 +213,103 @@ def set_plug_value(plug, value, mod=None, apply=True):
         return
 
     obj = plug.attribute()
-    if obj.hasFn(maya.OpenMaya.MFn.kUnitAttribute):
-        unit_attr = maya.OpenMaya.MFnUnitAttribute(obj)
+    if obj.hasFn(maya.api.OpenMaya.MFn.kUnitAttribute):
+        unit_attr = maya.api.OpenMaya.MFnUnitAttribute(obj)
         unit_type = unit_attr.unitType()
-        if unit_type == maya.OpenMaya.MFnUnitAttribute.kDistance:
+        if unit_type == maya.api.OpenMaya.MFnUnitAttribute.kDistance:
             if mod:
-                mod.newPlugValueMDistance(plug, maya.OpenMaya.MDistance(value))
+                mod.newPlugValueMDistance(plug, maya.api.OpenMaya.MDistance(value))
             else:
-                plug.setMDistance(maya.OpenMaya.MDistance(value))
-        elif unit_type == maya.OpenMaya.MFnUnitAttribute.kTime:
+                plug.setMDistance(maya.api.OpenMaya.MDistance(value))
+        elif unit_type == maya.api.OpenMaya.MFnUnitAttribute.kTime:
             if mod:
-                mod.newPlugValueMTime(plug, maya.OpenMaya.MTime(value))
+                mod.newPlugValueMTime(plug, maya.api.OpenMaya.MTime(value))
             else:
-                plug.setMTime(maya.OpenMaya.MTime(value))
-        elif unit_type == maya.OpenMaya.MFnUnitAttribute.kAngle:
+                plug.setMTime(maya.api.OpenMaya.MTime(value))
+        elif unit_type == maya.api.OpenMaya.MFnUnitAttribute.kAngle:
             if mod:
-                mod.newPlugValueMAngle(plug, maya.OpenMaya.MAngle(value))
+                mod.newPlugValueMAngle(plug, maya.api.OpenMaya.MAngle(value))
             else:
-                plug.setMAngle(maya.OpenMaya.MAngle(value))
-        elif obj.hasFn(maya.OpenMaya.MFn.kNumericAttribute):
-            numeric_attr = maya.OpenMaya.MFnNumericAttribute(obj)
+                plug.setMAngle(maya.api.OpenMaya.MAngle(value))
+        elif obj.hasFn(maya.api.OpenMaya.MFn.kNumericAttribute):
+            numeric_attr = maya.api.OpenMaya.MFnNumericAttribute(obj)
             numeric_type = numeric_attr.numericType()
             if numeric_type in (
-                    maya.OpenMaya.MFnNumericData.k2Double, maya.OpenMaya.MFnNumericData.k2Float,
-                    maya.OpenMaya.MFnNumericData.k2Int, maya.OpenMaya.MFnNumericData.k2Long,
-                    maya.OpenMaya.MFnNumericData.k2Short, maya.OpenMaya.MFnNumericData.k3Double,
-                    maya.OpenMaya.MFnNumericData.k3Float, maya.OpenMaya.MFnNumericData.k3Int,
-                    maya.OpenMaya.MFnNumericData.k3Long, maya.OpenMaya.MFnNumericData.k3Short,
-                    maya.OpenMaya.MFnNumericData.k4Double):
-                data = maya.OpenMaya.MFnNumericData().create(value)
+                    maya.api.OpenMaya.MFnNumericData.k2Double, maya.api.OpenMaya.MFnNumericData.k2Float,
+                    maya.api.OpenMaya.MFnNumericData.k2Int, maya.api.OpenMaya.MFnNumericData.k2Long,
+                    maya.api.OpenMaya.MFnNumericData.k2Short, maya.api.OpenMaya.MFnNumericData.k3Double,
+                    maya.api.OpenMaya.MFnNumericData.k3Float, maya.api.OpenMaya.MFnNumericData.k3Int,
+                    maya.api.OpenMaya.MFnNumericData.k3Long, maya.api.OpenMaya.MFnNumericData.k3Short,
+                    maya.api.OpenMaya.MFnNumericData.k4Double):
+                data = maya.api.OpenMaya.MFnNumericData().create(value)
                 if mod:
                     mod.newPlugValue(plug, data.object())
                 else:
                     plug.setMObject(data.object())
-            elif numeric_type == maya.OpenMaya.MFnNumericData.kDouble:
+            elif numeric_type == maya.api.OpenMaya.MFnNumericData.kDouble:
                 if mod:
                     mod.newPlugValueDouble(plug, value)
                 else:
                     plug.setDouble(value)
-            elif numeric_type == maya.OpenMaya.MFnNumericData.kFloat:
+            elif numeric_type == maya.api.OpenMaya.MFnNumericData.kFloat:
                 if mod:
                     mod.newPlugValueFloat(plug, value)
                 else:
                     plug.setFloat(value)
-            elif numeric_type == maya.OpenMaya.MFnNumericData.kBoolean:
+            elif numeric_type == maya.api.OpenMaya.MFnNumericData.kBoolean:
                 if mod:
                     mod.newPlugValueBool(plug, value)
                 else:
                     plug.setBool(value)
-            elif numeric_type == maya.OpenMaya.MFnNumericData.kChar:
+            elif numeric_type == maya.api.OpenMaya.MFnNumericData.kChar:
                 if mod:
                     mod.newPlugValueChar(plug, value)
                 else:
                     plug.setChar(value)
             elif numeric_type in (
-                    maya.OpenMaya.MFnNumericData.kInt, maya.OpenMaya.MFnNumericData.kInt64, 
-                    maya.OpenMaya.MFnNumericData.kLong, maya.OpenMaya.MFnNumericData.kLast):
+                    maya.api.OpenMaya.MFnNumericData.kInt, maya.api.OpenMaya.MFnNumericData.kInt64,
+                    maya.api.OpenMaya.MFnNumericData.kLong, maya.api.OpenMaya.MFnNumericData.kLast):
                 if mod:
                     mod.newPlugValueInt(plug, value)
                 else:
                     plug.setInt(value)
-            elif numeric_type == maya.OpenMaya.MFnNumericData.kShort:
+            elif numeric_type == maya.api.OpenMaya.MFnNumericData.kShort:
                 if mod:
                     mod.newPlugValueInt(plug, value)
                 else:
                     plug.setInt(value)
-        elif obj.hasFn(maya.OpenMaya.MFn.kEnumAttribute):
+        elif obj.hasFn(maya.api.OpenMaya.MFn.kEnumAttribute):
             if mod:
                 mod.newPlugValueInt(plug, value)
             else:
                 plug.setInt(value)
-        elif obj.hasFn(maya.OpenMaya.MFn.kTypedAttribute):
-            typed_attr = maya.OpenMaya.MFnTypedAttribute(obj)
+        elif obj.hasFn(maya.api.OpenMaya.MFn.kTypedAttribute):
+            typed_attr = maya.api.OpenMaya.MFnTypedAttribute(obj)
             typed_type = typed_attr.attrType()
-            if typed_type == maya.OpenMaya.MFnData.kMatrix:
-                mat = maya.OpenMaya.MFnMatrixData().create(maya.OpenMaya.MMatrix(value))
+            if typed_type == maya.api.OpenMaya.MFnData.kMatrix:
+                mat = maya.api.OpenMaya.MFnMatrixData().create(maya.api.OpenMaya.MMatrix(value))
                 if mod:
                     mod.newPlugValue(plug, mat)
                 else:
                     plug.setMObject(mat)
-            elif typed_type == maya.OpenMaya.MFnData.kString:
+            elif typed_type == maya.api.OpenMaya.MFnData.kString:
                 if mod:
                     mod.newPlugValueString(plug, value)
                 else:
                     plug.setString(value)
-        elif obj.hasFn(maya.OpenMaya.MFn.kMatrixAttribute):
-            mat = maya.OpenMaya.MFnMatrixData().create(maya.OpenMaya.MMatrix(value))
+        elif obj.hasFn(maya.api.OpenMaya.MFn.kMatrixAttribute):
+            mat = maya.api.OpenMaya.MFnMatrixData().create(maya.api.OpenMaya.MMatrix(value))
             if mod:
                 mod.newPlugValue(plug, mat)
             else:
                 plug.setMObject(mat)
-        elif obj.hasFn(maya.OpenMaya.MFn.kMessageAttribute) and not value:
+        elif obj.hasFn(maya.api.OpenMaya.MFn.kMessageAttribute) and not value:
             # Message attributes doesn't have any values
             pass
-        elif obj.hasFn(maya.OpenMaya.MFn.kMessageAttribute) and isinstance(value, maya.OpenMaya.MPlug):
+        elif obj.hasFn(maya.api.OpenMaya.MFn.kMessageAttribute) and isinstance(value, maya.api.OpenMaya.MPlug):
             # connect the message attribute
             connect_plugs(plug, value, mod=mod, apply=False)
-        elif obj.hasFn(maya.OpenMaya.MFn.kMessageAttribute):
+        elif obj.hasFn(maya.api.OpenMaya.MFn.kMessageAttribute):
             # Message attributes doesn't have any values
             pass
             connect_plugs(plug, value, mod=mod, apply=False)
@@ -332,9 +333,9 @@ def connect_plugs(source, target, mod=None, force=True, apply=True):
     :return:
     """
 
-    mod = mod or maya.OpenMaya.MDGModifier()
+    mod = mod or maya.api.OpenMaya.MDGModifier()
 
-    source_is_destination = source.isDestination if maya.is_new_api() else source.isDestination()
+    source_is_destination = source.isDestination
     if source_is_destination:
         target_source = target.source()
         if force:

@@ -10,9 +10,9 @@ from __future__ import print_function, division, absolute_import
 import logging
 import traceback
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 def check_reference(ref_node):

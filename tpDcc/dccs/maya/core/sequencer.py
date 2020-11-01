@@ -9,11 +9,11 @@ from __future__ import print_function, division, absolute_import
 
 import logging
 
-from Qt.QtWidgets import *
+from Qt.QtWidgets import QApplication
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class ShotsExporter(object):

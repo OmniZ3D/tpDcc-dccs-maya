@@ -7,6 +7,9 @@ Module that contains functions and classes related with MASH nodes
 
 from __future__ import print_function, division, absolute_import
 
+import maya.cmds
+import maya.mel
+
 MASH_AVAILABLE = True
 try:
     import MASH.api as mapi
@@ -17,7 +20,6 @@ try:
 except ImportError:
     MASH_AVAILABLE = False
 
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import name as naming, gui
 
 

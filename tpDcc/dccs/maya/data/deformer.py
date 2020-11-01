@@ -5,11 +5,13 @@ This module include base class for deformer data object
 """
 
 import copy
+import logging
 
 import maya.cmds as cmds
 
-import tpDcc
 from tpDcc.libs.python import python
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class MayaDeformerData(object):
@@ -87,7 +89,7 @@ class MayaDeformerData(object):
         self.get_deformer_attr_connections()
 
         build_time = cmds.timerX(st=timer)
-        tpDcc.logger.debug('MayaDeformerData: Data build time for "{}" : "{}"'.format(self._deformer, str(build_time)))
+        LOGGER.debug('MayaDeformerData: Data build time for "{}" : "{}"'.format(self._deformer, str(build_time)))
 
         return self._deformer
 

@@ -7,11 +7,28 @@ Module that contains functions and classes related with Maya API
 
 from __future__ import print_function, division, absolute_import
 
+import os
+import logging
+
+import maya.cmds
+import maya.OpenMaya
+import maya.OpenMayaAnim
+import maya.api.OpenMaya
+import maya.api.OpenMayaAnim
+
 from tpDcc.libs.python import python
 # IMPORTANT: use namespace to avoid clash with our mathlib Maya api module
 from tpDcc.libs.python import mathlib as python_mathlib
 
-import tpDcc.dccs.maya as maya
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
+
+
+def is_new_api():
+    return os.environ.get('TPDCC_MAYA_NEW_API', True)
+
+
+def set_use_new_api(flag):
+    os.environ['TPCC_MAYA_NEW_API'] = bool(flag)
 
 
 class ApiObject(object):
@@ -40,7 +57,10 @@ class Point(ApiObject, object):
         self.obj = self._set_api_object(x, y, z, w)
 
     def _set_api_object(self, x, y, z, w):
-        return maya.OpenMaya.MPoint(x, y, z, w)
+        if is_new_api():
+            return maya.api.OpenMaya.MPoint(x, y, z, w)
+        else:
+            return maya.OpenMaya.MPoint(x, y, z, w)
 
     def get(self):
         return [self.obj.x, self.obj.y, self.obj.z, self.obj.w]
@@ -54,7 +74,10 @@ class FloatPoint(ApiObject, object):
         self.obj = self._set_api_object(x, y, z, w)
 
     def _set_api_object(self, x, y, z, w):
-        return maya.OpenMaya.MFloatPoint(x, y, z, w)
+        if is_new_api():
+            return maya.api.OpenMaya.MFloatPoint(x, y, z, w)
+        else:
+            return maya.OpenMaya.MFloatPoint(x, y, z, w)
 
     def get(self):
         return [self.obj.x, self.obj.y, self.obj.z, self.obj.w]
@@ -72,16 +95,16 @@ class Matrix(ApiObject, object):
     def _set_api_object(self, matrix_list, matrix_object):
         matrix = matrix_object or maya.OpenMaya.MMatrix()
         if matrix_list:
-            if maya.is_new_api():
-                matrix = maya.OpenMaya.MMatrix(matrix_list)
+            if is_new_api():
+                matrix = maya.api.OpenMaya.MMatrix(matrix_list)
             else:
                 maya.OpenMaya.MScriptUtil.createMatrixFromList(matrix_list, matrix)
 
         return matrix
 
     def set_matrix_from_list(self, matrix_list):
-        if maya.is_new_api():
-            self.obj = maya.OpenMaya.MMatrix(matrix_list)
+        if is_new_api():
+            self.obj = maya.api.OpenMaya.MMatrix(matrix_list)
         else:
             maya.OpenMaya.MScriptUtil.createMatrixFromList(matrix_list, self.obj)
 
@@ -103,7 +126,7 @@ class Matrix(ApiObject, object):
 
         matrix_list = list()
 
-        if maya.is_new_api():
+        if is_new_api():
             for x in range(4):
                 for y in range(4):
                     matrix_list.append(self.obj.getElement(x, y))
@@ -132,9 +155,15 @@ class IntArray(ApiObject, object):
 
     def _set_api_object(self):
         if self._args or self._kwargs:
-            return maya.OpenMaya.MIntArray(*self._args, **self._kwargs)
+            if is_new_api():
+                return maya.api.OpenMaya.MIntArray(*self._args, **self._kwargs)
+            else:
+                return maya.OpenMaya.MIntArray(*self._args, **self._kwargs)
         else:
-            return maya.OpenMaya.MIntArray()
+            if is_new_api():
+                return maya.api.OpenMaya.MIntArray()
+            else:
+                return maya.OpenMaya.MIntArray()
 
     def get(self):
         numbers = list()
@@ -154,7 +183,7 @@ class IntArray(ApiObject, object):
         :return: int
         """
 
-        if maya.is_new_api():
+        if is_new_api():
             return len(self.obj)
         else:
             return self.obj.length()
@@ -183,9 +212,15 @@ class DoubleArray(ApiObject, object):
             return self._double_array
         else:
             if self._args or self._kwargs:
-                return maya.OpenMaya.MDoubleArray(*self._args, **self._kwargs)
+                if is_new_api():
+                    return maya.api.OpenMaya.MDoubleArray(*self._args, **self._kwargs)
+                else:
+                    return maya.OpenMaya.MDoubleArray(*self._args, **self._kwargs)
             else:
-                return maya.OpenMaya.MDoubleArray()
+                if is_new_api():
+                    return maya.api.OpenMaya.MDoubleArray()
+                else:
+                    return maya.OpenMaya.MDoubleArray()
 
     def get(self):
         numbers = list()
@@ -205,7 +240,7 @@ class DoubleArray(ApiObject, object):
         :return: int
         """
 
-        if maya.is_new_api():
+        if is_new_api():
             return len(self.obj)
         else:
             return self.obj.length()
@@ -217,9 +252,16 @@ class PointArray(ApiObject, object):
         super(PointArray, self).__init__()
 
     def _set_api_object(self):
-        if maya.is_new_api() and self._elems_list:
-            return maya.OpenMaya.MPointArray(self._elems_list)
-        return maya.OpenMaya.MPointArray()
+        if is_new_api():
+            if self._elems_list:
+                return maya.api.OpenMaya.MPointArray(self._elems_list)
+            else:
+                return maya.api.OpenMaya.MPointArray()
+        else:
+            if self._elems_list:
+                return maya.OpenMaya.MPointArray(self._elems_list)
+            else:
+                return maya.OpenMaya.MPointArray()
 
     def get(self):
         values = list()
@@ -232,7 +274,7 @@ class PointArray(ApiObject, object):
         return values
 
     def set(self, positions):
-        if maya.is_new_api():
+        if is_new_api():
             for i in range(len(positions)):
                 self.obj.append(positions[i])
         else:
@@ -240,7 +282,7 @@ class PointArray(ApiObject, object):
                 self.obj.set(i, positions[i][0], positions[i][1], positions[i][2])
 
     def length(self):
-        if maya.is_new_api():
+        if is_new_api():
             return len(self.obj)
         else:
             return self.obj.length()
@@ -265,7 +307,10 @@ class DagPathArray(ApiObject, object):
         if self._dag_path_array:
             return self._dag_path_array
         else:
-            return maya.OpenMaya.MDagPathArray()
+            if is_new_api():
+                return maya.api.OpenMaya.MDagPathArray()
+            else:
+                return maya.OpenMaya.MDagPathArray()
 
     def length(self):
         """
@@ -273,7 +318,7 @@ class DagPathArray(ApiObject, object):
         :return: int
         """
 
-        if maya.is_new_api():
+        if is_new_api():
             return len(self.obj)
         else:
             return self.obj.length()
@@ -291,7 +336,10 @@ class MayaObject(ApiObject, object):
         if mobj:
             self.obj = self._set_api_object(mobj)
         else:
-            self.obj = maya.OpenMaya.MObject()
+            if is_new_api():
+                self.obj = maya.api.OpenMaya.MObject()
+            else:
+                self.obj = maya.OpenMaya.MObject()
 
         self.mobj = mobj
 
@@ -334,7 +382,10 @@ class DagPath(ApiObject, object):
         if self._dag_path:
             return self._dag_path
         else:
-            return maya.OpenMaya.MDagPath()
+            if is_new_api():
+                return maya.api.OpenMaya.MDagPath()
+            else:
+                return maya.OpenMaya.MDagPath()
 
     def full_path_name(self):
         """
@@ -354,10 +405,13 @@ class DagPath(ApiObject, object):
         return self.obj.hasFn(fn)
 
     def get_a_path_to(self, mobj):
-        if maya.is_new_api():
+        if is_new_api():
             return self.obj.getAPathTo(mobj)
         else:
-            dag_path = maya.OpenMaya.MDagPath()
+            if is_new_api():
+                dag_path = maya.api.OpenMaya.MDagPath()
+            else:
+                dag_path = maya.OpenMaya.MDagPath()
             return self.obj.getAPathTo(mobj, dag_path)
 
 
@@ -369,13 +423,19 @@ class DagNode(ApiObject, object):
         if mobj:
             self.obj = self._set_api_object(mobj)
         else:
-            self.obj = maya.OpenMaya.MFnDagNode(mobj)
+            if is_new_api():
+                self.obj = maya.api.OpenMaya.MFnDagNode(mobj)
+            else:
+                self.obj = maya.OpenMaya.MFnDagNode(mobj)
 
     def _set_api_object(self, mobj):
-        return maya.OpenMaya.MFnDagNode(mobj)
+        if is_new_api():
+            return maya.api.OpenMaya.MFnDagNode(mobj)
+        else:
+            return maya.OpenMaya.MFnDagNode(mobj)
 
     def is_intermediate_object(self):
-        if maya.is_new_api():
+        if is_new_api():
             return self.obj.isIntermediateObject
         else:
             return self.obj.isIntermediateObject()
@@ -414,10 +474,16 @@ class DependencyNode(ApiObject, object):
         if mobj:
             self.obj = self._set_api_object(mobj)
         else:
-            self.obj = maya.OpenMaya.MFnDependencyNode(mobj)
+            if is_new_api():
+                self.obj = maya.api.OpenMaya.MFnDependencyNode(mobj)
+            else:
+                self.obj = maya.OpenMaya.MFnDependencyNode(mobj)
 
     def _set_api_object(self, mobj):
-        return maya.OpenMaya.MFnDependencyNode(mobj)
+        if is_new_api():
+            return maya.api.OpenMaya.MFnDependencyNode(mobj)
+        else:
+            return maya.OpenMaya.MFnDependencyNode(mobj)
 
     def get_name(self):
         return self.obj.name()
@@ -442,7 +508,10 @@ class SelectionList(ApiObject, object):
         if self._sel_list:
             return self._sel_list
         else:
-            return maya.OpenMaya.MSelectionList()
+            if is_new_api():
+                return maya.api.OpenMaya.MSelectionList()
+            else:
+                return maya.OpenMaya.MSelectionList()
 
     def add(self, item):
         """
@@ -479,7 +548,7 @@ class SelectionList(ApiObject, object):
         try:
             self.obj.add(name)
         except Exception:
-            maya.logger.warning('Could not add {} into selection list'.format(name))
+            LOGGER.warning('Could not add {} into selection list'.format(name))
             return
 
     def get_depend_node(self, index=0):
@@ -490,13 +559,13 @@ class SelectionList(ApiObject, object):
         """
         mobj = MayaObject()
         try:
-            if maya.is_new_api():
+            if is_new_api():
                 mobj = MayaObject(self.obj.getDependNode(0))
             else:
                 self.obj.getDependNode(0, mobj())
             return mobj()
         except Exception:
-            maya.logger.warning('Could not get MObject at index {}'.format(index))
+            LOGGER.warning('Could not get MObject at index {}'.format(index))
             return
 
     def get_dag_path(self, index=0):
@@ -508,7 +577,7 @@ class SelectionList(ApiObject, object):
         :return: DagPath
         """
 
-        if maya.is_new_api():
+        if is_new_api():
             maya_dag_path = self.obj.getDagPath(index)
         else:
             maya_dag_path = maya.OpenMaya.MDagPath()
@@ -527,7 +596,7 @@ class SelectionList(ApiObject, object):
         :return: tuple(MDagPath, MObject)
         """
 
-        if maya.is_new_api():
+        if is_new_api():
             maya_dag, maya_component = self.obj.getComponent(index)
         else:
             maya_dag = maya.OpenMaya.MDagPath()
@@ -546,7 +615,7 @@ class SelectionList(ApiObject, object):
         :return: MPlug
         """
 
-        if maya.is_new_api():
+        if is_new_api():
             plug = self.obj.getPlug(index)
         else:
             plug = maya.OpenMaya.MPlug()
@@ -563,9 +632,15 @@ class SelectionListIterator(ApiObject, object):
 
     def _set_api_object(self):
         if hasattr(self._sel_list, 'obj'):
-            return maya.OpenMaya.MItSelectionList(self._sel_list.obj)
+            if is_new_api():
+                return maya.api.OpenMaya.MItSelectionList(self._sel_list.obj)
+            else:
+                return maya.OpenMaya.MItSelectionList(self._sel_list.obj)
         else:
-            return maya.OpenMaya.MItSelectionList(self._sel_list)
+            if is_new_api():
+                return maya.api.OpenMaya.MItSelectionList(self._sel_list)
+            else:
+                return maya.OpenMaya.MItSelectionList(self._sel_list)
 
     def is_done(self):
         """
@@ -589,7 +664,7 @@ class SelectionListIterator(ApiObject, object):
         :return: MDagPath
         """
 
-        if maya.is_new_api():
+        if is_new_api():
             maya_dag_path = self.obj.getDagPath()
         else:
             maya_dag_path = maya.OpenMaya.MDagPath()
@@ -603,7 +678,7 @@ class SelectionListIterator(ApiObject, object):
         :return: tuple(MDagPath, MObject)
         """
 
-        if maya.is_new_api():
+        if is_new_api():
             maya_dag, maya_component = self.obj.getComponent()
         else:
             maya_dag = maya.OpenMaya.MDagPath()
@@ -624,11 +699,20 @@ class SingleIndexedComponent(ApiObject, object):
     def _set_api_object(self):
         if self._mobj:
             if hasattr(self._mobj, 'obj'):
-                return maya.OpenMaya.MFnSingleIndexedComponent(self._mobj.obj)
+                if is_new_api():
+                    return maya.api.OpenMaya.MFnSingleIndexedComponent(self._mobj.obj)
+                else:
+                    return maya.OpenMaya.MFnSingleIndexedComponent(self._mobj.obj)
             else:
-                return maya.OpenMaya.MFnSingleIndexedComponent(self._mobj)
+                if is_new_api():
+                    return maya.api.OpenMaya.MFnSingleIndexedComponent(self._mobj)
+                else:
+                    return maya.OpenMaya.MFnSingleIndexedComponent(self._mobj)
         else:
-            return maya.OpenMaya.MFnSingleIndexedComponent()
+            if is_new_api():
+                return maya.api.OpenMaya.MFnSingleIndexedComponent()
+            else:
+                return maya.OpenMaya.MFnSingleIndexedComponent()
 
     def create(self, mfn):
         """
@@ -660,13 +744,19 @@ class SkinCluster(ApiObject, object):
 
     def _set_api_object(self):
 
-        if isinstance(self._skin_node, maya.OpenMayaAnim.MFnSkinCluster):
+        if isinstance(self._skin_node, (maya.OpenMayaAnim.MFnSkinCluster, maya.api.OpenMayaAnim.MFnSkinCluster)):
             return self._skin_node
         else:
             if hasattr(self._skin_node, 'obj'):
-                return maya.OpenMayaAnim.MFnSkinCluster(self._skin_node.obj)
+                if is_new_api():
+                    return maya.api.OpenMayaAnim.MFnSkinCluster(self._skin_node.obj)
+                else:
+                    return maya.OpenMayaAnim.MFnSkinCluster(self._skin_node.obj)
             else:
-                return maya.OpenMayaAnim.MFnSkinCluster(self._skin_node)
+                if is_new_api():
+                    return maya.api.OpenMayaAnim.MFnSkinCluster(self._skin_node)
+                else:
+                    return maya.OpenMayaAnim.MFnSkinCluster(self._skin_node)
 
     def influence_objects(self):
         """
@@ -674,7 +764,7 @@ class SkinCluster(ApiObject, object):
         :return: DagPathArray
         """
 
-        if maya.is_new_api():
+        if is_new_api():
             maya_dag_path_array = self.obj.influenceObjects()
         else:
             maya_dag_path_array = maya.OpenMaya.MDagPathArray()
@@ -726,7 +816,7 @@ class SkinCluster(ApiObject, object):
             if isinstance(components, MayaObject):
                 components = components.obj
 
-        if maya.is_new_api():
+        if is_new_api():
             if not shape and not components and not influence:
                 raise RuntimeError('You need to pass at least two arguments to get_weights function')
 
@@ -773,7 +863,10 @@ class SkinCluster(ApiObject, object):
 class TransformFunction(MayaFunction, object):
 
     def _set_api_object(self, mobj):
-        return maya.OpenMaya.MFnTransform(mobj)
+        if is_new_api():
+            return maya.api.OpenMaya.MFnTransform(mobj)
+        else:
+            return maya.OpenMaya.MFnTransform(mobj)
 
     def get_transformation_matrix(self):
         return self.obj.transformation()
@@ -784,7 +877,7 @@ class TransformFunction(MayaFunction, object):
 
     def get_vector_matrix_product(self, vector):
         # TODO: Not working properly
-        maya.logger.warning('get_vector_matrix_product() does not work properly yet ...!')
+        LOGGER.warning('get_vector_matrix_product() does not work properly yet ...!')
         vct = maya.OpenMaya.MVector()
         vct.x = vector[0]
         vct.y = vector[1]
@@ -801,9 +894,15 @@ class MeshFunction(MayaFunction, object):
 
     def _set_api_object(self, mobj):
         if hasattr(mobj, 'obj'):
-            return maya.OpenMaya.MFnMesh(mobj.obj)
+            if is_new_api():
+                return maya.api.OpenMaya.MFnMesh(mobj.obj)
+            else:
+                return maya.OpenMaya.MFnMesh(mobj.obj)
         else:
-            return maya.OpenMaya.MFnMesh(mobj)
+            if is_new_api():
+                return maya.api.OpenMaya.MFnMesh(mobj)
+            else:
+                return maya.OpenMaya.MFnMesh(mobj)
 
     def refresh_mesh(self):
         self.obj.updateSurface()
@@ -813,32 +912,31 @@ class MeshFunction(MayaFunction, object):
         self.obj.copy(mesh_obj, transform)
 
     def get_number_of_vertices(self):
-        if maya.is_new_api():
+        if is_new_api():
             return self.obj.numVertices
         else:
             return self.obj.numVertices()
 
     def get_number_of_edges(self):
-        if maya.is_new_api():
+        if is_new_api():
             return self.obj.numEdges
         else:
             return self.obj.numEdges()
 
     def get_number_of_faces(self):
-        if maya.is_new_api():
+        if is_new_api():
             return self.obj.numPolygons
         else:
             return self.obj.numPolygons()
 
     def get_number_of_uvs(self):
-        if maya.is_new_api():
+        if is_new_api():
             return self.obj.numUVs
         else:
             return self.obj.numUVs()
 
     def get_number_of_triangles(self):
-
-        if maya.is_new_api():
+        if is_new_api():
             triangles, triangle_verts = self.obj.getTriangles()
         else:
             triangles, triangle_verts = maya.OpenMaya.MIntArray(), maya.OpenMaya.MIntArray()
@@ -852,7 +950,7 @@ class MeshFunction(MayaFunction, object):
         return count
 
     def get_triangle_ids(self):
-        if maya.is_new_api():
+        if is_new_api():
             triangles, triangle_verts = self.obj.getTriangles()
         else:
             triangles = maya.OpenMaya.MIntArray()
@@ -867,7 +965,7 @@ class MeshFunction(MayaFunction, object):
         return id_list
 
     def get_quad_ids(self):
-        if maya.is_new_api():
+        if is_new_api():
             triangles, triangle_verts = self.obj.getTriangles()
         else:
             triangles = maya.OpenMaya.MIntArray()
@@ -882,7 +980,7 @@ class MeshFunction(MayaFunction, object):
         return id_list
 
     def get_non_tri_quad_ids(self):
-        if maya.is_new_api():
+        if is_new_api():
             triangles, triangle_verts = self.obj.getTriangles()
         else:
             triangles = maya.OpenMaya.MIntArray()
@@ -897,7 +995,7 @@ class MeshFunction(MayaFunction, object):
         return id_list
 
     def get_vertex_positions(self):
-        if maya.is_new_api():
+        if is_new_api():
             point_array = PointArray()
             point_array.obj = self.obj.getPoints(maya.OpenMaya.MSpace.kWorld)
         else:
@@ -925,44 +1023,57 @@ class MeshFunction(MayaFunction, object):
 
     def get_point_at_uv(self, u_value=0, v_value=0):
 
-        space = maya.OpenMaya.MSpace.kWorld
-
         point = Point(0.0, 0.0, 0.0).get_api_object()
-        util = maya.OpenMaya.MScriptUtil()
-        util.createFromList([float(u_value), float(v_value)], 2)
-        uv = util.asFloat2Ptr()
 
-        # TODO: We need to get polygon ID
-        polygon_id = 0
-        self.obj.getPointAtUV(polygon_id, point, uv, space)
+        # TODO: Finish
+
+        if is_new_api():
+            space = maya.api.OpenMaya.MSpace.kWorld
+            uv = [float(u_value, float(v_value))]
+            polygon_id = self.obj.getPointAtUV(point, uv, space)
+        else:
+            space = maya.OpenMaya.MSpace.kWorld
+            util = maya.OpenMaya.MScriptUtil()
+            util.createFromList([float(u_value), float(v_value)], 2)
+            uv = util.asFloat2Ptr()
+            # TODO: We need to get polygon ID
+            polygon_id = 0
+            self.obj.getPointAtUV(polygon_id, point, uv, space)
 
     def get_closest_face(self, vector):
-        pointA = maya.OpenMaya.MPoint(vector[0], vector[1], vector[2])
-        pointB = maya.OpenMaya.MPoint()
-        space = maya.OpenMaya.MSpace.kWorld
 
-        if maya.is_new_api():
-            index = self.obj.getClosestPoint(pointA, pointB, space)
+        if is_new_api():
+            point_a = maya.api.OpenMaya.MPoint(vector[0], vector[1], vector[2])
+            point_b = maya.api.OpenMaya.MPoint()
+            space = maya.api.OpenMaya.MSpace.kWorld
+            index = self.obj.getClosestPoint(point_a, point_b, space)
         else:
+            point_a = maya.OpenMaya.MPoint(vector[0], vector[1], vector[2])
+            point_b = maya.OpenMaya.MPoint()
+            space = maya.OpenMaya.MSpace.kWorld
             util = maya.OpenMaya.MScriptUtil()
             id_pointer = util.asIntPtr()
-            self.obj.getClosestPoint(pointA, pointB, space, id_pointer)
+            self.obj.getClosestPoint(point_a, point_b, space, id_pointer)
             index = maya.OpenMaya.MScriptUtil(id_pointer).asInt()
 
         return index
 
     def get_closest_position(self, source_vector):
 
-        # TODO: Implement to support both OpenMaya and OpenMaya2
-
-        new_point = maya.OpenMaya.MPoint()
-        point_base = maya.OpenMaya.MPoint()
-        point_base.x = source_vector[0]
-        point_base.y = source_vector[1]
-        point_base.z = source_vector[2]
-        accelerator = self.obj.autoUniformGridParams()
-        space = maya.OpenMaya.MSpace.kWorld
-        self.obj.getClosestPoint(point_base, new_point, space, None, accelerator)
+        if is_new_api():
+            point_base = maya.api.OpenMaya.MPoint(source_vector[0], source_vector[1], source_vector[2])
+            accelerator = self.obj.autoUniformGridParams()
+            space = maya.api.OpenMaya.MSpace.kWorld
+            new_point = self.obj.getClosestPoint(point_base, space, None, accelerator)
+        else:
+            new_point = maya.OpenMaya.MPoint()
+            point_base = maya.OpenMaya.MPoint()
+            point_base.x = source_vector[0]
+            point_base.y = source_vector[1]
+            point_base.z = source_vector[2]
+            accelerator = self.obj.autoUniformGridParams()
+            space = maya.OpenMaya.MSpace.kWorld
+            self.obj.getClosestPoint(point_base, new_point, space, None, accelerator)
 
         return [new_point.x, new_point.y, new_point.z]
 
@@ -1110,7 +1221,7 @@ class NurbsSurfaceFunction(MayaFunction, object):
         point = Point(vector[0], vector[1], vector[2])
         space = maya.OpenMaya.MSpace.kWorld
 
-        if maya.is_new_api():
+        if is_new_api():
             _, u, v = self.obj.closestPoint(point.get_api_object(), 0.0, 0.0, False, 0.00001, space)
         else:
             u = maya.OpenMaya.MScriptUtil()
@@ -1127,13 +1238,13 @@ class NurbsSurfaceFunction(MayaFunction, object):
 
     def get_position_from_parameter(self, u, v):
         point = Point()
-        space = maya.OpenMaya.MSpace.kWorld
+        space = maya.api.OpenMaya.MSpace.kWorld if is_new_api() else maya.OpenMaya.MSpace.kWorld
         self.obj.getPointAtParam(u, v, point.get_api_object(), space)
 
         return point.get_as_vector()
 
     def get_closest_normal(self, source_vector, at_source_position=False):
-        space = maya.OpenMaya.MSpace.kWorld
+        space = maya.api.OpenMaya.MSpace.kWorld if is_new_api() else maya.OpenMaya.MSpace.kWorld
         uv = self.get_closest_parameter(source_vector)
         vector = self.obj.normal(uv[0], uv[1], space)
         if not at_source_position:
@@ -1145,19 +1256,22 @@ class NurbsSurfaceFunction(MayaFunction, object):
 
 class NurbsCurveFunction(MayaFunction, object):
     def _set_api_object(self, mobj):
-        return maya.OpenMaya.MFnNurbsCurve(mobj)
+        if is_new_api():
+            return maya.api.OpenMaya.MFnNurbsCurve(mobj)
+        else:
+            return maya.OpenMaya.MFnNurbsCurve(mobj)
 
     def get_length(self):
         return self.obj.length()
 
     def get_degree(self):
-        return self.obj.degree if maya.is_new_api() else self.obj.degree()
+        return self.obj.degree if is_new_api() else self.obj.degree()
 
     def get_cv_count(self):
         return self.obj.numCVs()
 
     def get_cv_positions(self, space=None):
-        if maya.is_new_api():
+        if is_new_api():
             return self.obj.cvPositions(space)
         else:
             space = space or maya.OpenMaya.MSpace.kObject
@@ -1178,7 +1292,7 @@ class NurbsCurveFunction(MayaFunction, object):
         self.obj.setCVs(point_array)
 
     def get_form(self):
-        return self.obj.form if maya.is_new_api() else self.obj.form()
+        return self.obj.form if is_new_api() else self.obj.form()
 
     def get_knot_count(self):
         return self.obj.numKnots()
@@ -1187,7 +1301,7 @@ class NurbsCurveFunction(MayaFunction, object):
         return self.obj.numSpans()
 
     def get_knot_values(self):
-        if maya.is_new_api():
+        if is_new_api():
             return self.obj.knots()
         else:
             knots = DoubleArray()
@@ -1195,8 +1309,8 @@ class NurbsCurveFunction(MayaFunction, object):
             return knots.get()
 
     def get_position_at_parameter(self, param, space=None):
-        space = space or maya.OpenMaya.MSpace.kObject
-        if maya.is_new_api():
+        space = space or (maya.api.OpenMaya.MSpace.kWorld if is_new_api() else maya.OpenMaya.MSpace.kWorld)
+        if is_new_api():
             point = maya.OpenMaya.MVector(self.obj.getPointAtParam(param, space=space))
         else:
             point = Point()
@@ -1211,6 +1325,9 @@ class NurbsCurveFunction(MayaFunction, object):
         return [point.x, point.y, point.z]
 
     def get_parameter_at_position(self, list_value):
+
+        # TODO: Implement for OpenMaya2
+
         u = maya.OpenMaya.MScriptUtil()
         u_ptr = u.asDoublePtr()
         maya.OpenMaya.MScriptUtil.setDouble(u_ptr, 0.0)
@@ -1225,8 +1342,8 @@ class NurbsCurveFunction(MayaFunction, object):
         return self.obj.findParamFromLength(value)
 
     def get_normal(self, value, space=None):
-        space = space or maya.OpenMaya.MSpace.kObject
-        if maya.is_new_api():
+        space = space or (maya.api.OpenMaya.MSpace.kWorld if is_new_api() else maya.OpenMaya.MSpace.kWorld)
+        if is_new_api():
             normal = self.obj.normal(value, space=space)
         else:
             normal = maya.OpenMaya.MVector()
@@ -1235,8 +1352,8 @@ class NurbsCurveFunction(MayaFunction, object):
         return normal
 
     def get_tangent(self, value, space=None):
-        space = space or maya.OpenMaya.MSpace.kObject
-        if maya.is_new_api():
+        space = space or (maya.api.OpenMaya.MSpace.kWorld if is_new_api() else maya.OpenMaya.MSpace.kWorld)
+        if is_new_api():
             normal = self.obj.tangent(value, space=space)
         else:
             normal = maya.OpenMaya.MVector()
@@ -1283,8 +1400,8 @@ def get_active_selection_list():
     :return: maya.OpenMaya.MSelectionList
     """
 
-    if maya.is_new_api():
-        selection_list = maya.OpenMaya.MGlobal.getActiveSelectionList()
+    if is_new_api():
+        selection_list = maya.api.OpenMaya.MGlobal.getActiveSelectionList()
     else:
         selection_list = maya.OpenMaya.MSelectionList()
         maya.OpenMaya.MGlobal.getActiveSelectionList(selection_list)
@@ -1294,17 +1411,23 @@ def get_active_selection_list():
 
 class IterateCurveCV(MayaIterator, object):
     def _set_api_object(self, mobj):
-        return maya.OpenMaya.MItCurveCV(mobj)
+        if is_new_api():
+            return maya.api.OpenMaya.MItCurveCV(mobj)
+        else:
+            return maya.OpenMaya.MItCurveCV(mobj)
 
 
 class IterateGeometry(MayaIterator, object):
     def _set_api_object(self, mobj):
-        return maya.OpenMaya.MItGeometry(mobj)
+        if is_new_api():
+            return maya.api.OpenMaya.MItGeometry(mobj)
+        else:
+            return maya.OpenMaya.MItGeometry(mobj)
 
     def get_points(self):
         space = maya.OpenMaya.MSpace.kObject
 
-        if maya.is_new_api():
+        if is_new_api():
             points = self.obj.allPositions(space)
         else:
             points = maya.OpenMaya.MPointArray()
@@ -1330,10 +1453,13 @@ class IterateGeometry(MayaIterator, object):
 
 class IterateEdges(MayaIterator, object):
     def _set_api_object(self, mobj):
-        return maya.OpenMaya.MItMeshEdge(mobj)
+        if is_new_api():
+            return maya.OpenMaya.MItMeshEdge(mobj)
+        else:
+            return maya.api.OpenMaya.MItMeshEdge(mobj)
 
     def set_edge(self, edge_id):
-        if maya.is_new_api():
+        if is_new_api():
             prev = self.obj.setIndex(edge_id)
         else:
             script_util = maya.OpenMaya.MScriptUtil()
@@ -1351,7 +1477,7 @@ class IterateEdges(MayaIterator, object):
 
     def get_connected_faces(self, edge_id):
         self.set_edge(edge_id)
-        if maya.is_new_api():
+        if is_new_api():
             connected_faces = self.obj.getConnectedFaces()
         else:
             connected_faces = maya.OpenMaya.MIntArray()
@@ -1362,7 +1488,7 @@ class IterateEdges(MayaIterator, object):
     def get_connected_edges(self, edge_id):
         self.set_edge(edge_id)
 
-        if maya.is_new_api():
+        if is_new_api():
             connected_edges = self.obj.getConnectedEdges()
         else:
             connected_edges = maya.OpenMaya.MIntArray()
@@ -1373,7 +1499,10 @@ class IterateEdges(MayaIterator, object):
 
 class IterateVertices(MayaIterator, object):
     def _set_api_object(self, mobj):
-        return maya.OpenMaya.MItMeshVertex(mobj)
+        if is_new_api():
+            return maya.api.OpenMaya.MItMeshVertex(mobj)
+        else:
+            return maya.OpenMaya.MItMeshVertex(mobj)
 
     def is_done(self):
         return self.obj.isDone()
@@ -1413,7 +1542,7 @@ class IterateVertices(MayaIterator, object):
         while not self.obj.isDone():
             has_vertex_color = self.obj.hasColor()
             if has_vertex_color:
-                if maya.is_new_api():
+                if is_new_api():
                     vertices_color[self.obj.index()] = self.obj.getColor()
                 else:
                     vertex_color = maya.OpenMaya.MColor()
@@ -1431,7 +1560,10 @@ class IterateVertices(MayaIterator, object):
 
 class IteratePolygonFaces(MayaIterator, object):
     def _set_api_object(self, mobj):
-        return maya.OpenMaya.MItMeshPolygon(mobj)
+        if is_new_api():
+            return maya.api.OpenMaya.MItMeshPolygon(mobj)
+        else:
+            return maya.OpenMaya.MItMeshPolygon(mobj)
 
     def is_done(self):
         return self.obj.isDone()
@@ -1450,14 +1582,14 @@ class IteratePolygonFaces(MayaIterator, object):
 
     def get_area(self, face_id=None):
         if face_id:
-            if maya.is_new_api():
+            if is_new_api():
                 prev = self.obj.setIndex(face_id)
             else:
                 script_util = maya.OpenMaya.MScriptUtil()
                 prev = script_util.asIntPtr()
                 self.obj.setIndex(face_id, prev)
 
-        if maya.is_new_api():
+        if is_new_api():
             area_value = self.obj.getArea()
         else:
             script_util = maya.OpenMaya.MScriptUtil()
@@ -1499,7 +1631,7 @@ class IteratePolygonFaces(MayaIterator, object):
         return closest_face
 
     def get_edges(self, face_id):
-        if maya.is_new_api():
+        if is_new_api():
             prev = self.obj.setIndex(face_id)
             edges = self.obj.getEdges()
         else:
@@ -1514,9 +1646,9 @@ class IteratePolygonFaces(MayaIterator, object):
         return edges
 
     def get_center(self, face_id=None):
-        space = maya.OpenMaya.MSpace.kWorld
+        space = maya.api.OpenMaya.MSpace.kWorld if is_new_api() else maya.OpenMaya.MSpace.kWorld
         if face_id:
-            if maya.is_new_api():
+            if is_new_api():
                 prev = self.obj.setIndex(face_id)
             else:
                 script_util = maya.OpenMaya.MScriptUtil()
@@ -1528,16 +1660,16 @@ class IteratePolygonFaces(MayaIterator, object):
         return point.x, point.y, point.z
 
     def get_normal(self, face_id=None):
-        space = maya.OpenMaya.MSpace.kWorld
+        space = maya.api.OpenMaya.MSpace.kWorld if is_new_api() else maya.OpenMaya.MSpace.kWorld
         if face_id:
-            if maya.is_new_api():
+            if is_new_api():
                 prev = self.obj.setIndex(face_id)
             else:
                 script_util = maya.OpenMaya.MScriptUtil()
                 prev = script_util.asIntPtr()
                 self.obj.setIndex(face_id, prev)
 
-        if maya.is_new_api():
+        if is_new_api():
             vector = self.obj.getNormal(space)
         else:
             vector = maya.OpenMaya.MVector()
@@ -1549,9 +1681,9 @@ class IteratePolygonFaces(MayaIterator, object):
 
         # TODO: Finish this implementation
 
-        space = maya.OpenMaya.MSpace.kWorld
+        space = maya.api.OpenMaya.MSpace.kWorld if is_new_api() else maya.OpenMaya.MSpace.kWorld
         if face_id:
-            if maya.is_new_api():
+            if is_new_api():
                 prev = self.obj.setIndex(face_id)
             else:
                 script_util = maya.OpenMaya.MScriptUtil()
@@ -1559,7 +1691,7 @@ class IteratePolygonFaces(MayaIterator, object):
                 self.obj.setIndex(face_id, prev)
 
         position = self.obj.center(space)
-        if maya.is_new_api():
+        if is_new_api():
             normal_vector = self.obj.getNormal(space)
         else:
             normal_vector = maya.OpenMaya.MVector()
@@ -1584,7 +1716,10 @@ class KeyframeFunction(MayaFunction, object):
     OSCILLATE = None
 
     def _set_api_object(self, mobj):
-        api_obj = maya.OpenMayaAnim.MFnAnimCurve(mobj)
+        if is_new_api():
+            api_obj = maya.api.OpenMayaAnim.MFnAnimCurve(mobj)
+        else:
+            api_obj = maya.OpenMayaAnim.MFnAnimCurve(mobj)
         self.CONSTANT = api_obj.kConstant
         self.LINEAR = api_obj.kLinear
         self.CYCLE = api_obj.kCycle

@@ -8,9 +8,14 @@ Module that contains functions and classes to work with HumanIK
 from __future__ import print_function, division, absolute_import
 
 import os
+import logging
 
-import tpDcc as tp
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.mel
+
+from tpDcc import dcc
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class HIKBoneNames(object):
@@ -250,27 +255,27 @@ def create_character(character_name, character_namespace=None, lock=True):
 
     for bone_name, bone_data in HIK_BONES.items():
         bone_full_name = '{}{}'.format(character_namespace, bone_name)
-        if not tp.Dcc.object_exists(bone_full_name):
-            maya.logger.warning('HIK bone "{}" not found in scene!'.format(bone_name))
+        if not dcc.object_exists(bone_full_name):
+            LOGGER.warning('HIK bone "{}" not found in scene!'.format(bone_name))
             continue
         bone_index = bone_data['index']
         set_character_object(character_definition, bone_full_name, bone_index, 0)
 
     property_node = get_properties_node(character_definition)
 
-    tp.Dcc.set_attribute_value(property_node, 'ForceActorSpace', 0)
-    tp.Dcc.set_attribute_value(property_node, 'ScaleCompensationMode', 1)
-    tp.Dcc.set_attribute_value(property_node, 'Mirror', 0)
-    tp.Dcc.set_attribute_value(property_node, 'HipsHeightCompensationMode', 1)
-    tp.Dcc.set_attribute_value(property_node, 'AnkleProximityCompensationMode', 1)
-    tp.Dcc.set_attribute_value(property_node, 'AnkleHeightCompensationMode', 0)
-    tp.Dcc.set_attribute_value(property_node, 'MassCenterCompensationMode', 1)
+    dcc.set_attribute_value(property_node, 'ForceActorSpace', 0)
+    dcc.set_attribute_value(property_node, 'ScaleCompensationMode', 1)
+    dcc.set_attribute_value(property_node, 'Mirror', 0)
+    dcc.set_attribute_value(property_node, 'HipsHeightCompensationMode', 1)
+    dcc.set_attribute_value(property_node, 'AnkleProximityCompensationMode', 1)
+    dcc.set_attribute_value(property_node, 'AnkleHeightCompensationMode', 0)
+    dcc.set_attribute_value(property_node, 'MassCenterCompensationMode', 1)
 
     if lock:
         maya.mel.eval('hikToggleLockDefinition')
     # else:
     #     generator_node = maya.cmds.createNode('HIKSkeletonGeneratorNode')
-        # tp.Dcc.connect_attribute(
+        # dcc.connect_attribute(
         #     generator_node, 'CharacterNode', character_definition, 'SkeletonGenerator', force=True)
 
     return character_definition
@@ -347,10 +352,10 @@ def is_character_definition(node):
     :return: bool
     """
 
-    if not tp.Dcc.object_exists(node):
+    if not dcc.node_exists(node):
         return False
 
-    if tp.Dcc.object_type(node) != 'HIKCharacterNode':
+    if dcc.object_type(node) != 'HIKCharacterNode':
         return False
 
     return True
@@ -471,7 +476,7 @@ def create_skeleton(character_name='Character1', attrs_dict=None):
 
     skeleton_generator_node = create_skeleton_generator_node(current_name)
     if not skeleton_generator_node:
-        maya.logger.warning('Was not possible to create HIK Skeleton Generator node.')
+        LOGGER.warning('Was not possible to create HIK Skeleton Generator node.')
         return False
 
     load_default_human_ik_pose_onto_skeleton_generator_node(skeleton_generator_node)
@@ -481,7 +486,7 @@ def create_skeleton(character_name='Character1', attrs_dict=None):
     reset_current_source()
 
     # If we have no characters yet, select the newly created character to refresh both the character and sources list
-    tp.Dcc.select_node(current_name)
+    dcc.select_node(current_name)
     update_current_character_from_scene()
     update_definition_ui()
     select_skeleton_tab()
@@ -511,8 +516,8 @@ def create_skeleton_generator_node(character_node):
     """
 
     skeleton_generator_node = maya.cmds.createNode('HIKSkeletonGeneratorNode')
-    tp.Dcc.set_attribute_value(skeleton_generator_node, 'isHistoricallyInteresting', 0)
-    tp.Dcc.connect_attribute(skeleton_generator_node, 'CharacterNode', character_node, 'SkeletonGenerator')
+    dcc.set_attribute_value(skeleton_generator_node, 'isHistoricallyInteresting', 0)
+    dcc.connect_attribute(skeleton_generator_node, 'CharacterNode', character_node, 'SkeletonGenerator')
 
     return skeleton_generator_node
 
@@ -524,23 +529,23 @@ def set_skeleton_generator_defaults(skeleton_generator_node):
     """
 
     for attr_name, default_value in HIK_SKELETON_GENERATOR_DEFAULTS.items():
-        if not tp.Dcc.attribute_exists(skeleton_generator_node, attr_name):
-            maya.logger.warning(
+        if not dcc.attribute_exists(skeleton_generator_node, attr_name):
+            LOGGER.warning(
                 'Impossible to reset {} because that attribute was not found in '
                 'HIK Skeleton generator node: "{}"'.format(attr_name, skeleton_generator_node))
             continue
-        tp.Dcc.set_attribute_value(skeleton_generator_node, attr_name, default_value)
+        dcc.set_attribute_value(skeleton_generator_node, attr_name, default_value)
 
 
 def set_skeleton_generator_attrs(skeleton_generator_node, attrs_dict):
 
     for attr_name, attr_value in attrs_dict.items():
-        if not tp.Dcc.attribute_exists(skeleton_generator_node, attr_name):
-            maya.logger.warning(
+        if not dcc.attribute_exists(skeleton_generator_node, attr_name):
+            LOGGER.warning(
                 'Impossible to set {} because that attribute was not found in '
                 'HIK Skeleton generator node "{}"'.format(attr_name, skeleton_generator_node))
             continue
-        tp.Dcc.set_attribute_value(skeleton_generator_node, attr_name, attr_value)
+        dcc.set_attribute_value(skeleton_generator_node, attr_name, attr_value)
 
 
 def load_default_human_ik_pose_onto_skeleton_generator_node(skeleton_generator_node):
@@ -552,7 +557,7 @@ def load_default_human_ik_pose_onto_skeleton_generator_node(skeleton_generator_n
 
     default_pose_file = get_default_human_ik_pose_file()
     if not os.path.isfile(default_pose_file):
-        maya.logger.warning(
+        LOGGER.warning(
             'Impossible to load default HumanIk pose becaue pose file was not found: {}'.format(default_pose_file))
         return False
 
@@ -591,7 +596,7 @@ def sync_skeleton_generator_from_ui():
     Syncs the skeleton generator settings from t he UI
     """
 
-    if tp.Dcc.is_batch():
+    if dcc.is_batch():
         return False
 
     current_name = get_current_character()
@@ -632,7 +637,7 @@ def get_properties_node(character_node):
                     character_node))
 
         if len(connections) > 1:
-            maya.logger.warning(
+            LOGGER.warning(
                 'Multiple HIKProperty2State nodes found for character definition "{}"! '
                 'Returning first item only ...'.format(character_node))
 
@@ -663,7 +668,7 @@ def get_solver_node(character_node):
         raise Exception('Unable to determine HIKSolverNode from character definition node "{}"!'.format(character_node))
 
     if len(connections) > 1:
-        maya.logger.warning(
+        LOGGER.warning(
             'Multiple HIKSolverNode nodes found for character definition "{}"! Returning first item only ...'.format(
                 character_node))
 
@@ -693,7 +698,7 @@ def get_retarget_node(character_node):
             character_node))
 
     if len(connections) > 1:
-        maya.logger.warning(
+        LOGGER.warning(
             'Multiple HIKRetargeterNode  nodes found for character definition "{}"! '
             'Returning first item only ...'.format(character_node))
 
@@ -800,28 +805,28 @@ def load_human_ik_plugin():
 
     maya_location = os.getenv('MAYA_LOCATION', None)
     if not maya_location or not os.path.isdir(maya_location):
-        maya.logger.warning(
+        LOGGER.warning(
             'Impossible to load HumanIK commands/plugins because Maya location was not found: {}!'.format(
                 maya_location))
         return False
 
     # Source HumanIK files
-    maya.eval('source "' + maya_location + '/scripts/others/hikGlobalUtils.mel"')
-    maya.eval('source "' + maya_location + '/scripts/others/hikCharacterControlsUI.mel"')
-    maya.eval('source "' + maya_location + '/scripts/others/hikDefinitionOperations.mel"')
-    maya.eval('source "' + maya_location + '/scripts/others/CharacterPipeline.mel"')
-    maya.eval('source "' + maya_location + '/scripts/others/characterSelector.mel"')
+    maya.mel.eval('source "' + maya_location + '/scripts/others/hikGlobalUtils.mel"')
+    maya.mel.eval('source "' + maya_location + '/scripts/others/hikCharacterControlsUI.mel"')
+    maya.mel.eval('source "' + maya_location + '/scripts/others/hikDefinitionOperations.mel"')
+    maya.mel.eval('source "' + maya_location + '/scripts/others/CharacterPipeline.mel"')
+    maya.mel.eval('source "' + maya_location + '/scripts/others/characterSelector.mel"')
 
     # Load HumanIK plugins
-    if not tp.Dcc.is_plugin_loaded('mayaHIK'):
-        tp.Dcc.register_plugin('mayaHIK')
-    if not tp.Dcc.is_plugin_loaded('mayaCharacterization'):
-        tp.Dcc.register_plugin('mayaCharacterization')
-    if not tp.Dcc.is_plugin_loaded('retargeterNodes'):
-        tp.Dcc.register_plugin('retargeterNodes')
+    if not dcc.is_plugin_loaded('mayaHIK'):
+        dcc.register_plugin('mayaHIK')
+    if not dcc.is_plugin_loaded('mayaCharacterization'):
+        dcc.register_plugin('mayaCharacterization')
+    if not dcc.is_plugin_loaded('retargeterNodes'):
+        dcc.register_plugin('retargeterNodes')
 
     # HIK Character Controls Tool
-    maya.eval('HIKCharacterControlsTool')
+    maya.mel.eval('HIKCharacterControlsTool')
 
     return True
 

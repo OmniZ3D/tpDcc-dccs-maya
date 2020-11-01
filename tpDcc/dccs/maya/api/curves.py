@@ -10,8 +10,10 @@ from __future__ import print_function, division, absolute_import
 from copy import copy
 from collections import OrderedDict
 
+import maya.cmds
+import maya.api.OpenMaya
+
 from tpDcc.libs.python import python
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.api import plugs, node as node_api
 
@@ -97,16 +99,16 @@ def get_curve_data(curve_shape, space=None):
     :return: dict
     """
 
-    space = space or maya.OpenMaya.MSpace.kObject
-    shape = maya.OpenMaya.MFnDagNode(curve_shape).getPath()
+    space = space or maya.api.OpenMaya.MSpace.kObject
+    shape = maya.api.OpenMaya.MFnDagNode(curve_shape).getPath()
     data = node_api.get_node_color_data(shape)
-    curve = maya.OpenMaya.MFnNurbsCurve(shape)
+    curve = maya.api.OpenMaya.MFnNurbsCurve(shape)
 
-    curve_knots = tuple(curve.knots() if maya.is_new_api() else curve.getKnots())
-    curve_degree = tuple(curve.degree if maya.is_new_api() else curve.degree())
-    curve_form = tuple(curve.form if maya.is_new_api() else curve.form())
-    curve_matrix = tuple(curve.form if maya.is_new_api() else curve.form())
-    curve_cvs = map(tuple, curve.cvPositions(space) if maya.is_new_api() else curve.cvs(space))
+    curve_knots = tuple(curve.knots())
+    curve_degree = tuple(curve.degree)
+    curve_form = tuple(curve.form)
+    curve_matrix = tuple(curve.form)
+    curve_cvs = map(tuple, curve.cvPositions(space))
 
     data.update({
         'knots': curve_knots,
@@ -127,14 +129,16 @@ def serialize_transform_curve(node, space=None):
     :return: dict
     """
 
-    space = space or maya.OpenMaya.MSpace.kObject
-    shapes = node_api.get_shapes(maya.OpenMaya.MDagPath(node).getPath(), filter_types=maya.OpenMaya.MFn.kNurbsCurve)
+    space = space or maya.api.OpenMaya.MSpace.kObject
+    shapes = node_api.get_shapes(
+        maya.api.OpenMaya.MDagPath(node).getPath(), filter_types=maya.api.OpenMaya.MFn.kNurbsCurve)
     data = dict()
     for shape in shapes:
         shape_dag = api.DagNode(shape.node())
         is_intermerdiate = shape_dag.is_intermediate_object()
         if not is_intermerdiate:
-            data[maya.OpenMaya.MNamespace.stripNamespaceFromName(shape_dag.get_name())] = get_curve_data(shape, space)
+            data[maya.api.OpenMaya.MNamespace.stripNamespaceFromName(
+                shape_dag.get_name())] = get_curve_data(shape, space)
 
     return data
 
@@ -149,7 +153,7 @@ def iterate_curve_points(dag_path, count, space=None):
     :return: tuple(MVector, MVector, MVector), position, normal and tangent of the curve points
     """
 
-    space = space or maya.OpenMaya.MSpace.kObject
+    space = space or maya.api.OpenMaya.MSpace.kObject
     curve_fn = api.NurbsCurveFunction(dag_path)
     length = curve_fn.get_length()
     distance = length / float(count - 1)
@@ -161,7 +165,7 @@ def iterate_curve_points(dag_path, count, space=None):
         param = curve_fn.get_parameter_at_length(current)
         if param == max_param:
             param = max_param - 0.0001
-        point = maya.OpenMaya.MVector(curve_fn.get_position_at_parameter(param, space=space))
+        point = maya.api.OpenMaya.MVector(curve_fn.get_position_at_parameter(param, space=space))
         try:
             yield point, curve_fn.get_normal(param), curve_fn.get_tangent(param)
         except RuntimeError:
@@ -180,18 +184,18 @@ def mirror_curve_cvs(curve_obj, axis='x', space=None):
     :return:
     """
 
-    space = space or maya.OpenMaya.MSpace.kObject
+    space = space or maya.api.OpenMaya.MSpace.kObject
     axis = axis.lower()
     axis_dict = {'x': 0, 'y': 1, 'z': 2}
     axis_to_mirror = set(axis_dict[ax] for ax in axis)
 
-    for shape in node_api.iterate_shapes(maya.OpenMaya.MFnDagNode(curve_obj).getPath()):
-        curve = maya.OpenMaya.MFnNurbsCurve(shape)
-        cvs = curve.cvPositions(space) if maya.is_new_api() else curve.cvs(space)
+    for shape in node_api.iterate_shapes(maya.api.OpenMaya.MFnDagNode(curve_obj).getPath()):
+        curve = maya.api.OpenMaya.MFnNurbsCurve(shape)
+        cvs = curve.cvPositions(space)
         for i in cvs:
             for ax in axis_to_mirror:
                 i[ax] *= -1
-        curve.setCVPositions(cvs) if maya.is_new_api() else curve.setCVs(cvs)
+        curve.setCVPositions(cvs)
         curve.updateCurve()
 
 
@@ -204,12 +208,12 @@ def match_curves(driver, targets, space=None):
     :return: list(MObject)
     """
 
-    space = space or maya.OpenMaya.MSpace.kObject
+    space = space or maya.api.OpenMaya.MSpace.kObject
     driver_data = serialize_transform_curve(driver, space=space)
     shapes = list()
     for target in targets:
         target_shapes = [node_api.name_from_mobject(i.node()) for i in node_api.iterate_shapes(
-            maya.OpenMaya.MDagPath.getAPathTo(target))]
+            maya.api.OpenMaya.MDagPath.getAPathTo(target))]
         if target_shapes:
             maya.cmds.delete(target_shapes)
         shapes.extend(create_curve_shape(target, driver_data, space=space)[1])
@@ -231,11 +235,11 @@ def create_curve_shape(
 
     parent_inverse_matrix = api.Matrix()
     if parent is None:
-        parent = maya.OpenMaya.MObject.kNullObj
+        parent = maya.api.OpenMaya.MObject.kNullObj
     else:
         if python.is_string(parent):
             parent = node_api.as_mobject(parent)
-        if parent != maya.OpenMaya.MObject.kNullObj:
+        if parent != maya.api.OpenMaya.MObject.kNullObj:
             parent_inverse_matrix = node_api.get_world_inverse_matrix(parent)
 
     translate_offset = CurveCV(translate_offset)
@@ -268,7 +272,7 @@ def create_curve_shape(
                 to_parent = created_parents[shape_name] if shape_name in created_parents else parent
                 child_name, child_parent, new_shapes, new_curve = _create_curve(
                     child_name, curve_data[child_name], space, curve_size, translate_offset, scale, order, color,
-                    mirror, maya.OpenMaya.MObject.kNullObj, parent_inverse_matrix)
+                    mirror, maya.api.OpenMaya.MObject.kNullObj, parent_inverse_matrix)
                 created_curves.append(child_name)
                 all_shapes.extend(new_shapes)
                 created_parents[child_name] = child_parent
@@ -308,7 +312,7 @@ def create_curve_from_points(name, points, shape_dict=None, parent=None):
 def _create_curve(
         shape_name, shape_data, space, curve_size, translate_offset, scale, order, color, mirror,
         parent, parent_inverse_matrix):
-    new_curve = maya.OpenMaya.MFnNurbsCurve()
+    new_curve = maya.api.OpenMaya.MFnNurbsCurve()
     new_shapes = list()
 
     # transform cvs
@@ -331,12 +335,12 @@ def _create_curve(
         knots = tuple([float(i) for i in range(-degree + 1, cvs.length())])
 
     enabled = shape_data.get('overrideEnabled', False) or color is not None
-    if space == maya.OpenMaya.MSpace.kWorld and parent != maya.OpenMaya.MObject.kNullObj:
+    if space == maya.api.OpenMaya.MSpace.kWorld and parent != maya.api.OpenMaya.MObject.kNullObj:
         for i in range(len(cvs.obj)):
             cvs.obj[i] *= parent_inverse_matrix
     shape = new_curve.create(cvs.obj, knots, degree, form, False, False, parent)
     new_shapes.append(shape)
-    if parent == maya.OpenMaya.MObject.kNullObj and shape.apiType() == maya.OpenMaya.MFn.kTransform:
+    if parent == maya.api.OpenMaya.MObject.kNullObj and shape.apiType() == maya.api.OpenMaya.MFn.kTransform:
         parent = shape
     if enabled:
         plugs.set_plug_value(

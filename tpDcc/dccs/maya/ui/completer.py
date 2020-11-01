@@ -7,9 +7,9 @@ Module that contains implementation for Maya Script completer
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtCore import *
+from Qt.QtCore import Qt
 
-from tpDcc.libs.qt.core import completer
+from tpDcc.dcc import completer
 
 
 class MayaCompleter(completer.BaseCompleter):

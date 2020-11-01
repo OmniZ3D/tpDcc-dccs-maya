@@ -11,14 +11,15 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-from Qt.QtWidgets import *
-from Qt.QtGui import *
+from Qt.QtWidgets import QWidget
+from Qt.QtGui import QPixmap
 try:
     from shiboken import wrapInstance
 except ImportError:
     from shiboken2 import wrapInstance
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.OpenMayaUI
 
 
 def get_default_shaders():

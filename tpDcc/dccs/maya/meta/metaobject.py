@@ -7,7 +7,8 @@ MetaNode class implementation for Maya
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.dccs.maya.meta import metanode, metautils
 from tpDcc.dccs.maya.core import transform as transform_lib, shape as shape_lib, attribute as attr_utils
 

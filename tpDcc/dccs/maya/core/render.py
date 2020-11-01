@@ -9,21 +9,20 @@ from __future__ import print_function, division, absolute_import
 
 import logging
 
+from tpDcc import dcc
 from tpDcc.libs.python import decorators
 
-import tpDcc as tp
-
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
-@decorators.Singleton
+@decorators.add_metaclass(decorators.Singleton)
 class RenderGlobals(object):
     def __init__(self):
         render_globals_node = get_render_globals_node_name()
         self._attrs_dict = dict()
-        all_attrs = tp.Dcc.list_attributes(render_globals_node)
+        all_attrs = dcc.list_attributes(render_globals_node)
         for attr in all_attrs:
-            self._attrs_dict[attr] = tp.Dcc.attribute_default_value(render_globals_node, attr)
+            self._attrs_dict[attr] = dcc.attribute_default_value(render_globals_node, attr)
 
     def __getattr__(self, item):
         if item in self._attrs_dict:
@@ -38,14 +37,14 @@ class RenderGlobals(object):
             set_render_globals_attribute(attr, value)
 
 
-@decorators.Singleton
+@decorators.add_metaclass(decorators.Singleton)
 class DefafultResolution(object):
     def __init__(self):
         default_resolution_node = get_default_resolution_node_name()
         self._attrs_dict = dict()
-        all_attrs = tp.Dcc.list_attributes(default_resolution_node)
+        all_attrs = dcc.list_attributes(default_resolution_node)
         for attr in all_attrs:
-            self._attrs_dict[attr] = tp.Dcc.attribute_default_value(default_resolution_node, attr)
+            self._attrs_dict[attr] = dcc.attribute_default_value(default_resolution_node, attr)
 
     def __getattr__(self, item):
         if item in self._attrs_dict:
@@ -87,12 +86,12 @@ def get_render_globals_attribute(attribute_name, default_value=None):
     """
 
     render_globals_node = get_render_globals_node_name()
-    if not tp.Dcc.attribute_exists(render_globals_node, attribute_name):
+    if not dcc.attribute_exists(render_globals_node, attribute_name):
         LOGGER.warning(
             'Attribute "{}" does not exists in RenderGlobals node "{}"!'.format(attribute_name, render_globals_node))
         return default_value
 
-    return tp.Dcc.get_attribute_value(render_globals_node, attribute_name)
+    return dcc.get_attribute_value(render_globals_node, attribute_name)
 
 
 def set_render_globals_attribute(attribute_name, attribute_value):
@@ -104,13 +103,13 @@ def set_render_globals_attribute(attribute_name, attribute_value):
     """
 
     render_globals_node = get_render_globals_node_name()
-    if not tp.Dcc.attribute_exists(render_globals_node, attribute_name):
+    if not dcc.attribute_exists(render_globals_node, attribute_name):
         LOGGER.warning(
             'Attribute "{}" does not exists in RenderGlobasls node "{}"!'.format(attribute_name, render_globals_node))
         return False
 
     try:
-        return tp.Dcc.set_attribute_value(render_globals_node, attribute_name, attribute_value)
+        return dcc.set_attribute_value(render_globals_node, attribute_name, attribute_value)
     except Exception as exc:
         LOGGER.error(
             'Was impossible to set attribute "{}" in RenderGlobals node "{}" with value "{}" | "{}"'.format(
@@ -127,13 +126,13 @@ def get_default_resolution_attribute(attribute_name, default_value=None):
     """
 
     default_resolution_node = get_default_resolution_node_name()
-    if not tp.Dcc.attribute_exists(default_resolution_node, attribute_name):
+    if not dcc.attribute_exists(default_resolution_node, attribute_name):
         LOGGER.warning(
             'Attribute "{}" does not exists in DefaultResolution node "{}"!'.format(
                 attribute_name, default_resolution_node))
         return default_value
 
-    return tp.Dcc.get_attribute_value(default_resolution_node, attribute_name)
+    return dcc.get_attribute_value(default_resolution_node, attribute_name)
 
 
 def set_default_resolution_attribute(attribute_name, attribute_value):
@@ -145,14 +144,14 @@ def set_default_resolution_attribute(attribute_name, attribute_value):
     """
 
     default_resolution_node = get_default_resolution_node_name()
-    if not tp.Dcc.attribute_exists(default_resolution_node, attribute_name):
+    if not dcc.attribute_exists(default_resolution_node, attribute_name):
         LOGGER.warning(
             'Attribute "{}" does not exists in DefafultResolution node "{}"!'.format(
                 attribute_name, default_resolution_node))
         return False
 
     try:
-        return tp.Dcc.set_attribute_value(default_resolution_node, attribute_name, attribute_value)
+        return dcc.set_attribute_value(default_resolution_node, attribute_name, attribute_value)
     except Exception as exc:
         LOGGER.error(
             'Was impossible to set attribute "{}" in DefafultResolution node "{}" with value "{}" | "{}"'.format(

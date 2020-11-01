@@ -6,14 +6,17 @@ Module that contains rig utils functions for Maya
 """
 
 import math
+import logging
 
-import tpDcc as tp
+import maya.cmds
+
+from tpDcc import dcc
 from tpDcc.libs.python import python
-
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import constraint as cns_utils, attribute as attr_utils, transform as transform_utils
 from tpDcc.dccs.maya.core import joint as jnt_utils, animation as anim_utils, space as space_utils, skin as skin_utils
 from tpDcc.dccs.maya.core import shape as shape_utils, geometry as geo_utils, rivet as rivet_utils, ik as ik_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class RigSwitch(object):
@@ -34,11 +37,11 @@ class RigSwitch(object):
         self._conditions = dict()
 
         if not maya.cmds.objExists('{}.switch'.format(switch_joint)):
-            maya.logger.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
+            LOGGER.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
 
         weight_count = self.get_weight_count()
         if not weight_count:
-            maya.logger.warning('{} has no weights!'.format(weight_count))
+            LOGGER.warning('{} has no weights!'.format(weight_count))
 
         for i in range(weight_count):
             self._groups[i] = None
@@ -79,7 +82,7 @@ class RigSwitch(object):
         elif not self._control_name or not maya.cmds.objExists(self._control_name):
             attr_name = '{}.{}'.format(self._switch_joint, self._attribute_name)
         else:
-            maya.logger.error('Impossible to create RigSwitch Attribute ...')
+            LOGGER.error('Impossible to create RigSwitch Attribute ...')
             return
 
         for key in self._groups.keys():
@@ -116,12 +119,12 @@ class RigSwitch(object):
 
         groups = python.force_list(groups)
         if not self._switch_joint or not maya.cmds.objExists(self._switch_joint):
-            maya.logger.warning('Swtich joint {} does not exists!'.format(self._switch_joint))
+            LOGGER.warning('Swtich joint {} does not exists!'.format(self._switch_joint))
             return
 
         weight_count = self.get_weight_count()
         if weight_count < (index + 1):
-            maya.logger.warning(
+            LOGGER.warning(
                 'Adding groups to index {} is undefined. {}.switch does not have that many inputs'.format(
                     index, self._switch_joint))
 
@@ -249,8 +252,8 @@ class StretchyChain(object):
                 distance_offset = self._create_distance_offset()
                 self._create_stretch_distance(top_locator, bottom_locator, distance_offset)
                 divide_distance = self._create_divide_distance()
-                tp.Dcc.connect_attribute(distance_offset, 'outputX', divide_distance, 'input1X')
-                tp.Dcc.connect_attribute(divide_distance, 'outputX', jnt, 'scale{}'.format(self._scale_axis))
+                dcc.connect_attribute(distance_offset, 'outputX', divide_distance, 'input1X')
+                dcc.connect_attribute(divide_distance, 'outputX', jnt, 'scale{}'.format(self._scale_axis))
         else:
             stretch_condition = self._create_stretch_condition()
             distance_offset = self._create_distance_offset(stretch_condition=stretch_condition)
@@ -289,19 +292,19 @@ class StretchyChain(object):
                 break
             current_joint = self._joints[i]
             next_joint = self._joints[i + 1]
-            distance = tp.Dcc.distance_between_nodes(current_joint, next_joint)
+            distance = dcc.distance_between_nodes(current_joint, next_joint)
             length += distance
 
         return length
 
     def _build_stretch_locators(self):
-        top_distance_locator = tp.Dcc.create_empty_group(
-            name=tp.Dcc.find_unique_name('locator_topDistance_{}'.format(self._name)))
-        match = tp.Dcc.match_translation_rotation(self._joints[0], top_distance_locator)
+        top_distance_locator = dcc.create_empty_group(
+            name=dcc.find_unique_name('locator_topDistance_{}'.format(self._name)))
+        match = dcc.match_translation_rotation(self._joints[0], top_distance_locator)
 
-        bottom_distance_locator = tp.Dcc.create_empty_group(
-            name=tp.Dcc.find_unique_name('locator_bottomDistance_{}'.format(self._name)))
-        match = tp.Dcc.match_translation_rotation(self._joints[-1], top_distance_locator)
+        bottom_distance_locator = dcc.create_empty_group(
+            name=dcc.find_unique_name('locator_bottomDistance_{}'.format(self._name)))
+        match = dcc.match_translation_rotation(self._joints[-1], top_distance_locator)
 
         if not self._attribute_node:
             self._attribute_node = top_distance_locator
@@ -320,15 +323,15 @@ class StretchyChain(object):
         return multiply.node
 
     def _create_stretch_distance(self, top_locator, bottom_locator, distance_offset):
-        distance_between = tp.Dcc.create_node(
-            node_name=tp.Dcc.find_unique_name('distanceBetween_{}'.format(self._name)), node_type='distanceBetween')
+        distance_between = dcc.create_node(
+            node_name=dcc.find_unique_name('distanceBetween_{}'.format(self._name)), node_type='distanceBetween')
         if self._vector:
-            tp.Dcc.connect_attribute(top_locator, 'translate', distance_between, 'point1')
-            tp.Dcc.connect_attribute(bottom_locator, 'translate', distance_between, 'point2')
+            dcc.connect_attribute(top_locator, 'translate', distance_between, 'point1')
+            dcc.connect_attribute(bottom_locator, 'translate', distance_between, 'point2')
         else:
-            tp.Dcc.connect_attribute(top_locator, 'worldMatrix', distance_between, 'inMatrix1')
-            tp.Dcc.connect_attribute(bottom_locator, 'worldMatrix', distance_between, 'inMatrix2')
-        tp.Dcc.connect_attribute(distance_between, 'distance', distance_offset, 'input1X')
+            dcc.connect_attribute(top_locator, 'worldMatrix', distance_between, 'inMatrix1')
+            dcc.connect_attribute(bottom_locator, 'worldMatrix', distance_between, 'inMatrix2')
+        dcc.connect_attribute(distance_between, 'distance', distance_offset, 'input1X')
 
         return distance_between
 
@@ -349,60 +352,60 @@ class StretchyChain(object):
 
     def _create_stretch_condition(self):
         total_length = self._get_length()
-        condition = tp.Dcc.create_node(
-            node_name=tp.Dcc.find_unique_name('{}_stretchCondition'.format(self._name)), node_type='condition')
-        tp.Dcc.set_integer_attribute_value(condition, 'operation', 2)
-        tp.Dcc.set_integer_attribute_value(condition, 'firstTerm', total_length)
-        tp.Dcc.set_integer_attribute_value(condition, 'colorIfTrueR', total_length)
+        condition = dcc.create_node(
+            node_name=dcc.find_unique_name('{}_stretchCondition'.format(self._name)), node_type='condition')
+        dcc.set_integer_attribute_value(condition, 'operation', 2)
+        dcc.set_integer_attribute_value(condition, 'firstTerm', total_length)
+        dcc.set_integer_attribute_value(condition, 'colorIfTrueR', total_length)
         self._stretch_condition = condition
 
         return condition
 
     def _create_stretch_on_off(self, stretch_condition):
-        blend = tp.Dcc.create_node(
-            node_name=tp.Dcc.find_unique_name('blendColors_{}'.format(self._name)), node_type='blendColors')
-        tp.Dcc.set_integer_attribute_value(blend, 'color2R', self._get_length())
-        tp.Dcc.set_integer_attribute_value(blend, 'blender', 1)
-        tp.Dcc.connect_attribute(stretch_condition, 'outColorR', blend, 'color1R')
+        blend = dcc.create_node(
+            node_name=dcc.find_unique_name('blendColors_{}'.format(self._name)), node_type='blendColors')
+        dcc.set_integer_attribute_value(blend, 'color2R', self._get_length())
+        dcc.set_integer_attribute_value(blend, 'blender', 1)
+        dcc.connect_attribute(stretch_condition, 'outColorR', blend, 'color1R')
 
         return blend
 
     def _create_offsets(self, divide_distance):
         stretch_offsets = list()
 
-        plus_total_offset = tp.Dcc.create_node(
-            node_name=tp.Dcc.find_unique_name('plusMinusAverage_total_offset_{}'.format(
+        plus_total_offset = dcc.create_node(
+            node_name=dcc.find_unique_name('plusMinusAverage_total_offset_{}'.format(
                 self._name)), node_type='plusMinusAverage')
         self._plus_total_offset = plus_total_offset
-        tp.Dcc.set_integer_attribute_value(plus_total_offset, 'operation', 3)
+        dcc.set_integer_attribute_value(plus_total_offset, 'operation', 3)
 
         for i in range(self._get_joint_count() - 1):
             var_name = 'offset{}'.format(i + 1)
             multiply = attr_utils.connect_multiply(
                 '{}.outputX'.format(divide_distance), '{}.scale{}'.format(self._joints[i], self._scale_axis), 1)
-            tp.Dcc.add_double_attribute(multiply, var_name, min_value=0.1, default_value=self._scale_offset)
+            dcc.add_double_attribute(multiply, var_name, min_value=0.1, default_value=self._scale_offset)
 
             if self._scale_offset != 1:
-                offset_multiply = tp.Dcc.create_node(
+                offset_multiply = dcc.create_node(
                     node_name='multiplyDivide_scaleOffset', node_type='multiplyDivide')
-                tp.Dcc.connect_attribute(multiply, var_name, offset_multiply, 'input1X')
+                dcc.connect_attribute(multiply, var_name, offset_multiply, 'input1X')
                 offset_value = 1.0 / self._scale_offset
-                tp.Dcc.set_float_attribute_value(offset_multiply, 'input2X', offset_value)
-                tp.Dcc.connect_attribute(offset_multiply, 'outputX', multiply, 'input2X')
-                tp.Dcc.connect_attribute(offset_multiply, 'outputX', plus_total_offset, 'input1D[{}]'.format(i + 1))
+                dcc.set_float_attribute_value(offset_multiply, 'input2X', offset_value)
+                dcc.connect_attribute(offset_multiply, 'outputX', multiply, 'input2X')
+                dcc.connect_attribute(offset_multiply, 'outputX', plus_total_offset, 'input1D[{}]'.format(i + 1))
             elif self._scale_offset == 1:
-                tp.Dcc.connect_attribute(multiply, var_name, multiply, 'input1X')
-                tp.Dcc.connect_attribute(multiply, var_name, plus_total_offset, 'input1D[{}]'.format(i + 1))
+                dcc.connect_attribute(multiply, var_name, multiply, 'input1X')
+                dcc.connect_attribute(multiply, var_name, plus_total_offset, 'input1D[{}]'.format(i + 1))
 
             stretch_offsets.append(multiply)
 
-        orig_distance_multiply = tp.Dcc.create_node(
-            node_name=tp.Dcc.find_unique_name('multiplyDivide_orig_distance_{}'.format(self._name)),
+        orig_distance_multiply = dcc.create_node(
+            node_name=dcc.find_unique_name('multiplyDivide_orig_distance_{}'.format(self._name)),
             node_type='multiplyDivide')
         self._orig_distance = orig_distance_multiply
         length = self._get_length()
-        tp.Dcc.set_float_attribute_value(orig_distance_multiply, 'input1X', length)
-        tp.Dcc.connect_attribute(plus_total_offset, 'output1D', orig_distance_multiply, 'input2X')
+        dcc.set_float_attribute_value(orig_distance_multiply, 'input1X', length)
+        dcc.connect_attribute(plus_total_offset, 'output1D', orig_distance_multiply, 'input2X')
 
         self._stretch_offsets = stretch_offsets
 
@@ -410,19 +413,19 @@ class StretchyChain(object):
 
     def _create_attributes(self, stretch_on_off):
         if self._create_title:
-            tp.Dcc.add_title_attribute(self._attribute_node, 'STRETCH')
+            dcc.add_title_attribute(self._attribute_node, 'STRETCH')
 
-        tp.Dcc.add_double_attribute(
+        dcc.add_double_attribute(
             self._attribute_node, self._attribute_name, min_value=0, max_value=1, default_value=self._default_vaue)
-        tp.Dcc.connect_attribute(self._attribute_node, self._attribute_name, stretch_on_off, 'blender')
+        dcc.connect_attribute(self._attribute_node, self._attribute_name, stretch_on_off, 'blender')
 
     def _create_offset_attributes(self, stretch_offsets):
         for i in range(len(stretch_offsets)):
             attr_name = 'stretech_{}'.format(i + 1)
-            tp.Dcc.add_double_attribute(
+            dcc.add_double_attribute(
                 self._attribute_node, attr_name, min_value=0.1, default_value=self._scale_offset,
                 keyable=bool(self._per_joint_stretch))
-            tp.Dcc.connect_attribute(self._attribute_node, attr_name, stretch_offsets[i], 'offset{}'.format(i + 1))
+            dcc.connect_attribute(self._attribute_node, attr_name, stretch_offsets[i], 'offset{}'.format(i + 1))
 
     def _add_joint(self, jnt):
         index = len(self._stretch_offsets) + 1
@@ -430,52 +433,52 @@ class StretchyChain(object):
         var_stretch = 'stretch_{}'.format(index)
         multiply = attr_utils.connect_multiply(
             '{}.outputX'.format(self._divide_distance), '{}.scale{}'.format(jnt, self._scale_axis), 1)
-        tp.Dcc.add_double_attribute(multiply, var_offset, min_value=0.1, default_value=1)
-        tp.Dcc.connect_attribute(multiply, var_offset, multiply, 'input2X')
-        tp.Dcc.connect_attribute(multiply, var_offset, self._plus_total_offset, 'input1D[{}]'.format(index))
-        tp.Dcc.add_double_attribute(
+        dcc.add_double_attribute(multiply, var_offset, min_value=0.1, default_value=1)
+        dcc.connect_attribute(multiply, var_offset, multiply, 'input2X')
+        dcc.connect_attribute(multiply, var_offset, self._plus_total_offset, 'input1D[{}]'.format(index))
+        dcc.add_double_attribute(
             self._attribute_node, var_stretch, min_value=0.1, default_value=1, keyable=bool(self._per_joint_stretch))
-        tp.Dcc.connect_attribute(self._attribute_node, var_stretch, multiply, 'offset{}'.format(index))
-        child_joints = tp.Dcc.node_joints(jnt)
+        dcc.connect_attribute(self._attribute_node, var_stretch, multiply, 'offset{}'.format(index))
+        child_joints = dcc.node_joints(jnt)
         if child_joints:
-            dst = tp.Dcc.distance_between_nodes(jnt, child_joints[0])
-            length = tp.Dcc.get_attribute_value(self._orig_distance, 'input1X')
+            dst = dcc.distance_between_nodes(jnt, child_joints[0])
+            length = dcc.get_attribute_value(self._orig_distance, 'input1X')
             length += dst
-            tp.Dcc.set_float_attribute_value(self._orig_distance, 'input1X', length)
+            dcc.set_float_attribute_value(self._orig_distance, 'input1X', length)
 
     def _create_damp(self, distance_offset, plugs):
-        min_length = tp.Dcc.distance_between_nodes(self._joints[0], self._joints[-1])
-        tp.Dcc.add_double_attribute(self._attribute_node, self._damp_name, min_value=0, max_value=1)
-        remap = tp.Dcc.create_node(
+        min_length = dcc.distance_between_nodes(self._joints[0], self._joints[-1])
+        dcc.add_double_attribute(self._attribute_node, self._damp_name, min_value=0, max_value=1)
+        remap = dcc.create_node(
             node_name='{}_remapValue_{}'.format(self._damp_name, self._name), node_type='remapValue')
-        tp.Dcc.set_float_attribute_value(remap, 'value[2].value_Position', 0.4)
-        tp.Dcc.set_float_attribute_value(remap, 'value[2].value_FloatValue', 0.666)
-        tp.Dcc.set_float_attribute_value(remap, 'value[2].value_Interp', 3)
-        tp.Dcc.set_float_attribute_value(remap, 'value[3].value_Position', 0.7)
-        tp.Dcc.set_float_attribute_value(remap, 'value[3].value_FloatValue', 0.9166)
-        tp.Dcc.set_float_attribute_value(remap, 'value[3].value_Interp', 1)
-        multi = tp.Dcc.create_node(
+        dcc.set_float_attribute_value(remap, 'value[2].value_Position', 0.4)
+        dcc.set_float_attribute_value(remap, 'value[2].value_FloatValue', 0.666)
+        dcc.set_float_attribute_value(remap, 'value[2].value_Interp', 3)
+        dcc.set_float_attribute_value(remap, 'value[3].value_Position', 0.7)
+        dcc.set_float_attribute_value(remap, 'value[3].value_FloatValue', 0.9166)
+        dcc.set_float_attribute_value(remap, 'value[3].value_Interp', 1)
+        multi = dcc.create_node(
             node_name='{}_offset_{}'.format(self._damp_name, self._name), node_type='multiplyDivide')
-        add_double = tp.Dcc.create_node(
+        add_double = dcc.create_node(
             node_name='{}_addDouble_{}'.format(self._damp_name, self._name), node_type='addDoubleLinear')
-        tp.Dcc.connect_attribute(self._orig_distance, 'outputX', multi, 'input1X')
-        tp.Dcc.connect_attribute(self._attribute_node, self._damp_name, multi, 'input2X')
-        tp.Dcc.connect_attribute(multi, 'outputX', add_double, 'input1')
-        tp.Dcc.connect_attribute(self._orig_distance, 'outputX', add_double, 'input2')
-        tp.Dcc.connect_attribute(add_double, 'output', remap, 'inputMax')
-        tp.Dcc.connect_attribute(self._orig_distance, 'outputX', remap, 'outputMax')
-        tp.Dcc.set_float_attribute_value(remap, 'inputMin', min_length)
-        tp.Dcc.set_float_attribute_value(remap, 'outputMin', min_length)
-        tp.Dcc.connect_attribute(distance_offset, 'outputX', remap, 'inputValue')
+        dcc.connect_attribute(self._orig_distance, 'outputX', multi, 'input1X')
+        dcc.connect_attribute(self._attribute_node, self._damp_name, multi, 'input2X')
+        dcc.connect_attribute(multi, 'outputX', add_double, 'input1')
+        dcc.connect_attribute(self._orig_distance, 'outputX', add_double, 'input2')
+        dcc.connect_attribute(add_double, 'output', remap, 'inputMax')
+        dcc.connect_attribute(self._orig_distance, 'outputX', remap, 'outputMax')
+        dcc.set_float_attribute_value(remap, 'inputMin', min_length)
+        dcc.set_float_attribute_value(remap, 'outputMin', min_length)
+        dcc.connect_attribute(distance_offset, 'outputX', remap, 'inputValue')
         for plug in plugs:
-            node_short_name = tp.Dcc.node_short_name(plug)
-            node_attr_name = tp.Dcc.node_attribute_name(plug)
-            tp.Dcc.connect_attribute(remap, 'outValue', node_short_name, node_attr_name)
+            node_short_name = dcc.node_short_name(plug)
+            node_attr_name = dcc.node_attribute_name(plug)
+            dcc.connect_attribute(remap, 'outValue', node_short_name, node_attr_name)
 
     def _create_other_distance_offset(self, distance_offset):
         multiply = attr_utils.MultiplyDivideNode('distanceOffset_{}'.format(self._name))
         plug = '{}.input2X'.format(distance_offset)
-        input_to_plug = tp.Dcc.get_attribute_input(plug)
+        input_to_plug = dcc.get_attribute_input(plug)
         multiply.input1X_in(input_to_plug)
         multiply.input2X_in(self._distance_offset_attribute)
         multiply.outputX_out(plug)
@@ -558,11 +561,11 @@ class StretchyElbowLock(object):
         lock_control = self._lock_attribute_control
 
         self._add_attribute(lock_control, 'lock')
-        tp.Dcc.set_minimum_integer_attribute_value(lock_control, 'lock', 0)
-        tp.Dcc.set_maximum_integer_attribute_value(lock_control, 'lock', 1)
+        dcc.set_minimum_integer_attribute_value(lock_control, 'lock', 0)
+        dcc.set_maximum_integer_attribute_value(lock_control, 'lock', 1)
         self._add_attribute(attribute_control, 'stretch', default=self._value)
-        tp.Dcc.set_minimum_integer_attribute_value(attribute_control, 'stretch', 0)
-        tp.Dcc.set_maximum_integer_attribute_value(attribute_control, 'stretch', 1)
+        dcc.set_minimum_integer_attribute_value(attribute_control, 'stretch', 0)
+        dcc.set_maximum_integer_attribute_value(attribute_control, 'stretch', 1)
         self._add_attribute(attribute_control, 'nudge')
 
         self._duplicate_joints()
@@ -585,63 +588,63 @@ class StretchyElbowLock(object):
         distance_bottom = self._rename(distance_bottom, 'btm')
         mult = self._multiply_divide(
             '{}.distance'.format(distance_full), '{}.output'.format(default_dst_double_linear))
-        tp.Dcc.set_integer_attribute_value(mult, 'operation', 2)
+        dcc.set_integer_attribute_value(mult, 'operation', 2)
         mult = self._rename(mult, 'stretch')
         condition = self._condition(
             '{}.outputX'.format(mult),
             '{}.distance'.format(distance_full), '{}.output'.format(default_dst_double_linear))
 
-        blend_two_stretch = tp.Dcc.create_node(node_type='blendTwoAttr')
+        blend_two_stretch = dcc.create_node(node_type='blendTwoAttr')
         blend_two_stretch = self._rename(blend_two_stretch, 'stretch')
-        tp.Dcc.set_integer_attribute_value(blend_two_stretch, 'input[0]', 1)
-        tp.Dcc.connect_attribute(condition, 'outColorR', blend_two_stretch, 'input[1]')
-        tp.Dcc.connect_attribute(attribute_control, 'stretch', blend_two_stretch, 'attributesBlender')
+        dcc.set_integer_attribute_value(blend_two_stretch, 'input[0]', 1)
+        dcc.connect_attribute(condition, 'outColorR', blend_two_stretch, 'input[1]')
+        dcc.connect_attribute(attribute_control, 'stretch', blend_two_stretch, 'attributesBlender')
 
-        nudge_offset = tp.Dcc.create_node('multDoubleLinear')
+        nudge_offset = dcc.create_node('multDoubleLinear')
         nudge_offset = self._rename(nudge_offset, 'nudgeOffset')
-        tp.Dcc.connect_attribute(attribute_control, 'nudge', nudge_offset, 'input1')
-        tp.Dcc.set_float_attribute_value(nudge_offset, 'input2', 0.001)
+        dcc.connect_attribute(attribute_control, 'nudge', nudge_offset, 'input1')
+        dcc.set_float_attribute_value(nudge_offset, 'input2', 0.001)
         nudge_double_linear = self._connect_double_linear(
             '{}.output'.format(blend_two_stretch), '{}.output'.format(nudge_offset))
         nudge_double_linear = self._rename(nudge_double_linear, 'nudge')
 
         mult_lock = self._multiply_divide('{}.distance'.format(distance_top), '{}.distance'.format(dst_a))
         mult_lock = self._rename(mult_lock, 'lock')
-        tp.Dcc.set_integer_attribute_value(mult_lock, 'operation', 2)
-        tp.Dcc.connect_attribute(distance_bottom, 'distance', mult_lock, 'input1Y')
-        tp.Dcc.connect_attribute(distance_bottom, 'distance', mult_lock, 'input2Y')
+        dcc.set_integer_attribute_value(mult_lock, 'operation', 2)
+        dcc.connect_attribute(distance_bottom, 'distance', mult_lock, 'input1Y')
+        dcc.connect_attribute(distance_bottom, 'distance', mult_lock, 'input2Y')
         top_lock_blend = self._blend_two_attr('{}.output'.format(nudge_double_linear), '{}.outputX'.format(mult_lock))
         top_lock_blend = self._rneame(top_lock_blend, 'lockTop')
-        tp.Dcc.connect_attribute(lock_control, 'lock', top_lock_blend, 'attributesBlender')
+        dcc.connect_attribute(lock_control, 'lock', top_lock_blend, 'attributesBlender')
         btm_lock_blend = self._blend_two_attr('{}.output'.format(nudge_double_linear), '{}.outputY'.format(mult_lock))
         btm_lock_blend = self._rename(btm_lock_blend, 'lockBtm')
-        tp.Dcc.connect_attribute(lock_control, 'lock', btm_lock_blend, 'attributesBlender')
+        dcc.connect_attribute(lock_control, 'lock', btm_lock_blend, 'attributesBlender')
 
-        top_mult = tp.Dcc.create_node('multDoubleLinear')
+        top_mult = dcc.create_node('multDoubleLinear')
         top_mult = self._rename(top_mult, 'top')
-        tp.Dcc.connect_attribute(top_lock_blend, 'output', top_mult, 'input2')
+        dcc.connect_attribute(top_lock_blend, 'output', top_mult, 'input2')
 
         if self._use_translate:
-            tp.Dcc.set_float_attribute_value(
+            dcc.set_float_attribute_value(
                 top_mult, 'input1',
-                tp.Dcc.get_attribute_value(self._joints[1], 'translate{}'.format(self._axis_letter)))
-            tp.Dcc.connect_attribute(top_mult, 'output', self._joints[1], 'translate{}'.format(self._axis_letter))
+                dcc.get_attribute_value(self._joints[1], 'translate{}'.format(self._axis_letter)))
+            dcc.connect_attribute(top_mult, 'output', self._joints[1], 'translate{}'.format(self._axis_letter))
         else:
-            tp.Dcc.set_integer_attribute_value(top_mult, 'input1', 1)
-            tp.Dcc.connect_attribute(top_mult, 'output', self._joints[0], 'scale{}'.format(self._axis_letter))
+            dcc.set_integer_attribute_value(top_mult, 'input1', 1)
+            dcc.connect_attribute(top_mult, 'output', self._joints[0], 'scale{}'.format(self._axis_letter))
 
-        bottom_mult = tp.Dcc.create_node('multDoubleLinear')
+        bottom_mult = dcc.create_node('multDoubleLinear')
         bottom_mult = self._rename(bottom_mult, 'btm')
-        tp.Dcc.connect_attribute(btm_lock_blend, 'output', bottom_mult, 'input2')
+        dcc.connect_attribute(btm_lock_blend, 'output', bottom_mult, 'input2')
 
         if self._use_translate:
-            tp.Dcc.set_float_attribute_value(
+            dcc.set_float_attribute_value(
                 bottom_mult, 'input1',
-                tp.Dcc.get_attribute_value(self._joints[2], 'translate{}'.format(self._axis_letter)))
-            tp.Dcc.connect_attribute(bottom_mult, 'output', self._joints[2], 'translate{}'.format(self._axis_letter))
+                dcc.get_attribute_value(self._joints[2], 'translate{}'.format(self._axis_letter)))
+            dcc.connect_attribute(bottom_mult, 'output', self._joints[2], 'translate{}'.format(self._axis_letter))
         else:
-            tp.Dcc.set_integer_attribute_value(bottom_mult, 'input1', 1)
-            tp.Dcc.connect_attribute(bottom_mult, 'output', self._joints[1], 'scale{}'.format(self._axis_letter))
+            dcc.set_integer_attribute_value(bottom_mult, 'input1', 1)
+            dcc.connect_attribute(bottom_mult, 'output', self._joints[1], 'scale{}'.format(self._axis_letter))
 
         if self._do_create_soft_ik:
             soft = SoftIk(self._joints)
@@ -659,40 +662,40 @@ class StretchyElbowLock(object):
     # =================================================================================================================
 
     def _build_locators(self):
-        self._top_locator = tp.Dcc.create_locator(name='distanceLocator_top_{}'.format(self._description))
-        self._bottom_locator = tp.Dcc.create_locator(name='distanceLocator_bottom_{}'.format(self._description))
-        tp.Dcc.set_parent(self._top_locator, self._controls[0])
-        tp.Dcc.zero_transform_attribute_channels(self._top_locator)
-        tp.Dcc.set_parent(self._bottom_locator, self._controls[-1])
-        tp.Dcc.zero_transform_attribute_channels(self._bottom_locator)
-        tp.Dcc.hide_node(self._top_locator)
-        tp.Dcc.hide_node(self._bottom_locator)
+        self._top_locator = dcc.create_locator(name='distanceLocator_top_{}'.format(self._description))
+        self._bottom_locator = dcc.create_locator(name='distanceLocator_bottom_{}'.format(self._description))
+        dcc.set_parent(self._top_locator, self._controls[0])
+        dcc.zero_transform_attribute_channels(self._top_locator)
+        dcc.set_parent(self._bottom_locator, self._controls[-1])
+        dcc.zero_transform_attribute_channels(self._bottom_locator)
+        dcc.hide_node(self._top_locator)
+        dcc.hide_node(self._bottom_locator)
         self._stretch_locators = [self._top_locator, self._bottom_locator]
 
     def _add_attribute(self, node, attribute_name, default=0):
-        tp.Dcc.add_title_attribute(node, 'STRETCH')
-        tp.Dcc.add_integer_attribute(node, attribute_name, default_value=default, keyable=True)
+        dcc.add_title_attribute(node, 'STRETCH')
+        dcc.add_integer_attribute(node, attribute_name, default_value=default, keyable=True)
 
     def _duplicate_joints(self):
-        duplicates = tp.Dcc.duplicate_hierarchy(self._joints[0], force_only_these=self._joints)
+        duplicates = dcc.duplicate_hierarchy(self._joints[0], force_only_these=self._joints)
         found = list()
         for dup, orig in zip(duplicates, self._joints):
-            new = tp.Dcc.rename_node(dup, 'default_{}'.format(orig))
+            new = dcc.rename_node(dup, 'default_{}'.format(orig))
             found.append(new)
 
-        tp.Dcc.hide_node(found[0])
+        dcc.hide_node(found[0])
 
         self._duplicated_joints = found
 
     def _create_distance(self, transform_a, transform_b):
-        distance_node = tp.Dcc.create_node(node_type='distanceBetween')
-        tp.Dcc.connect_attribute(transform_a, 'worldMatrix', distance_node, 'inMatrix1')
-        tp.Dcc.connect_attribute(transform_b, 'worldMatrix', distance_node, 'inMatrix2')
+        distance_node = dcc.create_node(node_type='distanceBetween')
+        dcc.connect_attribute(transform_a, 'worldMatrix', distance_node, 'inMatrix1')
+        dcc.connect_attribute(transform_b, 'worldMatrix', distance_node, 'inMatrix2')
 
         return distance_node
 
     def _connect_double_linear(self, attr_a, attr_b, input_attr=None):
-        add_double_linear = tp.Dcc.create_node('addDoubleLinear')
+        add_double_linear = dcc.create_node('addDoubleLinear')
         maya.cmds.connectAttr(attr_a, '{}.input1'.format(add_double_linear))
         maya.cmds.connectAttr(attr_b, '{}.input2'.format(add_double_linear))
         if input_attr:
@@ -703,10 +706,10 @@ class StretchyElbowLock(object):
     def _rename(self, old_name, new_name):
         return maya.cmds.rename(
             old_name,
-            tp.Dcc.find_unique_name('{}_{}_{}'.format(tp.Dcc.node_type(old_name), new_name, self._description)))
+            dcc.find_unique_name('{}_{}_{}'.format(dcc.node_type(old_name), new_name, self._description)))
 
     def _multiply_divide(self, attr_a, attr_b, input_attr=None):
-        mult = tp.Dcc.create_node('multiplyDivide')
+        mult = dcc.create_node('multiplyDivide')
         maya.cmds.connectAttr(attr_a, '{}.input1X'.format(mult))
         maya.cmds.connectAttr(attr_b, '{}.input2X'.format(mult))
         if input_attr:
@@ -715,7 +718,7 @@ class StretchyElbowLock(object):
         return mult
 
     def _condition(self, color_if_true_attr, first_term_attr, second_term_attr):
-        condition = tp.Dcc.create_node('condition')
+        condition = dcc.create_node('condition')
         maya.cmds.connectAttr(color_if_true_attr, '{}.colorIfTrueR'.format(condition))
         maya.cmds.connectAttr(first_term_attr, '{}.firstTerm'.format(condition))
         maya.cmds.connectAttr(second_term_attr, '{}.secondTerm'.format(condition))
@@ -723,7 +726,7 @@ class StretchyElbowLock(object):
         return condition
 
     def _blend_two_attr(self, attr_a, attr_b, input_attr=None):
-        blend_two = tp.Dcc.create_node('blendTwoAttr')
+        blend_two = dcc.create_node('blendTwoAttr')
         maya.cmds.connectAttr(attr_a, '{}.input[0]'.format(blend_two))
         maya.cmds.connectAttr(attr_b, '{}.input[1]'.format(blend_two))
         if input_attr:
@@ -783,11 +786,11 @@ class SoftIk(object):
     # =================================================================================================================
 
     def _rename(self, old_name, new_name):
-        return tp.Dcc.rename_Node(old_name, tp.Dcc.find_unique_name(
-            '{}_{}_{}'.format(tp.Dcc.nodetype(old_name), new_name, self._description)))
+        return dcc.rename_Node(old_name, dcc.find_unique_name(
+            '{}_{}_{}'.format(dcc.nodetype(old_name), new_name, self._description)))
 
     def _add_attribute(self, node, attribute_name, default=0):
-        tp.Dcc.add_integer_attribute(node, attribute_name, default_value=default, keyable=True)
+        dcc.add_integer_attribute(node, attribute_name, default_value=default, keyable=True)
 
         return '{}.{}'.format(node, attribute_name)
 
@@ -795,65 +798,65 @@ class SoftIk(object):
         attr = self._add_attribute(soft_buffer_node, self._attribute_name)
         nice_attr = self._add_attribute(self._attribute_contrtol, self._nice_attribute_name, 0)
         anim_utils.quick_driven_key(nice_attr, attr, [0, 1], [0.001, 1], infinite=True)
-        tp.Dcc.unkeyable_attribute(soft_buffer_node, self._attribute_name)
+        dcc.unkeyable_attribute(soft_buffer_node, self._attribute_name)
         tp.Dc.set_minimum_integer_attribute_value(self._attribute_contrtol, self._nice_attribute_name, 0)
         tp.Dc.set_maximum_integer_attribute_value(self._attribute_contrtol, self._nice_attribute_name, 2)
 
     def _build_soft_graph(self):
         chain_distance = jnt_utils.get_joints_chain_length(self._joints)
-        subtract_soft = self._rename(tp.Dcc.create_node('plusMinusAverage'), 'subtractSoft')
+        subtract_soft = self._rename(dcc.create_node('plusMinusAverage'), 'subtractSoft')
         self._create_attributes(subtract_soft)
         soft_attr = '{}.{}'.format(subtract_soft, self._attribute_name)
-        tp.Dcc.set_integer_attribute_value(subtract_soft, 'operation', 2)
+        dcc.set_integer_attribute_value(subtract_soft, 'operation', 2)
         if not self._default_distance_attribute:
-            tp.Dcc.set_float_attribute_value(subtract_soft, 'input1D[0]', chain_distance)
+            dcc.set_float_attribute_value(subtract_soft, 'input1D[0]', chain_distance)
         else:
             maya.cmds.connectAttr(self._default_distance_attribute, '{}.input1D[0]'.format(subtract_soft))
         subtract_soft_total = self._rename(maya.cmds.createNode('plusMinusAverage'), 'subtractSoftTotal')
         maya.cmds.setAttr('{}.operation'.format(subtract_soft_total), 2)
         maya.cmds.connectAttr(self._control_distance_attribute, '{}.input1D[0]'.format(subtract_soft_total))
-        tp.Dcc.connect_attribute(subtract_soft, 'output1D', subtract_soft_total, 'input1D[1]')
+        dcc.connect_attribute(subtract_soft, 'output1D', subtract_soft_total, 'input1D[1]')
         divide_soft = self._rename(maya.cmds.createNode('multiplyDivide'), 'divideSoft')
-        tp.Dcc.set_integer_attribute_value(divide_soft, 'operation', 2)
-        tp.Dcc.connect_attribute(subtract_soft_total, 'output1D', divide_soft, 'input1X')
+        dcc.set_integer_attribute_value(divide_soft, 'operation', 2)
+        dcc.connect_attribute(subtract_soft_total, 'output1D', divide_soft, 'input1X')
         maya.cmds.connectAttr(soft_attr, '{}.input2X'.format(divide_soft))
-        negate = self._rename(tp.Dcc.create_node('multiplyDivide'), 'negateSoft')
-        tp.Dcc.set_integer_attribute_value(negate, 'input1X', -1)
-        tp.Dcc.connectAttr(divide_soft, 'outputX', 'input2X', negate)
-        power_soft = self._rename(tp.Dcc.create_node('multiplyDivide'), 'powerSoft')
+        negate = self._rename(dcc.create_node('multiplyDivide'), 'negateSoft')
+        dcc.set_integer_attribute_value(negate, 'input1X', -1)
+        dcc.connectAttr(divide_soft, 'outputX', 'input2X', negate)
+        power_soft = self._rename(dcc.create_node('multiplyDivide'), 'powerSoft')
         exp_value = math.exp(1)
-        tp.Dcc.set_integer_attribute_value(power_soft, 'operation', 3)
-        tp.Dcc.set_float_attribute_value(power_soft, 'input1X', exp_value)
-        tp.Dcc.connect_attribute(negate, 'outputX', power_soft, 'input2X')
-        power_mult_soft = self._rename(tp.Dcc.create_node('multiplyDivide'), 'powerMultSoft')
+        dcc.set_integer_attribute_value(power_soft, 'operation', 3)
+        dcc.set_float_attribute_value(power_soft, 'input1X', exp_value)
+        dcc.connect_attribute(negate, 'outputX', power_soft, 'input2X')
+        power_mult_soft = self._rename(dcc.create_node('multiplyDivide'), 'powerMultSoft')
         maya.cmds.connectAttr(soft_attr, '{}.input1X'.format(power_mult_soft))
-        tp.Dcc.connect_attribute(power_soft, 'outputX', power_mult_soft, 'input2X')
-        subtract_end_soft = self._rename(tp.Dcc.create_node('plusMinusAverage'), 'subtractEndSoft')
-        tp.Dcc.set_integer_attribute_value(subtract_end_soft, 'operation', 2)
+        dcc.connect_attribute(power_soft, 'outputX', power_mult_soft, 'input2X')
+        subtract_end_soft = self._rename(dcc.create_node('plusMinusAverage'), 'subtractEndSoft')
+        dcc.set_integer_attribute_value(subtract_end_soft, 'operation', 2)
         if not self._default_distance_attribute:
-            tp.Dcc.set_float_attribute_value(subtract_end_soft, 'input1D[0]', chain_distance)
+            dcc.set_float_attribute_value(subtract_end_soft, 'input1D[0]', chain_distance)
         else:
             maya.cmds.connectAttr(self._default_distance_attribute, '{}.input1D[0]'.format(subtract_end_soft))
-        tp.Dcc.connect_attribute(power_mult_soft, 'outputX', subtract_end_soft, 'input1D[1]')
-        inside_condition = self._rename(tp.Dcc.create_node('condition'), 'insideSoft')
+        dcc.connect_attribute(power_mult_soft, 'outputX', subtract_end_soft, 'input1D[1]')
+        inside_condition = self._rename(dcc.create_node('condition'), 'insideSoft')
         maya.cmds.connectAttr(self._control_distance_attribute, '{}.firstTerm'.format(inside_condition))
-        tp.Dcc.connect_attribute(subtract_soft, 'output1D', inside_condition, 'secondTerm')
-        tp.Dcc.set_integer_attribute_value(inside_condition, 'operation', 2)
-        tp.Dcc.connect_attribute(subtract_end_soft, 'output1D', inside_condition, 'colorIfTrueR')
+        dcc.connect_attribute(subtract_soft, 'output1D', inside_condition, 'secondTerm')
+        dcc.set_integer_attribute_value(inside_condition, 'operation', 2)
+        dcc.connect_attribute(subtract_end_soft, 'output1D', inside_condition, 'colorIfTrueR')
         maya.cmds.connectAttr(self._control_distance_attribute, '{}.colorIfFalseR'.format(inside_condition))
 
-        locator = tp.Dcc.create_locator(name='locator_{}'.format(self._description))
-        tp.Dcc.match_translation_rotation(self._joints[-1], locator)
+        locator = dcc.create_locator(name='locator_{}'.format(self._description))
+        dcc.match_translation_rotation(self._joints[-1], locator)
         if self._ik_locator_parent:
-            tp.Dcc.set_parent(locator, self._ik_locator_parent)
+            dcc.set_parent(locator, self._ik_locator_parent)
         if self._top_aim_transform:
             follow = space_utils.create_follow_group(self._top_aim_transform, locator)
             transform_utils.zero_transform_channels(locator)
-            tp.Dcc.set_node_inherits_transform(follow, False)
-        tp.Dcc.connect_attribute(inside_condition, 'outColorR', locator, 'translateX')
+            dcc.set_node_inherits_transform(follow, False)
+        dcc.connect_attribute(inside_condition, 'outColorR', locator, 'translateX')
         if self._bottom_control:
-            new_grp = tp.Dcc.create_empty_group(name='softOnOff_{}'.format(self._description))
-            cns = tp.Dcc.create_point_constraint(new_grp, self._bottom_control)
+            new_grp = dcc.create_empty_group(name='softOnOff_{}'.format(self._description))
+            cns = dcc.create_point_constraint(new_grp, self._bottom_control)
             cns_edit = cns_utils.Constraint()
             cns_edit.create_switch(self._attribute_contrtol, 'stretch', constraint=cns)
             locator = new_grp
@@ -915,7 +918,7 @@ class RiggedLine(object):
         """
 
         self._curve = maya.cmds.curve(
-            d=1, p=[(0, 0, 0), (0, 0, 0)], k=[0, 1], n=tp.Dcc.find_unique_name('guideLine_%s' % self._name))
+            d=1, p=[(0, 0, 0), (0, 0, 0)], k=[0, 1], n=dcc.find_unique_name('guideLine_%s' % self._name))
         maya.cmds.delete(self._curve, ch=True)
         shapes = shape_utils.get_shapes(self._curve)
         maya.cmds.rename(shapes[0], '{}Shape'.format(self._curve))
@@ -932,9 +935,9 @@ class RiggedLine(object):
 
         cluster, transform = maya.cmds.cluster('{}.cv[{}]'.format(self._curve, cv))
         transform = maya.cmds.rename(
-            transform, tp.Dcc.find_unique_name('{}_cv{}_guideLineCluster'.format(self._name, cv)))
+            transform, dcc.find_unique_name('{}_cv{}_guideLineCluster'.format(self._name, cv)))
         cluster = maya.cmds.rename(
-            '{}Cluster'.format(transform), tp.Dcc.find_unique_name('{}_cv{}_clusterGuideLine'.format(self._name, cv)))
+            '{}Cluster'.format(transform), dcc.find_unique_name('{}_cv{}_clusterGuideLine'.format(self._name, cv)))
         maya.cmds.hide(transform)
         maya.cmds.parent(transform, self._top_group)
 
@@ -953,8 +956,8 @@ class RiggedLine(object):
         Internal function that match cluster positions with the positions of the rig line controls
         """
 
-        tp.Dcc.match_translation_to_rotate_pivot(self._top, self._cluster1[1])
-        tp.Dcc.match_translation_to_rotate_pivot(self._bottom, self._cluster2[1])
+        dcc.match_translation_to_rotate_pivot(self._top, self._cluster1[1])
+        dcc.match_translation_to_rotate_pivot(self._bottom, self._cluster2[1])
 
     def _constrain_clusters(self):
         """
@@ -967,8 +970,8 @@ class RiggedLine(object):
             maya.cmds.parent(offset1, offset2, self._top_group)
             maya.cmds.parent(self._cluster1[1], offset1)
             maya.cmds.parent(self._cluster2[1], offset2)
-            tp.Dcc.match_translation(self._top, offset1)
-            tp.Dcc.match_translation(self._bottom, offset2)
+            dcc.match_translation(self._top, offset1)
+            dcc.match_translation(self._bottom, offset2)
             cns_utils.constraint_local(self._top, offset1)
             cns_utils.constraint_local(self._bottom, offset2)
         else:
@@ -1053,22 +1056,22 @@ class TwistRibbon(object):
 
         self._control_transforms = list()
 
-        top_locator = tp.Dcc.create_locator(
-            tp.Dcc.find_unique_name('locator_twistRibbonTop_{}'.format(self._description)))
-        bottom_locator = tp.Dcc.create_locator(
-            tp.Dcc.find_unique_name('locator_twistRibbonBottom_{}'.format(self._description)))
+        top_locator = dcc.create_locator(
+            dcc.find_unique_name('locator_twistRibbonTop_{}'.format(self._description)))
+        bottom_locator = dcc.create_locator(
+            dcc.find_unique_name('locator_twistRibbonBottom_{}'.format(self._description)))
 
         if not self._end_transform:
-            children = tp.Dcc.list_children(self._joint, children_type='joint')
+            children = dcc.list_children(self._joint, children_type='joint')
             if not children:
-                maya.logger.warning(
+                LOGGER.warning(
                     'No child found for {}. Could not create twist ribbon rig setup.'.format(self._joint))
                 return []
             temp_group = children[0]
         else:
             temp_group = self._end_transform
 
-        self._group = tp.Dcc.create_empty_group(tp.Dcc.find_unique_name('twistRibbon_{}'.format(self._description)))
+        self._group = dcc.create_empty_group(dcc.find_unique_name('twistRibbon_{}'.format(self._description)))
 
         self._surface = geo_utils.transforms_to_nurbs_surface(
             [self._joint, temp_group], name=self._description,
@@ -1080,25 +1083,25 @@ class TwistRibbon(object):
                 keepControlPoints=0, keepCorners=0, spansU=1, degreeU=1, spansV=2, degreeV=3, tolerance=0.01,
                 fitRebuild=0, direction=2)
 
-        tp.Dcc.set_parent(self._surface, self._group)
+        dcc.set_parent(self._surface, self._group)
         if not self._joints:
             self._joints = geo_utils.nurbs_surface_u_to_transforms(
                 self._surface, self._description, count=self._joint_count)
 
-        self._rivets_group = tp.Dcc.create_empty_group(
-            tp.Dcc.find_unique_name('twistRibbon_rivets_{}'.format(self._description)))
-        tp.Dcc.set_parent(self._rivets_group, self._group)
+        self._rivets_group = dcc.create_empty_group(
+            dcc.find_unique_name('twistRibbon_rivets_{}'.format(self._description)))
+        dcc.set_parent(self._rivets_group, self._group)
 
         for joint in self._joints:
             maya.cmds.delete(maya.cmds.orientConstraint(self._joint, joint))
             maya.cmds.makeIdentity(joint, apply=True, r=True)
             rivet = rivet_utils.attach_to_surface(joint, self._surface, constraint=self._attach_directly)
-            relatives = tp.Dcc.list_relatives(rivet, relative_type='transform')
+            relatives = dcc.list_relatives(rivet, relative_type='transform')
             if relatives:
                 self._control_transforms.apepnd(relatives[1])
             shapes = shape_utils.get_shapes(rivet)
-            tp.Dcc.hide_node(shapes)
-            tp.Dcc.set_parent(rivet, self._rivets_group)
+            dcc.hide_node(shapes)
+            dcc.set_parent(rivet, self._rivets_group)
             self._rivets.append(rivet)
 
         skin_surface = skin_utils.SkinJointSurface(self._surface, self._description)
@@ -1108,7 +1111,7 @@ class TwistRibbon(object):
 
         joints = skin_surface.get_joints_list()
         if self._dual_quaternion:
-            tp.Dcc.delete_object(joints[1:-1])
+            dcc.delete_object(joints[1:-1])
             joints = [joints[0], joints[-1]]
         else:
             maya.cmds.setAttr('{}.skinningMethod'.format(skin), 0)
@@ -1118,22 +1121,22 @@ class TwistRibbon(object):
         self._top_joint = joints[0]
         self._bottom_joint = joints[1]
 
-        tp.Dcc.match_translation_to_rotate_pivot(joints[0], top_locator)
-        tp.Dcc.match_translation_to_rotate_pivot(joints[-1], bottom_locator)
-        tp.Dcc.set_parent(joints[0], top_locator)
-        tp.Dcc.set_parent(joints[-1], bottom_locator)
+        dcc.match_translation_to_rotate_pivot(joints[0], top_locator)
+        dcc.match_translation_to_rotate_pivot(joints[-1], bottom_locator)
+        dcc.set_parent(joints[0], top_locator)
+        dcc.set_parent(joints[-1], bottom_locator)
 
         maya.cmds.skinPercent(skin, self._surface, normalize=True)
-        tp.Dcc.hide_object(joints)
+        dcc.hide_node(joints)
 
-        if self._top_parent and tp.Dcc.object_exists(self._top_parent):
-            tp.Dcc.set_parent(self._top_locator, self._top_parent)
-        if self._bottom_parent and tp.Dcc.object_exists(self._bottom_parent):
-            tp.Dcc.set_parent(self._bottom_locator, self._bottom_parent)
+        if self._top_parent and dcc.node_exists(self._top_parent):
+            dcc.set_parent(self._top_locator, self._top_parent)
+        if self._bottom_parent and dcc.node_exists(self._bottom_parent):
+            dcc.set_parent(self._bottom_locator, self._bottom_parent)
 
-        if self._top_constraint and tp.Dcc.object_exists(self._top_constraint):
+        if self._top_constraint and dcc.node_exists(self._top_constraint):
             eval('cmds.{}({}, {}, mo=True)'.format(self._top_constraint_type, self._top_constraint, top_locator))
-        if self._bottom_constraint and tp.Dcc.object_exists(self._bottom_constraint):
+        if self._bottom_constraint and dcc.node_exists(self._bottom_constraint):
             eval('cmds.{}({}, {}, mo=True)'.format(
                 self._bottom_constraint_type, self._bottom_constraint, bottom_locator))
 
@@ -1229,9 +1232,9 @@ class TwistRibbon(object):
                 self._description), ik_utils.IkHandle.SOLVER_RP)
         maya.cmds.hide(joint1, joint2)
         self._top_ik = ik
-        xform = tp.Dcc.create_buffer_group(joint1)
-        tp.Dcc.set_parent(xform, self._top_locator)
-        tp.Dcc.set_parent(ik, self._bottom_locator)
+        xform = dcc.create_buffer_group(joint1)
+        dcc.set_parent(xform, self._top_locator)
+        dcc.set_parent(ik, self._bottom_locator)
         maya.cmds.hide(joint1, ik)
 
     def _create_bottom_twister_joint(self):
@@ -1240,9 +1243,9 @@ class TwistRibbon(object):
                 self._description), ik_utils.IkHandle.SOLVER_RP)
         maya.cmds.hide(joint1, joint2)
         self._bottom_ik = ik
-        xform = tp.Dcc.create_buffer_group(joint1)
-        tp.Dcc.set_parent(xform, self._bottom_locator)
-        tp.Dcc.set_parent(ik, self._top_locator)
+        xform = dcc.create_buffer_group(joint1)
+        dcc.set_parent(xform, self._bottom_locator)
+        dcc.set_parent(ik, self._top_locator)
         maya.cmds.hide(joint1, ik)
 
 

@@ -9,9 +9,11 @@ from __future__ import print_function, division, absolute_import
 
 from collections import defaultdict
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.mel
+import maya.api.OpenMaya
+
 from tpDcc.dccs.maya import api
-from tpDcc.dccs.maya.api import mathlib
 from tpDcc.libs.python import python
 from tpDcc.dccs.maya.core import helpers, exceptions, node
 
@@ -138,7 +140,7 @@ def get_mesh_fn(mesh):
         mesh = maya.cmds.listRelatives(mesh, s=True, ni=True, pa=True)[0]
 
     mesh_path = node.get_mdag_path(mesh)
-    mesh_fn = maya.OpenMaya.MFnMesh(mesh_path)
+    mesh_fn = maya.api.OpenMaya.MFnMesh(mesh_path)
 
     return mesh_fn
 
@@ -157,16 +159,11 @@ def get_mesh_vertex_iter(mesh, vtx_id=None):
         mesh = maya.cmds.listRelatives(mesh, s=True, ni=True, pa=True)[0]
 
     mesh_path = node.get_mdag_path(mesh)
-    mesh_vtx_it = maya.OpenMaya.MItMeshVertex(mesh_path)
+    mesh_vtx_it = maya.api.OpenMaya.MItMeshVertex(mesh_path)
 
     # Initialize vertexId
     if vtx_id is not None:
-        if maya.is_new_api():
-            mesh_vtx_it.setIndex(vtx_id)
-        else:
-            mesh_vtx_util = maya.OpenMaya.MScriptUtil(0)
-            mesh_vtx_ptr = mesh_vtx_util.asIntPtr()
-            mesh_vtx_it.setIndex(vtx_id, mesh_vtx_ptr)
+        mesh_vtx_it.setIndex(vtx_id)
 
     return mesh_vtx_it
 
@@ -185,16 +182,11 @@ def get_mesh_face_iter(mesh, face_id=None):
         mesh = maya.cmds.listRelatives(mesh, s=True, ni=True, pa=True)[0]
 
     mesh_path = node.get_mdag_path(mesh)
-    mesh_face_it = maya.OpenMaya.MItMeshPolygon(mesh_path)
+    mesh_face_it = maya.api.OpenMaya.MItMeshPolygon(mesh_path)
 
     # Initialize faceId
     if face_id is not None:
-        if maya.is_new_api():
-            mesh_face_it.setIndex(face_id)
-        else:
-            mesh_face_util = maya.OpenMaya.MScriptUtil(0)
-            mesh_face_ptr = mesh_face_util.asIntPtr()
-            mesh_face_it.setIndex(face_id, mesh_face_ptr)
+        mesh_face_it.setIndex(face_id)
 
     return mesh_face_it
 
@@ -213,16 +205,11 @@ def get_mesh_edge_iter(mesh, edge_id=None):
         mesh = maya.cmds.listRelatives(mesh, s=True, ni=True, pa=True)[0]
 
     mesh_path = node.get_mdag_path(mesh)
-    mesh_edge_it = maya.OpenMaya.MItMeshEdge(mesh_path)
+    mesh_edge_it = maya.api.OpenMaya.MItMeshEdge(mesh_path)
 
     # Initialize faceId
     if edge_id is not None:
-        if maya.is_new_api():
-            mesh_edge_it.setIndex(edge_id)
-        else:
-            mesh_edge_util = maya.OpenMaya.MScriptUtil(0)
-            mesh_edge_ptr = mesh_edge_util.asIntPtr()
-            mesh_edge_it.setIndex(edge_id, mesh_edge_ptr)
+        mesh_edge_it.setIndex(edge_id)
 
     return mesh_edge_it
 
@@ -234,21 +221,12 @@ def get_raw_points(mesh):
     :return:
     """
 
-    use_new_api = False
-    if maya.is_new_api():
-        maya.logger.warning(
-            'get_raw_points function is dependant of MFnMesh.getRawPoints() function which is not available '
-            'in OpenMaya 2.0! Using OpenMaya 1.0 ...')
-        maya.use_new_api(False)
-        use_new_api = True
+    # get_raw_points function is dependant of MFnMesh.getRawPoints() function which is not available  in OpenMaya2
 
     check_mesh(mesh)
 
     mesh_fn = get_mesh_fn(mesh)
     mesh_pts = mesh_fn.getRawPoints()
-
-    if use_new_api:
-        maya.use_new_api(True)
 
     return mesh_pts
 
@@ -265,22 +243,9 @@ def get_points(mesh, flatten=False):
 
     mesh_fn = get_mesh_fn(mesh)
 
-    if maya.is_new_api():
-        mesh_pt_array = list(mesh_fn.getFloatPoints())
-        if flatten:
-            mesh_pt_array = [list(pt) for pt in mesh_pt_array]
-    else:
-        mesh_pts = mesh_fn.getRawPoints()
-        mesh_vtx = mesh_fn.numVertices()
-        mesh_pt_array = list()
-        mesh_pt_util = maya.OpenMaya.MScriptUtil()
-        for i in range(mesh_vtx):
-            mesh_pt_array.append([
-                mesh_pt_util.getFloatArrayItem(mesh_pts, (i * 3) + 0),
-                mesh_pt_util.getFloatArrayItem(mesh_pts, (i * 3) + 1),
-                mesh_pt_util.getFloatArrayItem(mesh_pts, (i * 3) + 2),
-                1.0
-            ])
+    mesh_pt_array = list(mesh_fn.getFloatPoints())
+    if flatten:
+        mesh_pt_array = [list(pt) for pt in mesh_pt_array]
 
     return mesh_pt_array
 
@@ -301,15 +266,11 @@ def get_normal(mesh, vtx_id, world_space=False, angle_weighted=False):
 
     # Get sample space
     if world_space:
-        sample_space = maya.OpenMaya.MSpace.kWorld
+        sample_space = maya.api.OpenMaya.MSpace.kWorld
     else:
-        sample_space = maya.OpenMaya.MSpace.kObject
+        sample_space = maya.api.OpenMaya.MSpace.kObject
 
-    if maya.is_new_api():
-        normal = mesh_fn.getVertexNormal(vtx_id, angle_weighted, sample_space)
-    else:
-        normal = maya.OpenMaya.MVector()
-        mesh_fn.getVertexNormal(vtx_id, normal, sample_space)
+    normal = mesh_fn.getVertexNormal(vtx_id, angle_weighted, sample_space)
 
     return normal
 
@@ -330,15 +291,11 @@ def get_normals(mesh, world_space=False, angle_weighted=False):
 
     # Get sample space
     if world_space:
-        sample_space = maya.OpenMaya.MSpace.kWorld
+        sample_space = maya.api.OpenMaya.MSpace.kWorld
     else:
-        sample_space = maya.OpenMaya.MSpace.kObject
+        sample_space = maya.api.OpenMaya.MSpace.kObject
 
-    if maya.is_new_api():
-        normals = mesh_fn.getVertexNormals(angle_weighted, sample_space)
-    else:
-        normals = maya.OpenMaya.MFloatVectorArray()
-        mesh_fn.getVertexNormals(angle_weighted, normals, sample_space)
+    normals = mesh_fn.getVertexNormals(angle_weighted, sample_space)
 
     return normals
 
@@ -357,15 +314,10 @@ def get_uvs(mesh, uv_set=None):
 
     mesh_fn = get_mesh_fn(mesh)
 
-    if maya.is_new_api():
-        if uv_set is not None:
-            u_array, v_array = mesh_fn.getUVs(uv_set)
-        else:
-            u_array, v_array = mesh_fn.getUVs()
+    if uv_set is not None:
+        u_array, v_array = mesh_fn.getUVs(uv_set)
     else:
-        u_array = maya.OpenMaya.MFloatArray()
-        v_array = maya.OpenMaya.MFloatArray()
-        mesh_fn.getUVs(u_array, v_array, uv_set)
+        u_array, v_array = mesh_fn.getUVs()
 
     return list(u_array), list(v_array)
 
@@ -384,15 +336,10 @@ def get_assigned_uvs(mesh, uv_set=None):
 
     mesh_fn = get_mesh_fn(mesh)
 
-    if maya.is_new_api():
-        if uv_set is not None:
-            uv_count, uv_ids = mesh_fn.getAssignedUVs(uv_set)
-        else:
-            uv_count, uv_ids = mesh_fn.getAssignedUVs()
+    if uv_set is not None:
+        uv_count, uv_ids = mesh_fn.getAssignedUVs(uv_set)
     else:
-        uv_count = maya.OpenMaya.MIntArray()
-        uv_ids = maya.OpenMaya.MIntArray()
-        mesh_fn.getAssignedUVs(uv_count, uv_ids, uv_set)
+        uv_count, uv_ids = mesh_fn.getAssignedUVs()
 
     return list(uv_count), list(uv_ids)
 
@@ -407,8 +354,6 @@ def get_connected_vertices(mesh, vertex_selection_set):
 
     # TODO: We need to rewrite this function to make it compatible with Maya API 1 and 2
 
-    import maya.OpenMaya as OpenMaya
-
     def get_neighbour_vertices(curr_vert_iter, vert_index):
         """
         Get neighbour of given vertex index
@@ -417,8 +362,8 @@ def get_connected_vertices(mesh, vertex_selection_set):
         :return: set<int>
         """
 
-        curr_vert_iter.setIndex(vert_index, OpenMaya.MScriptUtil().asIntPtr())
-        int_array = OpenMaya.MIntArray()
+        curr_vert_iter.setIndex(vert_index, maya.api.OpenMaya.MScriptUtil().asIntPtr())
+        int_array = maya.api.OpenMaya.MIntArray()
         curr_vert_iter.getConnectedVertices(int_array)
 
         return set(int(x) for x in int_array)
@@ -430,7 +375,7 @@ def get_connected_vertices(mesh, vertex_selection_set):
 
     dep_node = node.get_depend_node(node=mesh)
 
-    vert_iter = OpenMaya.MItMeshVertex(dep_node)
+    vert_iter = maya.api.OpenMaya.MItMeshVertex(dep_node)
     for index in vertex_selection_set:
         district_houses = set()
         if index not in visited_neighbours:
@@ -450,7 +395,7 @@ def get_connected_vertices(mesh, vertex_selection_set):
             district_dict[district_number] = district_houses
             district_number += 1
 
-        vert_iter.setIndex(index, OpenMaya.MScriptUtil().asIntPtr())
+        vert_iter.setIndex(index, maya.api.OpenMaya.MScriptUtil().asIntPtr())
         vert_iter.next()
 
     return district_dict

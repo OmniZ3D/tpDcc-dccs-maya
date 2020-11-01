@@ -7,7 +7,8 @@ Module that contains functions and classes related with Maya Nucleus solver
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.mel
 
 
 def set_active_nucleus(nucleus_node_name):

@@ -9,9 +9,9 @@ from __future__ import print_function, division, absolute_import
 
 import logging
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 def is_color_management_enabled():

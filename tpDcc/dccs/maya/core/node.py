@@ -9,11 +9,16 @@ from __future__ import print_function, division, absolute_import
 
 import re
 import uuid
+import logging
+
+import maya.cmds
+import maya.api.OpenMaya
 
 from tpDcc.libs.python import python, name, color
-import tpDcc.dccs.maya as maya
-from tpDcc.dccs.maya.api import plugs, node as api_node
+from tpDcc.dccs.maya.api import node as api_node
 from tpDcc.dccs.maya.core import exceptions, helpers, color as maya_color
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 def is_a_shape(node_name):
@@ -66,6 +71,8 @@ def is_empty(node_name, no_user_attributes=True, no_connections=True):
     Returns whether a given node is an empty one (is not referenced, has no child transforms,
     has no custom attributes and has no connections)
     :param node_name: str, name of a Maya node
+    :param no_user_attributes: bool
+    :param no_connections: bool
     :return: bool
     """
 
@@ -162,14 +169,14 @@ def get_node_types(nodes, return_shape_type=True):
 def update_uuid(node_name):
     """
     Updates the unique identifier of the given Maya node
-    :param node: str
+    :param node_name: str
     :return:
     """
 
     ids = list()
     for attr in maya.cmds.ls('*.uuid'):
-        id = maya.cmds.getAttr(attr)
-        ids.append(id)
+        node_id = maya.cmds.getAttr(attr)
+        ids.append(node_id)
 
     uuid_attr = node_name + '.uuid'
     if not maya.cmds.objExists(uuid_attr):
@@ -195,7 +202,7 @@ def check_node(node):
     if python.is_string(node):
         if not maya.cmds.objExists(node):
             return False
-    elif isinstance(node, maya.OpenMaya.MObject):
+    elif isinstance(node, maya.api.OpenMaya.MObject):
         return not node.isNull()
 
     return True
@@ -239,7 +246,7 @@ def is_dag_node(mobj):
     :return: True if the MObject is a DAG node or False otherwise
     """
 
-    return mobj.hasFn(maya.OpenMaya.MFn.kDagNode)
+    return mobj.hasFn(maya.api.OpenMaya.MFn.kDagNode)
 
 
 def is_visible(node, check_lod_vis=True, check_draw_override=True):
@@ -268,7 +275,7 @@ def is_visible(node, check_lod_vis=True, check_draw_override=True):
         if not part:
             continue
         if not maya.cmds.objExists(part):
-            maya.logger.debug('Unable to find ancestor node {}!'.format(part))
+            LOGGER.debug('Unable to find ancestor node {}!'.format(part))
             continue
 
         if not maya.cmds.getAttr(part + '.visibility'):
@@ -294,21 +301,14 @@ def get_mobject(node_name):
     check_node(node_name)
 
     if isinstance(node_name, str) or isinstance(node_name, unicode):
-        selection_list = maya.OpenMaya.MSelectionList()
+        selection_list = maya.api.OpenMaya.MSelectionList()
         selection_list.add(node_name)
+        try:
+            mobj = selection_list.getDependNode(0)
+        except Exception as exc:
+            maya.cmds.warning('Impossible to get MObject from name {} : {}'.format(node_name, exc))
+            return
 
-        if maya.is_new_api():
-            try:
-                mobj = selection_list.getDependNode(0)
-            except Exception as e:
-                maya.cmds.warning('Impossible to get MObject from name {}'.format(node_name))
-                return
-        else:
-            mobj = maya.OpenMaya.MObject()
-            try:
-                selection_list.getDependNode(0, mobj)
-            except Exception as e:
-                maya.cmds.warning('Impossible to get MObject from name {}'.format(node_name))
         return mobj
 
     elif node_name.__module__.startswith('pymel'):
@@ -329,11 +329,11 @@ def get_name(mobj, fullname=True):
         if not mobj or mobj.isNull():
             return None
         if is_dag_node(mobj):
-            dag_path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
+            dag_path = maya.api.OpenMaya.MDagPath.getAPathTo(mobj)
             if fullname:
                 return dag_path.fullPathName()
             return dag_path.partialPathName().split('|')[-1]
-        return maya.OpenMaya.MFnDependencyNode(mobj).name()
+        return maya.api.OpenMaya.MFnDependencyNode(mobj).name()
     except Exception as e:
         maya.cmds.warning('Impossible to get name from MObject: {} - {}'.format(mobj, str(e)))
         return None
@@ -350,8 +350,8 @@ def set_names(nodes, names):
     names = python.force_list(names)
 
     # TODO: Check why after calling this function, the undo does not allow to undo the renaming operation
-    for node, name in zip(nodes, names):
-        maya.OpenMaya.MFnDagNode(node).setName(name)
+    for node, node_name in zip(nodes, names):
+        maya.api.OpenMaya.MFnDagNode(node).setName(node_name)
 
 
 def get_mdag_path(obj):
@@ -367,14 +367,8 @@ def get_mdag_path(obj):
 
     check_node(obj)
 
-    if maya.is_new_api():
-        selection_list = maya.OpenMaya.MGlobal.getSelectionListByName(obj)
-        dag_path = selection_list.getDagPath(0)
-    else:
-        selection_list = maya.OpenMaya.MSelectionList()
-        dag_path = maya.OpenMaya.MDagPath()
-        maya.OpenMaya.MGlobal.getSelectionListByName(obj, selection_list)
-        selection_list.getDagPath(0, dag_path)
+    selection_list = maya.api.OpenMaya.MGlobal.getSelectionListByName(obj)
+    dag_path = selection_list.getDagPath(0)
 
     return dag_path
 
@@ -388,20 +382,11 @@ def get_depend_node(node):
     check_node(node)
 
     if type(node) in [str, unicode]:
-        selection_list = maya.OpenMaya.MSelectionList()
+        selection_list = maya.api.OpenMaya.MSelectionList()
         selection_list.add(node)
-
-        if maya.is_new_api():
-            dep_node = selection_list.getDependNode(0)
-        else:
-            try:
-                dep_node = maya.OpenMaya.MFnDependencyNode()
-                selection_list.getDependNode(0, dep_node)
-            except Exception:
-                dep_node = maya.OpenMaya.MObject()
-                selection_list.getDependNode(0, dep_node)
+        dep_node = selection_list.getDependNode(0)
     else:
-        dep_node = maya.OpenMaya.MFnDependencyNode(node)
+        dep_node = maya.api.OpenMaya.MFnDependencyNode(node)
 
     return dep_node
 
@@ -409,7 +394,7 @@ def get_depend_node(node):
 def get_plug(node, plug_name):
     """
     Get the plug of a Maya node
-    :param obj_name: str | MObject, Name of the object or MObject
+    :param node: str | MObject, Name of the object or MObject
     :param plug_name: str, Name of the plug
     """
 
@@ -417,13 +402,13 @@ def get_plug(node, plug_name):
 
     if type(node) in [str, unicode]:
         mobj = get_depend_node(node)
-        dep_fn = maya.OpenMaya.MFnDependencyNode()
+        dep_fn = maya.api.OpenMaya.MFnDependencyNode()
         dep_fn.setObject(mobj)
         plug = dep_fn.findPlug(plug_name, False)
     else:
         dep_node = get_depend_node(node)
         attr = dep_node.attribute(plug_name)
-        plug = maya.OpenMaya.MPlug(node, attr)
+        plug = maya.api.OpenMaya.MPlug(node, attr)
 
     return plug
 
@@ -464,16 +449,13 @@ def get_shape(node, intermediate=False):
                 return get_shape(node)
             else:
                 return node
-    elif isinstance(node, maya.OpenMaya.MObject):
-        if not node.apiType() == maya.OpenMaya.MFn.kTransform:
+    elif isinstance(node, maya.api.OpenMaya.MObject):
+        if not node.apiType() == maya.api.OpenMaya.MFn.kTransform:
             return node
 
-        path = maya.OpenMaya.MDagPath.getAPathTo(node)
-        num_shapes = maya.OpenMaya.MScriptUtil()
-        num_shapes.createFromInt(0)
-        num_shapes_ptr = num_shapes.asUintPtr()
-        path.numberOfShapesDirectlyBelow(num_shapes_ptr)
-        if maya.OpenMaya.MScriptUtil(num_shapes_ptr).asUint():
+        path = maya.api.OpenMaya.MDagPath.getAPathTo(node)
+        num_shapes = path.numberOfShapesDirectlyBelow()
+        if num_shapes:
             # TODO: Should this return the last shape, instead of the first?
             path.extendToShapeDirectlyBelow(0)
             return path.node()
@@ -492,7 +474,7 @@ def attribute_check(obj, attribute):
     check_node(obj)
 
     dep_node = get_depend_node(obj)
-    dep_fn = maya.OpenMaya.MFnDependencyNode()
+    dep_fn = maya.api.OpenMaya.MFnDependencyNode()
     dep_fn.setObject(dep_node)
     return dep_fn.hasAttribute(attribute)
 
@@ -508,7 +490,7 @@ def connect_nodes(parent_obj, parent_plug, child_obj, child_plug):
 
     parent_plug = get_plug(parent_obj, parent_plug)
     child_plug = get_plug(child_obj, child_plug)
-    mdg_mod = maya.OpenMaya.MDGModifier()
+    mdg_mod = maya.api.OpenMaya.MDGModifier()
     mdg_mod.connect(parent_plug, child_plug)
     mdg_mod.doIt()
 
@@ -524,7 +506,7 @@ def disconnect_nodes(parent_obj, parent_plug, child_obj, child_plug):
 
     parent_plug = get_plug(parent_obj, parent_plug)
     child_plug = get_plug(child_obj, child_plug)
-    mdg_mod = maya.OpenMaya.MDGModifier()
+    mdg_mod = maya.api.OpenMaya.MDGModifier()
     mdg_mod.disconnect(parent_plug, child_plug)
     mdg_mod.doIt()
 
@@ -599,8 +581,8 @@ def get_plug_value(plug):
     api_type = plug_attr.apiType()
 
     # Float Groups - rotate, translate, scale; Compounds
-    if api_type in [maya.OpenMaya.MFn.kAttribute3Double, maya.OpenMaya.MFn.kAttribute3Float,
-                    maya.OpenMaya.MFn.kCompoundAttribute]:
+    if api_type in [maya.api.OpenMaya.MFn.kAttribute3Double, maya.api.OpenMaya.MFn.kAttribute3Float,
+                    maya.api.OpenMaya.MFn.kCompoundAttribute]:
         result = []
         if plug.isCompound:
             for c in range(plug.numChildren()):
@@ -608,50 +590,50 @@ def get_plug_value(plug):
             return result
 
     # Distance
-    elif api_type in [maya.OpenMaya.MFn.kDoubleLinearAttribute, maya.OpenMaya.MFn.kFloatLinearAttribute]:
+    elif api_type in [maya.api.OpenMaya.MFn.kDoubleLinearAttribute, maya.api.OpenMaya.MFn.kFloatLinearAttribute]:
         return plug.asMDistance().asCentimeters()
 
     # Angle
-    elif api_type in [maya.OpenMaya.MFn.kDoubleAngleAttribute, maya.OpenMaya.MFn.kFloatAngleAttribute]:
+    elif api_type in [maya.api.OpenMaya.MFn.kDoubleAngleAttribute, maya.api.OpenMaya.MFn.kFloatAngleAttribute]:
         return plug.asMAngle().asDegrees()
 
     # TYPED
-    elif api_type == maya.OpenMaya.MFn.kTypedAttribute:
-        plug_type = maya.OpenMaya.MFnTypedAttribute(plug_attr).attrType()
+    elif api_type == maya.api.OpenMaya.MFn.kTypedAttribute:
+        plug_type = maya.api.OpenMaya.MFnTypedAttribute(plug_attr).attrType()
 
         # Matrix
-        if plug_type == maya.OpenMaya.MFnData.kMatrix:
-            return maya.OpenMaya.MFnMatrixData(plug.asMObject()).matrix()
+        if plug_type == maya.api.OpenMaya.MFnData.kMatrix:
+            return maya.api.OpenMaya.MFnMatrixData(plug.asMObject()).matrix()
 
         # String
-        elif plug_type == maya.OpenMaya.MFnData.kString:
+        elif plug_type == maya.api.OpenMaya.MFnData.kString:
             return plug.asString()
 
     # Matrix
-    elif api_type == maya.OpenMaya.MFn.kMatrixAttribute:
-        return maya.OpenMaya.MFnMatrixData(plug.asMObject()).matrix()
+    elif api_type == maya.api.OpenMaya.MFn.kMatrixAttribute:
+        return maya.api.OpenMaya.MFnMatrixData(plug.asMObject()).matrix()
 
     # NUMBERS
-    elif api_type == maya.OpenMaya.MFn.kNumericAttribute:
+    elif api_type == maya.api.OpenMaya.MFn.kNumericAttribute:
 
-        plug_type = maya.OpenMaya.MFnNumericAttribute(plug_attr).numericType()
+        plug_type = maya.api.OpenMaya.MFnNumericAttribute(plug_attr).numericType()
 
         # Boolean
-        if plug_type == maya.OpenMaya.MFnNumericData.kBoolean:
+        if plug_type == maya.api.OpenMaya.MFnNumericData.kBoolean:
             return plug.asBool()
 
         # Integer - Short, Int, Long, Byte
-        elif plug_type in [maya.OpenMaya.MFnNumericData.kShort, maya.OpenMaya.MFnNumericData.kInt,
-                           maya.OpenMaya.MFnNumericData.kLong, maya.OpenMaya.MFnNumericData.kByte]:
+        elif plug_type in [maya.api.OpenMaya.MFnNumericData.kShort, maya.api.OpenMaya.MFnNumericData.kInt,
+                           maya.api.OpenMaya.MFnNumericData.kLong, maya.api.OpenMaya.MFnNumericData.kByte]:
             return plug.asInt()
 
         # Float - Float, Double, Address
-        elif plug_type in [maya.OpenMaya.MFnNumericData.kFloat, maya.OpenMaya.MFnNumericData.kDouble,
-                           maya.OpenMaya.MFnNumericData.kAddr]:
+        elif plug_type in [maya.api.OpenMaya.MFnNumericData.kFloat, maya.api.OpenMaya.MFnNumericData.kDouble,
+                           maya.api.OpenMaya.MFnNumericData.kAddr]:
             return plug.asDouble()
 
     # Enum
-    elif api_type == maya.OpenMaya.MFn.kEnumAttribute:
+    elif api_type == maya.api.OpenMaya.MFn.kEnumAttribute:
         return plug.asInt()
 
 
@@ -697,13 +679,13 @@ def get_attribute_data_type(data):
     :return: int, value for the data type
     """
 
-    data_type = maya.OpenMaya.MFnData.kInvalid
+    data_type = maya.api.OpenMaya.MFnData.kInvalid
     if isinstance(data, str):
-        data_type = maya.OpenMaya.MFnData.kString
+        data_type = maya.api.OpenMaya.MFnData.kString
     if isinstance(data, float):
-        data_type = maya.OpenMaya.MFnData.kFloatArray
+        data_type = maya.api.OpenMaya.MFnData.kFloatArray
     if isinstance(data, int):
-        data_type = maya.OpenMaya.MFnData.kIntArray
+        data_type = maya.api.OpenMaya.MFnData.kIntArray
 
     # TODO: Add support for other types
 
@@ -730,56 +712,56 @@ def has_attribute(node, attr_name):
         return False
 
 
-def create_attribute(mobj, name, data_type=None, short_name=None, default=None):
+def create_attribute(mobj, attribute_name, data_type=None, short_name=None, default=None):
     """
     Creates an attribute on the provided object.
-    Returns the attribute anme and shortName
+    Returns the attribute name and shortName
     :param mobj: OpenMaya.MObject, MObject to create the attribute for
-    :param name: str, name of the attribute
+    :param attribute_name: str, name of the attribute
     :param data_type: Type of data to store in the attribute
     :param short_name: str, short name for the attribute
-    :param default: default value assinged to teh attribute
+    :param default: default value assigned to teh attribute
     :return: (name, short name) As name and short name are normalized, this returns the actual names used for attribute
         names
     """
 
     # TODO: Reimplement this function so it can work on all cases (take the one that appears on the MetaData class)
 
-    name = normalize_attribute_name(name)
+    attribute_name = normalize_attribute_name(attribute_name)
     if data_type is None and default is not None:
         data_type = get_attribute_data_type(default)
-        if data_type == maya.OpenMaya.MFnData.kInvalid:
+        if data_type == maya.api.OpenMaya.MFnData.kInvalid:
             data_type = None
-            maya.logger.debug('Unable to determine the attribute type => {}'.format(str(default)))
+            LOGGER.debug('Unable to determine the attribute type => {}'.format(str(default)))
         if data_type is None:
-            data_type = maya.OpenMaya.MFnData.kAny
+            data_type = maya.api.OpenMaya.MFnData.kAny
 
         try:
             if short_name is None:
-                short_name = normalize_attribute_short_name(name, unique_on_obj=mobj)
-            dep_node = maya.OpenMaya.MFnDependencyNode(mobj)
+                short_name = normalize_attribute_short_name(attribute_name, unique_on_obj=mobj)
+            dep_node = maya.api.OpenMaya.MFnDependencyNode(mobj)
         except Exception as e:
             raise Exception('Error while getting dependency node from MObject "{}" - {}'.format(mobj, str(e)))
 
-        s_attr = maya.OpenMaya.MFnTypedAttribute()
+        s_attr = maya.api.OpenMaya.MFnTypedAttribute()
         if default:
-            attr = s_attr.create(name, short_name, data_type, default)
+            attr = s_attr.create(attribute_name, short_name, data_type, default)
         else:
-            attr = s_attr.create(name, short_name, data_type)
+            attr = s_attr.create(attribute_name, short_name, data_type)
         dep_node.addAttribute(attr)
 
-        return name, short_name
+        return attribute_name, short_name
 
 
-def set_attribute(mobj, name, value):
+def set_attribute(mobj, attr_name, value):
     """
     Sets the value of a current existing attribute of the passed node
     :param mobj: OpenMaya.MObject, MObject to set the attribute value to
-    :param name: str, name of the attribute to store the value in
+    :param attr_name: str, name of the attribute to store the value in
     :param value: value to store in the attribute
     """
 
-    plug = get_plug(mobj, name)
+    plug = get_plug(mobj, attr_name)
     if isinstance(value, str):
         plug.setString(value)
     elif isinstance(value, bool):
@@ -873,48 +855,40 @@ def get_output_attributes(node):
     return outputs
 
 
-def get_all_hiearchy_nodes(node, direction=None, object_type=None):
+def get_all_hierarchy_nodes(node, direction=None, object_type=None):
     """
     Returns a list with all nodes in the given node hierarchy
     :param node: str, node to retrieve hierarchy from
+    :param direction: str
+    :param object_type: str
     :return:
     """
 
     if direction is None:
         # if helpers.get_maya_version() > 2016:
-        #     direction = maya.OpenMaya.MItDependencyGraph.kDownstream
+        #     direction = maya.api.OpenMaya.MItDependencyGraph.kDownstream
         # else:
         #     direction = OpenMaya.MItDependencyGraph.kDownstream
-        direction = maya.OpenMaya.MItDependencyGraph.kDownstream
+        direction = maya.api.OpenMaya.MItDependencyGraph.kDownstream
 
     check_node(node)
 
     object_type = python.force_list(object_type)
     nodes = list()
 
-    if type(node) == maya.OpenMaya.MObject:
+    if type(node) == maya.api.OpenMaya.MObject:
         mobj = node
     else:
-        if maya.is_new_api():
-            sel_list = maya.OpenMaya.MSelectionList()
-            sel_list.add(node)
-            mobj = sel_list.getDependNode(0)
-        else:
-            mobj = maya.OpenMaya.MObject()
-            sel_list = maya.OpenMaya.MSelectionList()
-            sel_list.add(node)
-            sel_list.getDependNode(0, mobj)
+        sel_list = maya.api.OpenMaya.MSelectionList()
+        sel_list.add(node)
+        mobj = sel_list.getDependNode(0)
 
-    mit_dependency_graph = maya.OpenMaya.MItDependencyGraph(
-        mobj, direction, maya.OpenMaya.MItDependencyGraph.kPlugLevel)
+    mit_dependency_graph = maya.api.OpenMaya.MItDependencyGraph(
+        mobj, direction, maya.api.OpenMaya.MItDependencyGraph.kPlugLevel)
 
     while not mit_dependency_graph.isDone():
-        if maya.is_new_api():
-            current_item = mit_dependency_graph.currentNode()
-        else:
-            current_item = mit_dependency_graph.currentItem()
-
-        depend_node_fn = maya.OpenMaya.MFnDependencyNode(current_item)
+        current_item = mit_dependency_graph.currentNode()
+        depend_node_fn = maya.api.OpenMaya.MFnDependencyNode(current_item)
         node_name = depend_node_fn.name()
         if object_type:
             for o_type in object_type:
@@ -938,7 +912,7 @@ def get_objects_of_mtype_iterator(object_type):
 
     object_type = python.force_list(object_type)
     for obj_type in object_type:
-        obj_iter = maya.OpenMaya.MItDependencyNodes(obj_type)
+        obj_iter = maya.api.OpenMaya.MItDependencyNodes(obj_type)
         while not obj_iter.isDone():
             yield obj_iter.thisNode()
             obj_iter.next()
@@ -1056,7 +1030,7 @@ def set_color(nodes, color_index):
 def set_index_color(node, index):
     """
     Sets the override Maya index color of the given nodes
-    :param index: int or str, Maya index color or Maya nice name color
+    :param node: str
     :param index: int, Maya color index to apply (from 0 to 30)
     """
 
@@ -1186,7 +1160,7 @@ def get_node_by_id(node_id, full_path=True):
     if helpers.get_maya_version() >= 2016:
         maya_nodes = maya.cmds.ls(node_id, long=full_path)
         if maya_nodes and len(maya_nodes) > 1:
-            maya.logger.warning('Multiple Maya nodes found with same IDs (this can happen when using heavy references')
+            LOGGER.warning('Multiple Maya nodes found with same IDs (this can happen when using heavy references')
         return maya_nodes[0]
 
     return None

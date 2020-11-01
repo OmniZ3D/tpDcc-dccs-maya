@@ -5,7 +5,8 @@
 Module that contains functions and classes related with meta system for rigging
 """
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.dccs.maya.meta import metanode
 
 

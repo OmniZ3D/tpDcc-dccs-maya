@@ -6,9 +6,13 @@ Module that contains functions and classes related with namespaces
 """
 
 import types
+import logging
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.dccs.maya.core import name as naming
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 def namespace_exists(namespace):
@@ -104,7 +108,7 @@ def remove_empty_namespaces():
             pass
 
     if delete_namespaces:
-        maya.logger.info('Namespaces removed: {}'.format(delete_namespaces))
+        LOGGER.info('Namespaces removed: {}'.format(delete_namespaces))
 
     return delete_namespaces
 
@@ -388,7 +392,7 @@ def assign_namespace_to_object_by_filter(namespace, filter_type, force_create=Tr
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return assign_namespace_to_object(
@@ -417,7 +421,7 @@ def remove_namespace_from_object_by_filter(namespace, filter_type, rename_shape=
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return remove_namespace_from_object(

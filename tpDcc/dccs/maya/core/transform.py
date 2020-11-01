@@ -8,11 +8,15 @@ Module that contains functions and classes related with transforms
 from __future__ import print_function, division, absolute_import
 
 import random
+import logging
+
+import maya.cmds
+import maya.api.OpenMaya
 
 from tpDcc.libs.python import name, mathlib, python
-
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import exceptions, attribute, node, component, name as name_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 TRANSFORM_SIDES = {
     'end': {
@@ -634,12 +638,12 @@ def get_position(point):
 
     if type(point) == list or type(point) == tuple:
         if len(point < 3):
-            maya.logger.exception('Invalid point value supplied! Not enough list/tuple elements!')
+            LOGGER.exception('Invalid point value supplied! Not enough list/tuple elements!')
             return
         pos = point[0:3]
     elif type(point) == str or type(point) == unicode:
         mobj = node.get_mobject(node_name=point)
-        if mobj.hasFn(maya.OpenMaya.MFn.kTransform):
+        if mobj.hasFn(maya.api.OpenMaya.MFn.kTransform):
             try:
                 pos = maya.cmds.xform(point, query=True, worldSpace=True, rotatePivot=True)
             except Exception:
@@ -650,11 +654,11 @@ def get_position(point):
             except Exception:
                 pass
         if not pos:
-            maya.logger.exception(
+            LOGGER.exception(
                 'Invalid point value supplied! Unable to determine type of point "{0}"!'.format(str(point)))
             return
     else:
-        maya.logger.exception('Invalid point value supplied! Invalid argument type!')
+        LOGGER.exception('Invalid point value supplied! Invalid argument type!')
         return
 
     return pos
@@ -667,11 +671,11 @@ def get_mpoint(point):
     :return: MPoint
     """
 
-    if type(point) == maya.OpenMaya.MPoint:
+    if type(point) == maya.api.OpenMaya.MPoint:
         return point
 
     pos = get_position(point=point)
-    mpoint = maya.OpenMaya.MPoint(pos[0], pos[1], pos[2], 1.0)
+    mpoint = maya.api.OpenMaya.MPoint(pos[0], pos[1], pos[2], 1.0)
 
     return mpoint
 
@@ -1091,7 +1095,7 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
     scope_transforms += transforms
     scope = list(set(scope_joints + scope_transforms))
     if not scope:
-        maya.logger.warning('No objects to mirror!')
+        LOGGER.warning('No objects to mirror!')
         return
 
     other_parents = dict()
@@ -1147,7 +1151,7 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
             if maya.cmds.objExists('{}.mirror'.format(other)):
                 mirror = maya.cmds.getAttr('{}.mirror'.format(other))
                 if not mirror:
-                    maya.logger.debug('{} was not mirrored because its mirror attribute is set off!'.format(other))
+                    LOGGER.debug('{} was not mirrored because its mirror attribute is set off!'.format(other))
                     continue
 
             lock_state = attribute.LockTransformState(other)

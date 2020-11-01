@@ -7,7 +7,8 @@ Module that contains functions and classes related with Maya Hair System (nHair)
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.libs.python import python
 from tpDcc.dccs.maya.core import name as name_utils, attribute as attr_utils
 

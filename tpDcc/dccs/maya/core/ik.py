@@ -7,10 +7,10 @@ Module that contains functions and classes related with IKs
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc as tp
-from tpDcc.libs.python import mathlib
+import maya.cmds
 
-import tpDcc.dccs.maya as maya
+from tpDcc import dcc
+from tpDcc.libs.python import mathlib
 from tpDcc.dccs.maya.core import attribute as attr_utils, name as name_utils, transform as transform_utils
 
 
@@ -114,19 +114,19 @@ class IkHandle(object):
 
     def _create_regular_ik(self):
         ik_handle, ik_effector = maya.cmds.ikHandle(
-            name=tp.Dcc.find_unique_name(self._name),
+            name=dcc.find_unique_name(self._name),
             startJoint=self._start_joint,
             endEffector=self._end_joint,
             sol=self._solver_type
         )
-        maya.cmds.rename(ik_effector, tp.Dcc.find_unique_name('effector_{}'.format(ik_handle)))
+        maya.cmds.rename(ik_effector, dcc.find_unique_name('effector_{}'.format(ik_handle)))
         self._ik_handle = ik_handle
         self._ik_effector = ik_effector
 
     def _create_spline_ik(self):
         if self._curve:
             ik_handle = maya.cmds.ikHandle(
-                name=tp.Dcc.find_unique_name(self._name),
+                name=dcc.find_unique_name(self._name),
                 startJoint=self._start_joint,
                 endEffector=self._end_joint,
                 sol=self._solver_type,
@@ -139,7 +139,7 @@ class IkHandle(object):
             self._ik_effector = ik_handle[1]
         else:
             ik_handle = maya.cmds.ikHandle(
-                name=tp.Dcc.find_unique_name(self._name),
+                name=dcc.find_unique_name(self._name),
                 startJoint=self._start_joint,
                 endEffector=self._end_joint,
                 sol=self._solver_type,
@@ -150,7 +150,7 @@ class IkHandle(object):
             self._ik_handle = ik_handle[0]
             self._ik_effector = ik_handle[1]
             self._curve = ik_handle[2]
-            self._curve = maya.cmds.rename(self._curve, tp.Dcc.find_unique_name('curve_{}'.format(self._name)))
+            self._curve = maya.cmds.rename(self._curve, dcc.find_unique_name('curve_{}'.format(self._name)))
     # endregion
 
 
@@ -176,13 +176,13 @@ def create_spline_ik_stretch(
         scale_axis = scale_axis.capitalize()
 
     name = 'curveInfo_{}'.format(curve)
-    arclen_node = maya.cmds.arclen(curve, ch=True, n=tp.Dcc.find_unique_name(name))
-    arclen_node = maya.cmds.rename(arclen_node, tp.Dcc.find_unique_name(name))
+    arclen_node = maya.cmds.arclen(curve, ch=True, n=dcc.find_unique_name(name))
+    arclen_node = maya.cmds.rename(arclen_node, dcc.find_unique_name(name))
 
     name1 = 'multiplyDivide_offset_{}'.format(arclen_node)
     name2 = 'multiplyDivide_{}'.format(arclen_node)
-    multiply_scale_offset = maya.cmds.createNode('multiplyDivide', n=tp.Dcc.find_unique_name(name1))
-    multiply = maya.cmds.createNode('multiplyDivide', n=tp.Dcc.find_unique_name(name2))
+    multiply_scale_offset = maya.cmds.createNode('multiplyDivide', n=dcc.find_unique_name(name1))
+    multiply = maya.cmds.createNode('multiplyDivide', n=dcc.find_unique_name(name2))
 
     maya.cmds.setAttr('{}.operation'.format(multiply_scale_offset), 2)
     maya.cmds.connectAttr('{}.arcLength'.format(arclen_node), '{}.input1X'.format(multiply_scale_offset))
@@ -271,14 +271,14 @@ def create_simple_spline_ik_stretch(curve, joints, stretch_axis='Y'):
     :return:
     """
 
-    arclen_node = maya.cmds.arclen(curve, ch=True, n=tp.Dcc.find_unique_name('curveInfo_{}'.format(curve)))
-    arclen_node = maya.cmds.rename(arclen_node, tp.Dcc.find_unique_name('curveInfo_{}'.format(curve)))
+    arclen_node = maya.cmds.arclen(curve, ch=True, n=dcc.find_unique_name('curveInfo_{}'.format(curve)))
+    arclen_node = maya.cmds.rename(arclen_node, dcc.find_unique_name('curveInfo_{}'.format(curve)))
 
     multiply_scale_offset = maya.cmds.createNode(
-        'multiplyDivide', n=tp.Dcc.find_unique_name('multiplyDivide_offset_{}'.format(arclen_node)))
+        'multiplyDivide', n=dcc.find_unique_name('multiplyDivide_offset_{}'.format(arclen_node)))
     maya.cmds.setAttr('{}.operation'.format(multiply_scale_offset), 2)
     multiply = maya.cmds.createNode(
-        'multiplyDivide', n=tp.Dcc.find_unique_name('multiplyDivide_{}'.format(arclen_node)))
+        'multiplyDivide', n=dcc.find_unique_name('multiplyDivide_{}'.format(arclen_node)))
     maya.cmds.connectAttr('{}.arcLength'.format(arclen_node), '{}.input1X'.format(multiply_scale_offset))
     maya.cmds.connectAttr('{}.outputX'.format(multiply_scale_offset), '{}.input1X'.format(multiply))
     maya.cmds.setAttr('{}.input2X'.format(multiply), maya.cmds.getAttr('{}.arcLength'.format(arclen_node)))
@@ -322,7 +322,7 @@ def create_ik_chain(top_transform, bottom_transform, name, solver=IkHandle.SOLVE
 
     if solver == IkHandle.SOLVER_RP:
         for axis in 'XYZ':
-            tp.Dcc.set_attribute_value(ik_pole, 'poleVector{}'.format(axis), 0)
+            dcc.set_attribute_value(ik_pole, 'poleVector{}'.format(axis), 0)
 
     return start_joint, end_joint, ik_pole
 
@@ -336,7 +336,7 @@ def create_ik_on_joint(joint, name, solver=IkHandle.SOLVER_SC):
     :return: str
     """
 
-    relatives = tp.Dcc.list_relatives(joint, type='joint')
+    relatives = dcc.list_relatives(joint, type='joint')
     if not relatives:
         return
     joint_end = relatives[0]
@@ -349,6 +349,6 @@ def create_ik_on_joint(joint, name, solver=IkHandle.SOLVER_SC):
 
     if solver == IkHandle.SOLVER_RP:
         for axis in 'XYZ':
-            tp.Dcc.set_attribute_value(ik_pole, 'poleVector{}'.format(axis), 0)
+            dcc.set_attribute_value(ik_pole, 'poleVector{}'.format(axis), 0)
 
     return ik_pole

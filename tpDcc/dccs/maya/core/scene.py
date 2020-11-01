@@ -9,17 +9,21 @@ from __future__ import print_function, division, absolute_import
 
 import os
 import string
+import logging
 import traceback
 import contextlib
 
-from Qt.QtWidgets import *
+from Qt.QtWidgets import QMessageBox
 
-import tpDcc as tp
+import maya.cmds
+import maya.api.OpenMaya
+
+from tpDcc import dcc
 from tpDcc.abstract import scene
 from tpDcc.libs.python import python, path as path_utils
-
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import helpers, name as name_utils, node as node_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class MayaScene(scene.AbstractScene, object):
@@ -42,7 +46,7 @@ class MayaScene(scene.AbstractScene, object):
         maya_objects = list()
 
         for obj in self._dcc_objects(from_selection=from_selection, wildcard=wildcard, object_type=object_type):
-            if obj.apiType() == maya.OpenMaya.MFn.kWorld:
+            if obj.apiType() == maya.api.OpenMaya.MFn.kWorld:
                 continue
             maya_objects.append(tp.SceneObject(self, obj))
 
@@ -69,17 +73,17 @@ class MayaScene(scene.AbstractScene, object):
             if python.is_string(object_type):
                 objects = maya.cmds.ls(type=object_type, long=True)
             else:
-                maya_type = tp.Dcc.OBJECT_TYPES.get(
-                    object_type, (maya.OpenMaya.MFn.kDagNode, maya.OpenMaya.MFn.kCharacter))
+                maya_type = dcc.node_types().get(
+                    object_type, (maya.api.OpenMaya.MFn.kDagNode, maya.api.OpenMaya.MFn.kCharacter))
                 objects = list(helpers.get_objects_of_mtype_iterator(maya_type))
 
         if (object_type is not None and object_type != 0) or wildcard:
             objects_list = list()
             for obj in objects:
                 if python.is_string(object_type):
-                    type_check = True if not object_type else tp.Dcc.node_tpdcc_type(obj, as_string=True) == object_type
+                    type_check = True if not object_type else dcc.node_tpdcc_type(obj, as_string=True) == object_type
                 else:
-                    type_check = True if not object_type else tp.Dcc.node_tpdcc_type(obj) == object_type
+                    type_check = True if not object_type else dcc.node_tpdcc_type(obj) == object_type
                 if wildcard:
                     obj_name = node_utils.get_name(mobj=obj, fullname=False)
                     wildcard_check = expression_regex.match(obj_name)
@@ -219,13 +223,12 @@ def open_scene(file_path, force=True, do_save=True):
     maya.cmds.file(file_path, open=True, force=force)
 
 
-def reference_scene(file_path, namespace=None, save=True):
+def reference_scene(file_path, namespace=None):
     """
     References a Maya file
     :param file_path: str, full path and filename of the scene we want to reference
     :param namespace: variant, str || None, namespace to add to the nodes in Maya. If None, default is the name of
         the file
-    :param save: bool, True if you want to save the current scene before importing file
     """
 
     if not namespace:
@@ -269,7 +272,7 @@ def save_as(file_path):
     if not file_path:
         return saved
 
-    maya.logger.debug('Saving "{}"'.format(file_path))
+    LOGGER.debug('Saving "{}"'.format(file_path))
 
     file_type = 'mayaAscii'
     if file_path.endswith('.mb'):
@@ -280,15 +283,15 @@ def save_as(file_path):
         maya.cmds.file(save=True, type=file_type)
         saved = True
     except Exception:
-        maya.logger.error(str(traceback.format_exc()))
+        LOGGER.error(str(traceback.format_exc()))
         saved = False
 
     if saved:
-        maya.logger.debug('Scene saved successfully into: {}'.format(file_path))
+        LOGGER.debug('Scene saved successfully into: {}'.format(file_path))
     else:
         if not maya.cmds.about(batch=True):
             maya.cmds.confirmDialog(message='Warning:\n\nMaya was unable to save!', button='Confirm')
-        maya.logger.warning('Scene not saved: {}'.format(file_path))
+        LOGGER.warning('Scene not saved: {}'.format(file_path))
 
     return saved
 
@@ -299,10 +302,10 @@ def iter_references():
     :return: Generator<OpenMaya.MObject>
     """
 
-    iterator = maya.OpenMaya.MItDependencyNodes(maya.OpenMaya.MFn.kReference)
+    iterator = maya.api.OpenMaya.MItDependencyNodes(maya.api.OpenMaya.MFn.kReference)
     while not iterator.isDone():
         try:
-            fn = maya.OpenMaya.MFnReference(iterator.thisNode())
+            fn = maya.api.OpenMaya.MFnReference(iterator.thisNode())
             try:
                 if not fn.isLoaded() or fn.isLocked():
                     continue
@@ -487,8 +490,9 @@ def get_top_dag_nodes_in_list(list_of_transforms):
 
 def get_node_transform_root(node, full_path=True):
     """
-    :param node: str
     Returns the transform root of the given node taking into account its hierarchy
+    :param node: str
+    :param full_path: str
     :return: str
     """
 
@@ -510,7 +514,7 @@ def get_root_node():
 
     from tpDcc.dccs.maya.core import node
 
-    for n in node.get_objects_of_mtype_iterator(object_type=maya.OpenMaya.MFn.kWorld):
+    for n in node.get_objects_of_mtype_iterator(object_type=maya.api.OpenMaya.MFn.kWorld):
         return n
 
     return None
@@ -524,7 +528,8 @@ def get_all_scene_nodes():
 
     from tpDcc.dccs.maya.core import node
 
-    obj_types = (maya.OpenMaya.MFn.kDagNode, maya.OpenMaya.MFn.kCharacter, maya.OpenMaya.MFn.kDependencyNode)
+    obj_types = (
+        maya.api.OpenMaya.MFn.kDagNode, maya.api.OpenMaya.MFn.kCharacter, maya.api.OpenMaya.MFn.kDependencyNode)
     return node.get_objects_of_mtype_iterator(obj_types)
 
 
@@ -535,14 +540,14 @@ def get_all_parent_nodes(node_name):
     :return: list(str)
     """
 
-    def _append_parents(node_name, node_list_):
+    def _append_parents(node_name_, node_list_):
         """
-        Internal function to recursvely append parents to list
-        :param node_name: str
+        Internal function to recursively append parents to list
+        :param node_name_: str
         :param node_list_: list<str>
         """
 
-        parents = maya.cmds.listRelatives(node_name, parent=True, fullPath=True, type='transform')
+        parents = maya.cmds.listRelatives(node_name_, parent=True, fullPath=True, type='transform')
         if parents:
             for parent in parents:
                 node_list_.append(parent)
@@ -561,14 +566,14 @@ def get_all_children_nodes(node_name):
     :return: list<str>
     """
 
-    def _append_children(node_name, node_list_):
+    def _append_children(node_name_, node_list_):
         """
         Internal function to recursively append children to list
-        :param node_name: str
+        :param node_name_: str
         :param node_list_: list<str>
         """
 
-        children = maya.cmds.listRelatives(node_name, fullPath=True, type='transform')
+        children = maya.cmds.listRelatives(node_name_, fullPath=True, type='transform')
         if children:
             for child in children:
                 node_list_.append(child)
@@ -613,7 +618,7 @@ def delete_unknown_nodes():
             maya.cmds.delete(n)
             deleted.append(n)
 
-    maya.logger.debug('Deleted uknowns: {}'.format(deleted))
+    LOGGER.debug('Deleted uknowns: {}'.format(deleted))
 
 
 def delete_turtle_nodes():
@@ -635,7 +640,7 @@ def delete_turtle_nodes():
                 turtle_nodes = node.delete_nodes_of_type(turtle_types)
                 break
 
-    maya.logger.debug('Removed Turtle nodes: {}'.format(turtle_nodes))
+    LOGGER.debug('Removed Turtle nodes: {}'.format(turtle_nodes))
 
 
 def delete_unused_plugins():
@@ -662,7 +667,7 @@ def delete_unused_plugins():
                 continue
             unused.append(p)
 
-    maya.logger.debug('Removed unused plugins: {}'.format(unused))
+    LOGGER.debug('Removed unused plugins: {}'.format(unused))
 
 
 def delete_garbage():
@@ -706,7 +711,7 @@ def delete_garbage():
             if not maya.cmds.objExists(n):
                 garbage_nodes.append(n)
 
-    maya.logger.debug('Delete Garbage Nodes: {}'.format(garbage_nodes))
+    LOGGER.debug('Delete Garbage Nodes: {}'.format(garbage_nodes))
 
 
 def clean_scene():

@@ -9,7 +9,7 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
 
 
 def is_standin_node(node):

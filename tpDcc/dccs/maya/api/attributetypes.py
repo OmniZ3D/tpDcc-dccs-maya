@@ -7,7 +7,7 @@ Module that centralizes May attribute types
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.api.OpenMaya
 
 kMFnNumericBoolean = 0
 kMFnNumericShort = 1
@@ -48,40 +48,40 @@ kMFnNumeric4Double = 35
 kMFnMessageAttribute = 36
 
 _MAYA_TYPE_FROM_TYPE = dict(
-    kMFnNumericBoolean=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.kBoolean),
-    kMFnNumericByte=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.kByte),
-    kMFnNumericShort=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.kShort),
-    kMFnNumericInt=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.kInt),
-    kMFnNumericLong=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.kLong),
-    kMFnNumericDouble=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.kDouble),
-    kMFnNumericFloat=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.kFloat),
-    kMFnNumericAddr=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.kAddr),
-    kMFnNumericChar=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.kChar),
-    kMFnNumeric2Double=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k2Double),
-    kMFnNumeric2Float=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k2Float),
-    kMFnNumeric2Int=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k2Int),
-    kMFnNumeric2Long=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k2Long),
-    kMFnNumeric2Short=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k2Short),
-    kMFnNumeric3Double=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k3Double),
-    kMFnNumeric3Float=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k3Float),
-    kMFnNumeric3Int=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k3Int),
-    kMFnNumeric3Long=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k3Long),
-    kMFnNumeric3Short=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k3Short),
-    kMFnNumeric4Double=(maya.OpenMaya.MFnNumericAttribute, maya.OpenMaya.MFnNumericData.k4Double),
-    kMFnUnitAttributeDistance=(maya.OpenMaya.MFnUnitAttribute, maya.OpenMaya.MFnUnitAttribute.kDistance),
-    kMFnUnitAttributeAngle=(maya.OpenMaya.MFnUnitAttribute, maya.OpenMaya.MFnUnitAttribute.kAngle),
-    kMFnUnitAttributeTime=(maya.OpenMaya.MFnUnitAttribute, maya.OpenMaya.MFnUnitAttribute.kTime),
-    kMFnkEnumAttribute=(maya.OpenMaya.MFnEnumAttribute, maya.OpenMaya.MFn.kEnumAttribute),
-    kMFnDataString=(maya.OpenMaya.MFnTypedAttribute, maya.OpenMaya.MFnData.kString),
-    kMFnDataMatrix=(maya.OpenMaya.MFnTypedAttribute, maya.OpenMaya.MFnData.kMatrix),
-    kMFnDataFloatArray=(maya.OpenMaya.MFnTypedAttribute, maya.OpenMaya.MFnData.kFloatArray),
-    kMFnDataDoubleArray=(maya.OpenMaya.MFnTypedAttribute, maya.OpenMaya.MFnData.kDoubleArray),
-    kMFnDataIntArray=(maya.OpenMaya.MFnTypedAttribute, maya.OpenMaya.MFnData.kIntArray),
-    kMFnDataPointArray=(maya.OpenMaya.MFnTypedAttribute, maya.OpenMaya.MFnData.kPointArray),
-    kMFnDataVectorArray=(maya.OpenMaya.MFnTypedAttribute, maya.OpenMaya.MFnData.kVectorArray),
-    kMFnDataStringArray=(maya.OpenMaya.MFnTypedAttribute, maya.OpenMaya.MFnData.kStringArray),
-    kMFnDataMatrixArray=(maya.OpenMaya.MFnTypedAttribute, maya.OpenMaya.MFnData.kMatrixArray),
-    kMFnMessageAttribute=(maya.OpenMaya.MFnMessageAttribute, maya.OpenMaya.MFn.kMessageAttribute)
+    kMFnNumericBoolean=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.kBoolean),
+    kMFnNumericByte=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.kByte),
+    kMFnNumericShort=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.kShort),
+    kMFnNumericInt=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.kInt),
+    kMFnNumericLong=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.kLong),
+    kMFnNumericDouble=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.kDouble),
+    kMFnNumericFloat=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.kFloat),
+    kMFnNumericAddr=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.kAddr),
+    kMFnNumericChar=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.kChar),
+    kMFnNumeric2Double=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k2Double),
+    kMFnNumeric2Float=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k2Float),
+    kMFnNumeric2Int=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k2Int),
+    kMFnNumeric2Long=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k2Long),
+    kMFnNumeric2Short=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k2Short),
+    kMFnNumeric3Double=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k3Double),
+    kMFnNumeric3Float=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k3Float),
+    kMFnNumeric3Int=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k3Int),
+    kMFnNumeric3Long=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k3Long),
+    kMFnNumeric3Short=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k3Short),
+    kMFnNumeric4Double=(maya.api.OpenMaya.MFnNumericAttribute, maya.api.OpenMaya.MFnNumericData.k4Double),
+    kMFnUnitAttributeDistance=(maya.api.OpenMaya.MFnUnitAttribute, maya.api.OpenMaya.MFnUnitAttribute.kDistance),
+    kMFnUnitAttributeAngle=(maya.api.OpenMaya.MFnUnitAttribute, maya.api.OpenMaya.MFnUnitAttribute.kAngle),
+    kMFnUnitAttributeTime=(maya.api.OpenMaya.MFnUnitAttribute, maya.api.OpenMaya.MFnUnitAttribute.kTime),
+    kMFnkEnumAttribute=(maya.api.OpenMaya.MFnEnumAttribute, maya.api.OpenMaya.MFn.kEnumAttribute),
+    kMFnDataString=(maya.api.OpenMaya.MFnTypedAttribute, maya.api.OpenMaya.MFnData.kString),
+    kMFnDataMatrix=(maya.api.OpenMaya.MFnTypedAttribute, maya.api.OpenMaya.MFnData.kMatrix),
+    kMFnDataFloatArray=(maya.api.OpenMaya.MFnTypedAttribute, maya.api.OpenMaya.MFnData.kFloatArray),
+    kMFnDataDoubleArray=(maya.api.OpenMaya.MFnTypedAttribute, maya.api.OpenMaya.MFnData.kDoubleArray),
+    kMFnDataIntArray=(maya.api.OpenMaya.MFnTypedAttribute, maya.api.OpenMaya.MFnData.kIntArray),
+    kMFnDataPointArray=(maya.api.OpenMaya.MFnTypedAttribute, maya.api.OpenMaya.MFnData.kPointArray),
+    kMFnDataVectorArray=(maya.api.OpenMaya.MFnTypedAttribute, maya.api.OpenMaya.MFnData.kVectorArray),
+    kMFnDataStringArray=(maya.api.OpenMaya.MFnTypedAttribute, maya.api.OpenMaya.MFnData.kStringArray),
+    kMFnDataMatrixArray=(maya.api.OpenMaya.MFnTypedAttribute, maya.api.OpenMaya.MFnData.kMatrixArray),
+    kMFnMessageAttribute=(maya.api.OpenMaya.MFnMessageAttribute, maya.api.OpenMaya.MFn.kMessageAttribute)
 )
 
 _TYPE_TO_STRING = {

@@ -11,10 +11,13 @@ import json
 from collections import OrderedDict
 from functools import partial
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+from Qt.QtCore import Qt, QSize
+from Qt.QtWidgets import QWidget, QLabel, QPushButton, QMenu
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.mel
+import maya.OpenMayaUI
+
 from tpDcc.abstract import shelf as abstract_shelf
 from tpDcc.libs.qt.core import qtutils
 from tpDcc.dccs.maya.core import gui

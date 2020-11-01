@@ -9,32 +9,128 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
+import maya.cmds
+
+from Qt.QtCore import Qt
+from Qt.QtWidgets import QColorDialog, QPushButton
+from Qt.QtGui import QColor
+
+from tpDcc import dcc
 from tpDcc.libs.python import path as path_utils
-from tpDcc.libs.qt.core import dialog as core_dialog
+from tpDcc.libs.qt.widgets import layouts, dialog, dividers
 from tpDcc.dccs.maya.core import directory
 
 
-class MayaDialog(core_dialog.Dialog, object):
+class MayaDialog(dialog.BaseDialog, object):
     def __init__(self, name='MayaDialog', parent=None, **kwargs):
         super(MayaDialog, self).__init__(name=name, parent=parent, **kwargs)
 
 
-class MayaOpenFileDialog(core_dialog.OpenFileDialog, object):
+class MayaColorDialog(dialog.BaseColorDialog, object):
+    def __init__(self, name='MayaColorDialog', parent=None, **kwargs):
+        super(MayaColorDialog, self).__init__(name=name, parent=parent, **kwargs)
+
+    def ui(self):
+        if dcc.get_version() <= 2016:
+            self.main_layout = self.get_main_layout()
+            self.setLayout(self.main_layout)
+
+            self.color_dialog = QColorDialog(parent=self)
+            self.color_dialog.setWindowFlags(Qt.Widget)
+            self.color_dialog.setOptions(QColorDialog.DontUseNativeDialog | QColorDialog.NoButtons)
+            self.main_layout.addWidget(self.color_dialog)
+
+            bottom_layout = layouts.HorizontalLayout()
+            bottom_layout.setAlignment(Qt.AlignRight)
+            self.main_layout.addLayout(bottom_layout)
+
+            self.ok_btn = QPushButton('Ok')
+            self.cancel_btn = QPushButton('Cancel')
+            bottom_layout.addLayout(dividers.DividerLayout())
+            bottom_layout.addWidget(self.ok_btn)
+            bottom_layout.addWidget(self.cancel_btn)
+
+        else:
+            super(MayaColorDialog, self).ui()
+
+    def setup_signals(self):
+        if dcc.get_version() <= 2016:
+            pass
+        else:
+            super(MayaColorDialog, self).setup_signals()
+
+    def _on_set_color(self, color_index):
+        if dcc.get_version() <= 2016:
+            self.color_dialog.setCurrentColor(QColor.fromRgb(
+                self.maya_colors[color_index][0] * 255,
+                self.maya_colors[color_index][1] * 255,
+                self.maya_colors[color_index][2] * 255
+            ))
+        else:
+            super(MayaColorDialog, self)._on_set_color()
+
+    def _on_ok_btn(self):
+        if dcc.get_version() <= 2016:
+            self.close()
+        else:
+            super(MayaColorDialog, self)._on_ok_btn()
+
+
+class MayaOpenFileDialog(dialog.BaseOpenFileDialog, object):
     def __init__(self, name='MayaOpenFileDialog', parent=None, **kwargs):
         super(MayaOpenFileDialog, self).__init__(name=name, parent=parent, **kwargs)
 
+    def open_app_browser(self):
+        sel_file = maya.cmds.fileDialog2(
+            caption=self.windowTitle(),
+            fileMode=1,
+            fileFilter=self.filters,
+            dialogStyle=2
+        )
+        if sel_file:
+            sel_file = sel_file[0]
+            return [sel_file, os.path.dirname(sel_file), [os.path.basename(sel_file)]]
 
-class MayaSaveFileDialog(core_dialog.SaveFileDialog, object):
+        return None
+
+
+class MayaSaveFileDialog(dialog.BaseSaveFileDialog, object):
     def __init__(self, name='MaxSaveFileDialog', parent=None, **kwargs):
         super(MayaSaveFileDialog, self).__init__(name=name, parent=parent, **kwargs)
 
+    def open_app_browser(self):
+        sel_file = maya.cmds.fileDialog2(
+            caption=self.windowTitle(),
+            fileMode=0,
+            fileFilter=self.filters,
+            dialogStyle=2
+        )
+        if sel_file:
+            sel_file = sel_file[0]
+            return [sel_file, os.path.dirname(sel_file), [os.path.basename(sel_file)]]
 
-class MayaSelectFolderDialog(core_dialog.SelectFolderDialog, object):
+        return None
+
+
+class MayaSelectFolderDialog(dialog.BaseSelectFolderDialog, object):
     def __init__(self, name='MaxSelectFolderDialog', parent=None, **kwargs):
         super(MayaSelectFolderDialog, self).__init__(name=name, parent=parent, **kwargs)
 
+    def open_app_browser(self):
+        sel_folder = maya.cmds.fileDialog2(
+            caption=self.windowTitle(),
+            fileMode=3,
+            fileFilter=self.filters,
+            dialogStyle=2
+        )
+        if sel_folder:
+            sel_folder = sel_folder[0]
+            return [sel_folder, os.path.dirname(sel_folder), [os.path.basename(sel_folder)]]
 
-class MayaNativeDialog(core_dialog.NativeDialog, object):
+        return None
+
+
+class MayaNativeDialog(dialog.BaseNativeDialog, object):
 
     @staticmethod
     def open_file(title='Open File', start_directory=None, filters=None):

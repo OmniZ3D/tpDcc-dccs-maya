@@ -7,9 +7,11 @@ Module that contains Maya scene wrapper class implementation
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc as tp
+import maya.cmds
+import maya.api.OpenMaya
+
+from tpDcc import dcc
 from tpDcc.abstract import scenewrapper
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import node as node_utils
 
 
@@ -34,8 +36,8 @@ class MayaSceneWrapper(scenewrapper.AbstractSceneWrapper, object):
     @_dcc_native_object.setter
     def _dcc_native_object(self, dcc_object):
         if dcc_object is None:
-            dcc_object = maya.OpenMaya.MObject()
-        self._native_handle = maya.OpenMaya.MObjectHandle(dcc_object)
+            dcc_object = maya.api.OpenMaya.MObject()
+        self._native_handle = maya.api.OpenMaya.MObjectHandle(dcc_object)
 
     # ==============================================================================================
     # OVERRIDES
@@ -151,7 +153,7 @@ class MayaSceneWrapper(scenewrapper.AbstractSceneWrapper, object):
 
         node_name = node_utils.get_name(self._dcc_native_object, fullname=True)
         try:
-            return tp.Dcc.get_attribute_value(node_name, attribute_name)
+            return dcc.get_attribute_value(node_name, attribute_name)
         except Exception:
             return default
 
@@ -165,4 +167,4 @@ class MayaSceneWrapper(scenewrapper.AbstractSceneWrapper, object):
 
         node_name = node_utils.get_name(self._dcc_native_object, fullname=True)
 
-        return tp.Dcc.set_attribute_value(node_name, attribute_name, value)
+        return dcc.set_attribute_value(node_name, attribute_name, value)

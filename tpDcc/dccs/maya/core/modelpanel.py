@@ -7,9 +7,10 @@ Module that contains functions to work with Maya model panels
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtWidgets import *
+from Qt.QtWidgets import QWidget, QVBoxLayout
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.dccs.maya.core import gui
 
 

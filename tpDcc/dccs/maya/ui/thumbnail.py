@@ -10,17 +10,16 @@ from __future__ import print_function, division, absolute_import
 import os
 import shutil
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+from Qt.QtCore import Signal
 
-import tpDcc
 from tpDcc.libs.qt.core import qtutils
+from tpDcc.libs.qt.widgets import layouts, buttons, dialog
 from tpDcc.dccs.maya.core import modelpanel, playblast, gui
 
 _instance = None
 
 
-class ThumbnailCaptureDialog(tpDcc.Dialog, object):
+class ThumbnailCaptureDialog(dialog.BaseDialog, object):
 
     DEFAULT_WIDTH = 250
     DEFAULT_HEIGHT = 250
@@ -90,11 +89,11 @@ class ThumbnailCaptureDialog(tpDcc.Dialog, object):
         self.set_start_frame(start_frame)
         self.set_end_frame(end_frame)
 
-        self._capture_btn = QPushButton('Capture')
+        self._capture_btn = buttons.BaseButton('Capture', parent=self)
         self._capture_btn.clicked.connect(self._on_capture)
         self._model_panel_widget = modelpanel.ModelPanelWidget(parent=self)
         # self._model_panel_widget = viewport.MayaViewport(parent=self)
-        main_layout = QVBoxLayout(self)
+        main_layout = layouts.VerticalLayout()
         main_layout.setObjectName(self.objectName() + 'Layout')
         main_layout.addWidget(self._model_panel_widget)
         main_layout.addWidget(self._capture_btn)
@@ -107,7 +106,7 @@ class ThumbnailCaptureDialog(tpDcc.Dialog, object):
 
     def capture_path(self):
         """
-        Returns the location of the captured playblast
+        Returns the location of the captured thumbnail
         :return: str
         """
 
@@ -131,7 +130,7 @@ class ThumbnailCaptureDialog(tpDcc.Dialog, object):
 
     def end_frame(self):
         """
-        Returns the end frame of the playblast
+        Returns the end frame of the thumbnail
         :return: int
         """
 
@@ -139,7 +138,7 @@ class ThumbnailCaptureDialog(tpDcc.Dialog, object):
 
     def set_end_frame(self, frame):
         """
-        Sets the end frame of the playblast
+        Sets the end frame of the thumbnail
         :param frame: int
         """
 
@@ -147,7 +146,7 @@ class ThumbnailCaptureDialog(tpDcc.Dialog, object):
 
     def start_frame(self):
         """
-        Returns the start frame of the playblast
+        Returns the start frame of the thumbnail
         :return: int
         """
 
@@ -155,7 +154,7 @@ class ThumbnailCaptureDialog(tpDcc.Dialog, object):
 
     def set_start_frame(self, frame):
         """
-        Sets the start frame of the playblast
+        Sets the start frame of the thumbnail
         :param frame: int
         """
 
@@ -163,7 +162,7 @@ class ThumbnailCaptureDialog(tpDcc.Dialog, object):
 
     def step(self):
         """
-        Returns the step amount of the playblast
+        Returns the step amount of the thumbnail
         :return: int
         """
 
@@ -171,8 +170,8 @@ class ThumbnailCaptureDialog(tpDcc.Dialog, object):
 
     def set_step(self, step):
         """
-        Sets the step amount of the playblast
-        For example, if the step is set to 2, it will playblast every second frame
+        Sets the step amount of the thumbnail
+        For example, if the step is set to 2, it will thumbnail every second frame
         :param step: int
         """
 

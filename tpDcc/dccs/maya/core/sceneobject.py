@@ -7,9 +7,9 @@ Module that contains Maya scene object class implementation
 
 from __future__ import print_function, division, absolute_import
 
-from tpDcc.abstract import sceneobject
+import maya.api.OpenMaya
 
-import tpDcc.dccs.maya as maya
+from tpDcc.abstract import sceneobject
 from tpDcc.dccs.maya.core import scenewrapper, node as node_utils, shape as shape_utils
 
 
@@ -19,7 +19,7 @@ class MayaSceneObject(sceneobject.AbstractSceneObject, scenewrapper.MayaSceneWra
         # We make sure that we store native Maya object as an OpenMaya.MObject
         # Also we store transform and shape information of the wrapped object
         mobj = node_utils.get_mobject(native_dcc_object)
-        if mobj.apiType() == maya.OpenMaya.MFn.kWorld:
+        if mobj.apiType() == maya.api.OpenMaya.MFn.kWorld:
             native_dcc_object = mobj
             self._maya_shape = None
         else:

@@ -8,12 +8,16 @@ Module that contains functions and classes related to names
 from __future__ import print_function, division, absolute_import
 
 import re
+import logging
 
-import tpDcc
+import maya.cmds
+
+from tpDcc.managers import configs
 from tpDcc.libs.python import python, strings
 from tpDcc.libs.python import name as naming_utils
-import tpDcc.dccs.maya as maya
 
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
+ 
 
 class EditIndexModes(object):
 
@@ -148,9 +152,9 @@ def get_short_name(obj):
     if node_names:
         if len(node_names) == 1:
             return node_names[0]
-        maya.logger.warning('Too many objects named "{}"'.format(obj))
+        LOGGER.warning('Too many objects named "{}"'.format(obj))
         for i, o in enumerate(node_names):
-            maya.logger.warning(' ' * 4 + '{0}: "{1}"'.format(i, o))
+            LOGGER.warning(' ' * 4 + '{0}: "{1}"'.format(i, o))
         raise ValueError('Get Node Short Name || More than one object with name {}'.format(obj))
     raise ValueError('Get Node Short Name || No object with name {} exists'.format(obj))
 
@@ -171,9 +175,9 @@ def get_long_name(obj):
     if node_names:
         if len(node_names) == 1:
             return node_names[0]
-        maya.logger.error('Too many objects named "{}"'.format(obj))
+        LOGGER.error('Too many objects named "{}"'.format(obj))
         for i, o in enumerate(node_names):
-            maya.logger.error(' ' * 4 + '{0}: "{1}"'.format(i, o))
+            LOGGER.error(' ' * 4 + '{0}: "{1}"'.format(i, o))
         raise ValueError('Get Node Long Name || More than one object with name {}'.format(obj))
 
     raise ValueError('Get Node Long Name || No object with name {} exists'.format(obj))
@@ -372,7 +376,7 @@ def find_unique_name_by_filter(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return find_unique_name(
@@ -428,18 +432,18 @@ def rename(name, new_name, uuid=None, rename_shape=True, return_long_name=True):
     if obj_short_name == new_short_name:
         return name
     if maya.cmds.lockNode(name, query=True)[0]:
-        maya.logger.warning('Node "{}" is loced and cannot be renamed!'.format(name))
+        LOGGER.warning('Node "{}" is loced and cannot be renamed!'.format(name))
         return name
     if not new_short_name:
-        maya.logger.warning('Names cannot be an empty string')
+        LOGGER.warning('Names cannot be an empty string')
         return name
     if new_short_name[0].isdigit():
-        maya.logger.warning('Names cannot start with numbers')
+        LOGGER.warning('Names cannot start with numbers')
         return name
     if ':' in new_short_name:
         new_pure_name = new_short_name.split(':')[-1]
         if new_pure_name[0].isdigit():
-            maya.logger.warning('Names cannot start with numbers')
+            LOGGER.warning('Names cannot start with numbers')
             return name
 
     renamed_name = maya.cmds.rename(name, new_short_name, ignoreShape=not rename_shape)
@@ -488,7 +492,6 @@ def add_prefix(prefix, obj_names=None, uuid=None, add_underscore=False, rename_s
     renaming while parenting nodes
     :param prefix: str, prefix to add
     :param obj_names: str, name of the node to add prefix to. If not given, selected nodes will be used
-    :param filter_type: str, If given, only nodes with given filter type will be processed
     :param uuid: str, optional UUID of the node we want to add prefix to. If given, obj_name will be ignored
     :param add_underscore: bool, Whether or not to add underscore after the prefix
     :param rename_shape: bool, Whether or not to also rename shape nodes of the renamed node
@@ -590,7 +593,7 @@ def add_prefix_by_filter(prefix, filter_type, add_underscore=False, rename_shape
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return add_prefix(
@@ -619,7 +622,7 @@ def add_suffix_by_filter(suffix, filter_type, add_underscore=False, rename_shape
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return add_suffix(
@@ -688,7 +691,7 @@ def change_suffix_padding_by_filter(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return change_suffix_padding(
@@ -738,37 +741,37 @@ def edit_item_index(obj_names, index, text='', mode=EditIndexModes.INSERT, separ
     :return: str, new name of the object
     """
 
-    def _edit_item_index(obj_name, index, obj_uuid=None):
+    def _edit_item_index(obj_name, index_, obj_uuid=None):
         long_prefix, namespace, base_name = get_node_name_parts(obj_name)
         base_name_list = base_name.split(separator)
-        if not check_index_in_list(base_name_list, index):
+        if not check_index_in_list(base_name_list, index_):
             return obj_name
 
         if mode == EditIndexModes.REMOVE:
             if len(base_name_list) == 1:
-                maya.logger.warning('Not enough name parts to rename: {}'.format(base_name_list[0]))
+                LOGGER.warning('Not enough name parts to rename: {}'.format(base_name_list[0]))
                 return obj_name
-            del base_name_list[index]
+            del base_name_list[index_]
         elif mode == EditIndexModes.REPLACE:
             if not text:
-                del base_name_list[index]
+                del base_name_list[index_]
             else:
-                base_name_list[index] = text
+                base_name_list[index_] = text
         elif mode == EditIndexModes.INSERT:
             if not text:
                 return obj_name
             neg = False
-            if index < 0:
-                index += 1
+            if index_ < 0:
+                index_ += 1
                 neg = True
             # Append to end if index is zero and negative
-            if index == 0 and neg:
+            if index_ == 0 and neg:
                 base_name_list.append(text)
             # Append to begin if index is zero and non negative
-            elif index == 0 and not neg:
+            elif index_ == 0 and not neg:
                 base_name_list = [text] + base_name_list
             else:
-                base_name_list.insert(index, text)
+                base_name_list.insert(index_, text)
 
         base_name = separator.join(base_name_list)
         new_name = join_node_name_parts('', namespace, base_name)
@@ -815,7 +818,7 @@ def edit_item_index_by_filter(index, filter_type, text='', mode=EditIndexModes.I
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return edit_item_index(
@@ -871,13 +874,13 @@ def auto_suffix_object(obj_names, uuid=None, rename_shape=True):
     if not obj_names:
         obj_names = maya.cmds.ls(sl=True, long=True)
 
-    naming_config = tpDcc.ConfigsMgr().get_config('tpDcc-naming')
+    naming_config = configs.get_config('tpDcc-naming')
     if not naming_config:
         auto_suffix = dict()
     else:
         auto_suffix = naming_config.get('auto_suffixes', default=dict())
     if not auto_suffix:
-        maya.logger.warning(
+        LOGGER.warning(
             'Impossible to launch auto suffix functionality because no auto suffixes are defined for Maya!')
         return None
 
@@ -911,7 +914,7 @@ def auto_suffix_object_by_type(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return auto_suffix_object(obj_names=filtered_obj_list, rename_shape=rename_shape)
@@ -934,7 +937,7 @@ def remove_numbers_from_object(
     def _remove_numbers_from_object(obj_name, obj_uuid=None):
         new_name = obj_name.split('|')[-1]
         if not trailing_only:
-            new_name = ''.join([i for i in new_name if not i.isdigit()])
+            new_name = ''.join([name_char for name_char in new_name if not name_char.isdigit()])
             if remove_underscores:
                 new_name = new_name.replace('__', '_')
         else:
@@ -979,7 +982,7 @@ def remove_numbers_from_object_by_filter(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return remove_numbers_from_object(
@@ -1045,7 +1048,7 @@ def renumber_objects_by_filter(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        maya.logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return renumber_objects(

@@ -7,7 +7,8 @@ Module that contains functions and classes related with Maya Cloth System (nClot
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.dccs.maya.core import attribute as attr_utils
 
 

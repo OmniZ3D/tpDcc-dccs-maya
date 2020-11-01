@@ -11,11 +11,8 @@ import sys
 import traceback
 from functools import wraps
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
-from Qt.QtGui import *
-
-import tpDcc.dccs.maya as maya
+import maya.mel
+import maya.cmds
 
 
 class ShowMayaProgress(object):
@@ -376,39 +373,3 @@ def repeat_static_command(class_name, skip_arguments=False):
             return fn_return
         return wrapper
     return repeat_command
-
-
-def show_wait_cursor(fn):
-    """
-    Decorator that shows wait cursor during function execution
-    :param fn:
-    """
-
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        cursor = QCursor(Qt.WaitCursor)
-        QApplication.setOverrideCursor(cursor)
-        try:
-            return fn(*args, **kwargs)
-        finally:
-            QApplication.restoreOverrideCursor()
-
-    return wrapper
-
-
-def show_arrow_cursor(fn):
-    """
-    Decorator that shows arrow cursor during function execution
-    :param fn:
-    """
-
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        cursor = QCursor(Qt.ArrowCursor)
-        QApplication.setOverrideCursor(cursor)
-        try:
-            return fn(*args, **kwargs)
-        finally:
-            QApplication.restoreOverrideCursor()
-
-    return wrapper

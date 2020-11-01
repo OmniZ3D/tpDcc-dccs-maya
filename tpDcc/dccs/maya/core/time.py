@@ -9,7 +9,8 @@ from __future__ import print_function, division, absolute_import
 
 from collections import OrderedDict
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.OpenMaya
 
 time_unit_to_fps = OrderedDict()
 for k, v in (

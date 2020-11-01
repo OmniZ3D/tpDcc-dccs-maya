@@ -8,11 +8,18 @@ Utility methods related to Maya Deformer nodes
 from __future__ import print_function, division, absolute_import
 
 import re
+import logging
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.OpenMaya
+import maya.api.OpenMaya
+import maya.api.OpenMayaAnim
+
 from tpDcc.libs.python import python, mathlib, name as name_utils
 from tpDcc.dccs.maya.core import node, attribute, exceptions, name as name_lib, decorators
 from tpDcc.dccs.maya.core import geometry as geo_utils, shape as shape_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 ALL_DEFORMERS = (
     'blendShape',
@@ -133,7 +140,7 @@ class ClusterSurface(ClusterObject, object):
                     index = '[{}][*]'.format(i)
                 cv = '{}.cv{}'.format(self._geo, index)
             else:
-                maya.logger.warning('Given NURBS Maya type "{}" is not valid!'.format(self._maya_type))
+                LOGGER.warning('Given NURBS Maya type "{}" is not valid!'.format(self._maya_type))
                 return
 
             cluster, handle = self._create_cluster(cv)
@@ -317,7 +324,7 @@ class ClusterCurve(ClusterSurface, object):
         :param flag: bool
         """
 
-        maya.logger.warning('Cannot set cluster U, there is only one direction for spans on a curve.')
+        LOGGER.warning('Cannot set cluster U, there is only one direction for spans on a curve.')
 
 
 def is_deformer(deformer):
@@ -393,16 +400,15 @@ def get_deformer_fn(deformer):
     :return: str
     """
 
-    if maya.use_new_api():
-        maya.logger.warning('MFnWeightGeometryFilter does not exists in OpenMayaAnim 2.0 yet! Using OpenMaya 1.0 ...')
-        maya.use_new_api(False)
+    # TODO: Make sure dependant functions return objects as OpenMaya1 objects
+    # MFnWeightGeometryFilter does not exists in OpenMayaAnim 2.0 yet! Using OpenMaya 1.0 ...')
 
     if not maya.cmds.objExists(deformer):
         raise Exception('Deformer {} does not exists!'.format(deformer))
 
     deformer_obj = node.get_mobject(deformer)
     try:
-        deformer_fn = maya.OpenMayaAnim.MFnWeightGeometryFilter(deformer_obj)
+        deformer_fn = maya.api.OpenMayaAnim.MFnWeightGeometryFilter(deformer_obj)
     except Exception as e:
         print(str(e))
         raise Exception('Could not get a geometry filter for deformer "{}"!'.format(deformer))
@@ -420,12 +426,12 @@ def get_deformer_set(deformer):
     check_deformer(deformer)
 
     deformer_obj = node.get_mobject(node_name=deformer)
-    deformer_fn = maya.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
+    deformer_fn = maya.api.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
     deformer_set_obj = deformer_fn.deformerSet()
     if deformer_set_obj.isNull():
         raise exceptions.DeformerSetExistsException(deformer)
 
-    return maya.OpenMaya.MFnDependencyNode(deformer_set_obj).name()
+    return maya.api.OpenMaya.MFnDependencyNode(deformer_set_obj).name()
 
 
 def get_deformer_set_fn(deformer):
@@ -440,7 +446,7 @@ def get_deformer_set_fn(deformer):
     deformer_set = get_deformer_set(deformer=deformer)
 
     deformer_set_obj = node.get_mobject(node_name=deformer_set)
-    deformer_set_fn = maya.OpenMaya.MFnSet(deformer_set_obj)
+    deformer_set_fn = maya.api.OpenMaya.MFnSet(deformer_set_obj)
 
     return deformer_set_fn
 
@@ -463,7 +469,7 @@ def get_geo_index(geometry, deformer):
     geo_obj = node.get_mobject(node_name=geometry)
 
     deformer_obj = node.get_mobject(node_name=deformer)
-    deformer_fn = maya.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
+    deformer_fn = maya.api.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
     try:
         geo_index = deformer_fn.indexForOutputShape(geo_obj)
     except Exception:
@@ -489,21 +495,11 @@ def get_deformer_set_members(deformer, geometry=''):
     else:
         geo_index = 0
 
-    if maya.is_new_api():
-        deformer_set_sel = deformer_set_fn.getMembers(True)
-        deformer_set_len = len(deformer_set_sel)
-        if geo_index >= deformer_set_len:
-            raise exceptions.GeometryIndexOutOfRange(deformer, geometry, geo_index, deformer_set_len)
-        geo_index, deformer_set_path, deformer_set_comp = deformer_set_sel.getDagPath()
-    else:
-        deformer_set_sel = maya.OpenMaya.MSelectionList()
-        deformer_set_fn.getMembers(deformer_set_sel, True)
-        deformer_set_path = maya.OpenMaya.MDagPath()
-        deformer_set_comp = maya.OpenMaya.MObject()
-        deformer_set_len = deformer_set_sel.length()
-        if geo_index >= deformer_set_len:
-            raise exceptions.GeometryIndexOutOfRange(deformer, geometry, geo_index, deformer_set_len)
-        deformer_set_sel.getDagPath(geo_index, deformer_set_path, deformer_set_comp)
+    deformer_set_sel = deformer_set_fn.getMembers(True)
+    deformer_set_len = len(deformer_set_sel)
+    if geo_index >= deformer_set_len:
+        raise exceptions.GeometryIndexOutOfRange(deformer, geometry, geo_index, deformer_set_len)
+    geo_index, deformer_set_path, deformer_set_comp = deformer_set_sel.getDagPath()
 
     return [deformer_set_path, deformer_set_comp]
 
@@ -520,14 +516,8 @@ def get_deformer_set_member_str_list(deformer, geometry=''):
 
     deformer_set_fn = get_deformer_set_fn(deformer)
 
-    if maya.is_new_api():
-        deformer_set_sel = deformer_set_fn.getMembers(True)
-        set_member_str = str(deformer_set_sel)
-    else:
-        deformer_set_sel = maya.OpenMaya.MSelectionList()
-        deformer_set_fn.getMembers(deformer_set_sel, True)
-        set_member_str = list()
-        deformer_set_sel.getSelectionStrings(set_member_str)
+    deformer_set_sel = deformer_set_fn.getMembers(True)
+    set_member_str = str(deformer_set_sel)
 
     set_member_str = maya.cmds.ls(set_member_str, fl=True)
 
@@ -556,37 +546,22 @@ def get_deformer_set_member_indices(deformer, geometry=''):
 
     # Single Index
     if geometry_type == 'mesh' or geometry_type == 'nurbsCurve' or geometry_type == 'particle':
-        single_index_comp_fn = maya.OpenMaya.MFnSingleIndexedComponent(deformer_set_mem[1])
-        if maya.is_new_api():
-            member_indices = single_index_comp_fn.getElements()
-        else:
-            member_indices = maya.OpenMaya.MIntArray()
-            single_index_comp_fn.getElements(member_indices)
+        single_index_comp_fn = maya.api.OpenMaya.MFnSingleIndexedComponent(deformer_set_mem[1])
+        member_indices = single_index_comp_fn.getElements()
         member_id_list = list(member_indices)
 
     # Double Index
     if geometry_type == 'nurbsSurface':
-        double_index_comp_fn = maya.OpenMaya.MFnDoubleIndexedComponent(deformer_set_mem[1])
-        if maya.is_new_api():
-            member_indices_U, member_indices_V = double_index_comp_fn.getElements()
-        else:
-            member_indices_U = maya.OpenMaya.MIntArray()
-            member_indices_V = maya.OpenMaya.MIntArray()
-            double_index_comp_fn.getElements(member_indices_U, member_indices_V)
+        double_index_comp_fn = maya.api.OpenMaya.MFnDoubleIndexedComponent(deformer_set_mem[1])
+        member_indices_U, member_indices_V = double_index_comp_fn.getElements()
         array_length = member_indices_U.length() if hasattr(member_indices_U, 'length') else len(member_indices_U)
         for i in range(array_length):
             member_id_list.append([member_indices_U[i], member_indices_V[i]])
 
     # Triple Index
     if geometry_type == 'lattice':
-        triple_index_comp_fn = maya.OpenMaya.MFnTripleIndexedComponent(deformer_set_mem[1])
-        if maya.is_new_api():
-            member_indices_S, member_indices_T, member_indices_U = triple_index_comp_fn.getElements()
-        else:
-            member_indices_S = maya.OpenMaya.MIntArray()
-            member_indices_T = maya.OpenMaya.MIntArray()
-            member_indices_U = maya.OpenMaya.MIntArray()
-            triple_index_comp_fn.getElements(member_indices_S, member_indices_T, member_indices_U)
+        triple_index_comp_fn = maya.api.OpenMaya.MFnTripleIndexedComponent(deformer_set_mem[1])
+        member_indices_S, member_indices_T, member_indices_U = triple_index_comp_fn.getElements()
         array_length = member_indices_S.length() if hasattr(member_indices_S, 'length') else len(member_indices_S)
         for i in range(array_length):
             member_id_list.append([member_indices_S[i], member_indices_T[i], member_indices_U[i]])
@@ -609,21 +584,17 @@ def get_affected_geometry(deformer, return_shapes=False, full_path_names=False):
     affected_objects = dict()
 
     deformer_obj = node.get_mobject(node_name=deformer)
-    geo_filter_fn = maya.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
+    geo_filter_fn = maya.api.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
 
-    if maya.is_new_api():
-        output_object_array = geo_filter_fn.getOutputGeometry()
-    else:
-        output_object_array = maya.OpenMaya.MObjectArray()
-        geo_filter_fn.getOutputGeometry(output_object_array)
+    output_object_array = geo_filter_fn.getOutputGeometry()
 
     array_length = output_object_array.length() if hasattr(output_object_array, 'length') else len(output_object_array)
     for i in range(array_length):
         output_index = geo_filter_fn.indexForOutputShape(output_object_array[i])
-        output_node = maya.OpenMaya.MFnDagNode(output_object_array[i])
+        output_node = maya.api.OpenMaya.MFnDagNode(output_object_array[i])
 
         if not return_shapes:
-            output_node = maya.OpenMaya.MFnDagNode(output_node.parent(0))
+            output_node = maya.api.OpenMaya.MFnDagNode(output_node.parent(0))
 
         if full_path_names:
             affected_objects[output_node.fullPathName()] = output_index
@@ -655,23 +626,23 @@ def find_input_shape(shape):
 
     # Find connected deformer
     deformer_obj = node.get_mobject(in_mesh_cnt[0])
-    if not deformer_obj.hasFn(maya.OpenMaya.MFn.kGeometryFilt):
+    if not deformer_obj.hasFn(maya.api.OpenMaya.MFn.kGeometryFilt):
         deformer_hist = maya.cmds.listHistory(shape, type='geometryFilter')
         if not deformer_hist:
-            maya.logger.warning(
+            LOGGER.warning(
                 'Shape node "{0}" has incoming inMesh connections but is not affected by any valid deformers! '
                 'Returning "{0}"!'.format(shape))
             return shape
         else:
             deformer_obj = node.get_mobject(deformer_obj[0])
 
-    deformer_fn = maya.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
+    deformer_fn = maya.api.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
 
     shape_obj = node.get_mobject(shape)
     geo_index = deformer_fn.indexForOutputShape(shape_obj)
     input_shape_obj = deformer_fn.inputShapeAtIndex(geo_index)
 
-    return maya.OpenMaya.MFnDependencyNode(input_shape_obj).name()
+    return maya.api.OpenMaya.MFnDependencyNode(input_shape_obj).name()
 
 
 def rename_deformer_set(deformer, deformer_set_name=''):
@@ -702,13 +673,8 @@ def get_weights(deformer, geometry=None):
     :return: list<float>
     """
 
-    use_new_api = False
-    if maya.is_new_api():
-        maya.logger.warning(
-            'get_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! '
-            'Using OpenMaya 1.0 ...')
-        maya.use_new_api(False)
-        use_new_api = True
+    # TODO: Make sure dependant functions return objects as OpenMaya1 objects
+    # NOTE: 'get_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet!
 
     check_deformer(deformer)
 
@@ -722,11 +688,8 @@ def get_weights(deformer, geometry=None):
     deformer_fn = get_deformer_fn(deformer)
     deformer_set_mem = get_deformer_set_members(deformer=deformer, geometry=geo_shape)
 
-    weight_list = maya.OpenMaya.MFloatArray()
+    weight_list = maya.api.OpenMaya.MFloatArray()
     deformer_fn.getWeights(deformer_set_mem[0], deformer_set_mem[1], weight_list)
-
-    if use_new_api:
-        maya.use_new_api(True)
 
     return list(weight_list)
 
@@ -739,13 +702,8 @@ def set_weights(deformer, weights, geometry=None):
     :param geometry: str, target geometry to apply weights to. If None, use first affected geometry
     """
 
-    use_new_api = False
-    if maya.is_new_api():
-        maya.logger.warning(
-            'set_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet! '
-            'Using OpenMaya 1.0 ...')
-        maya.use_new_api(False)
-        use_new_api = True
+    # TODO: Make sure dependant functions return objects as OpenMaya1 objects
+    # set_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya 2.0 yet!
 
     check_deformer(deformer)
 
@@ -754,19 +712,16 @@ def set_weights(deformer, weights, geometry=None):
 
     geo_shape = geometry
     geo_obj = node.get_mobject(geometry)
-    if geometry and geo_obj.hasFn(maya.OpenMaya.MFn.kTransform):
+    if geometry and geo_obj.hasFn(maya.api.OpenMaya.MFn.kTransform):
         geo_shape = maya.cmds.listRelatives(geometry, s=True, ni=True)[0]
 
     deformer_fn = get_deformer_fn(deformer)
     deformer_set_mem = get_deformer_set_members(deformer=deformer, geometry=geo_shape)
 
-    weights_list = maya.OpenMaya.MFloatArray()
+    weights_list = maya.api.OpenMaya.MFloatArray()
     [weights_list.append(i) for i in weights]
 
     deformer_fn.setWeight(deformer_set_mem[0], deformer_set_mem[1], weights_list)
-
-    if use_new_api:
-        maya.use_new_api(True)
 
 
 def bind_pre_matrix(deformer, bind_pre_matrix='', parent=True):
@@ -840,13 +795,8 @@ def prune_membership_by_weights(deformer, geo_list=None, threshold=0.001):
     :param threshold: float, weight threshold for removal
     """
 
-    use_new_api = False
-    if maya.is_new_api():
-        maya.logger.warning(
-            'prune_membership_by_weights function is dependant of MFnWeightGeometryFilter which is not available in '
-            'OpenMaya 2.0 yet! Using OpenMaya 1.0 ...')
-        maya.use_new_api(False)
-        use_new_api = True
+    # TODO: Make sure dependant functions return objects as OpenMaya1 objects
+    # prune_membership_by_weights function is dependant of MFnWeightGeometryFilter which is not available in OpenMaya2
 
     check_deformer(deformer)
 
@@ -880,9 +830,6 @@ def prune_membership_by_weights(deformer, geo_list=None, threshold=0.001):
         if prune_list:
             maya.cmds.sets(prune_list, rm=deformer_set)
 
-    if use_new_api:
-        maya.use_new_api(True)
-
     return all_prune_list
 
 
@@ -895,7 +842,7 @@ def clean(deformer, threshold=0.001):
 
     check_deformer(deformer)
 
-    maya.logger.debug('Cleaning deformer: {}!'.format(deformer))
+    LOGGER.debug('Cleaning deformer: {}!'.format(deformer))
 
     prune_weights(deformer=deformer, threshold=threshold)
     prune_membership_by_weights(deformer=deformer, threshold=threshold)
@@ -915,12 +862,8 @@ def check_multiple_outputs(deformer, print_result=True):
     if not out_geo_plug.isArray():
         raise Exception('Attribute ""{}".outputGeometry is not array" attribute!'.format(deformer))
 
-    if maya.use_new_api():
-        index_list = out_geo_plug.getExistingArrayAttributeIndices()
-        num_index = len(index_list)
-    else:
-        index_list = maya.OpenMaya.MIntArray()
-        num_index = out_geo_plug.getExistingArrayAttributeIndices(index_list)
+    index_list = out_geo_plug.getExistingArrayAttributeIndices()
+    num_index = len(index_list)
 
     return_dict = dict()
     for i in range(num_index):
@@ -929,11 +872,11 @@ def check_multiple_outputs(deformer, print_result=True):
         if len(plug_cnt) > 1:
             return_dict[deformer + '.outputGeometry[' + str(index_list[i]) + ']'] = plug_cnt
             if print_result:
-                maya.logger.debug(
+                LOGGER.debug(
                     'Deformer output "' + deformer + '.outputGeometry[' + str(
                         index_list[i]) + ']" has ' + str(len(plug_cnt)) + ' outgoing connections:')
                 for cnt in plug_cnt:
-                    maya.logger.debug('\t- ' + cnt)
+                    LOGGER.debug('\t- ' + cnt)
 
     return return_dict
 
@@ -1031,7 +974,7 @@ def get_skin_weights(skin_deformer, vertices_ids=None):
 
     mobj = node.get_mobject(skin_deformer)
 
-    mf_skin = maya.OpenMayaAnim.MFnSkinCluster(mobj)
+    mf_skin = maya.api.OpenMayaAnim.MFnSkinCluster(mobj)
 
     weight_list_plug = mf_skin.findPlug('weightList', 0)
     weights_plug = mf_skin.findPlug('weights', 0)
@@ -1047,13 +990,9 @@ def get_skin_weights(skin_deformer, vertices_ids=None):
     for vertex_id in vertices_ids:
         weights_plug.selectAncestorLogicalIndex(vertex_id, weight_list_attr)
 
-        if maya.is_new_api():
-            weight_influence_ids = weights_plug.getExistingArrayAttributeIndices()
-        else:
-            weight_influence_ids = maya.OpenMaya.MIntArray()
-            weights_plug.getExistingArrayAttributeIndices(weight_influence_ids)
+        weight_influence_ids = weights_plug.getExistingArrayAttributeIndices()
 
-        influence_plug = maya.OpenMaya.MPlug(weights_plug)
+        influence_plug = maya.api.OpenMaya.MPlug(weights_plug)
         for influence_id in weight_influence_ids:
             influence_plug.selectAncestorLogicalIndex(influence_id, weights_attr)
             if influence_id not in weights:
@@ -1177,7 +1116,7 @@ def get_skin_influence_names(skin_deformer, short_name=False):
     """
 
     mobj = node.get_mobject(skin_deformer)
-    mf_skin = maya.OpenMayaAnim.MFnSkinCluster(mobj)
+    mf_skin = maya.api.OpenMayaAnim.MFnSkinCluster(mobj)
     influence_dag_paths = mf_skin.influenceObjects()
 
     influence_names = list()
@@ -1201,7 +1140,7 @@ def get_skin_influence_indices(skin_deformer):
     """
 
     mobj = node.get_mobject(skin_deformer)
-    mf_skin = maya.OpenMayaAnim.MFnSkinCluster(mobj)
+    mf_skin = maya.api.OpenMayaAnim.MFnSkinCluster(mobj)
     influence_dag_paths = mf_skin.influenceObjects()
 
     influence_ids = list()
@@ -1224,15 +1163,10 @@ def get_skin_influences(skin_deformer, short_name=True, return_dict=False):
     """
 
     mobj = node.get_mobject(skin_deformer)
-    mf_skin = maya.OpenMayaAnim.MFnSkinCluster(mobj)
+    mf_skin = maya.api.OpenMayaAnim.MFnSkinCluster(mobj)
 
-    if maya.is_new_api():
-        influence_dag_paths = mf_skin.influenceObjects()
-        total_paths = len(influence_dag_paths)
-    else:
-        influence_dag_paths = maya.OpenMaya.MDagPathArray()
-        mf_skin.influenceObjects(influence_dag_paths)
-        total_paths = influence_dag_paths.length()
+    influence_dag_paths = mf_skin.influenceObjects()
+    total_paths = len(influence_dag_paths)
 
     influence_ids = dict()
     influence_names = list()
@@ -1367,16 +1301,16 @@ def skin_mesh_from_mesh(source_mesh, target_mesh, exclude_joints=None, include_j
     :param uv_space: bool, Whether to copy the skin weights in UV space rather than point space
     """
 
-    maya.logger.debug('Skinning {} using weights from {}'.format(target_mesh, source_mesh))
+    LOGGER.debug('Skinning {} using weights from {}'.format(target_mesh, source_mesh))
 
     skin = find_deformer_by_type(source_mesh, 'skinCluster')
     if not skin:
-        maya.logger.warning('{} has no skin. No skinning to copy!'.lformat(source_mesh))
+        LOGGER.warning('{} has no skin. No skinning to copy!'.lformat(source_mesh))
         return
 
     target_skin = find_deformer_by_type(target_mesh, 'skinCluster')
     if target_skin:
-        maya.logger.warning('{} already has a skinCluster. Deleting existing one ...'.format(target_mesh))
+        LOGGER.warning('{} already has a skinCluster. Deleting existing one ...'.format(target_mesh))
         maya.cmds.delete(target_skin)
         target_skin = None
 

@@ -10,12 +10,13 @@ from __future__ import print_function, division, absolute_import
 import string
 import logging
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.libs.python import python, name as core_name
 from tpDcc.dccs.maya.core import exceptions, deformer, shape, component, name as name_utils, attribute as attr_utils
 from tpDcc.dccs.maya.core import geometry as geo_utils
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class BlendShapeOrigin(object):
@@ -570,6 +571,7 @@ def add_empty_target(blend_shape, target_alias='', input_target_items=None):
     Adds a new empty target into the given blendShape node
     :param blend_shape: str, name of the blendShape to add target to
     :param target_alias: str, override the default blendShape target alias
+    :param input_target_items:
     :return: str
     """
 

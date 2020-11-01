@@ -7,10 +7,9 @@ Module that contains functions and classes related with colors
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtGui import *
+from Qt.QtGui import QColor
 
-import tpDcc.dccs.maya as maya
-
+import maya.cmds
 
 # ==== Control Colors
 CONTROL_COLORS = [(.467, .467, .467), [.000, .000, .000], (.247, .247, .247), (.498, .498, .498), (0.608, 0, 0.157),
@@ -91,25 +90,26 @@ def get_rig_color(rig_type='fk', side='center'):
 
     if rig_type == 'fk' or rig_type == 'FK':
         if side == 'left' or side == 'Left' or side == 'L' or side == 'l' or side == 'Lt':
-            cl = QColor.fromRgbF(0.7, 0.4, 0.7)
-            cl.ann = 'LtFK Color'
+            rig_color = QColor.fromRgbF(0.7, 0.4, 0.7)
+            rig_color.ann = 'LtFK Color'
         elif side == 'right' or side == 'Right' or side == 'R' or side == 'r' or side == 'Rt':
-            cl = QColor.fromRgbF(0.7, 0.4, 0.4)
-            cl.ann = 'RtFK Color'
+            rig_color = QColor.fromRgbF(0.7, 0.4, 0.4)
+            rig_color.ann = 'RtFK Color'
         else:
-            cl = QColor.fromRgbF(0.7, 0.7, 0.4)
-            cl.ann = 'CnFK Color'
-    elif rig_type == 'ik' or rig_type == 'IK':
+            rig_color = QColor.fromRgbF(0.7, 0.7, 0.4)
+            rig_color.ann = 'CnFK Color'
+    else:
         if side == 'left' or side == 'Left' or side == 'L' or side == 'l' or side == 'Lt':
-            cl = QColor.fromRgbF(0.4, 0.5, 0.7)
-            cl.ann = 'LtIK Color'
+            rig_color = QColor.fromRgbF(0.4, 0.5, 0.7)
+            rig_color.ann = 'LtIK Color'
         elif side == 'right' or side == 'Right' or side == 'R' or side == 'r' or side == 'Rt':
-            cl = QColor.fromRgbF(0.7, 0.4, 0.7)
-            cl.ann = 'RtIK Color'
+            rig_color = QColor.fromRgbF(0.7, 0.4, 0.7)
+            rig_color.ann = 'RtIK Color'
         else:
-            cl = QColor.fromRgbF(0.4, 0.7, 0.4)
-            cl.ann = 'CnIK Color'
-    return cl
+            rig_color = QColor.fromRgbF(0.4, 0.7, 0.4)
+            rig_color.ann = 'CnIK Color'
+
+    return rig_color
 
 
 def get_mirror_rig_color_by_type(rig_type='fk', side='center'):
@@ -120,10 +120,10 @@ def get_mirror_rig_color_by_type(rig_type='fk', side='center'):
     """
 
     rig_colors = dict()
-    for rig_type in ['fk', 'ik']:
-        rig_colors[rig_type] = dict
-        for side in ['left', 'right', 'center']:
-            rig_colors[dict][side] = get_rig_color(rig_type=rig_type, side=side)
+    for rig_type_ in ['fk', 'ik']:
+        rig_colors[rig_type_] = dict
+        for side_ in ['left', 'right', 'center']:
+            rig_colors[rig_type_][side_] = get_rig_color(rig_type=rig_type_, side=side_)
 
     if side == 'left':
         mirror_side = 'right'
@@ -151,7 +151,7 @@ def get_mirror_rig_color_by_color(cl):
     for rig_type in ['fk', 'ik']:
         rig_colors[rig_type] = dict
         for side in ['left', 'right', 'center']:
-            rig_colors[dict][side] = get_rig_color(rig_type=rig_type, side=side)
+            rig_colors[rig_type][side] = get_rig_color(rig_type=rig_type, side=side)
 
     for rig_type, side_colors in rig_colors.items():
         for side, rig_color in side_colors.items():

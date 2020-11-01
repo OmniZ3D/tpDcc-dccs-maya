@@ -7,11 +7,14 @@ Module that contains functions and classes related to maya filter types
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 from collections import OrderedDict
 
-import tpDcc
+import maya.cmds
+
 from tpDcc.libs.python import python
-import tpDcc.dccs.maya as maya
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 ALL_FILTER_TYPE = 'All Node Types'
 GROUP_FILTER_TYPE = 'Group'
@@ -105,7 +108,7 @@ def filter_all_node_types(
 
     all_selected_objs = maya.cmds.ls(sl=True, long=True, dagObjects=search_hierarchy, dag=dag)
     if not all_selected_objs:
-        maya.logger.warning('No objects selected, select at least one please!')
+        LOGGER.warning('No objects selected, select at least one please!')
         return list()
 
     if not transforms_only:
@@ -156,14 +159,14 @@ def filter_by_group(selection_only, search_hierarchy, dag):
     if selection_only:
         objs_list = maya.cmds.ls(sl=True, long=True)
         if not objs_list:
-            maya.logger.warning('Nothing is selected, please select at least one object!')
+            LOGGER.warning('Nothing is selected, please select at least one object!')
             return list()
 
     obj_transforms = filter_list_by_types(
         filter_types='transform', objs_list=objs_list, search_hierarchy=search_hierarchy,
         selection_only=selection_only, dag=dag)
     if not obj_transforms:
-        maya.logger.warning('No groups found!')
+        LOGGER.warning('No groups found!')
         return list()
 
     # We check again to avoid not wanted transforms (such as joints, or shape nodes)
@@ -188,7 +191,7 @@ def filter_dag_transforms(filter_types, search_hierarchy=False, selection_only=T
     if selection_only:
         sel_objs = maya.cmds.ls(sl=True, long=True)
         if not sel_objs:
-            maya.logger.warning('No objects selected. Please select at least one!')
+            LOGGER.warning('No objects selected. Please select at least one!')
             return list()
         shapes_list = maya.cmds.listRelatives(sel_objs, shapes=True, fullPath=True)
         if shapes_list:
@@ -225,7 +228,7 @@ def filter_by_type(
 
     obj_type_list = TYPE_FILTERS.get(filter_type, None)
     if not obj_type_list:
-        maya.logger.warning('Filter Type "{}" is not supported in Maya!'.format(filter_type))
+        LOGGER.warning('Filter Type "{}" is not supported in Maya!'.format(filter_type))
         return None
 
     if keep_order:

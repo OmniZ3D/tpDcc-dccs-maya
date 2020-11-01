@@ -9,7 +9,8 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.mel
 
 
 def load_abc_import_plugin():

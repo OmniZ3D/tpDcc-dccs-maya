@@ -7,7 +7,9 @@ Module that contains functions and classes related with Maya API maths
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.api.OpenMaya
+
 from tpDcc.dccs.maya import api
 
 
@@ -18,7 +20,7 @@ def magnitude(vector=(0, 0, 0)):
     :return: float
     """
 
-    return maya.OpenMaya.MVector(vector[0], vector[1], vector[2]).length()
+    return maya.api.OpenMaya.MVector(vector[0], vector[1], vector[2]).length()
 
 
 def get_axis_vector(transform, axis_vector):
@@ -46,7 +48,7 @@ def normalize_vector(vector=(0, 0, 0)):
     :return: tuple
     """
 
-    normal = maya.OpenMaya.MVector(vector[0], vector[1], vector[2]).normal()
+    normal = maya.api.OpenMaya.MVector(vector[0], vector[1], vector[2]).normal()
 
     return normal.x, normal.y, normal.z
 
@@ -59,8 +61,8 @@ def dot_product(vector1=(0.0, 0.0, 0.0), vector2=(0.0, 0.0, 0.0)):
     :return: float
     """
 
-    vec1 = maya.OpenMaya.MVector(vector1[0], vector1[1], vector1[2])
-    vec2 = maya.OpenMaya.MVector(vector2[0], vector2[1], vector2[2])
+    vec1 = maya.api.OpenMaya.MVector(vector1[0], vector1[1], vector1[2])
+    vec2 = maya.api.OpenMaya.MVector(vector2[0], vector2[1], vector2[2])
 
     return vec1 * vec2
 
@@ -73,8 +75,8 @@ def cross_product(vector1=(0.0, 0.0, 0.0), vector2=(0.0, 0.0, 0.0)):
     :return: tuple
     """
 
-    vec1 = maya.OpenMaya.MVector(vector1[0], vector1[1], vector1[2])
-    vec2 = maya.OpenMaya.MVector(vector2[0], vector2[1], vector2[2])
+    vec1 = maya.api.OpenMaya.MVector(vector1[0], vector1[1], vector1[2])
+    vec2 = maya.api.OpenMaya.MVector(vector2[0], vector2[1], vector2[2])
     cross_product = vec1 ^ vec2
 
     return cross_product.x, cross_product.y, cross_product.z
@@ -88,10 +90,10 @@ def distance_between(point1=[0.0, 0.0, 0.0], point2=[0.0, 0.0, 0.0]):
     :return: float
     """
 
-    pnt1 = maya.OpenMaya.MVector(point1[0], point1[1], point1[2])
-    pnt2 = maya.OpenMaya.MVector(point2[0], point2[1], point2[2])
+    pnt1 = maya.api.OpenMaya.MVector(point1[0], point1[1], point1[2])
+    pnt2 = maya.api.OpenMaya.MVector(point2[0], point2[1], point2[2])
 
-    return maya.OpenMaya.MVector(pnt1 - pnt2).length()
+    return maya.api.OpenMaya.MVector(pnt1 - pnt2).length()
 
 
 def offset_vector(point1=[0.0, 0.0, 0.0], point2=[0.0, 0.0, 0.0]):
@@ -102,8 +104,8 @@ def offset_vector(point1=[0.0, 0.0, 0.0], point2=[0.0, 0.0, 0.0]):
     :return: tuple
     """
 
-    pnt1 = maya.OpenMaya.MVector(point1[0], point1[1], point1[2])
-    pnt2 = maya.OpenMaya.MVector(point2[0], point2[1], point2[2])
+    pnt1 = maya.api.OpenMaya.MVector(point1[0], point1[1], point1[2])
+    pnt2 = maya.api.OpenMaya.MVector(point2[0], point2[1], point2[2])
     vec = pnt2 - pnt1
 
     return vec.x, vec.y, vec.z
@@ -170,8 +172,8 @@ def multiply_matrix(matrix4x4_list1, matrix4x4_list2):
     :return: OpenMaya.MMatrix
     """
 
-    mat1 = maya.OpenMaya.MMatrix(matrix4x4_list1)
-    mat2 = maya.OpenMaya.MMatrix(matrix4x4_list2)
+    mat1 = maya.api.OpenMaya.MMatrix(matrix4x4_list1)
+    mat2 = maya.api.OpenMaya.MMatrix(matrix4x4_list2)
 
     return mat1 * mat2
 
@@ -191,8 +193,8 @@ def distance_between_nodes(source_node=None, target_node=None):
             return 0
         source_node, target_node = sel
 
-    source_pos = maya.OpenMaya.MPoint(*maya.cmds.xform(source_node, query=True, worldSpace=True, translation=True))
-    target_pos = maya.OpenMaya.MPoint(*maya.cmds.xform(target_node, query=True, worldSpace=True, translation=True))
+    source_pos = maya.api.OpenMaya.MPoint(*maya.cmds.xform(source_node, query=True, worldSpace=True, translation=True))
+    target_pos = maya.api.OpenMaya.MPoint(*maya.cmds.xform(target_node, query=True, worldSpace=True, translation=True))
 
     return source_pos.distanceTo(target_pos)
 
@@ -212,7 +214,7 @@ def direction_vector_between_nodes(source_node=None, target_node=None):
             return 0
         source_node, target_node = sel
 
-    source_pos = maya.OpenMaya.MPoint(*maya.cmds.xform(source_node, query=True, worldSpace=True, translation=True))
-    target_pos = maya.OpenMaya.MPoint(*maya.cmds.xform(target_node, query=True, worldSpace=True, translation=True))
+    source_pos = maya.api.OpenMaya.MPoint(*maya.cmds.xform(source_node, query=True, worldSpace=True, translation=True))
+    target_pos = maya.api.OpenMaya.MPoint(*maya.cmds.xform(target_node, query=True, worldSpace=True, translation=True))
 
     return target_pos - source_pos

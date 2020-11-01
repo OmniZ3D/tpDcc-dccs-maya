@@ -7,10 +7,10 @@ Utility module that contains classes and functions to work with Maya callbacks
 
 from __future__ import print_function, division, absolute_import
 
-from tpDcc import register
-from tpDcc.abstract import callback
+import maya.cmds
+import maya.api.OpenMaya
 
-import tpDcc.dccs.maya as maya
+from tpDcc.abstract import callback
 
 
 class MayaCallback(object):
@@ -46,7 +46,7 @@ class MayaCallback(object):
             :return: Token of inderminant type to later unregister the function
             """
 
-            return maya.OpenMaya.MTimerMessage.addTimerCallback(cls.Interval, fn, "")
+            return maya.api.OpenMaya.MTimerMessage.addTimerCallback(cls.Interval, fn, "")
 
         @classmethod
         def unregister(cls, token):
@@ -56,7 +56,7 @@ class MayaCallback(object):
             """
 
             if token:
-                maya.OpenMaya.MTimerMessage.removeCallback(token)
+                maya.api.OpenMaya.MTimerMessage.removeCallback(token)
 
     class NodeAddedCallback(callback.ICallback, object):
         """
@@ -67,7 +67,7 @@ class MayaCallback(object):
         def filter(cls, *args):
             mobj = args[0]
             try:
-                node = maya.OpenMaya.MFnDagNode(mobj)
+                node = maya.api.OpenMaya.MFnDagNode(mobj)
                 path = node.fullPathName()
                 name = node.name()
                 valid = True
@@ -80,12 +80,12 @@ class MayaCallback(object):
 
         @classmethod
         def register(cls, fn, owner=None):
-            return maya.OpenMaya.MDGMessage.addNodeCallback(fn, 'transform', 'dagNode')
+            return maya.api.OpenMaya.MDGMessage.addNodeAddedCallback(fn, 'transform', 'dagNode')
 
         @classmethod
         def unregister(cls, token):
             if token:
-                maya.OpenMaya.MDGMessage.removeCallback(token)
+                maya.api.OpenMaya.MDGMessage.removeCallback(token)
 
     class NodeDeletedCallback(callback.ICallback, object):
         """
@@ -96,7 +96,7 @@ class MayaCallback(object):
         def filter(cls, *args):
             mobj = args[0]
             try:
-                node = maya.OpenMaya.MFnDagNode(mobj)
+                node = maya.api.OpenMaya.MFnDagNode(mobj)
                 path = node.fullPathName()
                 name = node.name()
                 valid = True
@@ -109,12 +109,12 @@ class MayaCallback(object):
 
         @classmethod
         def register(cls, fn, owner=None):
-            return maya.OpenMaya.MDGMessage.addNodeRemovedCallback(fn, 'transform', 'dagNode')
+            return maya.api.OpenMaya.MDGMessage.addNodeRemovedCallback(fn, 'transform', 'dagNode')
 
         @classmethod
         def unregister(cls, token):
             if token:
-                maya.OpenMaya.MDGMessage.removeCallback(token)
+                maya.api.OpenMaya.MDGMessage.removeCallback(token)
 
     class NodeSelectCallback(callback.ICallback, object):
         """
@@ -142,7 +142,7 @@ class MayaCallback(object):
         Callback that handles SceneCreation notifications for Maya
         """
 
-        _codes = [maya.OpenMaya.MSceneMessage.kBeforeNew, maya.OpenMaya.MSceneMessage.kBeforeOpen]
+        _codes = [maya.api.OpenMaya.MSceneMessage.kBeforeNew, maya.api.OpenMaya.MSceneMessage.kBeforeOpen]
 
         @classmethod
         def filter(cls, *args):
@@ -150,12 +150,12 @@ class MayaCallback(object):
 
         @classmethod
         def register(cls, fn, owner=None):
-            return [maya.OpenMaya.MSceneMessage.addCallback(c, fn) for c in cls._codes]
+            return [maya.api.OpenMaya.MSceneMessage.addCallback(c, fn) for c in cls._codes]
 
         @classmethod
         def unregister(cls, token):
             for t in token:
-                maya.OpenMaya.MSceneMessage.removeCallback(t)
+                maya.api.OpenMaya.MSceneMessage.removeCallback(t)
 
     class ShutdownCallback(callback.ICallback, object):
         """
@@ -168,9 +168,9 @@ class MayaCallback(object):
 
         @classmethod
         def register(cls, fn, owner=None):
-            return maya.OpenMaya.MSceneMessage.addCallback(maya.OpenMaya.MSceneMessage.kMayaExiting, fn)
+            return maya.api.OpenMaya.MSceneMessage.addCallback(maya.api.OpenMaya.MSceneMessage.kMayaExiting, fn)
 
         @classmethod
         def unregister(cls, token):
             if token:
-                maya.OpenMaya.MSceneMessage.removeCallback(token)
+                maya.api.OpenMaya.MSceneMessage.removeCallback(token)

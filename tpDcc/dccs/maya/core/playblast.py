@@ -9,11 +9,12 @@ import os
 import glob
 import logging
 
+import maya.cmds
+import maya.mel
+
 from tpDcc.libs.python import osplatform
 
-import tpDcc.dccs.maya as maya
-
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class PlayblastRenderers(object):

@@ -7,11 +7,16 @@ Module that contains functions and classes related with spaces
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import logging
+
+import maya.cmds
+
 from tpDcc.dccs.maya import api
 from tpDcc.libs.python import python
 from tpDcc.dccs.maya.core import name as name_utils, attribute as attr_utils, transform as xform_utils
 from tpDcc.dccs.maya.core import constraint as cns_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 def create_empty_follow_group(
@@ -195,7 +200,7 @@ def create_multi_follow(
     """
 
     if len(source_list) < 2:
-        maya.logger.warning('Cannot create multi follow with less than 2 source transforms!')
+        LOGGER.warning('Cannot create multi follow with less than 2 source transforms!')
         return False
 
     locators = list()

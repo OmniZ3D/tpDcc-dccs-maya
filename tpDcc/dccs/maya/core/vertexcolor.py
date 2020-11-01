@@ -7,8 +7,9 @@ Module that contains functions and classes related with vertex colors and color 
 
 from __future__ import print_function, division, absolute_import
 
+import maya.cmds
+
 from tpDcc.libs.python import python
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.core import node
 

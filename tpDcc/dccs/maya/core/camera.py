@@ -7,7 +7,10 @@ Module that contains functions and classes related with cameras
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.api.OpenMaya
+import maya.api.OpenMayaUI
+
 from tpDcc.dccs.maya.api import mathlib
 from tpDcc.dccs.maya.core import node, transform
 
@@ -202,19 +205,11 @@ def get_current_camera(use_api=True, full_path=True):
     """
 
     if use_api:
-        if maya.is_new_api():
-            camera_path = maya.OpenMayaUI.M3dView().active3dView().getCamera()
-            if full_path:
-                return camera_path.fullPathName()
-            else:
-                return camera_path.partialPathName()
+        camera_path = maya.api.OpenMayaUI.M3dView().active3dView().getCamera()
+        if full_path:
+            return camera_path.fullPathName()
         else:
-            camera_path = maya.OpenMaya.MDagPath()
-            maya.OpenMayaUI.M3dView().active3dView().getCamera(camera_path)
-            if full_path:
-                return camera_path.fullPathName()
-            else:
-                return camera_path.partialPathName()
+            return camera_path.partialPathName()
     else:
         panel = maya.cmds.getPanel(withFocus=True)
         if maya.cmds.getPanel(typeOf=panel) == 'modelPanel':
@@ -244,14 +239,14 @@ def set_current_camera(camera_name):
     :param camera_name: str, name of the camera to use
     """
 
-    view = maya.OpenMayaUI.M3dView.active3dView()
+    view = maya.api.OpenMayaUI.M3dView.active3dView()
     if maya.cmds.nodeType(camera_name) == 'transform':
         shapes = maya.cmds.listRelatives(camera_name, shapes=True)
         if shapes and maya.cmds.nodeType(shapes[0]) == 'camera':
             camera_name = shapes[0]
 
     mobj = node.get_mobject(camera_name)
-    cam = maya.OpenMaya.MDagPath(mobj)
+    cam = maya.api.OpenMaya.MDagPath(mobj)
     view.setCamera(cam)
 
     maya.cmds.refresh()
@@ -268,8 +263,8 @@ def get_eye_point(camera_name):
 
     camera_shape = maya.cmds.ls(maya.cmds.listRelatives(camera_name, s=True, pa=True), type='camera')[0]
     camera_dag_path = node.get_mdag_path(camera_shape)
-    camera_fn = maya.OpenMaya.MFnCamera(camera_dag_path)
-    camera_pt = camera_fn.eyePoint(maya.OpenMaya.MSpace.kWorld)
+    camera_fn = maya.api.OpenMaya.MFnCamera(camera_dag_path)
+    camera_pt = camera_fn.eyePoint(maya.api.OpenMaya.MSpace.kWorld)
 
     return [camera_pt.x, camera_pt.y, camera_pt.z]
 

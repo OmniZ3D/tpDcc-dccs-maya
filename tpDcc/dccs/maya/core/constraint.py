@@ -7,10 +7,10 @@ Module that contains functions and classes related with attributes
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc as tp
-from tpDcc.libs.python import python
+import maya.cmds
 
-import tpDcc.dccs.maya as maya
+from tpDcc import dcc
+from tpDcc.libs.python import python
 from tpDcc.dccs.maya.api import mathlib
 from tpDcc.dccs.maya.core import attribute, name as name_utils, transform as transform_utils
 from tpDcc.dccs.maya.core import shape as shape_utils
@@ -657,7 +657,7 @@ def constraint_local(source_transform, target_transform, parent=False, scale_con
             maya.cmds.parent(local_group, w=True)
         buffer_group = transform_utils.create_buffer_group(local_group, use_duplicate=True)
     else:
-        local_group = maya.cmds.group(empty=True, n=tp.Dcc.find_unique_name('local_{}'.format(source_transform)))
+        local_group = maya.cmds.group(empty=True, n=dcc.find_unique_name('local_{}'.format(source_transform)))
         transform_utils.MatchTransform(target_transform, local_group).translation_rotation()
         transform_utils.MatchTransform(target_transform, local_group).scale()
         if shape_utils.has_shape_of_type(source_transform, 'follicle'):

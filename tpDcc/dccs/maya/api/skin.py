@@ -7,9 +7,12 @@ Module that contains functions related with Maya Skin Cluster node
 
 from __future__ import print_function, division, absolute_import
 
+import maya.cmds
+import maya.api.OpenMaya
+import maya.api.OpenMayaAnim
+
 from tpDcc.libs.python import python
 from tpDcc.core import command
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.api import mesh
 
@@ -36,7 +39,7 @@ def get_skin_cluster(dag_path=None):
     selection_list.create_by_name(skin_name)
 
     skin_node = selection_list.get_depend_node(0)
-    skin_node = maya.OpenMayaAnim.MFnSkinCluster(skin_node)
+    skin_node = maya.api.OpenMayaAnim.MFnSkinCluster(skin_node)
 
     return skin_node, skin_name
 
@@ -58,24 +61,13 @@ def get_skin_weights(skin_cluster, mesh_shape_name):
     if not mesh_path or not mesh_components:
         return None
 
-    influences_array = maya.OpenMaya.MIntArray()
-    if maya.is_new_api():
-        path_array = skin_cluster.influenceObjects()
-    else:
-        path_array = maya.OpenMaya.MDagPathArray()
-        skin_cluster.influenceObjects(path_array)
+    influences_array = maya.api.OpenMaya.MIntArray()
+    path_array = skin_cluster.influenceObjects()
     influences_count = len(path_array)
     for i in range(influences_count):
         influences_array.append(skin_cluster.indexForInfluenceObject(path_array[i]))
 
-    if maya.is_new_api():
-        weights = skin_cluster.getWeights(mesh_path, mesh_components, influences_array)
-    else:
-        poly_iter = maya.OpenMaya.MItMeshVertex(mesh_path, mesh_components)
-        vert_count = poly_iter.count()
-        val_count = influences_count * vert_count
-        weights = maya.OpenMaya.MDoubleArray(val_count)
-        skin_cluster.getWeights(mesh_path, mesh_components, influences_array, weights)
+    weights = skin_cluster.getWeights(mesh_path, mesh_components, influences_array)
 
     return weights
 
@@ -92,17 +84,13 @@ def set_skin_weights(skin_cluster, mesh_shape_name, skin_data):
     if not mesh_path or not mesh_components:
         return None
 
-    influences_array = maya.OpenMaya.MIntArray()
-    if maya.is_new_api():
-        path_array = skin_cluster.influenceObjects()
-    else:
-        path_array = maya.OpenMaya.MDagPathArray()
-        skin_cluster.influenceObjects(path_array)
+    influences_array = maya.api.OpenMaya.MIntArray()
+    path_array = skin_cluster.influenceObjects()
     influences_count = len(path_array)
     for i in range(influences_count):
         influences_array.append(skin_cluster.indexForInfluenceObject(path_array[i]))
 
-    weights_array = maya.OpenMaya.MDoubleArray()
+    weights_array = maya.api.OpenMaya.MDoubleArray()
     for i in skin_data[1:-1].split(','):
         weights_array.append(float(i))
 

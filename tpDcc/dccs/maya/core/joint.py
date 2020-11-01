@@ -9,15 +9,20 @@ from __future__ import print_function, division, absolute_import
 
 import math
 import random
+import logging
 
-import tpDcc as tp
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.api.OpenMaya
+
+from tpDcc import dcc
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.api import mathlib
 from tpDcc.libs.python import strings, python, name as python_name, mathlib as math_utils
 from tpDcc.dccs.maya.core import exceptions, decorators, scene, attribute, transform, node
 from tpDcc.dccs.maya.core import transform as xform_utils, constraint as cns_utils, matrix as matrix_utils
 from tpDcc.dccs.maya.core import name as name_utils, shape as shape_utils, ik as ik_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class BuildJointHierarchy(object):
@@ -262,7 +267,7 @@ class OrientJointAttributes(object):
         if not objects_to_orient:
             objects_to_orient = scene.get_top_dag_nodes()
 
-        maya.logger.debug('Orienting {}'.format(objects_to_orient))
+        LOGGER.debug('Orienting {}'.format(objects_to_orient))
 
         oriented = False
         for obj in objects_to_orient:
@@ -517,7 +522,7 @@ class OrientJoint(object):
 
         if maya.cmds.objExists('{}.active'.format(self._joint)):
             if not maya.cmds.getAttr('{}.active'.format(self._joint)):
-                maya.logger.warning('{} has orientation attributes but is not active. Skipping ...'.format(self._joint))
+                LOGGER.warning('{} has orientation attributes but is not active. Skipping ...'.format(self._joint))
                 return
 
         self._get_relatives()
@@ -525,13 +530,13 @@ class OrientJoint(object):
         self._get_children_special_cases()
         self._freeze(scale=True)
 
-        maya.logger.info('Orienting {}'.format(name_utils.get_basename(self._joint)))
+        LOGGER.info('Orienting {}'.format(name_utils.get_basename(self._joint)))
 
         try:
             for axis in 'XYZ':
                 maya.cmds.setAttr('{}.rotateAxis{}'.format(self._joint, axis), 0)
         except Exception:
-            maya.logger.warning('Could not zero our rotateAxis on {}. This can cause rig errors!'.format(self._joint))
+            LOGGER.warning('Could not zero our rotateAxis on {}. This can cause rig errors!'.format(self._joint))
 
         self._orient_values = self._get_values()
 
@@ -561,7 +566,7 @@ class OrientJoint(object):
         """
 
         if not maya.cmds.objExists('{}.ORIENT_INFO'.format(self._joint)):
-            maya.logger.warning(
+            LOGGER.warning(
                 'Impossible to get orient attributes from {} because they do not exists!'.format(self._joint))
             return
 
@@ -614,7 +619,7 @@ class OrientJoint(object):
             return
 
         if self._child:
-            maya.logger.warning(
+            LOGGER.warning(
                 'Orient Joints inverted scale only permitted on joints with no children. '
                 'Skipping scale invert change on {}'.format(name_utils.get_basename(self.joint)))
             return
@@ -692,7 +697,7 @@ class OrientJoint(object):
                 child_group = self._get_position_group(self._child)
                 self._up_space_type = 'object'
             elif not self._child or not maya.cmds.objExists(self._child):
-                maya.logger.warning('Child specified as up in orient attribute but {} has no child'.format(self._joint))
+                LOGGER.warning('Child specified as up in orient attribute but {} has no child'.format(self._joint))
             return child_group
 
         elif index == 3:
@@ -705,7 +710,7 @@ class OrientJoint(object):
             mid = self._get_triangle_group(self._orient_values['triangleMid'])
             btm = self._get_triangle_group(self._orient_values['triangleBottom'])
             if not top or not mid or not btm:
-                maya.logger.warning(
+                LOGGER.warning(
                     'Could not orient {} fully with current triangle plane settings'.format(self._joint))
                 return
 
@@ -722,7 +727,7 @@ class OrientJoint(object):
                 child_group = self._get_position_group(self._child2)
                 self._up_space_type = 'object'
             elif not self._child2 or not maya.cmds.objExists(self._child2):
-                maya.logger.warning(
+                LOGGER.warning(
                     'Child 2 specified as up in orient attributes but {} has no 2nd child'.format(self._joint))
             return child_group
 
@@ -759,7 +764,7 @@ class OrientJoint(object):
         try:
             maya.cmds.makeIdentity(self._joint, apply=True, r=True, s=scale)
         except Exception as exc:
-            maya.logger.warning('Could not freeze {} when trying to orient: {}'.format(self._joint, exc))
+            LOGGER.warning('Could not freeze {} when trying to orient: {}'.format(self._joint, exc))
 
     def _get_local_up_group(self, transform_name):
         """
@@ -1110,7 +1115,7 @@ def joint_buffer(joint, index_str=0):
         if result == 'Create':
             index_str = maya.cmds.promptDialog(q=True, text=True)
         else:
-            maya.logger.warning('User canceled joint group creation ...')
+            LOGGER.warning('User canceled joint group creation ...')
             return
 
         # Get joint prefix and create joint buffer group
@@ -1220,7 +1225,7 @@ def orient(joint, aim_axis='x', up_axis='y', up_vector=(0, 1, 0)):
     if not child_joint_list:
         maya.cmds.setAttr('{}.jo'.format(joint), 0, 0, 0)
     else:
-        parent_matrix = maya.OpenMaya.MMatrix()
+        parent_matrix = maya.api.OpenMaya.MMatrix()
         parent_joint = maya.cmds.listRelatives(joint, p=True, pa=True)
         if parent_joint:
             parent_matrix = transform.get_matrix(parent_joint[0])
@@ -1266,7 +1271,7 @@ def orient_to(joint, target):
         child_list = maya.cmds.parent(child_list, world=True)
 
     # Get parent joint matrix
-    parent_matrix = maya.OpenMaya.MMatrix()
+    parent_matrix = maya.api.OpenMaya.MMatrix()
     parent_joint = maya.cmds.listRelatives(joint, p=True, pa=True)
     if parent_joint:
         parent_matrix = transform.get_matrix(parent_joint[0])
@@ -1383,7 +1388,7 @@ def flip_orient(joint, target=None, axis='x'):
     if axis == 'z':
         flip_matrix = matrix_utils.build_matrix(x_axis=(0, 0, -1))
 
-    target_matrix = maya.OpenMaya.MTransformationMatrix(joint_matrix * flip_matrix.inverse())
+    target_matrix = maya.api.OpenMaya.MTransformationMatrix(joint_matrix * flip_matrix.inverse())
     flip_rotation = target_matrix.eulerRotation()
     flip_rotation_list = (flip_rotation.x * rad_to_deg, flip_rotation.y * rad_to_deg, flip_rotation.z * rad_to_deg)
     maya.cmds.setAttr('{}.jo'.format(target), *flip_rotation_list)
@@ -1469,7 +1474,7 @@ def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
         if parent and force:
             parent = maya.cmd.sls(parent, type='joint') or list()
         if not parent:
-            maya.logger.warning(
+            LOGGER.warning(
                 'No source object specified and no parent joint found for joint "{}". Skipping connection ...'.format(
                     joint))
             return None
@@ -1481,7 +1486,7 @@ def connect_inverse_scale(joint, inverse_scale_object=None, force=False):
         try:
             maya.cmds.connectAttr('{}.scale'.format(inverse_scale_object), '{}.inverseScale'.format(joint), f=True)
         except Exception as exc:
-            maya.logger.error(
+            LOGGER.error(
                 'Error connection "{}.scale" to "{}.inverseScale! {}'.format(inverse_scale_object, joint, exc))
             return None
 
@@ -1597,8 +1602,8 @@ def create_joint_on_center():
     if not selection:
         return maya.cmds.joint(n='joint#')
 
-    if maya.cmds.objectType(selection[0]) != 'mesh':
-        raise NotImplementedError('Center to selected objects not implemented yet')
+    # if maya.cmds.objectType(selection[0]) != 'mesh':
+    #     raise NotImplementedError('Center to selected objects not implemented yet')
 
     bounding = transform.BoundingBox(selection)
     center_point = bounding.get_center()
@@ -1611,9 +1616,9 @@ def create_joint_on_center():
 
 
 @decorators.undo
-def create_joints_on_selected_components():
+def create_joints_on_selected_components_center():
     """
-    Creates joints on current selected components (vertices, faces or edges)
+    Creates joints on current selected components (vertices, faces or edges) center
     :return:
     """
 
@@ -1692,7 +1697,8 @@ def create_oriented_joints_along_curve(curve, count=20, description='curve', att
     joints.insert(0, start_joint)
     joints.append(end_joint)
     for joint in joints:
-        new_joints.appedn(maya.cmds.rename(joint, name_utils.find_unique_name('joint_{}_1'.format(curve))))
+        new_joints.append(joint)
+    #     new_joints.append(maya.cmds.rename(joint, name_utils.find_unique_name('joint_{}_1'.format(curve))))
 
     ik = ik_utils.IkHandle(curve)
     ik.set_start_joint(new_joints[0])
@@ -1822,18 +1828,18 @@ def insert_joints(joints=None, joint_count=1):
     if joints is None:
         joints = maya.cmds.ls(sl=True, type='joint')
         if not joints:
-            maya.logger.warning('No joint selected')
+            LOGGER.warning('No joint selected')
             return
     if joint_count < 1:
-        maya.logger.warning('Must insert at least 1 joint')
+        LOGGER.warning('Must insert at least 1 joint')
         return
 
     result = list()
 
     for joint in joints:
-        children = maya.cmds.listRelatives(joint, children=True, type='joint')
+        children = maya.cmds.listRelatives(joint, children=True, type='joint', fullPath=True)
         if not children:
-            maya.logger.warning('Joint "{}" needs at least a child in order to insert joints. Skipping!'.format(joint))
+            LOGGER.warning('Joint "{}" needs at least a child in order to insert joints. Skipping!'.format(joint))
             continue
 
         name = joint
@@ -1845,7 +1851,7 @@ def insert_joints(joints=None, joint_count=1):
         direction *= increment
 
         for i in range(joint_count):
-            position = maya.OpenMaya.MPoint(*maya.cmds.xform(joint, query=True, worldSpace=True, translation=True))
+            position = maya.api.OpenMaya.MPoint(*maya.cmds.xform(joint, query=True, worldSpace=True, translation=True))
             position += direction
             joint = maya.cmds.insertJoint(joint)
             joint = maya.cmds.rename(joint, '{}#'.format(name))
@@ -1969,7 +1975,7 @@ def create_oriented_joints_on_curve(curve, count=20, description=None, attach=Fa
 
     description = description or 'curve'
     if count < 2:
-        maya.logger.info('A joint chain need to have at least 2 joints')
+        LOGGER.info('A joint chain need to have at least 2 joints')
         return created_joints
     if count < 3:
         count = count - 2
@@ -2013,10 +2019,10 @@ def check_joint_labels(joints=None):
     joints = python.force_list(joints)
     if not joints:
         meshes = list()
-        transforms = tp.Dcc.selected_nodes_of_type('transform')
+        transforms = dcc.selected_nodes_of_type('transform')
         if transforms:
             for xform in transforms:
-                shapes = tp.Dcc.list_shapes_of_type(xform, 'mesh')
+                shapes = dcc.list_shapes_of_type(xform, 'mesh')
                 if not shapes:
                     continue
                 meshes.extend(shapes)
@@ -2105,7 +2111,7 @@ def auto_assign_labels_to_mesh_influences(skinned_mesh, input_left=None, input_r
 
     from tpDcc.dccs.maya.core import skin
 
-    skinned_mesh = skinned_mesh or tp.Dcc.selected_nodes_of_type('transform')
+    skinned_mesh = skinned_mesh or dcc.selected_nodes_of_type('transform')
     skinned_mesh = python.force_list(skinned_mesh)
     if not skinned_mesh:
         return False
@@ -2116,10 +2122,10 @@ def auto_assign_labels_to_mesh_influences(skinned_mesh, input_left=None, input_r
     all_joints = list()
     all_shapes = list()
     for mesh in skinned_mesh:
-        if tp.Dcc.node_type(mesh) == 'mesh':
+        if dcc.node_type(mesh) == 'mesh':
             all_shapes.append(mesh)
         else:
-            target_shapes = tp.Dcc.list_shapes_of_type(mesh, 'mesh')
+            target_shapes = dcc.list_shapes_of_type(mesh, 'mesh')
             if target_shapes:
                 all_shapes.append(target_shapes[0])
     if not all_shapes:

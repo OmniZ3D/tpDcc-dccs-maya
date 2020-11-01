@@ -7,16 +7,23 @@ Module that contains functions and classes related to Maya UI
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 import functools
 import traceback
 import contextlib
 from collections import OrderedDict
 
-from Qt.QtWidgets import *
+from Qt.QtWidgets import QApplication, QWidget, QDesktopWidget, QMainWindow, QTextEdit
 
-import tpDcc
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.utils
+import maya.mel
+import maya.OpenMayaUI as OpenMayaUIv1
+
+from tpDcc import dcc
 from tpDcc.libs.qt.core import qtutils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 # ===================================================================================
 
@@ -135,11 +142,11 @@ def get_maya_window(window_name=None, wrap_instance=True):
                 qt_obj = qtutils.to_qt_object(window_name)
                 if qt_obj is not None:
                     return qt_obj
-            ptr = maya.api1['OpenMayaUI'].MQtUtil.findControl(window_name)
+            ptr = maya.OpenMayaUI.MQtUtil.findControl(window_name)
             if ptr is not None:
                 return qtutils.wrapinstance(ptr, QMainWindow)
         else:
-            ptr = maya.api1['OpenMayaUI'].MQtUtil.mainWindow()
+            ptr = maya.OpenMayaUI.MQtUtil.mainWindow()
             if ptr is not None:
                 return qtutils.wrapinstance(ptr, QMainWindow)
 
@@ -311,19 +318,6 @@ def get_is_standalone():
     return not hasattr(maya.cmds, 'about') or maya.cmds.about(batch=True)
 
 
-def get_active_panel():
-    """
-    Returns the current active modelPanel
-    :return: str, name of the model panel or raises an error if no active modelPanel iis found
-    """
-
-    panel = maya.cmds.getPanel(withFocus=True)
-    if not panel or 'modelPanel' not in panel:
-        raise RuntimeError('No active model panel found!')
-
-    return panel
-
-
 def get_available_screen_size():
     """
     Returns available screen size without space occupied by task bar
@@ -483,11 +477,11 @@ def to_qt_object(maya_name, qobj=None):
 
     if not qobj:
         qobj = QWidget
-    ptr = maya.api1['OpenMayaUI'].MQtUtil.findControl(maya_name)
+    ptr = maya.OpenMayaUI.MQtUtil.findControl(maya_name)
     if ptr is None:
-        ptr = maya.api1['OpenMayaUI'].MQtUtil.findLayout(maya_name)
+        ptr = maya.OpenMayaUI.MQtUtil.findLayout(maya_name)
     if ptr is None:
-        ptr = maya.api1['OpenMayaUI'].MQtUtil.findMenuItem(maya_name)
+        ptr = maya.OpenMayaUI.MQtUtil.findMenuItem(maya_name)
     if ptr is not None:
         return qtutils.wrapinstance(long(ptr), qobj)
     return None
@@ -498,7 +492,7 @@ def to_maya_object(qt_object):
     Returns a QtObject as Maya object
     """
 
-    return maya.api1['OpenMayaUI'].MQtUtil.fullName(qtutils.unwrapinstance(qt_object))
+    return maya.OpenMayaUI.MQtUtil.fullName(qtutils.unwrapinstance(qt_object))
 
 
 def get_parent_widget(widget):
@@ -508,7 +502,7 @@ def get_parent_widget(widget):
     :return: QWidget
     """
 
-    ptr = maya.api1['OpenMayaUI'].MQtUtil.getParent(qtutils.unwrapinstance(widget))
+    ptr = maya.OpenMayaUI.MQtUtil.getParent(qtutils.unwrapinstance(widget))
     return qtutils.wrapinstance(long(ptr))
 
 
@@ -518,7 +512,7 @@ def get_ui_gvars():
     :return: list<str>
     """
 
-    gvars = list()
+    gui_vars = list()
     for g in [x for x in sorted(maya.mel.eval('env')) if x.find('$g') > -1]:
         try:
             var_type = maya.mel.eval('whatIs "{0}"'.format(g))
@@ -533,11 +527,11 @@ def get_ui_gvars():
                 raise ValueError
         except Exception:
             continue
-        gvars.append([g, widget_type.__name__])
-    return gvars
+        gui_vars.append([g, widget_type.__name__])
+    return gui_vars
 
 
-def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right']):
+def create_dock_window(window, dock_area='right', allowed_areas=None):
     """
     Docks given window in Maya (used in conjunction with DockedWindow class from window.py module)
     :param window: DockedWindow, UI we want to attach into Maya UI
@@ -546,6 +540,7 @@ def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right'
     :return:
     """
 
+    allowed_areas = allowed_areas or ['left', 'right']
     ui_name = str(window.objectName())
     ui_title = str(window.windowTitle())
     dock_name = '{}Dock'.format(ui_name)
@@ -565,8 +560,8 @@ def create_dock_window(window, dock_area='right', allowed_areas=['left', 'right'
         dock.create()
         window.show()
     except Exception:
-        tpDcc.logger.warning('{} window failed to load. Maya may need to finish loading'.format(ui_name))
-        tpDcc.logger.error(traceback.format_exc())
+        LOGGER.warning('{} window failed to load. Maya may need to finish loading'.format(ui_name))
+        LOGGER.error(traceback.format_exc())
 
 
 def is_window_floating(window_name):
@@ -576,7 +571,7 @@ def is_window_floating(window_name):
     :return: bool
     """
 
-    if tpDcc.Dcc.get_version() < 2017:
+    if dcc.get_version() < 2017:
         floating = maya.cmds.dockControl(window_name, floating=True, query=True)
     else:
         floating = maya.cmds.workspaceControl(window_name, floating=True, query=True)
@@ -625,8 +620,11 @@ def add_maya_widget(layout, layout_parent, maya_fn, *args, **kwargs):
     return qtobj, maya_ui
 
 
-def add_attribute_widget(layout, layout_parent, lbl, attr=None, attr_type='cbx', size=[10, 60, 40, 80],
-                         attr_changed_fn=None):
+def add_attribute_widget(layout, layout_parent, lbl, attr=None, attr_type='cbx', size=None, attr_changed_fn=None):
+
+    qt_object = None
+    size = size or [10, 60, 40, 80]
+
     if attr and not maya.cmds.objExists(attr):
         return False
 
@@ -635,10 +633,11 @@ def add_attribute_widget(layout, layout_parent, lbl, attr=None, attr_type='cbx',
 
     maya.cmds.columnLayout(adjustableColumn=True)
 
+    ui_item = None
     try:
         if attr_type == 'cbx':
             ui_item = maya.cmds.checkBox(label=lbl, v=False, rs=False, w=60)
-            maya.cmds.checkBox(ui_item, changeCommand=lambda attr: attr_changed_fn(attr), edit=True)
+            maya.cmds.checkBox(ui_item, changeCommand=lambda attr_name: attr_changed_fn(attr_name), edit=True)
             maya.cmds.connectControl(ui_item, attr)
 
         if attr_type == 'color':
@@ -659,14 +658,15 @@ def add_attribute_widget(layout, layout_parent, lbl, attr=None, attr_type='cbx',
             ui_item = maya.cmds.attrFieldSliderGrp(label=lbl, attribute=attr, cl2=["left", "left"], cw2=size, pre=2)
             maya.cmds.attrFieldSliderGrp(ui_item, changeCommand=lambda *args: attr_changed_fn(attr), edit=True)
 
-        qtobj = to_qt_object(ui_item)
-        qtobj.setParent(layout_parent)
-        layout.addWidget(qtobj)
+        if ui_item:
+            qt_object = to_qt_object(ui_item)
+            qt_object.setParent(layout_parent)
+            layout.addWidget(qt_object)
     finally:
         if maya.cmds.window('tempAttrWidgetWin', exists=True):
             maya.cmds.deleteUI('tempAttrWidgetWin')
 
-    return qtobj
+    return qt_object
 
 
 def current_model_panel():
@@ -727,7 +727,7 @@ def delete_workspace_control(control_name, reset_floating=True):
     :return: bool
     """
 
-    if not tpDcc.Dcc.get_version() > 2017:
+    if not dcc.get_version() > 2017:
         return None
 
     if maya.cmds.workspaceControl(control_name, query=True, exists=True):

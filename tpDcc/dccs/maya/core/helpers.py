@@ -12,8 +12,9 @@ import sys
 import stat
 import shutil
 
+import maya.cmds
+
 from tpDcc.libs.python import python
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import time, gui
 
 

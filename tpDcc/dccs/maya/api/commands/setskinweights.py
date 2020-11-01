@@ -5,8 +5,9 @@
 Module that contains commands for tpRigToolkit-rigtoolbox for Maya
 """
 
+import maya.api.OpenMaya
+
 from tpDcc.core import command
-import tpDcc.dccs.maya as maya
 
 
 class SetSkinWeights(command.DccCommand, object):
@@ -38,21 +39,13 @@ class SetSkinWeights(command.DccCommand, object):
 
     def undo(self):
         if self._old_weights and self._skin_cluster:
-            weights_array = maya.OpenMaya.MDoubleArray()
+            weights_array = maya.api.OpenMaya.MDoubleArray()
             for i in self._old_weights[1:-1].split(','):
                 weights_array.append(float(i))
             self._skin_cluster.setWeights(
                 self._mesh_path, self._mesh_components, self._influences_array, weights_array, False)
 
     def _get_skin_weights(self, skin_cluster, mesh_path, mesh_components, influences_array):
-        if maya.is_new_api():
-            weights = skin_cluster.getWeights(mesh_path, mesh_components, influences_array)
-        else:
-            influences_count = len(influences_array)
-            poly_iter = maya.OpenMaya.MItMeshVertex(mesh_path, mesh_components)
-            vert_count = poly_iter.count()
-            val_count = influences_count * vert_count
-            weights = maya.OpenMaya.MDoubleArray(val_count)
-            skin_cluster.getWeights(mesh_path, mesh_components, influences_array, weights)
+        weights = skin_cluster.getWeights(mesh_path, mesh_components, influences_array)
 
         return weights

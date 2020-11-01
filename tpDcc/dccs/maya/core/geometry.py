@@ -7,12 +7,18 @@ Module that contains functions and classes related with geometry
 
 from __future__ import print_function, division, absolute_import
 
-from tpDcc.libs.python import mathlib, python
+import re
+import logging
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.api.OpenMaya
+
+from tpDcc.libs.python import mathlib, python, octree
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.core import helpers, exceptions, shape, transform as xform_utils, name as name_utils
 from tpDcc.dccs.maya.core import scene, joint as joint_utils, component as cmp_utils, shape as shape_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class MeshTopologyCheck(object):
@@ -314,7 +320,7 @@ def get_mpoint_array(geometry, world_space=True):
 
     check_geometry(geometry)
 
-    if node.get_mobject(geometry).hasFn(maya.OpenMaya.MFn.kTransform):
+    if node.get_mobject(geometry).hasFn(maya.api.OpenMaya.MFn.kTransform):
         try:
             geometry = maya.cmds.listRelatives(geometry, s=True, ni=True, pa=True)[0]
         except Exception:
@@ -322,35 +328,24 @@ def get_mpoint_array(geometry, world_space=True):
 
     if world_space:
         shape_obj = node.get_mdag_path(geometry)
-        space = maya.OpenMaya.MSpace.kWorld
+        space = maya.api.OpenMaya.MSpace.kWorld
     else:
         shape_obj = node.get_mobject(geometry)
-        space = maya.OpenMaya.MSpace.kObject
+        space = maya.api.OpenMaya.MSpace.kObject
 
     # Check shape type
     shape_type = maya.cmds.objectType(geometry)
 
-    point_list = maya.OpenMaya.MPointArray()
-    if maya.is_new_api():
-        if shape_type == 'mesh':
-            mesh_fn = maya.OpenMaya.MFnMesh(shape_obj)
-            point_list = mesh_fn.getPoints(space)
-        if shape_type == 'nurbsCurve':
-            curve_fn = maya.OpenMaya.MFnNurbsCurve(shape_obj)
-            point_list = curve_fn.getCVs(space)
-        if shape_type == 'nurbsSurface':
-            surface_fn = maya.OpenMaya.MFnNurbsSurface(shape_obj)
-            point_list = surface_fn.getCVs(space)
-    else:
-        if shape_type == 'mesh':
-            mesh_fn = maya.OpenMaya.MFnMesh(shape_obj)
-            mesh_fn.getPoints(point_list, space)
-        if shape_type == 'nurbsCurve':
-            curve_fn = maya.OpenMaya.MFnNurbsCurve(shape_obj)
-            curve_fn.getCVs(point_list, space)
-        if shape_type == 'nurbsSurface':
-            surface_fn = maya.OpenMaya.MFnNurbsSurface(shape_obj)
-            surface_fn.getCVs(point_list, space)
+    point_list = maya.api.OpenMaya.MPointArray()
+    if shape_type == 'mesh':
+        mesh_fn = maya.api.OpenMaya.MFnMesh(shape_obj)
+        point_list = mesh_fn.getPoints(space)
+    if shape_type == 'nurbsCurve':
+        curve_fn = maya.api.OpenMaya.MFnNurbsCurve(shape_obj)
+        point_list = curve_fn.getCVs(space)
+    if shape_type == 'nurbsSurface':
+        surface_fn = maya.api.OpenMaya.MFnNurbsSurface(shape_obj)
+        point_list = surface_fn.getCVs(space)
 
     return point_list
 
@@ -388,12 +383,12 @@ def set_mpoint_array(geometry, points, world_space=False):
 
     if world_space:
         shape_obj = node.get_mdag_path(geometry)
-        space = maya.OpenMaya.MSpace.kWorld
+        space = maya.api.OpenMaya.MSpace.kWorld
     else:
         shape_obj = node.get_mobject(geometry)
-        space = maya.OpenMaya.MSpace.kObject
+        space = maya.api.OpenMaya.MSpace.kObject
 
-    it_geo = maya.OpenMaya.MItGeometry(shape_obj)
+    it_geo = maya.api.OpenMaya.MItGeometry(shape_obj)
     it_geo.setAllPositions(points, space)
 
 
@@ -410,17 +405,95 @@ def get_mbounding_box(geometry, world_space=True):
     check_geometry(geometry)
 
     geo_path = node.get_mdag_path(geometry)
-    geo_node_fn = maya.OpenMaya.MFnDagNode(geo_path)
+    geo_node_fn = maya.api.OpenMaya.MFnDagNode(geo_path)
     geo_bbox = geo_node_fn.boundingBox()
 
     # Transform to world space or local space
     if world_space:
         geo_bbox.transformUsing(geo_path.exclusiveMatrix())
     else:
-        maya.logger.warning('Local space Bounding Bosx is not fully reliable ...')
+        LOGGER.warning('Local space Bounding Bosx is not fully reliable ...')
         geo_bbox.transformUsing(geo_node_fn.transformationMatrix().inverse())
 
     return geo_bbox
+
+
+def voxelize_mesh(mesh_node, divisions=2):
+    """
+    Voxelizes a mesh using an octree data structure
+    :param mesh_node: str
+    :param divisions: int
+    :return:
+    """
+
+    def _flatten_vertices_list(mesh_name, vertices_list):
+        """
+        Given a list containing vertices, which may appear as ranges, return a list containing without ranges
+        NOTE: Maya returns ranges with inclusive vertices on both ends
+        :param mesh_name: str, name of the mesh to get vertices from
+        :param vertices_list: list, list of mesh vertices to flatten
+        :return: list
+        """
+
+        flattened_verts = list()
+        for v in vertices_list:
+            match = re.compile(".*\[(\d*):(\d*)\]").match(v)
+            if not match:
+                continue
+            for v_index in match.groups():
+                flattened_verts.append('{0}.vtx[{1}]'.format(mesh_name, v_index))
+
+        return flattened_verts
+
+    mesh_node = mesh_node or maya.cmds.ls(sl=True)
+    mesh_nodes = python.force_list(mesh_node)
+    if not mesh_nodes:
+        return
+
+    for mesh_name in mesh_nodes:
+        try:
+            shape_node = maya.cmds.listRelatives(mesh_name, children=True, shapes=True)[0]
+            node_type = maya.cmds.nodeType(shape_node)
+            if not node_type == 'mesh':
+                continue
+        except IndexError:
+            continue
+
+        min_x, min_y, min_z, max_x, max_y, max_z = maya.cmds.exactWorldBoundingBox(mesh_name)
+        ot = octree.Octree((min_x, min_y, min_z), (max_x, max_y, max_z))
+        ot_nodes = [ot.root]
+
+        # Subdivide the octree to desired division level
+        while ot_nodes:
+            tree_node = ot_nodes.pop(0)
+            if tree_node.divisions < divisions:
+                tree_node.subdivide()
+                ot_nodes.append(tree_node.children)
+            break
+
+        voxel_locations = set()
+        # For each face in the mesh, find the node(s) containing that face
+        for face_index in range(maya.cmds.polyEvaluate(mesh_name, f=True)):
+            verts = maya.cmds.polyListComponentConversion('%s.f[%d]' % (mesh_name, face_index), ff=True, tv=True)
+
+            # Flatten vertices list
+            vert_list = _flatten_vertices_list(mesh_name, verts)
+
+            # Find the leaf node containing these vertices
+            for v in vert_list:
+                node = ot.root
+                while node.children:
+                    v_pos = maya.cmds.xform(v, query=True, ws=True, t=True)
+                    node = node.child_containing(v_pos)
+
+                # Add the midpoint of the leaf node to the voxel set
+                voxel_locations.add(node.half_values)
+
+        # Create a cube at each of the voxel locations
+        for i, (lx, ly, lz) in enumerate(voxel_locations):
+            voxel_name = '%s_vox_%d' % (mesh_name, i)
+            maya.cmds.polyCube(name=voxel_name)
+            maya.cmds.xform(voxel_name, translation=[lx, ly, lz])
 
 
 def smooth_preview(geometry, smooth_flag=True):
@@ -441,8 +514,6 @@ def smooth_preview_all(smooth_flag=True):
     Turns on/off smooth preview of all the meshes in the current scene
     :param smooth_flag: bool
     """
-
-    from tpDcc.dccs.maya.core import scene
 
     if scene.is_batch():
         return
@@ -705,7 +776,7 @@ def get_mesh_shape(mesh, shape_index=0):
     if shape_index < shape_count:
         return shapes[0]
     if shape_index > shape_count:
-        maya.logger.warning('{} does not have a shape count up to {}'.format(mesh, shape_index))
+        LOGGER.warning('{} does not have a shape count up to {}'.format(mesh, shape_index))
         return None
 
     return shapes[shape_index]
@@ -734,7 +805,7 @@ def get_surface_shape(surface, shape_index=0):
     if shape_index < shape_count:
         return shapes[0]
     elif shape_index >= shape_count:
-        maya.logger.warning(
+        LOGGER.warning(
             'Surface {} does not have a shape count up to {}. Returning last shape'.format(surface, shape_index))
         return shapes[-1]
 
@@ -1004,35 +1075,6 @@ def add_poly_smooth(mesh, divisions=1):
             kmb=1, suv=1, peh=0, sl=1, dpe=1, ps=0.1, ro=1, ch=1)[0]
 
     return poly_smooth
-
-
-def smooth_preview(mesh, flag=True):
-    """
-    Sets whether or not mesh smooth preview is enabled
-    :param mesh: str, mesh to set smooth preview of
-    :param flag: bool
-    """
-
-    if flag:
-        maya.cmds.setAttr('{}.displaySmoothMesh'.format(mesh), 2)
-    else:
-        maya.cmds.setAttr('{}.displaySmoothMesh'.format(mesh), 0)
-
-
-def smooth_preview_all(flag=True):
-    """
-    Sets whether or not smooth previews is enabled in all meshes in current scene
-    :param flag: bool
-    """
-
-    if scene.is_batch():
-        return
-
-    meshes = maya.cmds.ls(type='mesh')
-    for mesh in meshes:
-        intermediate = maya.cmds.getAttr('{}.intermediateObject'.format(mesh))
-        if not intermediate:
-            smooth_preview(mesh, flag=flag)
 
 
 def polygon_plane_to_curves(plane, count=5, u=True, description=''):

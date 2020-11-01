@@ -7,7 +7,7 @@ Module that contains functions and classes related with directories and files in
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
 
 
 def select_file_dialog(title, start_directory=None, pattern=None):

@@ -7,9 +7,9 @@ Utility methods related to Maya Follicles
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc as tp
+import maya.cmds
 
-import tpDcc.dccs.maya as maya
+from tpDcc import dcc
 from tpDcc.dccs.maya.core import shape, geometry, constraint as constraint_utils, transform as transform_utils
 from tpDcc.dccs.maya.core import mesh as mesh_utils, attribute as attr_utils
 
@@ -30,9 +30,9 @@ def create_empty_follicle(description, uv=None, hide_follicle=True):
     follicle = maya.cmds.listRelatives(follicle_shape, p=True)[0]
     maya.cmds.setAttr('{}.inheritsTransform'.format(follicle), False)
     if not description:
-        follicle = maya.cmds.rename(follicle, tp.Dcc.find_unique_name('follicle'))
+        follicle = maya.cmds.rename(follicle, dcc.find_unique_name('follicle'))
     else:
-        follicle = maya.cmds.rename(follicle, tp.Dcc.find_unique_name(description))
+        follicle = maya.cmds.rename(follicle, dcc.find_unique_name(description))
 
     maya.cmds.setAttr('{}.parameterU'.format(follicle), uv[0])
     maya.cmds.setAttr('{}.parameterV'.format(follicle), uv[1])

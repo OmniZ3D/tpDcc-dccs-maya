@@ -7,9 +7,12 @@ Module that contains functions and classes related to shapes
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc as tp
+import maya.cmds
+import maya.OpenMaya
+import maya.api.OpenMaya
+
+from tpDcc import dcc
 from tpDcc.libs.python import python
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import exceptions, filtertypes, node as node_utils, name as name_utils
 
 
@@ -82,7 +85,7 @@ def is_shape(obj):
         return False
 
     mobj = node_utils.get_mobject(obj)
-    if not mobj.hasFn(maya.OpenMaya.MFn.kShape):
+    if not mobj.hasFn(maya.api.OpenMaya.MFn.kShape):
         return False
 
     return True
@@ -216,20 +219,18 @@ def get_shapes_generator(mobj):
     :return: generator
     """
 
-    # TODO: Make this function to work in both OpenMayaV1 and V2
+    # TODO: Make this function to work with OpenMaya2
 
-    import maya.OpenMaya as OpenMaya
-
-    if not mobj.apiType() == OpenMaya.MFn.kTransform:
+    if not mobj.apiType() == maya.OpenMaya.MFn.kTransform:
         return
 
-    path = OpenMaya.MDagPath.getAPathTo(mobj)
-    num_shapes = OpenMaya.MScriptUtil()
+    path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
+    num_shapes = maya.OpenMaya.MScriptUtil()
     num_shapes.createFromInt(0)
     num_shapes_ptr = num_shapes.asUintPtr()
     path.numberOfShapesDirectlyBelow(num_shapes_ptr)
-    for index in range(OpenMaya.MScriptUtil(num_shapes_ptr).asUint()):
-        p = OpenMaya.MDagPath.getAPathTo(mobj)
+    for index in range(maya.OpenMaya.MScriptUtil(num_shapes_ptr).asUint()):
+        p = maya.OpenMaya.MDagPath.getAPathTo(mobj)
         p.extendToShapeDirectlyBelow(index)
         yield p.node()
 
@@ -519,7 +520,7 @@ def rename_shapes(transform_node=None):
 
     renamed_shapes = list()
 
-    transform_node = python.force_list(transform_node or tp.Dcc.selected_nodes())
+    transform_node = python.force_list(transform_node or dcc.selected_nodes())
     for node in transform_node:
         node_shapes = list()
         short_name = name_utils.get_short_name(node)

@@ -7,10 +7,15 @@ This module include data class for curves
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc as tp
-import tpDcc.dccs.maya as maya
+import logging
+
+import maya.cmds
+import maya.api.OpenMaya
+
 from tpDcc.core import data
 from tpDcc.dccs.maya.core import exceptions, curve as curve_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class CurveData(data.Data, object):
@@ -29,7 +34,7 @@ class CurveData(data.Data, object):
         """
 
         if not self._curve:
-            tp.logger.exception('No Curves Given')
+            LOGGER.exception('No Curves Given')
 
         if type(self._curve) not in [list, tuple]:
             self._curve = [self._curve]
@@ -54,14 +59,8 @@ class CurveData(data.Data, object):
 
             curve_fn = curve_utils.get_curve_fn(curve=crv)
 
-            if tp.is_new_api():
-                point_array = curve_fn.cvPositions(maya.OpenMaya.MSpace.kObject)
-                world_point_array = curve_fn.cvPositions(maya.OpenMaya.MSpace.kWorld)
-            else:
-                point_array = maya.OpenMaya.MPointArray()
-                world_point_array = maya.OpenMaya.MPointArray()
-                curve_fn.getCVs(point_array, maya.OpenMaya.MSpace.kObject)
-                curve_fn.getCVs(world_point_array, maya.OpenMaya.MSpace.kWorld)
+            point_array = curve_fn.cvPositions(maya.api.OpenMaya.MSpace.kObject)
+            world_point_array = curve_fn.cvPositions(maya.api.OpenMaya.MSpace.kWorld)
 
             point_array_length = point_array.length() if hasattr(point_array, 'length') else len(point_array)
             for i in range(point_array_length):
@@ -158,26 +157,26 @@ class CurveData(data.Data, object):
 
         for ctrl in controls:
             if not maya.cmds.objExists(ctrl):
-                tp.logger.warning('CurveData: Curve Shape "{}" does not exists!'.format(ctrl))
+                LOGGER.warning('CurveData: Curve Shape "{}" does not exists!'.format(ctrl))
                 continue
             if not data_keys.count(ctrl):
-                tp.logger.warning('CurveData: No Data for Curve Shape "{}"'.format(ctrl))
+                LOGGER.warning('CurveData: No Data for Curve Shape "{}"'.format(ctrl))
                 continue
 
-            point_array = maya.OpenMaya.MPointArray()
+            point_array = maya.api.OpenMaya.MPointArray()
             if self.world_space:
                 crv = self._data[ctrl][1]
             else:
                 crv = self._data[ctrl][0]
 
             for cv in crv:
-                point_array.append(maya.OpenMaya.MPoint(cv[0], cv[1], cv[2], 1.0))
+                point_array.append(maya.api.OpenMaya.MPoint(cv[0], cv[1], cv[2], 1.0))
 
             curve_fn = curve_utils.get_curve_fn(curve=ctrl)
             if self.world_space:
-                curve_fn.setCVs(point_array, maya.OpenMaya.MSpace.kWorld)
+                curve_fn.setCVs(point_array, maya.api.OpenMaya.MSpace.kWorld)
             else:
-                curve_fn.setCVs(point_array, maya.OpenMaya.MSpace.kObject)
+                curve_fn.setCVs(point_array, maya.api.OpenMaya.MSpace.kObject)
 
             curve_fn.updateCurve()
 
@@ -210,14 +209,14 @@ class NurbsCurveData(CurveData, object):
         """
 
         if not self._curve:
-            tp.logger.exception('No Curve Given')
+            LOGGER.exception('No Curve Given')
 
         if not curve_utils.is_curve(curve=self._curve):
             raise exceptions.NURBSCurveException(curve=self._curve)
 
-        space = maya.OpenMaya.MSpace.kWorld
+        space = maya.api.OpenMaya.MSpace.kWorld
         if self.world_space:
-            space = maya.OpenMaya.MSpace.kWorld
+            space = maya.api.OpenMaya.MSpace.kWorld
 
         timer = maya.cmds.timerX()
 
@@ -225,37 +224,21 @@ class NurbsCurveData(CurveData, object):
 
         self._data['name'] = self._curve
 
-        if tp.is_new_api():
-            knot_array = curve_fn.knots()
-            cv_array = curve_fn.cvs(space)
-            cv_length = len(cv_array)
-            self._data['degree'] = curve_fn.degree
-            self._data['form'] = int(curve_fn.form)
-        else:
-            knot_array = maya.OpenMaya.MDoubleArray()
-            cv_array = maya.OpenMaya.MPointArray()
-            curve_fn.getKnots(knot_array)
-            curve_fn.getCVs(cv_array, space)
-            cv_length = cv_array.length()
-            self._data['degree'] = int(curve_fn.degree())
-            self._data['form'] = int(curve_fn.form())
+        knot_array = curve_fn.knots()
+        cv_array = curve_fn.cvs(space)
+        cv_length = len(cv_array)
+        self._data['degree'] = curve_fn.degree
+        self._data['form'] = int(curve_fn.form)
 
         self._data['knots'] = list(knot_array)
         self._data['cvs'] = [(cv_array[i].x, cv_array[i].y, cv_array[i].z) for i in range(cv_length)]
 
         for u in self._data['knots']:
-            if tp.is_new_api():
-                edit_pt = curve_fn.getPointAtParam(u, space)
-            else:
-                edit_pt = maya.OpenMaya.MPoint()
-                try:
-                    curve_fn.getPointAtParam(u, edit_pt, space)
-                except Exception:
-                    continue
+            edit_pt = curve_fn.getPointAtParam(u, space)
             self._data['editPt'].append((edit_pt.x, edit_pt.y, edit_pt.z))
 
         build_time = maya.cmds.timerX(st=timer)
-        tp.logger.debug(
+        LOGGER.debug(
             'NurbsCurveData: Data build time for curve "{}" : {}'.format(self._data['name'], str(build_time)))
 
         return self._data['name']
@@ -266,25 +249,16 @@ class NurbsCurveData(CurveData, object):
         num_cvs = len(self._data['cvs'])
         num_knots = len(self._data['knots'])
 
-        if tp.is_new_api():
-            cv_array = maya.OpenMaya.MPointArray(num_cvs, maya.OpenMaya.MPoint.kOrigin)
-            knots = maya.OpenMaya.MDoubleArray(num_knots, 0)
-            for i in range(num_cvs):
-                cv_array[i] = maya.OpenMaya.MPoint(
-                    self._data['cvs'][i][0], self._data['cvs'][i][1], self._data['cvs'][i][2], 1.0)
-            for i in range(num_knots):
-                knots[i] = self._data[knots][i]
-        else:
-            cv_array = maya.OpenMaya.MPointArray(num_cvs, maya.OpenMaya.MPoint.origin)
-            knots = maya.OpenMaya.MDoubleArray(num_knots, 0)
-            for i in range(num_cvs):
-                cv_array.set(maya.OpenMaya.MPoint(
-                    self._data['cvs'][i][0], self._data['cvs'][i][1], self._data['cvs'][i][2], 1.0), i)
-            for i in range(num_knots):
-                knots.set(self._data['knots'][i], i)
+        cv_array = maya.api.OpenMaya.MPointArray(num_cvs, maya.api.OpenMaya.MPoint.kOrigin)
+        knots = maya.api.OpenMaya.MDoubleArray(num_knots, 0)
+        for i in range(num_cvs):
+            cv_array[i] = maya.api.OpenMaya.MPoint(
+                self._data['cvs'][i][0], self._data['cvs'][i][1], self._data['cvs'][i][2], 1.0)
+        for i in range(num_knots):
+            knots[i] = self._data[knots][i]
 
-        curve_fn = maya.OpenMaya.MFnNurbsCurve()
-        curve_data = maya.OpenMaya.MFnNurbsCurveData().create()
+        curve_fn = maya.api.OpenMaya.MFnNurbsCurve()
+        curve_data = maya.api.OpenMaya.MFnNurbsCurveData().create()
         curve_obj = curve_fn.create(
             cv_array,
             knots,
@@ -295,10 +269,10 @@ class NurbsCurveData(CurveData, object):
             curve_data
         )
 
-        curve_obj_handle = maya.OpenMaya.MObjectHandle(curve_obj)
+        curve_obj_handle = maya.api.OpenMaya.MObjectHandle(curve_obj)
 
         build_time = maya.cmds.timerX(st=timer)
-        tp.logger.debug(
+        LOGGER.debug(
             'NurbsCurveData: Data rebuild time for curve "{}" : {}'.format(self._data['name'], str(build_time)))
 
         return curve_obj_handle
@@ -309,25 +283,16 @@ class NurbsCurveData(CurveData, object):
         num_cvs = len(self._data['cvs'])
         num_knots = len(self._data['knots'])
 
-        if tp.is_new_api():
-            cv_array = maya.OpenMaya.MPointArray(num_cvs, maya.OpenMaya.MPoint.kOrigin)
-            knots = maya.OpenMaya.MDoubleArray(num_knots, 0)
-            for i in range(num_cvs):
-                cv_array[i] = maya.OpenMaya.MPoint(
-                    self._data['cvs'][i][0], self._data['cvs'][i][1], self._data['cvs'][i][2], 1.0)
-            for i in range(num_knots):
-                knots[i] = self._data[knots][i]
-        else:
-            cv_array = maya.OpenMaya.MPointArray(num_cvs, maya.OpenMaya.MPoint.origin)
-            knots = maya.OpenMaya.MDoubleArray(num_knots, 0)
-            for i in range(num_cvs):
-                cv_array.set(maya.OpenMaya.MPoint(
-                    self._data['cvs'][i][0], self._data['cvs'][i][1], self._data['cvs'][i][2], 1.0), i)
-            for i in range(num_knots):
-                knots.set(self._data['knots'][i], i)
-
-        curve_fn = maya.OpenMaya.MFnNurbsCurve()
-        curve_data = maya.OpenMaya.MObject()
+        cv_array = maya.api.OpenMaya.MPointArray(num_cvs, maya.api.OpenMaya.MPoint.kOrigin)
+        knots = maya.api.OpenMaya.MDoubleArray(num_knots, 0)
+        for i in range(num_cvs):
+            cv_array[i] = maya.api.OpenMaya.MPoint(
+                self._data['cvs'][i][0], self._data['cvs'][i][1], self._data['cvs'][i][2], 1.0)
+        for i in range(num_knots):
+            knots[i] = self._data[knots][i]
+       
+        curve_fn = maya.api.OpenMaya.MFnNurbsCurve()
+        curve_data = maya.api.OpenMaya.MObject()
         curve_obj = curve_fn.create(
             cv_array,
             knots,
@@ -338,8 +303,8 @@ class NurbsCurveData(CurveData, object):
             curve_data
         )
 
-        crv = maya.OpenMaya.MFnDependencyNode(curve_obj).setName(self._data['name'])
+        crv = maya.api.OpenMaya.MFnDependencyNode(curve_obj).setName(self._data['name'])
 
         build_time = maya.cmds.timerX(st=timer)
-        tp.logger.debug(
+        LOGGER.debug(
             'NurbsCurveData: Curve rebuild time for curve "{}" : {}'.format(self._data['name'], str(build_time)))

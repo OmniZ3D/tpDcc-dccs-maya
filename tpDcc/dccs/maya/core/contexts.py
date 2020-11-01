@@ -9,7 +9,7 @@ from __future__ import print_function, division, absolute_import
 
 import contextlib
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
 
 
 @contextlib.contextmanager

@@ -7,7 +7,7 @@ Module that contains functions and classes related with scene layers
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
 
 
 def create_display_layer(name, nodes=None, display_type=2):

@@ -13,11 +13,13 @@ import traceback
 
 from tpDcc.libs.python import python
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.mel
+
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.core import attribute, scene
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class InsertRemoveAnimCurveKeys(object):
@@ -399,7 +401,7 @@ def convert_start_end_frame_anim_curve_tangents_to_fixed(anim_curves, frames):
 def key_all_anim_curves_in_frames(frames, anim_curves=None):
     """
     Inserts keyframes on all animation curves on given frame
-    :param frame: list(int)
+    :param frames: list(int)
     :param anim_curves: list(str)
     """
 
@@ -547,7 +549,7 @@ def convert_fraction_keys_to_whole_keys(animation_curves, consider_selected_rang
                     else:
                         maya.cmds.setKeyframe(anim_curve, insert=True, t=round_frame)
                     keys_inserted.append(round_frame)
-                except Exception as exc:
+                except Exception:
                     error_msg = 'AnimCurve: {}\n'.format(anim_curve)
                     if is_hold:
                         error_msg += 'Tried to move a key from frame {} to frame {} to maintain a hold with ' \

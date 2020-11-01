@@ -9,7 +9,8 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import math
 
-import tpDcc.dccs.maya as maya
+import maya.api.OpenMaya
+
 from tpDcc.dccs.maya.api import mathlib
 
 
@@ -23,8 +24,8 @@ def create_matrix_from_list(values_list):
     if len(values_list) != 16:
         raise Exception('Invalid list of values. Expecting 16 elements, found: {}'.format(len(values_list)))
 
-    matrix = maya.OpenMaya.MMatrix()
-    maya.OpenMaya.MScriptUtil.createMatrixFromList(values_list, matrix)
+    matrix = maya.api.OpenMaya.MMatrix()
+    maya.api.OpenMaya.MScriptUtil.createMatrixFromList(values_list, matrix)
 
     return matrix
 
@@ -53,10 +54,7 @@ def set_matrix_cell(matrix, value, row, column):
     :param column: int, matrix, column number
     """
 
-    if maya.is_new_api():
-        matrix[row][column] = value
-    else:
-        maya.OpenMaya.MScriptUtil.setDoubleArray(matrix[row], column, value)
+    matrix[row][column] = value
 
 
 def set_matrix_row(matrix, vector, row):
@@ -79,9 +77,9 @@ def get_translation(matrix):
     :return:
     """
 
-    x = maya.OpenMaya.MScriptUtil.getDoubleArrayItem(matrix[3], 0)
-    y = maya.OpenMaya.MScriptUtil.getDoubleArrayItem(matrix[3], 1)
-    z = maya.OpenMaya.MScriptUtil.getDoubleArrayItem(matrix[3], 2)
+    x = maya.api.OpenMaya.MScriptUtil.getDoubleArrayItem(matrix[3], 0)
+    y = maya.api.OpenMaya.MScriptUtil.getDoubleArrayItem(matrix[3], 1)
+    z = maya.api.OpenMaya.MScriptUtil.getDoubleArrayItem(matrix[3], 2)
 
 
 def get_rotation(matrix, rotation_order='xyz'):
@@ -103,7 +101,7 @@ def get_rotation(matrix, rotation_order='xyz'):
     else:
         rotation_order = int(rotation_order)
 
-    transform_matrix = maya.OpenMaya.MTransformationMatrix(matrix)
+    transform_matrix = maya.api.OpenMaya.MTransformationMatrix(matrix)
     euler_rotation = transform_matrix.eulerRotation()
     euler_rotation.reorderIt(rotation_order)
 
@@ -120,17 +118,17 @@ def build_matrix(translate=(0, 0, 0), x_axis=(1, 0, 0), y_axis=(0, 1, 0), z_axis
     :return: MMatrix
     """
 
-    matrix = maya.OpenMaya.MMatrix()
+    matrix = maya.api.OpenMaya.MMatrix()
     values = list()
 
-    if not isinstance(translate, maya.OpenMaya.MVector):
-        translate = maya.OpenMaya.MVector(translate[0], translate[1], translate[2])
-    if not isinstance(x_axis, maya.OpenMaya.MVector):
-        x_axis = maya.OpenMaya.MVector(x_axis[0], x_axis[1], x_axis[2])
-    if not isinstance(y_axis, maya.OpenMaya.MVector):
-        y_axis = maya.OpenMaya.MVector(y_axis[0], y_axis[1], y_axis[2])
-    if not isinstance(z_axis, maya.OpenMaya.MVector):
-        z_axis = maya.OpenMaya.MVector(z_axis[0], y_axis[1], y_axis[2])
+    if not isinstance(translate, maya.api.OpenMaya.MVector):
+        translate = maya.api.OpenMaya.MVector(translate[0], translate[1], translate[2])
+    if not isinstance(x_axis, maya.api.OpenMaya.MVector):
+        x_axis = maya.api.OpenMaya.MVector(x_axis[0], x_axis[1], x_axis[2])
+    if not isinstance(y_axis, maya.api.OpenMaya.MVector):
+        y_axis = maya.api.OpenMaya.MVector(y_axis[0], y_axis[1], y_axis[2])
+    if not isinstance(z_axis, maya.api.OpenMaya.MVector):
+        z_axis = maya.api.OpenMaya.MVector(z_axis[0], y_axis[1], y_axis[2])
 
     set_matrix_row(matrix, x_axis, 0)
     set_matrix_row(matrix, y_axis, 1)
@@ -212,16 +210,16 @@ def vector_matrix_multiply(vector, matrix, transform_as_point=False, invert_matr
     :return:
     """
 
-    if not isinstance(matrix, maya.OpenMaya.MMatrix):
+    if not isinstance(matrix, maya.api.OpenMaya.MMatrix):
         raise Exception('Matrix input variable is not a valid MMatrix object ({})'.format(type(matrix)))
 
     if transform_as_point:
-        vector = maya.OpenMaya.MPoint(vector[0], vector[1], vector[2], 1.0)
+        vector = maya.api.OpenMaya.MPoint(vector[0], vector[1], vector[2], 1.0)
     else:
-        vector = maya.OpenMaya.Point(vector[0], vector[1], vector[2])
+        vector = maya.api.OpenMaya.Point(vector[0], vector[1], vector[2])
 
     # Transform matrix
-    if matrix != maya.OpenMaya.identity:
+    if matrix != maya.api.OpenMaya.identity:
         if invert_matrix:
             matrix = matrix.inverse()
         vector *= matrix

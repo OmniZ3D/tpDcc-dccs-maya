@@ -12,12 +12,13 @@ import os
 import logging
 import tempfile
 
-from Qt.QtWidgets import *
+from Qt.QtWidgets import QWidget, QVBoxLayout
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.dccs.maya.core import gui
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class MayaViewport(QWidget):

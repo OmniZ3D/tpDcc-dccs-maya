@@ -7,18 +7,19 @@ Module that contains functionality for Maya windows
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtWidgets import *
-from Qt.QtCore import *
+from Qt.QtCore import Qt, QSize
+from Qt.QtWidgets import QWidget, QMainWindow
 
-from tpDcc.libs.qt.core import window as core_window
-from tpDcc.dccs import maya as maya
+import maya.cmds
+import maya.OpenMayaUI
+import maya.app.general.mayaMixin
 
-from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+from tpDcc.libs.qt.widgets import layouts, window
 
 BOOTSTRAP_WIDGETS = dict()
 
 
-class MayaWindow(core_window.MainWindow, object):
+class MayaWindow(window.MainWindow, object):
     def __init__(self, *args, **kwargs):
         super(MayaWindow, self).__init__(*args, **kwargs)
         self.setProperty('saveWindowPref', True)
@@ -75,7 +76,7 @@ class MayaWindow(core_window.MainWindow, object):
 #         super(MayaSubWindow, self).__init__(*args, **kwargs)
 
 
-class BootStrapWidget(MayaQWidgetDockableMixin, QWidget):
+class BootStrapWidget(maya.app.general.mayaMixin.MayaQWidgetDockableMixin, QWidget):
     width = maya.cmds.optionVar(query='workspacesWidePanelInitialWidth') * 0.75
     INITIAL_SIZE = QSize(width, 600)
     PREFERRED_SIZE = QSize(width, 420)
@@ -98,10 +99,8 @@ class BootStrapWidget(MayaQWidgetDockableMixin, QWidget):
         self.central_widget = widget
         self._docking_frame.setCentralWidget(self.central_widget)
 
-        bootstrap_layout = QVBoxLayout(self)
+        bootstrap_layout = layouts.VerticalLayout(spacing=0, margins=(0, 0, 0, 0))
         bootstrap_layout.addWidget(self._docking_frame, 0)
-        bootstrap_layout.setContentsMargins(0, 0, 0, 0)
-        bootstrap_layout.setSpacing(0)
         self.setLayout(bootstrap_layout)
         widget.setProperty('bootstrapWidget', self)
 
@@ -150,8 +149,8 @@ def rebuild(object_name):
         return False
 
     parent = maya.OpenMayaUI.MQtUtil.getCurrentParent()
-    mixinPtr = maya.OpenMayaUI.MQtUtil.findControl(wid.objectName())
-    maya.OpenMayaUI.MQtUtil.addWidgetToMayaLayout(long(mixinPtr), long(parent))
+    mixin_ptr = maya.OpenMayaUI.MQtUtil.findControl(wid.objectName())
+    maya.OpenMayaUI.MQtUtil.addWidgetToMayaLayout(long(mixin_ptr), long(parent))
     return True
 
 
@@ -170,3 +169,36 @@ def bootstrap_destroy_window(object_name):
         wid.close()
         return True
     return False
+
+
+class MayaDockedWindow(maya.app.general.mayaMixin.MayaQWidgetDockableMixin, window.MainWindow):
+    def __init__(self, parent=None, **kwargs):
+        self._dock_area = kwargs.get('dock_area', 'right')
+        self._dock = kwargs.get('dock', False)
+        super(MayaDockedWindow, self).__init__(parent=parent, **kwargs)
+
+        self.setProperty('saveWindowPref', True)
+
+        if self._dock:
+            self.show(dockable=True, floating=False, area=self._dock_area)
+
+    def ui(self):
+        if self._dock:
+            ui_name = str(self.objectName())
+            if maya.cmds.about(version=True) >= 2017:
+                workspace_name = '{}WorkspaceControl'.format(ui_name)
+                workspace_name = workspace_name.replace(' ', '_')
+                workspace_name = workspace_name.replace('-', '_')
+                if maya.cmds.workspaceControl(workspace_name, exists=True):
+                    maya.cmds.deleteUI(workspace_name)
+            else:
+                dock_name = '{}DockControl'.format(ui_name)
+                dock_name = dock_name.replace(' ', '_')
+                dock_name = dock_name.replace('-', '_')
+                # dock_name = 'MayaWindow|%s' % dock_name       # TODO: Check if we need this
+                if maya.cmds.dockControl(dock_name, exists=True):
+                    maya.cmds.deleteUI(dock_name, controlong=True)
+
+            self.setAttribute(Qt.WA_DeleteOnClose, True)
+
+        super(MayaDockedWindow, self).ui()

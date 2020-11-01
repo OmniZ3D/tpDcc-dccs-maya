@@ -6,16 +6,21 @@ Module that contains utils functions to work with Qt in Maya
 """
 
 import sys
+import logging
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+from Qt.QtCore import Qt
+from Qt.QtWidgets import QWidget
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.OpenMayaUI
+
 from tpDcc.libs.qt.core import qtutils as qt
 from tpDcc.dccs.maya.core import gui
 
 if sys.version_info > (3,):
     long = int
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 def add_widget_to_maya_layout(widget):
@@ -44,7 +49,7 @@ def dock_widget(widget, label, retain=False, show=True):
     try:
         maya.cmds.deleteUI(workspace_control)
         maya.cmds.workspaceControlState(workspace_control, remove=True)
-        maya.debug('Removing workspace {0}'.format(workspace_control))
+        LOGGER.debug('Removing workspace {0}'.format(workspace_control))
     except Exception:
         pass
 

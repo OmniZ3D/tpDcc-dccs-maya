@@ -9,9 +9,13 @@ from __future__ import print_function, division, absolute_import
 
 import re
 import copy
+import logging
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.dccs.maya.core import decorators
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class SymmetryTable(object):
@@ -120,7 +124,7 @@ class SymmetryTable(object):
         # [non_symmetry_vertices.append(i) for i in negative_vertices if i != 'm']
 
         if vertices_counter != total_vertices:
-            maya.warning('Mesh object "{} is not symmetrical!'.format(mesh))
+            LOGGER.warning('Mesh object "{} is not symmetrical!'.format(mesh))
 
         self.sym_table = sym_table
         self.asym_table = non_symmetry_vertices
@@ -186,6 +190,7 @@ def get_symmetric_vertex(vertex_index, sym_table_list):
     """
     Returns symmetric vertex or -1 if not symmetric vertex found
     :param vertex_index: int
+    :param sym_table_list: int
     """
 
     for i in range(len(sym_table_list)):

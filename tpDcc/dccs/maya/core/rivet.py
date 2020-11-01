@@ -7,11 +7,11 @@ Utility methods related to Maya rivets
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc as tp
-from tpDcc.libs.python import mathlib, python, name as name_utils
+import maya.cmds
 
-import tpDcc.dccs.maya as maya
+from tpDcc import dcc
 from tpDcc.dccs.maya import api
+from tpDcc.libs.python import mathlib, python, name as name_utils
 from tpDcc.dccs.maya.core import geometry, attribute, transform as transform_utils
 from tpDcc.dccs.maya.core import mesh as mesh_utils, constraint as constraint_utils
 
@@ -73,14 +73,14 @@ class Rivet(object):
         vert_iterator = api.IterateEdges(shape)
         vert_ids = vert_iterator.get_connected_vertices(edge_index_1)
         edge_to_curve_1 = maya.cmds.createNode(
-            'polyEdgeToCurve', n=tp.Dcc.find_unique_name('rivetCurve1_{}'.format(self._name)))
+            'polyEdgeToCurve', n=dcc.find_unique_name('rivetCurve1_{}'.format(self._name)))
         maya.cmds.setAttr(
             '{}.inputComponents'.format(edge_to_curve_1), 2,
             'vtx[{}]'.format(vert_ids[0]), 'vtx[{}]'.format(vert_ids[1]), type='componentList')
         vert_iterator = api.IterateEdges(shape)
         vert_ids = vert_iterator.get_connected_vertices(edge_index_2)
         edge_to_curve_2 = maya.cmds.createNode(
-            'polyEdgeToCurve', n=tp.Dcc.find_unique_name('rivetCurve2_{}'.format(self._name)))
+            'polyEdgeToCurve', n=dcc.find_unique_name('rivetCurve2_{}'.format(self._name)))
         maya.cmds.setAttr(
             '{}.inputComponents'.format(edge_to_curve_2), 2,
             'vtx[{}]'.format(vert_ids[0]), 'vtx[{}]'.format(vert_ids[1]), type='componentList')
@@ -88,7 +88,7 @@ class Rivet(object):
         maya.cmds.connectAttr('{}.outMesh'.format(mesh), '{}.inputPolymesh'.format(edge_to_curve_1))
         maya.cmds.connectAttr('{}.worldMatrix'.format(mesh), '{}.inputMat'.format(edge_to_curve_2))
         maya.cmds.connectAttr('{}.outMesh'.format(mesh), '{}.inputPolymesh'.format(edge_to_curve_2))
-        loft = maya.cmds.createNode('loft', n=tp.Dcc.find_unique_name('rivetLoft_{}'.format(self._name)))
+        loft = maya.cmds.createNode('loft', n=dcc.find_unique_name('rivetLoft_{}'.format(self._name)))
         maya.cmds.setAttr('{}.ic'.format(loft), s=2)
         maya.cmds.setAttr('{}.u'.format(loft), True)
         maya.cmds.setAttr('{}.rsn'.format(loft), True)
@@ -102,21 +102,21 @@ class Rivet(object):
 
     def _create_rivet(self):
         if self._create_joint:
-            tp.Dcc.clear_selection()
-            self._rivet = tp.Dcc.create_joint(name=tp.Dcc.find_unique_name('joint_{}'.format(self._name)))
+            dcc.clear_selection()
+            self._rivet = dcc.create_joint(name=dcc.find_unique_name('joint_{}'.format(self._name)))
         else:
-            self._rivet = tp.Dcc.create_locator(name=tp.Dcc.find_unique_name('rivet_{}'.format(self._name)))
+            self._rivet = dcc.create_locator(name=dcc.find_unique_name('rivet_{}'.format(self._name)))
 
     def _create_point_on_surface(self):
         self._point_on_surface = maya.cmds.createNode(
-            'pointOnSurfaceInfo', n=tp.Dcc.find_unique_name('pointOnSurface_{}'.format(self._surface)))
+            'pointOnSurfaceInfo', n=dcc.find_unique_name('pointOnSurface_{}'.format(self._surface)))
         maya.cmds.setAttr('{}.turnOnPercentage'.format(self._point_on_surface), self._percent_on)
         maya.cmds.setAttr('{}.parameterU'.format(self._point_on_surface), self._uv[0])
         maya.cmds.setAttr('{}.parameterV'.format(self._point_on_surface), self._uv[1])
 
     def _create_aim_constraint(self):
         self._aim_constraint = maya.cmds.createNode(
-            'aimConstraint', n=tp.Dcc.find_unique_name('aimConstraint_{}'.format(self._surface)))
+            'aimConstraint', n=dcc.find_unique_name('aimConstraint_{}'.format(self._surface)))
         maya.cmds.setAttr('{}.aimVector'.format(self._aim_constraint), 0, 1, 0, type='double3')
         maya.cmds.setAttr('{}.upVector'.format(self._aim_constraint), 0, 0, 1, type='double3')
 
@@ -241,7 +241,7 @@ def attach_to_mesh(transform, mesh, deform=False, priority=None, face=None, poin
 
     if deform:
         for xform in transform:
-            cluster, handle = maya.cmds.cluster(xform, n=tp.Dcc.find_unique_name('rivetCluster_{}'.format(xform)))
+            cluster, handle = maya.cmds.cluster(xform, n=dcc.find_unique_name('rivetCluster_{}'.format(xform)))
             maya.cmds.hide(handle)
             maya.cmds.parent(handle, rivet)
 

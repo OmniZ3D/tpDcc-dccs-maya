@@ -7,7 +7,10 @@ This module include data class for components
 
 from __future__ import print_function, division, absolute_import, unicode_literals
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+import maya.OpenMaya
+import maya.api.OpenMaya
+
 from tpDcc.libs.python import python
 from tpDcc.dccs.maya.core import exceptions, node, name as name_utils, shape as shape_utils
 
@@ -134,14 +137,14 @@ def get_shape_from_component(component, component_name='vtx'):
     return component_shape
 
 
-def is_a_vertex(node):
+def is_a_vertex(component_name):
     """
     Returns whether given object is a vertex or not
-    :param node: str
+    :param component_name: str
     :return: bool
     """
 
-    if maya.cmds.objExists(node) and node.find('.vtx[') > -1:
+    if maya.cmds.objExists(component_name) and component_name.find('.vtx[') > -1:
         return True
 
     return False
@@ -236,7 +239,7 @@ def get_edge_path(edges=None):
     maya.cmds.select(clear=True)
     maya.cmds.polySelectSp(edges, loop=True)
 
-    return maya.cmds.ls(sl=True, l=True)
+    return maya.cmds.ls(sl=True, long=True)
 
 
 def edges_to_curve(edges, description=None):

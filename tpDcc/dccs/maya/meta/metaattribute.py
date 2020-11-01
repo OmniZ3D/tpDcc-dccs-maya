@@ -10,11 +10,12 @@ from __future__ import print_function, division, absolute_import
 import copy
 import logging
 
-import tpDcc.dccs.maya as maya
+import maya.cmds
+
 from tpDcc.libs.python import decorators
 from tpDcc.dccs.maya.meta import metautils
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class MetaAttribute(object):
@@ -59,7 +60,7 @@ class MetaAttribute(object):
             obj_name.meta_node
             self.obj = obj_name
         except Exception:
-            from tpRigToolkit.core.meta import metanode
+            from tpDcc.dccs.maya.meta import metanode
             assert maya.cmds.objExists(obj_name) is True, '"{}" does not exists!'.format(obj_name)
             self.obj = metanode.MetaNode(obj_name)
 
@@ -348,7 +349,7 @@ class MetaAttribute(object):
                                 maya.cmds.setAttr(child_attr.obj.meta_node + '.' + child_attr.attr, edit=True,
                                                   keyable=True)
                                 self.hidden = False
-                    elif not self.keyale:
+                    elif not self.keyable:
                         maya.cmds.setAttr(self.obj.meta_node + '.' + self.attr, edit=True, keyable=True)
                         self.hidden = False
                 else:

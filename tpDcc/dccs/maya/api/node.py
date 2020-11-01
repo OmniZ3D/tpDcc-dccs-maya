@@ -7,8 +7,9 @@ Module that contains functions and classes related with Maya API nodes
 
 from __future__ import print_function, division, absolute_import
 
+import maya.api.OpenMaya
+
 from tpDcc.libs.python import python
-import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.api import plugs, exceptions
 
@@ -40,14 +41,14 @@ def name_from_mobject(mobj, partial_name=False, include_namespace=True):
     :return: str, name of the Maya object
     """
 
-    if mobj.hasFn(maya.OpenMaya.MFn.kDagNode):
+    if mobj.hasFn(maya.api.OpenMaya.MFn.kDagNode):
         dag_node = api.DagNode(mobj)
         node_name = dag_node.get_partial_path() if partial_name else dag_node.get_full_path()
     else:
         node_name = api.DependencyNode(mobj).get_name()
 
     if not include_namespace:
-        node_name = maya.OpenMaya.MNamespace.stripNamespaceFromName(node_name)
+        node_name = maya.api.OpenMaya.MNamespace.stripNamespaceFromName(node_name)
 
     return node_name
 
@@ -61,7 +62,7 @@ def names_from_mobject_handles(mobjs_list):
 
     names_list = list()
     for mobj in mobjs_list:
-        object_handle = maya.OpenMaya.MObjectHandle(mobj)
+        object_handle = maya.api.OpenMaya.MObjectHandle(mobj)
         if not object_handle.isValid() or not object_handle.isAlive():
             continue
         names_list.append(name_from_mobject(object_handle.object()))
@@ -77,7 +78,7 @@ def rename_mobject(mobj, new_name):
     :return:
     """
 
-    dag_mod = maya.OpenMaya.MDagModifier()
+    dag_mod = maya.api.OpenMaya.MDagModifier()
     dag_mod.renameNode(mobj, new_name)
     dag_mod.doIt()
 
@@ -93,10 +94,10 @@ def set_matrix(mobj, matrix, space=None):
     :return:
     """
 
-    space = space or maya.OpenMaya.MSpace.kTransform
-    dag = maya.OpenMaya.MFnDagNode(mobj)
-    transform = maya.OpenMaya.MFnTransform(dag.getPath())
-    transform_matrix = maya.OpenMaya.MTransformationMatrix(matrix)
+    space = space or maya.api.OpenMaya.MSpace.kTransform
+    dag = maya.api.OpenMaya.MFnDagNode(mobj)
+    transform = maya.api.OpenMaya.MFnTransform(dag.getPath())
+    transform_matrix = maya.api.OpenMaya.MTransformationMatrix(matrix)
     transform.setTranslation(transform_matrix.translation(space), space)
     transform.setRotation(transform_matrix.rotation(asQuaternion=True), space)
     transform.setScale(transform_matrix.scale(space))
@@ -109,7 +110,7 @@ def get_world_matrix_plug(mobj):
     :return: MPlug
     """
 
-    world_matrix = maya.OpenMaya.MFnDependencyNode(mobj).findPlug('worldMatrix', False)
+    world_matrix = maya.api.OpenMaya.MFnDependencyNode(mobj).findPlug('worldMatrix', False)
     return world_matrix.elementByLogicalIndex(0)
 
 
@@ -184,13 +185,13 @@ def set_parent(child, new_parent=None, maintain_offset=False, mod=None, apply=Tr
     :return:
     """
 
-    new_parent = new_parent or maya.OpenMaya.MObject.kNullObj
+    new_parent = new_parent or maya.api.OpenMaya.MObject.kNullObj
     if child == new_parent:
         return False
 
-    mod = mod or maya.OpenMaya.MDagModifier()
+    mod = mod or maya.api.OpenMaya.MDagModifier()
     if maintain_offset:
-        if new_parent == maya.OpenMaya.MObject.kNullObj:
+        if new_parent == maya.api.OpenMaya.MObject.kNullObj:
             offset = get_world_matrix(child)
         else:
             start = get_world_matrix(new_parent)
@@ -214,21 +215,13 @@ def decompose_transform_matrix(matrix, rotation_order, space=None):
     :return: tuple(MVector, MVector, MVector)
     """
 
-    transform_matrix = maya.OpenMaya.MTransformationMatrix(matrix)
+    transform_matrix = maya.api.OpenMaya.MTransformationMatrix(matrix)
     transform_matrix.reorderRotation(rotation_order)
-    rotation_as_quaterion = space == maya.OpenMaya.MSpace.kWorld
+    rotation_as_quaterion = space == maya.api.OpenMaya.MSpace.kWorld
 
-    if maya.is_new_api():
-        translation = transform_matrix.translation(space)
-        rotation = transform_matrix.rotation(asQuaternion=rotation_as_quaterion)
-        scale = transform_matrix.scale(space)
-    else:
-        translation = maya.OpenMaya.MVector()
-        rotation = maya.OpenMaya.MVector()
-        scale = maya.OpenMaya.MVector()
-        transform_matrix.translation(translation, space)
-        transform_matrix.rotation(rotation, asQuaternion=rotation_as_quaterion)
-        transform_matrix.scale(scale, space)
+    translation = transform_matrix.translation(space)
+    rotation = transform_matrix.rotation(asQuaternion=rotation_as_quaterion)
+    scale = transform_matrix.scale(space)
 
     return translation, rotation, scale
 
@@ -240,7 +233,7 @@ def get_node_color_data(mobj):
     :return: dict
     """
 
-    depend_node = maya.OpenMaya.MFnDagNode(api.DagNode(mobj).get_path())
+    depend_node = maya.api.OpenMaya.MFnDagNode(api.DagNode(mobj).get_path())
     plug = depend_node.findPlug('overrideColorRGB', False)
     enabled_plug = depend_node.findPlug('overrideEnabled', False)
     override_rgb_colors = depend_node.findPlug('overrideRGBColors', False)
@@ -264,7 +257,7 @@ def set_node_color(mobj, color, outliner_color=None, use_outliner_color=False):
     :param use_outliner_color: bool, Whether or not to apply outliner color
     """
 
-    depend_node = maya.OpenMaya.MFnDagNode(api.DagNode(mobj).get_path())
+    depend_node = maya.api.OpenMaya.MFnDagNode(api.DagNode(mobj).get_path())
     plug = depend_node.findPlug('overrideColorRGB', False)
     enabled_plug = depend_node.findPlug('overrideEnabled', False)
     override_rgb_colors = depend_node.findPlug('overrideRGBColors', False)
@@ -291,7 +284,7 @@ def iterate_shapes(dag_path, filter_types=None):
 
     filter_types = python.force_list(filter_types)
     for i in range(dag_path.numberOfShapesDirectlyBelow()):
-        shape_dag_path = maya.OpenMaya.MDagPath(dag_path)
+        shape_dag_path = maya.api.OpenMaya.MDagPath(dag_path)
         shape_dag_path.extendToShape(i)
         if not filter_types or shape_dag_path.apiType() in filter_types:
             yield shape_dag_path
@@ -320,7 +313,7 @@ def get_child_path_at_index(path, index):
     if existing_child_count < 1:
         return None
     index = index if index >= 0 else path.childCount() - abs(index)
-    copy_path = maya.OpenMaya.MDagPath(path)
+    copy_path = maya.api.OpenMaya.MDagPath(path)
     copy_path.push(path.child(index))
 
     return copy_path
@@ -356,4 +349,4 @@ def get_child_transforms(path):
     :return: list(MDagPath), list of all transforms below given path
     """
 
-    return get_child_paths_by_fn(path, maya.OpenMaya.MFn.kTransform)
+    return get_child_paths_by_fn(path, maya.api.OpenMaya.MFn.kTransform)

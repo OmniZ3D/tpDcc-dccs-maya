@@ -1,18 +1,17 @@
 import sys
 
-import tpDcc.dccs.maya as maya
-from maya.api import OpenMaya as OpenMaya
+import maya.api.OpenMaya
 
-if not hasattr(maya, '_TPDCC_COMMAND'):
-    maya._TPDCC_COMMAND = None
-    maya._COMMAND_RUNNER = None
+if not hasattr(maya.api.OpenMaya, '_TPDCC_COMMAND'):
+    maya.api.OpenMaya._TPDCC_COMMAND = None
+    maya.api.OpenMaya._COMMAND_RUNNER = None
 
 
 def maya_useNewAPI():
     pass
 
 
-class UndoCommand(OpenMaya.MPxCommand):
+class UndoCommand(maya.api.OpenMaya.MPxCommand):
     """
     Custom undo command plugin that allow us to support the undo of custom tpDcc
     commands that uses both API and MEL code
@@ -32,14 +31,14 @@ class UndoCommand(OpenMaya.MPxCommand):
 
     @staticmethod
     def syntax_creator():
-        return OpenMaya.MSyntax()
+        return maya.api.OpenMaya.MSyntax()
 
     def doIt(self, args_list):
-        import tpDcc.dccs.maya as maya
-        if maya._TPDCC_COMMAND is not None:
-            self._command = maya._TPDCC_COMMAND
-            maya._TPDCC_COMMAND = None
-            self._command_runner = maya._COMMAND_RUNNER
+        import maya.api.OpenMaya
+        if maya.api.OpenMaya._TPDCC_COMMAND is not None:
+            self._command = maya.api.OpenMaya._TPDCC_COMMAND
+            maya.api.OpenMaya._TPDCC_COMMAND = None
+            self._command_runner = maya.api.OpenMaya._COMMAND_RUNNER
             self.redoIt()
 
     def redoIt(self):
@@ -49,25 +48,25 @@ class UndoCommand(OpenMaya.MPxCommand):
         self._command_runner._run(self._command)
 
     def undoIt(self):
-        import tpDcc.dccs.maya as maya
+        import maya.api.OpenMaya
         if self._command is None:
             return
 
-        if self._command != maya._COMMAND_RUNNER.undo_stack[-1]:
+        if self._command != maya.api.OpenMaya._COMMAND_RUNNER.undo_stack[-1]:
             raise ValueError('Undo stack has become out of sync with tpDcc commands {}'.format(self._command.id))
         elif self._command.is_undoable:
             try:
                 self._command.undo()
             finally:
-                maya._COMMAND_RUNNER.redo_stack.append(self._command)
-                maya._COMMAND_RUNNER.undo_stack.pop()
+                maya.api.OpenMaya._COMMAND_RUNNER.redo_stack.append(self._command)
+                maya.api.OpenMaya._COMMAND_RUNNER.undo_stack.pop()
 
     def isUndoable(self):
         return self._command.is_undoable
 
 
 def initializePlugin(mobj):
-    mplugin = OpenMaya.MFnPlugin(mobj, 'Tomas Poveda', '1.0', 'Any')
+    mplugin = maya.api.OpenMaya.MFnPlugin(mobj, 'Tomas Poveda', '1.0', 'Any')
     try:
         mplugin.registerCommand(UndoCommand.commandName, UndoCommand.command_creator, UndoCommand.syntax_creator)
     except:
@@ -75,7 +74,7 @@ def initializePlugin(mobj):
 
 
 def uninitializePlugin(mobj):
-    mplugin = OpenMaya.MFnPlugin(mobj)
+    mplugin = maya.api.OpenMaya.MFnPlugin(mobj)
     try:
         mplugin.deregisterCommand(UndoCommand.commandName)
     except:
