@@ -14,12 +14,13 @@ import traceback
 import maya.cmds
 import maya.mel
 import maya.api.OpenMaya
+import maya.api.OpenMayaAnim
 
 from tpDcc import dcc
 from tpDcc.dccs.maya import api
 from tpDcc.libs.python import python, mathlib, kdtree
 from tpDcc.dccs.maya.api import mathlib as api_mathlib, skin as api_skin
-from tpDcc.dccs.maya.core import decorators, exceptions, node as node_utils, mesh as mesh_utils
+from tpDcc.dccs.maya.core import decorators, exceptions, deformer, attribute, node as node_utils, mesh as mesh_utils
 from tpDcc.dccs.maya.core import joint as jnt_utils, transform as xform_utils, shape as shape_utils, name as name_utils
 
 LOGGER = logging.getLogger('tpDcc-dccs-maya')
@@ -2091,3 +2092,400 @@ def hammer_vertices(vertices_to_hammer=None, return_as_list=True):
         return mesh_utils.convert_to_vertices(components)
 
     return True
+
+
+def get_skin_weights(skin_deformer, vertices_ids=None):
+    """
+    Get the skin weights of the given skinCluster deformer
+    :param skin_deformer: str, name of a skin deformer
+    :param vertices_ids:
+    :return: dict<int, list<float>, returns a dictionary where the key is the influence id and the
+    value is the list of weights of the influence
+    """
+
+    mobj = node_utils.get_mobject(skin_deformer)
+
+    mf_skin = maya.api.OpenMayaAnim.MFnSkinCluster(mobj)
+
+    weight_list_plug = mf_skin.findPlug('weightList', 0)
+    weights_plug = mf_skin.findPlug('weights', 0)
+    weight_list_attr = weight_list_plug.attribute()
+    weights_attr = weights_plug.attribute()
+
+    weights = dict()
+
+    vertices_count = weight_list_plug.numElements()
+    if not vertices_ids:
+        vertices_ids = list(range(vertices_count))
+
+    for vertex_id in vertices_ids:
+        weights_plug.selectAncestorLogicalIndex(vertex_id, weight_list_attr)
+
+        weight_influence_ids = weights_plug.getExistingArrayAttributeIndices()
+
+        influence_plug = maya.api.OpenMaya.MPlug(weights_plug)
+        for influence_id in weight_influence_ids:
+            influence_plug.selectAncestorLogicalIndex(influence_id, weights_attr)
+            if influence_id not in weights:
+                weights[influence_id] = [0] * vertices_count
+
+            try:
+                value = influence_plug.asDouble()
+                weights[influence_id][vertex_id] = value
+            except KeyError:
+                # Assumes a removed influence
+                pass
+
+    return weights
+
+
+def get_skin_envelope(geo_obj):
+    """
+    Returns envelope value of the skinCluster in the given geometry object
+    :param geo_obj: str, name of the geometry
+    :return: float
+    """
+
+    skin_deformer = deformer.find_deformer_by_type(geo_obj, 'skinCluster')
+    if skin_deformer:
+        return maya.cmds.getAttr('{}.envelope'.format(skin_deformer))
+
+    return None
+
+
+def set_skin_envelope(geo_obj, envelope_value):
+    """
+    Sets the envelope value of teh skinCluster in the given geometry object
+    :param geo_obj: str, name of the geometry
+    :param envelope_value: float. envelope value
+    """
+
+    skin_deformer = deformer.find_deformer_by_type(geo_obj, 'skinCluster')
+    if skin_deformer:
+        return maya.cmds.setAttr('{}.envelope'.format(skin_deformer), envelope_value)
+
+
+def get_skin_influence_weights(influence_name, skin_deformer):
+    """
+    Returns weights of the influence in the given skinCluster deformer
+    :param influence_name: str, name of the influence
+    :param skin_deformer: str, skinCluster deformer name
+    :return: list<float>, influences values
+    """
+
+    influence_index = get_index_at_skin_influence(influence_name, skin_deformer)
+    if influence_index is None:
+        return
+
+    weights_dict = get_skin_weights(skin_deformer)
+    if influence_index in weights_dict:
+        weights = weights_dict[influence_index]
+    else:
+        indices = attribute.get_indices('{}.weightList'.format(skin_deformer))
+        index_count = len(indices)
+        weights = [0] * index_count
+
+    return weights
+
+
+def get_index_at_skin_influence(influence, skin_deformer):
+    """
+    Given an influence name, find at what index it connects to the skinCluster
+    This corresponds to the matrix attribute.
+    For example, skin_deformer.matrix[0] is the connection of the first influence
+    :param influence: str, name of an influence
+    :param skin_deformer: str, name of a skinCluster affected by the influence
+    :return: int, index of the influence
+    """
+
+    connections = maya.cmds.listConnections('{}.worldMatrix'.format(influence), p=True, s=True)
+    if not connections:
+        return
+
+    good_connection = None
+    for cnt in connections:
+        if cnt.startswith(skin_deformer):
+            good_connection = cnt
+            break
+
+    if good_connection is None:
+        return
+
+    search = name_utils.search_last_number(good_connection)
+    found_string = search.group()
+
+    index = None
+    if found_string:
+        index = int(found_string)
+
+    return index
+
+
+def get_skin_influence_at_index(index, skin_deformer):
+    """
+    Returns which influence connect to the skinCluster at the given index
+    :param index: int, index of an influence
+    :param skin_deformer: str, name of the skinCluster to check the index
+    :return: str, name of the influence at the given index
+    """
+
+    influence_slot = '{}.matrix[{}]'.format(skin_deformer, index)
+    connection = attribute.get_attribute_input(influence_slot)
+    if connection:
+        connection = connection.split('.')
+        return connection[0]
+
+    return None
+
+
+def get_skin_influence_names(skin_deformer, short_name=False):
+    """
+    Returns the names of the connected influences in the given skinCluster
+    :param skin_deformer: str, name of the skinCluster
+    :param short_name: bool, Whether to return full name of the influence or not
+    :return: list<str>
+    """
+
+    mobj = node_utils.get_mobject(skin_deformer)
+    mf_skin = maya.api.OpenMayaAnim.MFnSkinCluster(mobj)
+    influence_dag_paths = mf_skin.influenceObjects()
+
+    influence_names = list()
+    for i in range(len(influence_dag_paths)):
+        if not short_name:
+            influence_path_name = influence_dag_paths[i].fullPathName()
+        else:
+            influence_path_name = influence_dag_paths[i].partialPathName()
+        influence_names.append(influence_path_name)
+
+    return influence_names
+
+
+def get_skin_influence_indices(skin_deformer):
+    """
+    Returns the indices of the connected influences in the given skinCluster
+    This corresponds to the matrix attribute.
+    For example, skin_deformer.matrix[0] is the connection of the first influence
+    :param skin_deformer: str, name of a skinCluster
+    :return: list<int>, list of indices
+    """
+
+    mobj = node_utils.get_mobject(skin_deformer)
+    mf_skin = maya.api.OpenMayaAnim.MFnSkinCluster(mobj)
+    influence_dag_paths = mf_skin.influenceObjects()
+
+    influence_ids = list()
+    for i in range(len(influence_dag_paths)):
+        influence_id = int(mf_skin.indexForInfluenceObject(influence_dag_paths[i]))
+        influence_ids.append(influence_id)
+
+    return influence_ids
+
+
+def get_skin_influences(skin_deformer, short_name=True, return_dict=False):
+    """
+    Returns the influences connected to the skin cluster
+    Returns a dictionary with the keys being the name of the influences being the value at the
+    key index where the influence connects to the skinCluster
+    :param skin_deformer: str, name of a skinCluster
+    :param short_name: bool, Whether to return full name of the influence or not
+    :param return_dict: bool, Whether to return a dictionary or not
+    :return: variant<dict, list>
+    """
+
+    mobj = node_utils.get_mobject(skin_deformer)
+    mf_skin = maya.api.OpenMayaAnim.MFnSkinCluster(mobj)
+
+    influence_dag_paths = mf_skin.influenceObjects()
+    total_paths = len(influence_dag_paths)
+
+    influence_ids = dict()
+    influence_names = list()
+    for i in range(total_paths):
+        influence_path = influence_dag_paths[i]
+        if not short_name:
+            influence_path_name = influence_dag_paths[i].fullPathName()
+        else:
+            influence_path_name = influence_dag_paths[i].partialPathName()
+        influence_id = int(mf_skin.indexForInfluenceObject(influence_path))
+        influence_ids[influence_path_name] = influence_id
+        influence_names.append(influence_path_name)
+
+    if return_dict:
+        return influence_ids
+    else:
+        return influence_names
+
+
+def get_non_zero_influences(skin_deformer):
+    """
+    Returns influences that have non zero weights in the skinCluster
+    :param skin_deformer: str, name of a skinCluster deformer
+    :return: list<str>, list of influences found in the skinCluster that have influence
+    """
+
+    influences = maya.cmds.skinCluster(skin_deformer, query=True, weightedInfluence=True)
+
+    return influences
+
+
+def add_missing_influences(skin_deformer1, skin_deformer2):
+    """
+    Make sure used influences in skin1 are added to skin2
+    :param skin_deformer1: str, name of skinCluster
+    :param skin_deformer2: str, name of skinCluster
+    """
+
+    influences1 = get_non_zero_influences(skin_deformer1)
+    influences2 = get_non_zero_influences(skin_deformer2)
+
+    for influence1 in influences1:
+        if influence1 not in influences2:
+            maya.cmds.skinCluster(skin_deformer2, edit=True, addInfluence=True, weight=0.0, normalizeWeights=1)
+
+
+def get_skin_blend_weights(skin_deformer):
+    """
+    Returns the blendWeight values on the given skinCluster
+    :param skin_deformer: str, name of a skinCluster deformer
+    :return: list<float>, blend weight values corresponding to point order
+    """
+
+    indices = attribute.get_indices('{}.weightList'.format(skin_deformer))
+    blend_weights = attribute.get_indices('{}.blendWeights'.format(skin_deformer))
+    blend_weights_dict = dict()
+
+    if blend_weights:
+        for blend_weight in blend_weights:
+            blend_weights_dict[blend_weight] = maya.cmds.getAttr(
+                '{}.blendWeights[{}]'.format(skin_deformer, blend_weight))
+
+    values = list()
+    for i in range(len(indices)):
+        if i in blend_weights_dict:
+            value = blend_weights_dict[i]
+            if type(value) < 0.000001:
+                value = 0.0
+            if isinstance(value, float):
+                value = 0.0
+            if value != value:
+                value = 0.0
+
+            values.append(value)
+            continue
+        else:
+            values.append(0.0)
+            continue
+
+    return values
+
+
+def set_skin_blend_weights(skin_deformer, weights):
+    """
+    Sets the blendWeights on the skinCluster given a list of weights
+    :param skin_deformer: str, name of a skinCluster deformer
+    :param weights: list<float>, list of weight values corresponding to point order
+    """
+
+    indices = attribute.get_indices('{}.weightList'.format(skin_deformer))
+
+    new_weights = list()
+    for weight in weights:
+        if weight != weight:
+            weight = 0.0
+        new_weights.append(weight)
+
+    for i in range(len(indices)):
+        if maya.cmds.objExists('{}.blendWeights[{}]'.format(skin_deformer, i)):
+            try:
+                maya.cmds.setAttr('{}.blendWeights[{}]'.format(skin_deformer, i), weights[i])
+            except Exception:
+                pass
+
+
+def set_skin_weights_to_zero(skin_deformer):
+    """
+    Sets all the weights on the given skinCluster to zero
+    :param skin_deformer: str, name of a skinCluster deformer
+    """
+
+    weights = maya.cmds.ls('{}.weightList[*]'.format(skin_deformer))
+    for weight in weights:
+        weight_attrs = maya.cmds.listAttr('{}.weights'.format(weight), multi=True)
+        if not weight_attrs:
+            continue
+        for weight_attr in weight_attrs:
+            attr = '{}.{}'.format(skin_deformer, weight_attr)
+            maya.cmds.setAttr(attr, 0)
+
+
+@decorators.undo_chunk
+def skin_mesh_from_mesh(source_mesh, target_mesh, exclude_joints=None, include_joints=None, uv_space=False):
+    """
+    Skins a mesh based on the skinning of another mesh
+    Source mesh must be skinned and the target mesh will be skinned with the joints in the source mesh
+    The skinning from the source mesh will be projected onto the target mesh
+    :param source_mesh: str, name of a mesh
+    :param target_mesh: str, name of a mesh
+    :param exclude_joints: list<str>, exclude the named joint from the skinCluster
+    :param include_joints: list<str>, include the named joints from the skinCluster
+    :param uv_space: bool, Whether to copy the skin weights in UV space rather than point space
+    """
+
+    LOGGER.debug('Skinning {} using weights from {}'.format(target_mesh, source_mesh))
+
+    skin = deformer.find_deformer_by_type(source_mesh, 'skinCluster')
+    if not skin:
+        LOGGER.warning('{} has no skin. No skinning to copy!'.format(source_mesh))
+        return
+
+    target_skin = deformer.find_deformer_by_type(target_mesh, 'skinCluster')
+    if target_skin:
+        LOGGER.warning('{} already has a skinCluster. Deleting existing one ...'.format(target_mesh))
+        maya.cmds.delete(target_skin)
+        target_skin = None
+
+    influences = get_non_zero_influences(skin)
+
+    if exclude_joints:
+        for exclude in exclude_joints:
+            if exclude in influences:
+                influences.remove(exclude)
+    if include_joints:
+        found = list()
+        for include in include_joints:
+            if include in influences:
+                found.append(include)
+        influences = found
+
+    # TODO: skinCluster should be renamed using NameIt lib
+    if target_skin:
+        if uv_space:
+            maya.cmds.copySkinWeights(
+                sourceSkin=skin,
+                destinationSkin=target_skin,
+                noMirror=True,
+                surfaceAssociation='closestPoint',
+                influenceAssociation=['name'],
+                uvSpace=['map1', 'map1'],
+                normalize=True
+            )
+        else:
+            maya.cmds.copySkinWeights(
+                sourceSkin=skin,
+                destinationSkin=target_skin,
+                noMirror=True,
+                surfaceAssociation='closestPoint',
+                influenceAssociation=['name'],
+                normalize=True
+            )
+        skinned = maya.cmds.skinCluster(target_skin, query=True, weightedInfluence=True)
+        unskinned = set(influences) ^ set(skinned)
+        for jnt in unskinned:
+            maya.cmds.skinCluster(target_skin, edit=True, removeInfluence=jnt)
+    else:
+        skin_name = name_utils.get_basename(target_mesh)
+        target_skin = maya.cmds.skinCluster(
+            influences, target_mesh, tsb=True, n=name_utils.find_unique_name('skin_{}'.format(skin_name)))[0]
+
+    return target_skin
