@@ -96,19 +96,20 @@ def get_curve_fn(curve):
     return curve_fn
 
 
-def create_from_point_list(point_list, degree=3, prefix=''):
+def create_from_point_list(point_list, degree=3, name=''):
     """
     Build a NURBS curve from a list of world positions
     :param point_list:  list<int>, list of CV world positions
     :param degree: int, degree of the curve to create
-    :param prefix: str, name prefix for newly created curves
+    :param name: str, name prefix for newly created curves
     :return: name of the new created curve
     """
 
     cv_list = [transform.get_position(i) for i in point_list]
 
     crv = maya.cmds.curve(p=cv_list, k=range(len(cv_list)), d=1)
-    crv = maya.cmds.rename(crv, prefix + '_crv')
+    name = name or 'curve_from_points'
+    crv = maya.cmds.rename(crv, name)
 
     if degree > 1:
         crv = maya.cmds.rebuildCurve(crv, d=degree, kcp=True, kr=0, ch=False, rpo=True)[0]
@@ -624,3 +625,25 @@ def get_curve_data(curve_shape, space=None):
         curve_shape = node_utils.get_mobject(curve_shape)
 
     return api_curves.get_curve_data(curve_shape, space)
+
+
+def find_shortest_path_between_curve_cvs(cvs_list):
+
+    start = cvs_list[0]
+    end = cvs_list[-1]
+    curve = start.split('.')[0]
+
+    obj_type = maya.cmds.objectType(curve)
+    if obj_type != 'nurbsCurve':
+        return None
+
+    numbers = [int(start.split("[")[-1].split("]")[0]), int(end.split("[")[-1].split("]")[0])]
+    range_list = range(min(numbers), max(numbers) + 1)
+    in_order = list()
+    for i, num in enumerate(range_list):
+        cv = '{}.cv[{}]'.format(curve, num)
+        in_order.append(cv)
+        if i == 0:
+            continue
+
+    return in_order

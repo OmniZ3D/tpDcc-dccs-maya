@@ -13,7 +13,7 @@ import logging
 import maya.cmds
 import maya.api.OpenMaya
 
-from tpDcc.libs.python import mathlib, python, octree
+from tpDcc.libs.python import mathlib, python, octree, dijkstra
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.core import helpers, exceptions, shape, transform as xform_utils, name as name_utils
 from tpDcc.dccs.maya.core import scene, joint as joint_utils, component as cmp_utils, shape as shape_utils
@@ -1077,9 +1077,139 @@ def add_poly_smooth(mesh, divisions=1):
     return poly_smooth
 
 
+# TODO: Finish implementation
 def polygon_plane_to_curves(plane, count=5, u=True, description=''):
     description = description or plane
     if count == 0:
         return
 
     dup_curve = maya.cmds.duplicate(plane)[0]
+
+
+def grow_lattice_points(points):
+    """
+    Returns grow selection of the given lattice points
+    :param points: lsit(str)
+    :return: list(str)
+    """
+
+    base = points[0].split('.')[0]
+    all_points = maya.cmds.filterExpand('{}.pt[*]'.format(base), helpers.SelectionMasks.LatticePoints)
+    extras = list()
+    for point in points:
+        extras.append(point)
+        a = int(point.split('[')[1].split(']')[0])
+        b = int(point.split('[')[2].split(']')[0])
+        c = int(point.split('[')[3].split(']')[0])
+        for i in [-1, 1]:
+            grow_a = '{}.pt[{}][{}][{}]'.format(base, a + i, b, c)
+            grow_b = '{}.pt[{}][{}][{}]'.format(base, a, b + i, c)
+            grow_c = '{}.pt[{}][{}][{}]'.format(base, a, b, c + i)
+            if grow_a in all_points:
+                extras.append(grow_a)
+            if grow_b in all_points:
+                extras.append(grow_b)
+            if grow_c in all_points:
+                extras.append(grow_c)
+
+    return extras
+
+
+def find_shortest_path_between_surface_cvs(cvs_list, diagonal=False, return_total_distance=False):
+
+    start = cvs_list[0]
+    end = cvs_list[-1]
+    start = start[1:] if start.startswith('|') else start
+    end = end[1:] if end.startswith('|') else end
+    surface = start.split('.')[0]
+
+    obj_type = maya.cmds.objectType(surface)
+    if obj_type == 'transform':
+        shape = maya.cmds.listRelatives(surface, shapes=True)
+        if shape:
+            obj_type = maya.cmds.objectType(shape[0])
+    if obj_type != 'nurbsSurface':
+        return None
+
+    all_cvs = maya.cmds.filterExpand(
+        '{}.cv[*][*]'.format(surface), selectionMask=helpers.SelectionMasks.ControlVertices)
+    graph = dijkstra.Graph()
+    recompute_dict = dict()
+    for cv in all_cvs:
+        base = (cv)
+        graph.add_node(base)
+        recompute_dict[base] = cv
+
+    for cv in all_cvs:
+        maya.cmds.select(clear=True)
+        maya.cmds.nurbsSelect(cv, growSelection=True)
+        grow_selection = maya.cmds.ls(sl=True)[0]
+        if not diagonal:
+            work_string = cv.split('][')
+            grow_string = grow_selection.split('][')
+            grow_selection = [
+                "%s][%s" % (work_string[0], grow_string[-1]), "%s][%s" % (grow_string[0], work_string[-1])]
+        grow_selection = maya.cmds.filterExpand(grow_selection, selectionMask=helpers.SelectionMasks.ControlVertices)
+        grow_selection.remove(cv)
+
+        base_pos = maya.api.OpenMaya.MVector(*maya.cmds.xform(cv, q=True, ws=True, t=True))
+        for grow_cv in grow_selection:
+            cv_pos = maya.api.OpenMaya.MVector(*maya.cmds.xform(grow_cv, q=True, ws=True, t=True))
+            cvs_length = (cv_pos - base_pos).length()
+            graph.add_edge((cv), (grow_cv), cvs_length)
+
+    shortest = dijkstra.shortest_path(graph, (start), (end))
+
+    in_order = list()
+    for found in shortest[-1]:
+        in_order.append(recompute_dict[found])
+
+    if return_total_distance:
+        total_distance = shortest[0]
+        return in_order, total_distance
+
+    return in_order
+
+
+def find_shortest_path_between_lattice_cvs(cvs_list, return_total_distance=False):
+    start = cvs_list[0]
+    end = cvs_list[-1]
+    surface = start.split('.')[0]
+
+    obj_type = maya.cmds.objectType(surface)
+    if obj_type == 'transform':
+        shape = maya.cmds.listRelatives(surface, shapes=True)
+        if shape:
+            obj_type = maya.cmds.objectType(shape[0])
+    if obj_type != 'lattice':
+        return None
+
+    all_cvs = maya.cmds.filterExpand(
+        '{}.cv[*][*]'.format(surface), selectionMask=helpers.SelectionMasks.ControlVertices)
+    graph = dijkstra.Graph()
+    recompute_dict = dict()
+    for cv in all_cvs:
+        base = (cv)
+        graph.add_node(cv)
+        recompute_dict[base] = cv
+
+    for cv in all_cvs:
+        grow_selection = grow_lattice_points([cv])
+        grow_selection.remove(cv)
+        base_pos = maya.api.OpenMaya.MVector(*maya.cmds.xform(cv, q=True, ws=True, t=True))
+        for grow_cv in grow_selection:
+            cv_pos = maya.api.OpenMaya.MVector(*maya.cmds.xform(grow_cv, q=True, ws=True, t=True))
+            cvs_length = (cv_pos - base_pos).length()
+            graph.add_edge((cv), (grow_cv), cvs_length)
+
+    shortest = dijkstra.shortest_path(graph, (start), (end))
+
+    in_order = list()
+    for found in shortest[-1]:
+        in_order.append(recompute_dict[found])
+
+    if return_total_distance:
+        total_distance = shortest[0]
+        return in_order, total_distance
+
+    return in_order
