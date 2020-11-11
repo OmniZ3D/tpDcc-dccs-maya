@@ -637,7 +637,7 @@ def get_position(point):
     pos = list()
 
     if type(point) == list or type(point) == tuple:
-        if len(point < 3):
+        if len(point) < 3:
             LOGGER.exception('Invalid point value supplied! Not enough list/tuple elements!')
             return
         pos = point[0:3]
@@ -1547,7 +1547,7 @@ def get_buffer_group(node_name, suffix='buffer'):
     :return: str
     """
 
-    attr_name = '{}_group'.format(suffix)
+    attr_name = 'group_{}'.format(suffix)
     node_and_attr = '{}.{}'.format(node_name, attr_name)
     if not maya.cmds.objExists(node_and_attr):
         return
