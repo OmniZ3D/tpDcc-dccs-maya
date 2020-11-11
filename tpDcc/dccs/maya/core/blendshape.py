@@ -637,41 +637,42 @@ def add_target(blend_shape, target, base='', target_index=-1, target_alias='', t
     return blend_shape + '.' + target_name
 
 
-def create(base_geo, target_geo=None, origin='local', deform_order=None, prefix=None):
+def create(base_geo, target_geo=None, origin='local', deform_order=None, name=None):
     """
     Creates a blend shape deformer for the given base geometry
     :param base_geo: str, geometry to apply blend shape deformer to
     :param target_geo: list<str>, list of blend shape target models
     :param origin: BlendShapeOrigin, create a local or world space blendshape deformer
     :param deform_order: BlendShapeDeformerOrder, deform order
-    :param prefix: str, naming prefix
+    :param name: str, blendshape node name
+    :param target_weight: float, default target weight value
     :return: str
     """
 
     if not maya.cmds.objExists(base_geo):
         raise Exception('Base geometry "{}" does not exists!'.format(base_geo))
 
-    if not prefix:
-        prefix = base_geo.split(':')[-1]
+    if not name:
+        name = '{}_blendShape'.format(base_geo.split(':')[-1])
 
-    blend_shape = prefix + '_blendShape'
-    if is_blendshape(blend_shape):
-        LOGGER.debug('BlendShape {} already exists!'.format(blend_shape))
-        return blend_shape
+    if is_blendshape(name):
+        LOGGER.debug('BlendShape {} already exists!'.format(name))
+        return name
 
     if deform_order == BlendShapeDeformerOrder.After:
-        blend_shape = maya.cmds.blendShape(base_geo, name=blend_shape, origin=origin, after=True)[0]
+        blend_shape = maya.cmds.blendShape(base_geo, name=name, origin=origin, after=True)[0]
     elif deform_order == BlendShapeDeformerOrder.Before:
-        blend_shape = maya.cmds.blendShape(base_geo, name=blend_shape, origin=origin, before=True)[0]
+        blend_shape = maya.cmds.blendShape(base_geo, name=name, origin=origin, before=True)[0]
     elif deform_order == BlendShapeDeformerOrder.Parallel:
-        blend_shape = maya.cmds.blendShape(base_geo, name=blend_shape, origin=origin, parallel=True)[0]
+        blend_shape = maya.cmds.blendShape(base_geo, name=name, origin=origin, parallel=True)[0]
     elif deform_order == BlendShapeDeformerOrder.Split:
-        blend_shape = maya.cmds.blendShape(base_geo, name=blend_shape, origin=origin, split=True)[0]
+        blend_shape = maya.cmds.blendShape(base_geo, name=name, origin=origin, split=True)[0]
     elif deform_order == BlendShapeDeformerOrder.Foc:
-        blend_shape = maya.cmds.blendShape(base_geo, name=blend_shape, origin=origin, foc=True)[0]
+        blend_shape = maya.cmds.blendShape(base_geo, name=name, origin=origin, foc=True)[0]
     else:
-        blend_shape = maya.cmds.blendShape(base_geo, name=blend_shape, origin=origin)[0]
+        blend_shape = maya.cmds.blendShape(base_geo, name=name, origin=origin)[0]
 
+    target_geo = python.force_list(target_geo)
     for target in target_geo:
         add_target(blend_shape=blend_shape, target=target, base=base_geo)
 
@@ -747,6 +748,8 @@ def set_target_weights(blend_shape, target, wt, geometry=''):
     check_blendshape(blend_shape)
     if not maya.cmds.objExists(blend_shape + '.' + target):
         raise Exception('BlendShape "{}" has no "{}" target attribute!'.format(blend_shape, target))
+
+    geometry = geometry or get_base_geo(blend_shape)
     if geometry and not maya.cmds.objExists(geometry):
         raise Exception('Object "{}" does not exists!'.format(geometry))
 
