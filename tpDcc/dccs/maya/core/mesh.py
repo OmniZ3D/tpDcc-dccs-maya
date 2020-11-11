@@ -7,6 +7,7 @@ Module that contains functions and classes related with meshes
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 from collections import defaultdict
 
 import maya.cmds
@@ -16,6 +17,8 @@ import maya.api.OpenMaya
 from tpDcc.dccs.maya import api
 from tpDcc.libs.python import python
 from tpDcc.dccs.maya.core import helpers, exceptions, node
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 def check_mesh(mesh):
@@ -610,9 +613,11 @@ def find_shortest_vertices_path_between_vertices(vertices_list):
 
     start = vertices_list[0]
     end = vertices_list[-1]
+    start = start[1:] if start.startswith('|') else start
+    end = end[1:] if end.startswith('|') else end
     mesh = start.split('.')[0]
 
-    obj_type = maya.cmds.objectType(start)
+    obj_type = maya.cmds.objectType(mesh)
     if obj_type != 'mesh':
         return None
 
@@ -644,7 +649,7 @@ def find_shortest_vertices_path_between_vertices(vertices_list):
         vtx_num2 = int(end.split('vtx[')[-1].split(']')[0])
         edge_selection = maya.cmds.polySelect(mesh, shortestEdgePath=[vtx_num1, vtx_num2])
         if edge_selection is None:
-            maya.logger.error('Selected vertices are not parte of the same polyShell!')
+            LOGGER.error('Selected vertices are not part of the same polyShell!')
             return None
 
     all_edges = list()

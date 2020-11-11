@@ -14,10 +14,10 @@ from tpDcc.dccs.maya.core import shape, geometry, constraint as constraint_utils
 from tpDcc.dccs.maya.core import mesh as mesh_utils, attribute as attr_utils
 
 
-def create_empty_follicle(description, uv=None, hide_follicle=True):
+def create_empty_follicle(name=None, uv=None, hide_follicle=True):
     """
     Creates a new empty follicle
-    :param description: str, description of the follicle
+    :param name: str, name of the follicle
     :param uv: list(int, int), uv where follicle will be created
     :param hide_follicle: bool, Whether or not follicle should be hided by default
     :return: str, name of the created follicle
@@ -29,10 +29,7 @@ def create_empty_follicle(description, uv=None, hide_follicle=True):
         maya.cmds.hide(follicle_shape)
     follicle = maya.cmds.listRelatives(follicle_shape, p=True)[0]
     maya.cmds.setAttr('{}.inheritsTransform'.format(follicle), False)
-    if not description:
-        follicle = maya.cmds.rename(follicle, dcc.find_unique_name('follicle'))
-    else:
-        follicle = maya.cmds.rename(follicle, dcc.find_unique_name(description))
+    follicle = maya.cmds.rename(follicle, dcc.find_unique_name(name or 'follicle'))
 
     maya.cmds.setAttr('{}.parameterU'.format(follicle), uv[0])
     maya.cmds.setAttr('{}.parameterV'.format(follicle), uv[1])
@@ -61,18 +58,18 @@ def create_mesh_follicle(mesh, description=None, uv=None, hide_follicle=True):
     return follicle
 
 
-def create_surface_follicle(surface, description=None, uv=None, hide_follicle=True):
+def create_surface_follicle(surface, name=None, uv=None, hide_follicle=True):
     """
     Crates follicle on a surface
     :param surface: str, name of the surface to attach follicle to
-    :param description: str, description of the follicle
+    :param name: str, description of the follicle
     :param uv: list(int, int,), corresponds to the UVs of the mesh in which the follicle will be attached
     :param hide_follicle: bool, Whether or not follicle should be hided by default
     :return: str, name of the created follicle
     """
 
     uv = uv if uv is not None else [0, 0]
-    follicle = create_empty_follicle(description, uv, hide_follicle=hide_follicle)
+    follicle = create_empty_follicle(name, uv, hide_follicle=hide_follicle)
     shape = maya.cmds.listRelatives(follicle, shapes=True)[0]
     maya.cmds.connectAttr('{}.local'.format(surface), '{}.inputSurface'.format(follicle))
     maya.cmds.connectAttr('{}.worldMatrix'.format(surface), '{}.inputWorldMatrix'.format(follicle))

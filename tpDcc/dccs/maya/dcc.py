@@ -26,7 +26,7 @@ from tpDcc.dccs.maya.api import mathlib
 from tpDcc.dccs.maya.core import helpers, gui, node, name, scene, shape, transform, decorators as maya_decorators
 from tpDcc.dccs.maya.core import attribute, namespace, playblast, constants as maya_constants, joint as joint_utils
 from tpDcc.dccs.maya.core import reference as ref_utils, constraint as constraint_utils, shader as shader_utils
-from tpDcc.dccs.maya.core import filtertypes, animation, sequencer, camera as cam_utils, deformer as deform_utils
+from tpDcc.dccs.maya.core import filtertypes, animation, sequencer, camera as cam_utils, cluster as cluster_utils
 from tpDcc.dccs.maya.core import space as space_utils, geometry as geo_utils, rivet as rivet_utils, color as maya_color
 from tpDcc.dccs.maya.core import follicle as follicle_utils, curve as curve_utils, ik as ik_utils
 
@@ -3064,6 +3064,16 @@ def duplicate_hierarchy(transforms, stop_at=None, force_only_these=None, replace
     return duplicate_hierarchy.create()
 
 
+def center_pivot(node):
+    """
+    Centers the pivot of the given node
+    :param node: str
+    :return:
+    """
+
+    return maya.cmds.xform(node, cp=True)
+
+
 def move_pivot_to_zero(node):
     """
     Moves pivot of given node to zero (0, 0, 0 in the world)
@@ -5859,7 +5869,7 @@ def create_cluster_surface(
     :return: list(str), list(str)
     """
 
-    cluster_surface = deform_utils.ClusterSurface(surface, name)
+    cluster_surface = cluster_utils.ClusterSurface(surface, name)
     cluster_surface.set_first_cluster_pivot_at_start(first_cluster_pivot_at_start)
     cluster_surface.set_last_cluster_pivot_at_end(last_cluster_pivot_at_end)
     cluster_surface.set_join_ends(join_ends)
@@ -5881,7 +5891,7 @@ def create_cluster_curve(
     :return: list(str), list(str)
     """
 
-    cluster_curve = deform_utils.ClusterCurve(curve, name)
+    cluster_curve = cluster_utils.ClusterCurve(curve, name)
     cluster_curve.set_first_cluster_pivot_at_start(first_cluster_pivot_at_start)
     cluster_curve.set_last_cluster_pivot_at_end(last_cluster_pivot_at_end)
     cluster_curve.set_join_ends(join_ends)
