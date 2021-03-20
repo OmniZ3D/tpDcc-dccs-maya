@@ -177,7 +177,6 @@ def set_current_time_unit(time_unit):
     Sets current time unit
     :param time_unit: STR
     """
-    
     return maya.cmds.currentUnit(time=time_unit)
 
 

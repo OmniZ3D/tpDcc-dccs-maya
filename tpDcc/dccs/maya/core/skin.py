@@ -20,6 +20,12 @@ import maya.mel
 import maya.api.OpenMaya
 import maya.api.OpenMayaAnim
 
+PYMEL_AVAILABLE = True
+try:
+    from pymel.core.general import PyNode
+except ImportError:
+    PYMEL_AVAILABLE = False
+
 from tpDcc import dcc
 from tpDcc.dccs.maya import api
 from tpDcc.libs.python import python, mathlib, kdtree
@@ -1703,12 +1709,6 @@ def get_influence_vertices(joint_nodes, mesh_name):
     :return: list(str)
     """
 
-    pymel_available = True
-    try:
-        from pymel.core.general import PyNode
-    except ImportError:
-        pymel_available = False
-    
     selected_transforms = dcc.selected_nodes_of_type('transform')
     selected_joints = dcc.selected_nodes_of_type('joint')
     joint_nodes = joint_nodes or selected_joints
@@ -1730,7 +1730,7 @@ def get_influence_vertices(joint_nodes, mesh_name):
     progress_value = 0.0
 
     for i, joint in enumerate(joint_nodes):
-        if pymel_available:
+        if PYMEL_AVAILABLE:
             joints_attached = maya.cmds.skinCluster(skin_cluster_name, query=True, inf=True)
             if joint_nodes_short[i] not in joints_attached:
                 continue
