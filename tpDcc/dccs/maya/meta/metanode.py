@@ -23,6 +23,7 @@ from functools import wraps
 import maya.cmds
 import maya.OpenMaya
 
+from tpDcc.libs.python import python
 from tpDcc.dccs.maya.meta import metautils
 from tpDcc.dccs.maya.core import exceptions, helpers, name as name_utils, attribute as attr_utils
 from tpDcc.dccs.maya.managers import metadatamanager
@@ -46,7 +47,7 @@ def node_lock_manager(fn):
                 LOGGER.debug('NodeLockManager > fn : {0} : node being unlocked'.format(fn.__name))
                 maya.cmds.lockNode(meta_node.meta_node, lock=False)
             res = fn(*args, **kwargs)
-        except StandardError as e:
+        except Exception as e:
             err = e
         finally:
             if locked:
@@ -54,7 +55,7 @@ def node_lock_manager(fn):
                 maya.cmds.lockNode(meta_node.meta_node, lock=True)
             if err:
                 traceback = sys.exc_info()[2]  # Get full traceback
-                raise StandardError(StandardError(err), traceback)
+                raise Exception(Exception(err), traceback)
             return res
 
     return wrapper
@@ -118,7 +119,7 @@ class MetaNode(object):
                     LOGGER.debug('Failed to initialize MetaClass : {0}'.format(registered_meta_class))
                     pass
             else:
-                raise StandardError('Node has an unregistered MetaClass attr set: "{}"'.format(meta_class))
+                raise Exception('Node has an unregistered MetaClass attr set: "{}"'.format(meta_class))
         else:
             LOGGER.debug('MetaClass "{}" not found, given or registered!'.format(meta_class))
             return super(cls.__class__, cls).__new__(cls)
@@ -159,7 +160,7 @@ class MetaNode(object):
             if full_management:
                 # MetaClass
                 self.add_attribute('meta_class', value=str(self.__class__.__name__), attr_type='string')
-                self.meta_node_id = name
+                self.meta_node_id = self.meta_node
                 # Use to identify system base classes
                 self.add_attribute('meta_class_group', value='MetaClass', attr_type='string', hidden=True)
                 # Indicates this node if a system root MetaNode
@@ -236,8 +237,8 @@ class MetaNode(object):
                     else:
                         raise AttributeError(
                             'Object instance "{}" : {} has no attribute : {}'.format(self.meta_node, self, attr))
-        except StandardError as e:
-            raise StandardError('{} | {}'.format(e, traceback.format_exc()))
+        except Exception as e:
+            raise Exception('{} | {}'.format(e, traceback.format_exc()))
 
     def __create_node__(self, node_type, name):
         """
@@ -337,7 +338,7 @@ class MetaNode(object):
                         value = metautils.MetaAttributeValidator.meta_node_string(value)
                 metautils.MetaAttributeUtils.set_message(self.meta_node, attr, value)
         except Exception:
-            raise StandardError(traceback.format_exc())
+            raise Exception(traceback.format_exc())
 
     @node_lock_manager
     def __setattr__(self, attr, value, force=True, **kwargs):
@@ -379,9 +380,9 @@ class MetaNode(object):
                     else:
                         try:
                             maya.cmds.setAttr(attr_string, value)
-                        except StandardError as e:
+                        except Exception as e:
                             LOGGER.debug('Failed to setAttr {0} - might be connected'.format(attr_string))
-                            raise StandardError(e)
+                            raise Exception(e)
 
                     LOGGER.debug('setAttr : {0} : type : {1} to value : {2}'.format(attr, attr_type, value))
                 if locked:
@@ -397,8 +398,8 @@ class MetaNode(object):
             if self.has_attr(attr):
                 maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, attr), lock=False)
                 maya.cmds.deleteAttr('{0}.{1}'.format(self.meta_node, attr))
-        except StandardError as e:
-            raise StandardError(e)
+        except Exception as e:
+            raise Exception(e)
 
     def __repr__(self):
         try:
@@ -519,8 +520,8 @@ class MetaNode(object):
                     return
                 # If we have a DagNode, we return the full path
                 return object.__getattribute__(self, '_MObject')
-            except StandardError as e:
-                raise StandardError(e)
+            except Exception as e:
+                raise Exception(e)
 
     @property
     def meta_node(self):
@@ -558,8 +559,8 @@ class MetaNode(object):
                 # LOGGER.debug('Updating _lastDagPath of {} to: \n\tLast DAG path: {}'.format(mobj, _result))
                 object.__setattr__(self, '_lastDagPath', _result)
                 return _result
-            except StandardError as e:
-                raise StandardError(e)
+            except Exception as e:
+                raise Exception(e)
 
     @meta_node.setter
     def meta_node(self, node):
@@ -577,8 +578,8 @@ class MetaNode(object):
                 object.__setattr__(self, '_MObject', mobj)
                 object.__setattr__(self, '_MObjectHandle', maya.OpenMaya.MObjectHandle(mobj))
                 object.__setattr__(self, '_MFnDependencyNode', maya.OpenMaya.MFnDependencyNode(mobj))
-            except StandardError as e:
-                raise StandardError(e)
+            except Exception as e:
+                raise Exception(e)
         else:
             LOGGER.debug('Setting meta node to None ...')
 
@@ -893,7 +894,7 @@ class MetaNode(object):
                     LOGGER.debug('setAttr Edit flags run : {0} = {1}'.format(attr, set_kwargs_to_edit))
 
                 added = True
-            except StandardError:
+            except Exception:
                 LOGGER.error(traceback.format_exc())
 
         return added
@@ -908,8 +909,8 @@ class MetaNode(object):
         if self.has_attr(attr):
             try:
                 maya.cmds.deleteAttr(self.meta_node, at=attr)
-            except StandardError as e:
-                raise StandardError('Failed to delete given attributes : {0} : {1}'.format(attr, e))
+            except Exception as e:
+                raise Exception('Failed to delete given attributes : {0} : {1}'.format(attr, e))
 
     @node_lock_manager
     def rename_attr(self, attr, new_attr_name):
@@ -1034,7 +1035,7 @@ class MetaNode(object):
             if not self.is_referenced():
                 for a in attr:
                     maya.cmds.setAttr('{0}.{1}'.format(self.meta_node, a), lock=state)
-        except StandardError as e:
+        except Exception as e:
             LOGGER.debug(str(e))
 
     @node_lock_manager
@@ -1056,11 +1057,11 @@ class MetaNode(object):
                     metadatamanager.convert_node_to_metanode(node_to_convert.meta_node, new_meta_class)
                 else:
                     node_to_convert.meta_class = new_meta_class
-            except StandardError as e:
+            except Exception as e:
                 LOGGER.debug('Failed to convert self to new MetaClass type: {}'.format(new_meta_class))
-                raise StandardError(StandardError(e), sys.exc_info()[2])
+                raise Exception(Exception(e), sys.exc_info()[2])
         else:
-            raise StandardError('Given class it not in the MetaClass Registry: {}'.format(new_meta_class))
+            raise Exception('Given class it not in the MetaClass Registry: {}'.format(new_meta_class))
 
     def is_component(self):
         """
@@ -1236,7 +1237,7 @@ class MetaNode(object):
                     else:
                         LOGGER.debug('{} being removed from the cache due to invalid MObject'.format(meta_node))
                         metadatamanager.clean_metanodes_cache()
-                except StandardError as e:
+                except Exception as e:
                     LOGGER.debug('CACHE: insepction fail!')
                     LOGGER.debug(str(e))
         except Exception:
@@ -1409,8 +1410,8 @@ class MetaNode(object):
                     maya.cmds.connectAttr('{0}.{1}'.format(
                         self.meta_node, attr), '{0}.{1}'.format(node, source_attr), f=force)
             else:
-                raise StandardError('{} is already connected to MetaNode'.format(node))
-        except StandardError as e:
+                raise Exception('{} is already connected to MetaNode'.format(node))
+        except Exception as e:
             LOGGER.warning(e)
 
     @node_lock_manager
@@ -1493,8 +1494,8 @@ class MetaNode(object):
                         maya.cmds.connectAttr('{0}.{1}'.format(self.meta_node, attr),
                                               '{0}.{1}'.format(node, source_attr), f=force)
                 else:
-                    raise StandardError('"{0}" is already connected to MetaNode "{1}"'.format(node, self.meta_node))
-            except StandardError as e:
+                    raise Exception('"{0}" is already connected to MetaNode "{1}"'.format(node, self.meta_node))
+            except Exception as e:
                 LOGGER.warning(e)
 
     @node_lock_manager
@@ -1527,7 +1528,7 @@ class MetaNode(object):
 
         connections = maya.cmds.listConnections(node, source=True, destination=False, plugs=True, connections=True)
         if not connections:
-            raise StandardError('{0} is not connected to the MetaNode {1}'.format(node, self.meta_node))
+            raise Exception('{0} is not connected to the MetaNode {1}'.format(node, self.meta_node))
 
         for source_plug, dst_plug in zip(connections[0::2], connections[1::2]):
             LOGGER.debug('Attribute Connection Inspected: {0} << {1}'.format(source_plug, dst_plug))
@@ -1553,7 +1554,7 @@ class MetaNode(object):
                         maya.cmds.deleteAttr(attr)
                 else:
                     LOGGER.debug('Deleting SourcePlug Attr aborted as node still has connections!')
-            except StandardError as e:
+            except Exception as e:
                 LOGGER.warning('Failed to remove MetaNode Connection Attribute')
                 LOGGER.debug(e)
 
@@ -1570,7 +1571,7 @@ class MetaNode(object):
                     delattr(source_plug_meta, attr.split('.')[-1])
                 else:
                     LOGGER.debug('Deleting SourcePlug Attr aborted as node still has connections!')
-            except StandardError as e:
+            except Exception as e:
                 LOGGER.warning('Failed to remove MetaNode Connection Attribute')
                 LOGGER.debug(e)
 
@@ -1806,8 +1807,12 @@ def attribute_data_type(value):
     :return: str, type string
     """
 
-    python_types = [str, unicode, bool, int, float, dict, list, tuple]
-    valid_types = ['string', 'unicode', 'bool', 'int', 'float', 'complex', 'complex', 'complex']
+    python_types = [str, bool, int, float, dict, list, tuple]
+    if python.is_python2():
+        python_types.insert(1, unicode)
+    valid_types = ['string', 'bool', 'int', 'float', 'complex', 'complex', 'complex']
+    if python.is_python2():
+        valid_types.insert(1, 'unicode')
     for py_type, valid_type in zip(python_types, valid_types):
         if issubclass(type(value), py_type):
             LOGGER.debug('Value {0} is a "{1}" attribute'.format(py_type, valid_type))
@@ -1836,7 +1841,7 @@ def deserialize_json_attr(data):
     :return: str
     """
 
-    if type(data) == unicode:
+    if not python.is_string(data):
         return json.loads(str(data))
     return json.loads(data)
 
@@ -1857,7 +1862,7 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
     # Check if given MetaClass is valid
     if meta_class is not None:
         t1 = time.clock()
-        if not type(meta_class) in [unicode, str]:
+        if not python.is_string(meta_class):
             try:
                 meta_class = meta_class.__name__
             except Exception as e:
@@ -1873,7 +1878,7 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
     if node_arg in [list, tuple]:
         if len(node) == 1:
             node = node[0]
-        elif node == []:
+        elif node == list():
             node = None
         else:
             raise ValueError('Node cannot be list or tuple or longer than 1 length: {}'.format(node))
@@ -1920,7 +1925,7 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
             if none_valid:
                 LOGGER.warning('"{}" maya_type: "{}" not in "{}"'.format(_node_short, str_type, maya_types_list))
                 return False
-            raise StandardError('"{}" maya_type: "{}" not in "{}"'.format(_node_short, str_type, maya_types_list))
+            raise Exception('"{}" maya_type: "{}" not in "{}"'.format(_node_short, str_type, maya_types_list))
         t2 = time.clock()
         LOGGER.debug('maya_type not None time ... % 0.6f' % (t2 - t1))
 
@@ -1950,7 +1955,10 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
     current_metaclases_keys = metadatamanager.METANODES_CACHE.keys()
     cache_key = None
     cached = None
-    unicode_node = unicode(_node)
+    try:
+        unicode_node = unicode(_node)
+    except Exception:
+        unicode_node = str(_node)
 
     if uuid in current_metaclases_keys:
         cache_key = uuid
@@ -2072,7 +2080,7 @@ def validate_obj_arg(node, meta_class, none_valid=False, default_meta_type=None,
             meta_node = new_meta_class(_node_short)
         else:
             if default_meta_type:
-                if not type(default_meta_type) in [unicode, str]:
+                if not python.is_string(default_meta_type):
                     try:
                         default_meta_type = default_meta_type.__name__
                     except Exception as e:
