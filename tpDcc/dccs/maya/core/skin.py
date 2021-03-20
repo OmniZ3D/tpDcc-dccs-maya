@@ -1310,26 +1310,25 @@ def move_skin_weights(source_joint=None, target_joint=None, mesh=None):
     total_infs = len(influence_joints)
 
     mesh_shape_name = shape_utils.get_shapes(mesh)[0]
-    out_weights_array = api_skin.get_skin_weights(skin_cluster_name, mesh_shape_name)
-    total_weights = len(out_weights_array)
+    out_wgts_array = api_skin.get_skin_weights(skin_cluster_name, mesh_shape_name)
+    total_weights = len(out_wgts_array)
 
-    source_jnt_index = 0
-    target_joint_index = 0
+    src_jnt_index = 0
+    tgt_jnt_index = 0
     for i in range(total_infs):
         if influence_joints[i] == source_joint_short:
-            source_jnt_index = i
+            src_jnt_index = i
         if influence_joints[i] == target_joint_short:
-            target_joint_index = i
+            tgt_jnt_index = i
 
     amount_to_loop = int(total_weights / total_infs)
 
     for i in range(amount_to_loop):
-        new_value = out_weights_array[
-                        (i * total_infs) + target_joint_index] + out_weights_array[(i * total_infs) + source_jnt_index]
-        out_weights_array[(i * total_infs) + target_joint_index] = new_value
-        out_weights_array[(i * total_infs) + source_jnt_index] = 0.0
+        new_value = out_wgts_array[(i * total_infs) + tgt_jnt_index] + out_wgts_array[(i * total_infs) + src_jnt_index]
+        out_wgts_array[(i * total_infs) + tgt_jnt_index] = new_value
+        out_wgts_array[(i * total_infs) + src_jnt_index] = 0.0
 
-    api_skin.set_skin_weights(skin_cluster_name, mesh_shape_name, out_weights_array)
+    api_skin.set_skin_weights(skin_cluster_name, mesh_shape_name, out_wgts_array)
 
     return True
 
