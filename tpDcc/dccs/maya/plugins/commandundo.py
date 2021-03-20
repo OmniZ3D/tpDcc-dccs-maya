@@ -69,7 +69,7 @@ def initializePlugin(mobj):
     mplugin = maya.api.OpenMaya.MFnPlugin(mobj, 'Tomas Poveda', '1.0', 'Any')
     try:
         mplugin.registerCommand(UndoCommand.commandName, UndoCommand.command_creator, UndoCommand.syntax_creator)
-    except:
+    except Exception:
         sys.stderr.write('Failed to register command: {}'.format(UndoCommand.commandName))
 
 
@@ -77,5 +77,5 @@ def uninitializePlugin(mobj):
     mplugin = maya.api.OpenMaya.MFnPlugin(mobj)
     try:
         mplugin.deregisterCommand(UndoCommand.commandName)
-    except:
+    except Exception:
         sys.stderr.write('Failed to unregister command: {}'.format(UndoCommand.commandName))

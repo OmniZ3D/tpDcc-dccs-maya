@@ -2884,7 +2884,7 @@ def convert_dcc_translation(translation):
     :param translation: list(float, float, float)
     :return: list(float, float, float)
     """
-    
+
     if get_up_axis_name().lower() == 'y':
         return translation
 
@@ -3566,7 +3566,6 @@ def create_follow_group(source_transform, target_transform, **kwargs):
     """
 
     return space_utils.create_follow_group(source_transform, target_transform, **kwargs)
-
 
 
 # =================================================================================================================

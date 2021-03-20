@@ -500,7 +500,7 @@ def to_qt_object(maya_name, qobj=None):
     if ptr is None:
         ptr = maya.OpenMayaUI.MQtUtil.findMenuItem(maya_name)
     if ptr is not None:
-        return wrapinstance(long(ptr), qobj)
+        return wrapinstance(int(ptr), qobj)
     return None
 
 
@@ -520,7 +520,7 @@ def get_parent_widget(widget):
     """
 
     ptr = maya.OpenMayaUI.MQtUtil.getParent(unwrapinstance(widget))
-    return wrapinstance(long(ptr))
+    return wrapinstance(int(ptr))
 
 
 def get_ui_gvars():
@@ -788,10 +788,10 @@ def wrapinstance(ptr, base=None):
     if ptr is None:
         return None
 
-    ptr = long(ptr)
+    ptr = int(ptr)
     if 'shiboken' in globals():
         if base is None:
-            qObj = shiboken.wrapInstance(long(ptr), QObject)
+            qObj = shiboken.wrapInstance(int(ptr), QObject)
             meta_obj = qObj.metaObject()
             cls = meta_obj.className()
             super_cls = meta_obj.superClass().className()
@@ -802,13 +802,13 @@ def wrapinstance(ptr, base=None):
             else:
                 base = QWidget
         try:
-            return shiboken.wrapInstance(long(ptr), base)
+            return shiboken.wrapInstance(int(ptr), base)
         except Exception:
             from PySide.shiboken import wrapInstance
-            return wrapInstance(long(ptr), base)
+            return wrapInstance(int(ptr), base)
     elif 'sip' in globals():
         base = QObject
-        return shiboken.wrapinstance(long(ptr), base)
+        return shiboken.wrapinstance(int(ptr), base)
     else:
         print('Failed to wrap object ...')
         return None
@@ -819,7 +819,7 @@ def unwrapinstance(object):
     Unwraps objects with PySide
     """
 
-    return long(shiboken.getCppPointer(object)[0])
+    return int(shiboken.getCppPointer(object)[0])
 
 
 def to_qt_object(long_ptr, qobj=None):

@@ -38,3 +38,4 @@ class MayaSceneObject(sceneobject.AbstractSceneObject, scenewrapper.MayaSceneWra
          :return: str
          """
 
+        pass

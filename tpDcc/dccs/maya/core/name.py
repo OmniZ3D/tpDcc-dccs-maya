@@ -17,7 +17,7 @@ from tpDcc.libs.python import python, strings
 from tpDcc.libs.python import name as naming_utils
 
 LOGGER = logging.getLogger('tpDcc-dccs-maya')
- 
+
 
 class EditIndexModes(object):
 

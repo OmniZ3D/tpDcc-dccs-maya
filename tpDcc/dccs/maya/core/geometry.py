@@ -436,8 +436,8 @@ def voxelize_mesh(mesh_node, divisions=2):
         """
 
         flattened_verts = list()
-        for v in vertices_list:
-            match = re.compile(".*\[(\d*):(\d*)\]").match(v)
+        for vert in vertices_list:
+            match = re.compile(r".*\[(\d*):(\d*)\]").match(vert)
             if not match:
                 continue
             for v_index in match.groups():

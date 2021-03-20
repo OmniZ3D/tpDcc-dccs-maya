@@ -2308,7 +2308,7 @@ def get_mirror_axis(transform_node, mirror_plane):
             result[i] = -1
         if mirror_plane == dcc.MirrorPlane.XZ:
             y = [t1[1], t2[1], t3[1]]
-            i =  mathlib.max_index(y)
+            i = mathlib.max_index(y)
             result[i] = -1
         if mirror_plane == dcc.MirrorPlane.XY:
             z = [t1[2], t2[2], t3[2]]

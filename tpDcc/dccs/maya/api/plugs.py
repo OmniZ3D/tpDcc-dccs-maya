@@ -117,7 +117,6 @@ def get_typed_value(plug):
         return attributetypes.kMFnDataStringArray, maya.api.OpenMaya.MFnStringArrayData(plug.asMObject()).array()
     elif data_type == maya.api.OpenMaya.MFnData.kMatrixArray:
         return attributetypes.kMFnDataMatrixArray, maya.api.OpenMaya.MFnMatrixArrayData(plug.asMObject()).array()
-    
     return None, None
 
 
