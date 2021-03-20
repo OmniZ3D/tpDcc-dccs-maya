@@ -21,12 +21,12 @@ from tpDcc.libs.qt.widgets import layouts, dialog, dividers
 from tpDcc.dccs.maya.core import directory
 
 
-class MayaDialog(dialog.BaseDialog, object):
+class MayaDialog(dialog.BaseDialog):
     def __init__(self, name='MayaDialog', parent=None, **kwargs):
         super(MayaDialog, self).__init__(name=name, parent=parent, **kwargs)
 
 
-class MayaColorDialog(dialog.BaseColorDialog, object):
+class MayaColorDialog(dialog.BaseColorDialog):
     def __init__(self, name='MayaColorDialog', parent=None, **kwargs):
         super(MayaColorDialog, self).__init__(name=name, parent=parent, **kwargs)
 
@@ -76,7 +76,7 @@ class MayaColorDialog(dialog.BaseColorDialog, object):
             super(MayaColorDialog, self)._on_ok_btn()
 
 
-class MayaOpenFileDialog(dialog.BaseOpenFileDialog, object):
+class MayaOpenFileDialog(dialog.BaseOpenFileDialog):
     def __init__(self, name='MayaOpenFileDialog', parent=None, **kwargs):
         super(MayaOpenFileDialog, self).__init__(name=name, parent=parent, **kwargs)
 
@@ -94,7 +94,7 @@ class MayaOpenFileDialog(dialog.BaseOpenFileDialog, object):
         return None
 
 
-class MayaSaveFileDialog(dialog.BaseSaveFileDialog, object):
+class MayaSaveFileDialog(dialog.BaseSaveFileDialog):
     def __init__(self, name='MaxSaveFileDialog', parent=None, **kwargs):
         super(MayaSaveFileDialog, self).__init__(name=name, parent=parent, **kwargs)
 
@@ -112,7 +112,7 @@ class MayaSaveFileDialog(dialog.BaseSaveFileDialog, object):
         return None
 
 
-class MayaSelectFolderDialog(dialog.BaseSelectFolderDialog, object):
+class MayaSelectFolderDialog(dialog.BaseSelectFolderDialog):
     def __init__(self, name='MaxSelectFolderDialog', parent=None, **kwargs):
         super(MayaSelectFolderDialog, self).__init__(name=name, parent=parent, **kwargs)
 
@@ -130,7 +130,7 @@ class MayaSelectFolderDialog(dialog.BaseSelectFolderDialog, object):
         return None
 
 
-class MayaNativeDialog(dialog.BaseNativeDialog, object):
+class MayaNativeDialog(dialog.BaseNativeDialog):
 
     @staticmethod
     def open_file(title='Open File', start_directory=None, filters=None):
