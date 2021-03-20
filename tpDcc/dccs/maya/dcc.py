@@ -12,6 +12,8 @@ import sys
 import logging
 from collections import OrderedDict
 
+import numpy as np
+
 from Qt.QtWidgets import QApplication, QMainWindow
 
 import maya.cmds
@@ -20,15 +22,16 @@ import maya.utils
 import maya.api.OpenMaya
 
 from tpDcc.core import dcc, consts
-from tpDcc.libs.python import python
+from tpDcc.libs.python import python, mathlib
 from tpDcc.libs.qt.core import qtutils
-from tpDcc.dccs.maya.api import mathlib
+from tpDcc.dccs.maya.api import mathlib as maya_math
 from tpDcc.dccs.maya.core import helpers, gui, node, name, scene, shape, transform, decorators as maya_decorators
 from tpDcc.dccs.maya.core import attribute, namespace, playblast, constants as maya_constants, joint as joint_utils
 from tpDcc.dccs.maya.core import reference as ref_utils, constraint as constraint_utils, shader as shader_utils
 from tpDcc.dccs.maya.core import filtertypes, animation, sequencer, camera as cam_utils, cluster as cluster_utils
 from tpDcc.dccs.maya.core import space as space_utils, geometry as geo_utils, rivet as rivet_utils, color as maya_color
-from tpDcc.dccs.maya.core import follicle as follicle_utils, curve as curve_utils, ik as ik_utils
+from tpDcc.dccs.maya.core import directory, follicle as follicle_utils, curve as curve_utils, ik as ik_utils
+from tpDcc.dccs.maya.core import humanik, deformer as deformer_utils, skin as skin_utils
 
 LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
@@ -209,7 +212,15 @@ def refresh_viewport():
     Refresh current DCC viewport
     """
 
-    maya.cmds.refresh()
+    maya.cmds.refresh(currentView=True)
+
+
+def refresh_all_viewport():
+    """
+    Refresh all DCC viewports
+    """
+
+    maya.cmds.refresh(currentView=False)
 
 
 def focus(object_to_focus):
@@ -477,11 +488,7 @@ def select_folder_dialog(title, start_directory=None):
     :return: str
     """
 
-    res = maya.cmds.fileDialog2(fm=3, dir=start_directory, cap=title)
-    if res:
-        res = res[0]
-
-    return res
+    return directory.select_folder_dialog(title=title, start_directory=start_directory)
 
 
 def save_file_dialog(title, start_directory=None, pattern=None):
@@ -493,11 +500,7 @@ def save_file_dialog(title, start_directory=None, pattern=None):
     :return: str
     """
 
-    res = maya.cmds.fileDialog2(fm=0, dir=start_directory, cap=title, ff=pattern)
-    if res:
-        res = res[0]
-
-    return res
+    return directory.save_file_dialog(title=title, start_directory=start_directory, pattern=pattern)
 
 
 def get_current_model_panel():
@@ -567,7 +570,7 @@ def node_types():
 
 def dcc_to_tpdcc_types():
     """
-    # Returns a dictionary that provides a mapping between Dcc object types and tpDcc object types
+    Returns a dictionary that provides a mapping between Dcc object types and tpDcc object types
     :return:
     """
 
@@ -595,7 +598,7 @@ def dcc_to_tpdcc_str_types():
             dcc_to_abstract_str_types[dcc_type[1]] = abstract_type
 
 
-def node_tpdcc_type(self, node_name, as_string=False):
+def node_tpdcc_type(node_name, as_string=False):
     """
     Returns the DCC object type as a string given a specific tpDcc object type
     :param node_name: str
@@ -693,7 +696,8 @@ def node_handle(node_name):
     :return: str
     """
 
-    return maya.cmds.ls(node_name, uuid=True)
+    node_uuid = maya.cmds.ls(node_name, uuid=True)
+    return None if not node_uuid else node_uuid[0]
 
 
 def node_is_empty(node_name, *args, **kwargs):
@@ -795,19 +799,21 @@ def find_node_by_name(node_name):
     return node.get_mobject(node_name)
 
 
-def find_node_by_id(unique_id):
+def find_node_by_id(unique_id, full_path=True):
     """
     Returns node by its given id.
     This function makes sure that the returned node is an existing node
     :param unique_id: str
+    :param full_path: bool
     :return: str
     """
 
-    node_found = node.get_node_by_id(unique_id)
+    node_found = node.get_node_by_id(unique_id, full_path=full_path)
     if not node_found:
         return None
 
-    return node.get_mobject(node_found)
+    return node_found
+    # return node.get_mobject(node_found)
 
 
 def rename_node(node, new_name, **kwargs):
@@ -836,7 +842,8 @@ def duplicate_node(node_name, new_node_name='', only_parent=False, return_roots_
     :return: list(str)
     """
 
-    return maya.cmds.duplicate(node_name, name=new_node_name, parentOnly=only_parent, returnRootsOnly=return_roots_only)
+    return maya.cmds.duplicate(
+        node_name, name=new_node_name, parentOnly=only_parent, returnRootsOnly=return_roots_only)[0]
 
 
 def delete_node(node_name):
@@ -1324,7 +1331,7 @@ def set_parent(node, parent):
     :param parent: str
     """
 
-    return maya.cmds.parent(node, parent)
+    return maya.cmds.parent(node, parent)[0]
 
 
 def set_parent_to_world(node):
@@ -1360,7 +1367,7 @@ def list_nodes(node_name=None, node_type=None, full_path=True):
     :param node_name:
     :param node_type:
     :param full_path:
-    :return:  list<str>
+    :return:  list(str)
     """
 
     if not node_name and not node_type:
@@ -1413,11 +1420,21 @@ def list_relatives(
     if relative_type:
         return maya.cmds.listRelatives(
             node, allDescendents=all_hierarchy, fullPath=full_path, type=relative_type,
-            shapes=shapes, noIntermediate=not intermediate_shapes)
+            shapes=shapes, noIntermediate=not intermediate_shapes) or list()
     else:
         return maya.cmds.listRelatives(
             node, allDescendents=all_hierarchy, fullPath=full_path, shapes=shapes,
-            noIntermediate=not intermediate_shapes)
+            noIntermediate=not intermediate_shapes) or list()
+
+
+def list_transforms(full_path=True):
+    """
+    List all transforms in current scene
+    :param full_path:
+    :return: list(str)
+    """
+
+    return maya.cmds.ls(tr=True, long=full_path)
 
 
 def node_inherits_transform(node):
@@ -1541,7 +1558,7 @@ def distance_between_nodes(source_node=None, target_node=None):
     :rtype: float
     """
 
-    return mathlib.distance_between_nodes(source_node, target_node)
+    return maya_math.distance_between_nodes(source_node, target_node)
 
 
 # =================================================================================================================
@@ -1813,7 +1830,7 @@ def filter_nodes_by_type(filter_type, search_hierarchy=False, selection_only=Tru
 
     return filtertypes.filter_by_type(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
-        remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
+        remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only) or list()
 
 
 # =================================================================================================================
@@ -1894,6 +1911,30 @@ def get_mirror_name(name, center_patterns=None, left_patterns=None, right_patter
             break
 
     return mirror_name
+
+
+def get_mirror_axis(name, mirror_plane):
+    """
+    Returns mirror axis of the given node name
+    :param name: str
+    :param mirror_plane: str, mirror plane ("YZ", "XY", "XZ")
+    :return: str
+    """
+
+    return transform.get_mirror_axis(name, mirror_plane)
+
+
+def is_axis_mirrored(source_node, target_node, axis, mirror_plane):
+    """
+    Returns whether or not given nodes axis are mirrored
+    :param source_node: str
+    :param target_node: str
+    :param axis: list(int)
+    :param mirror_plane: str
+    :return: bool
+    """
+
+    return transform.is_axis_mirrored(source_node, target_node, axis, mirror_plane)
 
 
 def get_color_of_side(side='C', sub_color=False):
@@ -2265,6 +2306,15 @@ def list_namespaces():
     return namespace.get_all_namespaces()
 
 
+def list_namespaces_from_selection():
+    """
+    Returns all namespaces of current selected objects
+    :return: list(str)
+    """
+
+    return namespace.get_namespaces_from_selection()
+
+
 def namespace_separator():
     """
     Returns character used to separate namespace from the node name
@@ -2390,6 +2440,15 @@ def change_namespace(old_namespace, new_namespace):
 # SCENE
 # =================================================================================================================
 
+def get_current_time():
+    """
+    Returns current scene time
+    :return: int
+    """
+
+    return maya.cmds.currentTime(query=True)
+
+
 def new_scene(force=True, do_save=True):
     """
     Creates a new DCC scene
@@ -2427,6 +2486,11 @@ def open_file(file_path, force=True):
     :param force: bool
     """
 
+    # we must do the check, otherwise depending on the type Maya can crash
+    if not file_path or not os.path.isfile(file_path):
+        LOGGER.warning('Impossible to open non existent file: "{}"'.format(file_path))
+        return
+
     nodes = maya.cmds.file(file_path, o=True, f=force, returnNewNodes=True)
 
     scene_ext = os.path.splitext(file_path)[-1]
@@ -2450,16 +2514,45 @@ def import_file(file_path, force=True, **kwargs):
     :return:
     """
 
+    # we must do the check, otherwise depending on the type Maya can crash
+    if not file_path or not os.path.isfile(file_path):
+        LOGGER.warning('Impossible to import non existent file: "{}"'.format(file_path))
+        return
+
+    import_type = kwargs.get('type', None)
+    options = kwargs.get('options', None)
+    ignore_version = kwargs.get('ignore_version', None)
     namespace = kwargs.get('namespace', None)
+    unique_namespace = kwargs.get('unique_namespace', True)
+
+    import_kwargs = {
+        'i': True,
+        'f': force,
+        'returnNewNodes': True,
+    }
+    if ignore_version is not None:
+        import_kwargs['ignoreVersion'] = ignore_version
     if namespace:
-        unique_namespace = kwargs.get('unique_namespace', True)
-        if unique_namespace:
-            return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True, namespace=namespace)
-        else:
-            return maya.cmds.file(
-                file_path, i=True, f=force, returnNewNodes=True, mergeNamespacesOnClash=True, namespace=namespace)
-    else:
-        return maya.cmds.file(file_path, i=True, f=force, returnNewNodes=True)
+        import_kwargs['namespace'] = namespace
+    if unique_namespace:
+        import_kwargs['mergeNamespacesOnClash'] = True
+    if import_type:
+        import_kwargs['type'] = import_type
+    if options:
+        import_kwargs['options'] = options
+
+    return maya.cmds.file(file_path, **import_kwargs)
+
+
+def merge_file(file_path, force=True, **kwargs):
+    """
+    Merges given file into current DCC scene
+    :param file_path: str
+    :param force: bool
+    :return:
+    """
+
+    return import_file(file_path, force=force, **kwargs)
 
 
 def reference_file(file_path, force=True, **kwargs):
@@ -2470,6 +2563,11 @@ def reference_file(file_path, force=True, **kwargs):
     :param kwargs: keyword arguments
     :return:
     """
+
+    # we must do the check, otherwise depending on the type Maya can crash
+    if not file_path or not os.path.isfile(file_path):
+        LOGGER.warning('Impossible to reference non existent file: "{}"'.format(file_path))
+        return
 
     namespace = kwargs.get('namespace', None)
     if namespace:
@@ -2483,6 +2581,40 @@ def reference_file(file_path, force=True, **kwargs):
 
     else:
         return maya.cmds.file(file_path, reference=True, f=force, returnNewNodes=True)
+
+
+def import_obj_file(file_path, force=True, **kwargs):
+    """
+    Imports OBJ file into current DCC scene
+    :param file_path: str
+    :param force: bool
+    :param kwargs: keyword arguments
+    :return:
+    """
+
+    if not is_plugin_loaded('objexport.mll'):
+        load_plugin('objexport.mll', quiet=True)
+
+    kwargs['type'] = 'OBJ'
+
+    return import_file(file_path, force=force, **kwargs)
+
+
+def import_fbx_file(file_path, force=True, **kwargs):
+    """
+    Imports FBX file into current DCC scene
+    :param file_path: str
+    :param force: bool
+    :param kwargs: keyword arguments
+    :return:
+    """
+
+    if not is_plugin_loaded('fbxmaya.mll'):
+        load_plugin('objexport.mll', quiet=True)
+
+    kwargs['type'] = 'FBX export'
+
+    return import_file(file_path, force=force, **kwargs)
 
 
 def scene_name():
@@ -2526,6 +2658,37 @@ def save_current_scene(force=True, **kwargs):
                     return maya.cmds.SaveScene()
                 else:
                     return maya.cmds.file(save=True, type=maya_scene_type)
+
+
+def export_current_selection(export_path, export_type, force=True, **kwargs):
+    """
+    Exports current selection to a file
+    :param export_path: str
+    :param export_type: str
+    :param force: bool
+    :param kwargs:
+    :return:
+    """
+
+    options = kwargs.get('options', None)
+    preserve_references = kwargs.get('preserve_references', False)
+
+    current_scene_name = scene_name()
+
+    if current_scene_name:
+        maya.cmds.file(rename=export_path)
+
+    if options:
+        result = maya.cmds.file(
+            force=force, options=options, type=export_type, preserveReferences=preserve_references, exportSelected=True)
+    else:
+        result = maya.cmds.file(
+            force=force, type=export_type, preserveReferences=preserve_references, exportSelected=True)
+
+    if current_scene_name:
+        maya.cmds.file(rename=current_scene_name)
+
+    return result
 
 
 def force_rename_to_save_scene():
@@ -2698,6 +2861,100 @@ def clean_scene():
 # =================================================================================================================
 # TRANSFORMS
 # =================================================================================================================
+
+def convert_translation(translation):
+    """
+    Converts given translation into a valid translation to be used with tpDcc
+    NOTE: tpDcc uses Y up coordinate axes as the base reference axis
+    NOTE: Maya can work with both Y axis and Z axis
+    :param translation: tuple(float, float, float)
+    :return: tuple(float, float, float)
+    """
+
+    if get_up_axis_name().lower() == 'y':
+        return translation
+
+    return translation[0], -translation[2], translation[1]
+
+
+def convert_dcc_translation(translation):
+    """
+    Converts given tpDcc translation into a translation that DCC can manage
+    NOTE: tpDcc uses Y up coordinate axes as the base reference axis
+    :param translation: list(float, float, float)
+    :return: list(float, float, float)
+    """
+    
+    if get_up_axis_name().lower() == 'y':
+        return translation
+
+    return translation[0], translation[2], -translation[1]
+
+
+def convert_rotation(rotation):
+    """
+    Converts given rotation into a valid rotation to be used with tpDcc
+    NOTE: tpDcc uses Y up coordinate axes as the base reference axis
+    :param rotation: tuple(float, float, float)
+    :return: tuple(float, float, float)
+    """
+
+    if get_up_axis_name().lower() == 'y':
+        return rotation
+
+    rotation_matrix1 = np.array(mathlib.rotation_matrix_xyz(rotation))
+    rotation_matrix2 = np.array(mathlib.rotation_matrix_xyz([-90, 0, 0]))
+    rotation_matrix3 = mathlib.rotation_matrix_to_xyz_euler(
+        rotation_matrix2.dot(rotation_matrix1).dot(np.linalg.inv(rotation_matrix2)))
+
+    return list(rotation_matrix3)
+
+
+def convert_dcc_rotation(rotation):
+    """
+    Converts given rotation into a rotation that DCC can manage
+    NOTE: tpDcc uses Y up coordinate axes as the base reference axis
+    :param rotation: list(float, float, float)
+    :return: list(float, float, float)
+    """
+
+    if get_up_axis_name().lower() == 'y':
+        return rotation
+
+    rotation_matrix1 = np.array(mathlib.rotation_matrix_xyz(rotation))
+    rotation_matrix2 = np.array(mathlib.rotation_matrix_xyz([90, 0, 0]))
+    rotation_matrix3 = mathlib.rotation_matrix_to_xyz_euler(
+        rotation_matrix2.dot(rotation_matrix1).dot(np.linalg.inv(rotation_matrix2)))
+
+    return list(rotation_matrix3)
+
+
+def convert_scale(scale):
+    """
+    Converts given scale into a valid rotation to be used with tpDcc
+    NOTE: tpDcc uses Y up coordinate axes as the base reference axis
+    :param scale: tuple(float, float, float)
+    :return: tuple(float, float, float)
+    """
+
+    if get_up_axis_name().lower() == 'y':
+        return scale
+
+    return scale[0], scale[2], scale[1]
+
+
+def convert_dcc_scale(scale):
+    """
+    Converts given scale into a scale that DCC can manage
+    NOTE: tpDcc uses Y up coordinate axes as the base reference axis
+    :param scale: list(float, float, float)
+    :return: list(float, float, float)
+    """
+
+    if get_up_axis_name().lower() == 'y':
+        return scale
+
+    return scale[0], scale[2], scale[1]
 
 
 def get_up_axis_name():
@@ -2922,7 +3179,7 @@ def scale_transform_shapes(node, scale_value, **kwargs):
     if not isinstance(scale_value, (list, tuple)):
         scale_value = (scale_value, scale_value, scale_value)
 
-    shapes = shape.get_shapes(node) if transform.is_transform(node) else node
+    shapes = shape.get_shapes(node) if transform.is_transform(node) else [node]
     components = shape.get_components_from_shapes(shapes)
     pivot = maya.cmds.xform(node, query=True, rp=True, ws=True)
     maya.cmds.scale(scale_value[0], scale_value[1], scale_value[2], components, p=pivot, r=True)
@@ -2947,9 +3204,9 @@ def mirror_transform(create_if_missing=False, transforms=None, left_to_right=Tru
     :param kwargs:
     """
 
-    prefix = kwargs.get('prefix', None)
-    suffix = kwargs.get('suffix', None)
-    string_search = kwargs.get('string_search', None)
+    prefix = kwargs.pop('prefix', None)
+    suffix = kwargs.pop('suffix', None)
+    string_search = kwargs.pop('string_search', None)
 
     return transform.mirror_transform(
         prefix=prefix, suffix=suffix, string_search=string_search, create_if_missing=create_if_missing,
@@ -2965,6 +3222,17 @@ def get_closest_transform(source_transform, targets):
     """
 
     return transform.get_closest_transform(source_transform, targets)
+
+
+def distance_between_transforms(source_transform, target_transform):
+    """
+    Returns the total distance between given transform nodes
+    :param source_transform: str, name of the source transform node
+    :param target_transform: str, name of the target transform node
+    :return: float, total distance between both nodes
+    """
+
+    return transform.get_distance(source_transform, target_transform)
 
 
 def rename_transform_shape_nodes(node):
@@ -3074,6 +3342,32 @@ def center_pivot(node):
     return maya.cmds.xform(node, cp=True)
 
 
+def move_pivot_in_object_space(node, x, y, z):
+    """
+    Moves the pivot of the given node by the given values in object_space
+    :param node: str
+    :param x: float
+    :param y: float
+    :param z: float
+    :return: float
+    """
+
+    maya.cmds.move(x, y, z, '{}.scalePivot'.format(node), '{}.rotatePivot'.format(node), relative=True)
+
+
+def move_pivot_in_world_space(node, x, y, z):
+    """
+    Moves the pivot of the given node by the given values in world space
+    :param node: str
+    :param x: float
+    :param y: float
+    :param z: float
+    :return: float
+    """
+
+    maya.cmds.move(x, y, z, '{}.scalePivot'.format(node), '{}.rotatePivot'.format(node), a=True)
+
+
 def move_pivot_to_zero(node):
     """
     Moves pivot of given node to zero (0, 0, 0 in the world)
@@ -3113,8 +3407,8 @@ def node_bounding_box_size(node):
     :return: float
     """
 
-    bounding = transform.BoundingBox(node).get_shapes_bounding_box()
-    size = bounding.get_size()
+    bounding_box = transform.BoundingBox(node).get_shapes_bounding_box()
+    size = bounding_box.get_size() if bounding_box else 0.0
 
     return size
 
@@ -3375,13 +3669,14 @@ def create_aim_constraint(source, point_to, **kwargs):
     world_up_object = kwargs.pop('world_up_object', None)
     weight = kwargs.pop('weight', 1.0)
     maintain_offset = kwargs.pop('maintain_offset', False)
+    skip = kwargs.pop('skip', 'none')
 
     if world_up_object:
         kwargs['worldUpObject'] = world_up_object
 
     return maya.cmds.aimConstraint(
         point_to, source, aim=aim_axis, upVector=up_axis, worldUpVector=world_up_axis,
-        worldUpType=world_up_type, weight=weight, mo=maintain_offset, **kwargs)
+        worldUpType=world_up_type, weight=weight, mo=maintain_offset, skip=skip, **kwargs)
 
 
 def create_pole_vector_constraint(control, handle):
@@ -3491,6 +3786,17 @@ def get_pole_vector_position(transform_init, transform_mid, transform_end, offse
 # GEOMETRY
 # =================================================================================================================
 
+def meshes_are_similar(mesh1, mesh2):
+    """
+    Checks whether two meshes to see if they have the same vertices, edge and face count
+    :param mesh1: str
+    :param mesh2: str
+    :return: bool
+    """
+
+    return geo_utils.is_mesh_compatible(mesh1, mesh2)
+
+
 def combine_meshes(meshes_to_combine=None, **kwargs):
     """
     Combines given meshes into one unique mesh. If no meshes given, all selected meshes will be combined
@@ -3505,6 +3811,27 @@ def combine_meshes(meshes_to_combine=None, **kwargs):
         return
 
     out, unite_node = maya.cmds.polyUnite(*meshes_to_combine)
+    if not construction_history:
+        delete_history(out)
+
+    return out
+
+
+def separate_meshes(meshes_to_separate=None, **kwargs):
+    """
+    Separates given meshes. If no meshes given, all selected meshes will be combined
+    :param meshes_to_separate: list(str) or None
+    :return: str
+    """
+
+    construction_history = kwargs.get('construction_history', True)
+    if not meshes_to_separate:
+        meshes_to_separate = maya.cmds.ls(sl=True, long=True)
+    if not meshes_to_separate:
+        return
+
+    res = maya.cmds.polySeparate(*meshes_to_separate)
+    out = res[:-1]
     if not construction_history:
         delete_history(out)
 
@@ -3754,6 +4081,39 @@ def get_curve_shapes(node_name):
     return curve_shapes
 
 
+def get_curve_knots(curve_node_name):
+    """
+    Returns given curve knots
+    :param curve_node_name: str
+    :return: list(str)
+    """
+
+    curve_fn = curve_utils.get_curve_fn(curve=curve_node_name)
+    curve_knots = curve_fn.knots()
+
+    return [float(knot) for knot in curve_knots]
+
+
+def get_curve_knots_positions(curve_node_name, world_space=False):
+    """
+    Returns given curve knot positions
+    :param curve_node_name: str
+    :param world_space: bool
+    :return: list(tuple(float, float, float))
+    """
+
+    space = maya.api.OpenMaya.MSpace.kWorld if world_space else maya.api.OpenMaya.MSpace.kObject
+    curve_fn = curve_utils.get_curve_fn(curve=curve_node_name)
+    knots = get_curve_knots(curve_node_name)
+
+    knots_positions = list()
+    for u in knots:
+        knot_position = curve_fn.getPointAtParam(u, space)
+        knots_positions.append((knot_position.x, knot_position.y, knot_position.z))
+
+    return knots_positions
+
+
 def get_curve_degree(curve_node_name):
     """
     Returns given curve degree
@@ -3782,6 +4142,22 @@ def get_curve_form(curve_node_name):
     """
 
     return maya.cmds.getAttr('{}.f'.format(curve_node_name))
+
+
+def get_curve_cvs(curve_node_name, world_space=False):
+    """
+    Returns given curve CVs
+    :param curve_node_name: str
+    :param world_space: bool
+    :return: list
+    """
+
+    space = maya.api.OpenMaya.MSpace.kWorld if world_space else maya.api.OpenMaya.MSpace.kObject
+    curve_fn = curve_utils.get_curve_fn(curve=curve_node_name)
+    cv_array = curve_fn.cvPositions(space)
+    cv_length = len(cv_array)
+
+    return [(cv_array[i].x, cv_array[i].y, cv_array[i].z) for i in range(cv_length)]
 
 
 def get_curve_cv_position_in_world_space(curve_node_name, cv_index):
@@ -3851,18 +4227,47 @@ def create_circle_curve(name, **kwargs):
     return maya.cmds.circle(n=name, normal=normal, ch=construction_history)[0]
 
 
-def create_curve(name, degree, points, knots, periodic):
+def create_curve(name, degree, cvs, knots, form, **kwargs):
     """
     Creates a new Nurbs curve
     :param name: str, name of the new curve
     :param degree: int
-    :param points: list
+    :param cvs: list(tuple(float, float, float))
     :param knots: list
-    :param periodic: bool
+    :param form: int
     :return: str
     """
 
-    return maya.cmds.curve(n=name, d=degree, p=points, k=knots, per=periodic)
+    is_2d = kwargs.pop('2d', False)
+    rational = kwargs.pop('rational', True)
+
+    num_cvs = len(cvs)
+    num_knots = len(knots)
+
+    cv_array = maya.api.OpenMaya.MPointArray(num_cvs, maya.api.OpenMaya.MPoint.kOrigin)
+    knots_array = maya.api.OpenMaya.MDoubleArray(num_knots, 0)
+    for i in range(num_cvs):
+        cv_array[i] = maya.api.OpenMaya.MPoint(cvs[i][0], cvs[i][1], cvs[i][2], 1.0)
+    for i in range(num_knots):
+        knots_array[i] = knots[i]
+
+    curve_fn = maya.api.OpenMaya.MFnNurbsCurve()
+    curve_data = maya.api.OpenMaya.MObject()
+    curve_obj = curve_fn.create(
+        cv_array,
+        knots,
+        degree,
+        form,
+        is_2d,
+        rational,
+        curve_data
+    )
+
+    new_curve = maya.api.OpenMaya.MFnDependencyNode(curve_obj).setName(name)
+
+    return new_curve
+
+    # return maya.cmds.curve(n=name, d=degree, p=points, k=knots, per=periodic)
 
 
 def create_curve_from_transforms(transforms, spans=None, description='from_transforms'):
@@ -3893,6 +4298,20 @@ def create_wire(surface, curves, name='wire', **kwargs):
     group_with_base = kwargs.get('group_with_base', False)
 
     return maya.cmds.wire(surface, w=curves, n=name, dds=dropoff_distance, gw=group_with_base)
+
+
+def find_deformer_by_type(geo_obj, deformer_type, **kwargs):
+    """
+    Given a object find a deformer with deformer_type in its history
+    :param geo_obj: str, name of a mesh
+    :param deformer_type: str, correspnds to the Maya deformer type (skinCluster, blendShape, etc)
+    :return: list(str), names of deformers of type found in the history>
+    """
+
+    # Whether to return all the deformer found of the given type or just the first one
+    return_all = kwargs.get('return_all', False)
+
+    return deformer_utils.find_deformer_by_type(geo_obj, deformer_type=deformer_type, return_all=return_all)
 
 
 # =================================================================================================================
@@ -4185,7 +4604,7 @@ def set_other_type_labelling(node, other_type_label):
     if not get_type_labelling(node) == 'Other' or not attribute_exists(node, 'otherType'):
         return False
 
-    return dcc.set_attribute_value(node, 'otherType', str(other_type_label))
+    return set_attribute_value(node, 'otherType', str(other_type_label))
 
 
 def get_draw_label_labelling(node):
@@ -4232,6 +4651,195 @@ def set_joint_radius(node, radius_value):
     """
 
     return maya.cmds.setAttr('{}.radius'.format(node), radius_value)
+
+
+# =================================================================================================================
+# SKIN
+# =================================================================================================================
+
+def create_skin(mesh, influences, **kwargs):
+    """
+    Creates a new skin deformer node with given influences and apply it to given mesh
+    :param mesh: str
+    :param influences: list(str)
+    :return: str
+    """
+
+    name = kwargs.get('name', 'skin')
+    only_selected_influences = kwargs.get('only_selected_influences', True)
+
+    return maya.cmds.skinCluster(influences, mesh, tsb=only_selected_influences, n=name)[0]
+
+
+def get_skin_weights(skin_node, vertices_ids=None):
+    """
+    Get the skin weights of the given skin deformer node
+    :param skin_node: str, name of a skin deformer node
+    :param vertices_ids:
+    :return: dict(int, list(float)), returns a dictionary where the key is the influence id and the
+    value is the list of weights of the influence
+    """
+
+    return skin_utils.get_skin_weights(skin_node, vertices_ids=vertices_ids)
+
+
+def get_skin_blend_weights(skin_deformer):
+    """
+    Returns the blendWeight values on the given skin node
+    :param skin_deformer: str, name of a skin deformer node
+    :return: list(float), blend weight values corresponding to point order
+    """
+
+    return skin_utils.get_skin_blend_weights(skin_deformer)
+
+
+def set_skin_blend_weights(skin_deformer, weights):
+    """
+    Sets the blendWeights on the skinCluster given a list of weights
+    :param skin_deformer: str, name of a skinCluster deformer
+    :param weights: list<float>, list of weight values corresponding to point order
+    """
+
+    return skin_utils.set_skin_blend_weights(skin_deformer, weights)
+
+
+def get_skin_influences(skin_deformer, short_name=True, return_dict=False):
+    """
+    Returns the influences connected to the skin cluster
+    Returns a dictionary with the keys being the name of the influences being the value at the
+    key index where the influence connects to the skinCluster
+    :param skin_deformer: str, name of a skinCluster
+    :param short_name: bool, Whether to return full name of the influence or not
+    :param return_dict: bool, Whether to return a dictionary or not
+    :return: variant(dict, list)
+    """
+
+    return skin_utils.get_skin_influences(skin_deformer, short_name=short_name, return_dict=return_dict)
+
+
+def apply_skin_influences_from_data(skin_deformer, influences, influence_dict):
+    """
+    Updates skin cluster with given influences data
+    :param skin_deformer: str
+    :param influences: list(str), list of influence names
+    :param influence_dict: dict(str, float), list that contains a map between influences and its weights
+    :return:
+    """
+
+    influence_index = 0
+    influence_index_dict = get_skin_influences(skin_deformer, return_dict=True)
+    #         progress_bar = progressbar.ProgressBar('Import Skin', len(influence_dict.keys()))
+    for influence in influences:
+        orig_influence = influence
+        if influence.count('|') > 1:
+            split_influence = influence.split('|')
+            if len(split_influence) > 1:
+                influence = split_influence[-1]
+        #             progress_bar.status('Importing skin mesh: {}, influence: {}'.format(short_name, influence))
+        if 'weights' not in influence_dict[orig_influence]:
+            LOGGER.warning('Weights missing for influence: {}. Skipping it ...'.format(influence))
+            continue
+        weights = influence_dict[orig_influence]['weights']
+        if influence not in influence_index_dict:
+            continue
+        index = influence_index_dict[influence]
+
+        # attr = '{}.weightList[*].weights[{}]'.format(skin_cluster, index)
+        # NOTE: his was not faster, zipping zero weights is much faster than setting all the weights
+        # maya.cmds.setAttr(attr, *weights )
+
+        for i in range(len(weights)):
+            weight = float(weights[i])
+            if weight == 0 or weight < 0.0001:
+                continue
+            attr = 'weightList[{}].weights[{}]'.format(i, index)
+            set_attribute_value(skin_deformer, attr, weight)
+        #             progress_bar.inc()
+
+        #             if progress_bar.break_signaled():
+        #                 break
+        influence_index += 1
+    #         progress_bar.end()
+
+    set_skin_normalize_weights_mode(skin_deformer, 1)  # interactive normalization
+    set_skin_force_normalize_weights(skin_deformer, True)
+
+
+def get_skin_influence_at_index(index, skin_deformer):
+    """
+    Returns which influence connect to the skin node at the given index
+    :param index: int, index of an influence
+    :param skin_deformer: str, name of the skin node to check the index
+    :return: str, name of the influence at the given index
+    """
+
+    return skin_utils.get_skin_influence_at_index(index, skin_deformer)
+
+
+def get_skin_envelope(geo_obj):
+    """
+    Returns envelope value of the skin node in the given geometry object
+    :param geo_obj: str, name of the geometry
+    :return: float
+    """
+
+    return skin_utils.get_skin_envelope(geo_obj)
+
+
+def set_skin_envelope(geo_obj, envelope_value):
+    """
+    Sets the envelope value of teh skin node in the given geometry object
+    :param geo_obj: str, name of the geometry
+    :param envelope_value: float. envelope value
+    """
+
+    return skin_utils.set_skin_envelope(geo_obj, envelope_value)
+
+
+def clear_skin_weights(skin_node):
+    """
+    Sets all the weights on the given skinCluster to zero
+    :param skin_node: str, name of a skinCluster deformer
+    """
+
+    return skin_utils.set_skin_weights_to_zero(skin_node)
+
+
+def set_skin_normalize_weights_mode(skin_node, index_mode):
+    """
+    Sets the skin normalize mode used by the given skin deformer node
+    :param skin_node: str
+    :param index_mode: int
+    """
+
+    maya.cmds.skinCluster(skin_node, edit=True, normalizeWeights=index_mode)
+
+
+def set_skin_force_normalize_weights(skin_node, flag):
+    """
+    Sets whether or not the skin node weights are forced to be normalized
+    :param skin_node: str
+    :param flag: bool
+    """
+
+    maya.cmds.skinCluster(skin_node, edit=True, forceNormalizeWeights=flag)
+
+
+def skin_mesh_from_mesh(source_mesh, target_mesh, **kwargs):
+    """
+    Skins a mesh based on the skinning of another mesh
+    Source mesh must be skinned and the target mesh will be skinned with the joints in the source mesh
+    The skinning from the source mesh will be projected onto the target mesh
+    :param source_mesh: str, name of a mesh
+    :param target_mesh: str, name of a mesh
+    """
+
+    exclude_joints = kwargs.get('exclude_joints', None)
+    include_joints = kwargs.get('include_joints', None)
+    uv_space = kwargs.get('uv_space', False)
+
+    return skin_utils.skin_mesh_from_mesh(
+        source_mesh, target_mesh, exclude_joints=exclude_joints, include_joints=include_joints, uv_space=uv_space)
 
 
 # =================================================================================================================
@@ -4291,6 +4899,24 @@ def add_node_to_selection_group(node, selection_group_name, force=True):
 # ATTRIBUTES
 # =================================================================================================================
 
+def get_valid_attribute_types():
+    """
+    Returns a list of valid attribute types in current DCC
+    :return: list(str)
+    """
+
+    return ["int", "long", "enum", "bool", "string", "float", "short", "double", "doubleAngle", "doubleLinear"]
+
+
+def get_valid_blendable_attribute_types():
+    """
+    Returns a list of valid blendable attribute types in current DCC
+    :return: list(str)
+    """
+
+    return ["int", "long", "float", "short", "double", "doubleAngle", "doubleLinear"]
+
+
 def attribute_default_value(node, attribute_name):
     """
     Returns default value of the attribute in the given node
@@ -4342,7 +4968,8 @@ def add_bool_attribute(node, attribute_name, default_value=False, **kwargs):
     keyable = kwargs.pop('keyable', True)
 
     maya.cmds.addAttr(node, ln=attribute_name, at='bool', dv=default_value, **kwargs)
-    maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+    if not node_is_referenced(node):
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
     maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
 
@@ -4484,8 +5111,9 @@ def add_enum_attribute(node, attribute_name, value, **kwargs):
     lock = kwargs.get('lock', False)
     channel_box_display = kwargs.get('channel_box_display', True)
     keyable = kwargs.pop('keyable', True)
+    default_value = kwargs.pop('default_value', 0)
 
-    maya.cmds.addAttr(node, ln=attribute_name, attributeType='enum', enumName=value, **kwargs)
+    maya.cmds.addAttr(node, ln=attribute_name, attributeType='enum', enumName=value, dv=default_value, **kwargs)
     maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
     maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
@@ -4557,18 +5185,26 @@ def is_attribute_connected(node, attribute_name):
     return attribute.is_connected('{}.{}'.format(node, attribute_name))
 
 
-def is_attribute_connected_to_attribute(source_node, source_attribute_name, target_node, target_attribute_name):
+def get_minimum_attribute_value_exists(node, attribute_name):
     """
-    Returns whether given source attribute is connected or not to given target attribute
-    :param source_node: str
-    :param source_attribute_name: str
-    :param target_node: str
-    :param target_attribute_name: str
+    Returns whether or not minimum value for given attribute is defined
+    :param node: str
+    :param attribute_name: str
     :return: bool
     """
 
-    return maya.cmds.isConnected(
-        '{}.{}'.format(source_node, source_attribute_name), '{}.{}'.format(target_node, target_attribute_name))
+    return maya.cmds.attributeQuery(attribute_name, node=node, minExists=True)
+
+
+def get_maximum_attribute_value_exists(node, attribute_name):
+    """
+    Returns whether or not maximum value for given attribute is defined
+    :param node: str
+    :param attribute_name: str
+    :return: bool
+    """
+
+    return maya.cmds.attributeQuery(attribute_name, node=node, maxExists=True)
 
 
 def get_maximum_integer_attribute_value(node, attribute_name):
@@ -4871,16 +5507,18 @@ def lock_scale_and_visibility_attributes(node):
     lock_visibility_attribute(node)
 
 
-def hide_keyable_attributes(node):
+def hide_keyable_attributes(node, **kwargs):
     """
     Hides all node attributes that are keyable
     :param node: str
     """
 
-    return attribute.hide_keyable_attributes(node)
+    skip_visibility = kwargs.get('skip_visibility')
+
+    return attribute.hide_keyable_attributes(node, skip_visibility=skip_visibility)
 
 
-def lock_keyable_attributes(node):
+def lock_keyable_attributes(node, **kwargs):
     """
     Locks all node attributes that are keyable
     :param node: str
@@ -5019,7 +5657,7 @@ def set_attribute_value(node, attribute_name, attribute_value, **kwargs):
     elif type(attribute_value) is float:
         set_float_attribute_value(
             node=node, attribute_name=attribute_name, attribute_value=attribute_value, **kwargs)
-    elif type(attribute_value) in [str, unicode]:
+    elif python.is_string(attribute_value):
         set_string_attribute_value(node=node, attribute_name=attribute_name, attribute_value=attribute_value)
     elif type(attribute_value) in [list, tuple]:
         if len(attribute_value) == 3:
@@ -5227,7 +5865,7 @@ def store_world_matrix_to_attribute(node, attribute_name='origMatrix', **kwargs)
         transform=node, attribute_name=attribute_name, skip_if_exists=skip_if_exists)
 
 
-def list_connections(node, attribute_name):
+def list_connections(node, attribute_name, **kwargs):
     """
     List the connections of the given out attribute in given node
     :param node: str
@@ -5235,7 +5873,7 @@ def list_connections(node, attribute_name):
     :return: list<str>
     """
 
-    return maya.cmds.listConnections('{}.{}'.format(node, attribute_name))
+    return maya.cmds.listConnections('{}.{}'.format(node, attribute_name), **kwargs)
 
 
 def list_connections_of_type(node, connection_type):
@@ -5461,7 +6099,7 @@ def create_ik_handle(name, start_joint, end_joint, solver_type=None, curve=None,
     """
 
     if solver_type is None:
-        solver_type = ik_utils.IkHandle.SOLVER_SPLINE
+        solver_type = ik_utils.IkHandle.SOLVER_SC
 
     handle = ik_utils.IkHandle(name)
     handle.set_solver(solver_type)
@@ -5553,7 +6191,7 @@ def get_start_frame():
     :return: int
     """
 
-    return maya.cmds.playbackOptions(query=True, minTime=True)
+    return animation.get_active_frame_range()[0]
 
 
 def get_end_frame():
@@ -5562,7 +6200,7 @@ def get_end_frame():
     :return: int
     """
 
-    return maya.cmds.playbackOptions(query=True, maxTime=True)
+    return animation.get_active_frame_range()[1]
 
 
 def get_current_frame():
@@ -5838,6 +6476,24 @@ def set_active_frame_range(start_frame, end_frame):
     """
 
     return animation.set_active_frame_range(start_frame, end_frame)
+
+
+def is_auto_keyframe_enabled():
+    """
+    Returns whether or not auto keyframe mode is enabled
+    :return: bool
+    """
+
+    return animation.is_auto_keyframe_enabled()
+
+
+def set_auto_keyframe_enabled(flag):
+    """
+    Enables/Disables auto keyframe mode
+    :param flag: bool
+    """
+
+    return animation.set_auto_keyframe_enabled(flag)
 
 
 # =================================================================================================================
@@ -6134,6 +6790,19 @@ def shot_camera(shot_node):
 
 
 # =================================================================================================================
+# HUMAN IK (HIK)
+# =================================================================================================================
+
+def get_scene_hik_characters():
+    """
+    Returns all HumanIK characters in current scene
+    :return: list(str)
+    """
+
+    return humanik.get_scene_characters() or list()
+
+
+# =================================================================================================================
 # DECORATORS
 # =================================================================================================================
 
@@ -6175,3 +6844,11 @@ def suspend_refresh_decorator():
     """
 
     return maya_decorators.suspend_refresh
+
+
+def restore_selection_decorator():
+    """
+    Returns decorators that selects again the objects that were selected before executing the decorated function
+    """
+
+    return maya_decorators.restore_selection

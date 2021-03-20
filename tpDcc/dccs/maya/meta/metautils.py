@@ -559,7 +559,7 @@ class MetaAttributeUtils(object):
         if current == value:
             LOGGER.debug('|Attribute Setter| >> Already has a value: {}'.format(combined))
             if was_locked:
-                MetaAttributeUtils.set_lock(attr_dict, True)
+                MetaAttributeUtils.set_lock(attr_dict, arg=True)
                 return
 
         children = MetaAttributeUtils.get_children(attr_dict)

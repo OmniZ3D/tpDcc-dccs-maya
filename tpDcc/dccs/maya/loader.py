@@ -119,7 +119,7 @@ def init_dcc(dev=False):
     update_paths()
     register_resources()
 
-    logger = create_logger(dev=dev)
+    create_logger(dev=dev)
 
     register_commands()
     load_plugins()
