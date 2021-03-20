@@ -1013,34 +1013,35 @@ def get_hsv_color(shape, linear=True):
     return hsv_color
 
 
-def set_color(nodes, color_index):
+def set_color(nodes, value):
     """
     Sets the override color for the given nodes
-    :param nodes: list(str), list of nodes to change override color of
-    :param color_index: int, color index to set override color to
+    :param nodes: str or list(str), list of nodes to change override color of
+    :param value: int, color index to set override color to
+    """
+
+    if isinstance(value, int):
+        set_index_color(nodes, value)
+    else:
+        set_rgb_color(nodes, value)
+
+
+def set_index_color(nodes, index):
+    """
+    Sets the override Maya index color of the given nodes
+    :param nodes: str or list(str), list of nodes to change override color of
+    :param index: int, Maya color index to apply (from 0 to 30)
     """
 
     nodes = python.force_list(nodes)
     for node in nodes:
-        if maya.cmds.objExists('{}.overrideEnabled'.format(node)):
+        if python.is_string(index):
+            index = maya_color.convert_maya_color_string_to_index(index)
+        if index is not None:
+            if maya.cmds.objExists('{}.overrideRGBColors'.format(node)):
+                maya.cmds.setAttr('{}.overrideRGBColors'.format(node), False)
             maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
-            maya.cmds.setAttr('{}.overrideColor'.format(node), color_index)
-
-
-def set_index_color(node, index):
-    """
-    Sets the override Maya index color of the given nodes
-    :param node: str
-    :param index: int, Maya color index to apply (from 0 to 30)
-    """
-
-    if python.is_string(index):
-        index = maya_color.convert_maya_color_string_to_index(index)
-    if index is not None:
-        if maya.cmds.objExists('{}.overrideRGBColors'.format(node)):
-            maya.cmds.setAttr('{}.overrideRGBColors'.format(node), False)
-        maya.cmds.setAttr('{}.overrideEnabled'.format(node), True)
-        maya.cmds.setAttr('{}.overrideColor'.format(node), index)
+            maya.cmds.setAttr('{}.overrideColor'.format(node), index)
 
     return index
 

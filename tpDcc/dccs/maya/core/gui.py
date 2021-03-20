@@ -13,7 +13,25 @@ import traceback
 import contextlib
 from collections import OrderedDict
 
+from Qt.QtCore import QObject
 from Qt.QtWidgets import QApplication, QWidget, QDesktopWidget, QMainWindow, QTextEdit
+from Qt import QtGui
+try:
+    import shiboken2 as shiboken
+except ImportError:
+    try:
+        from PySide2 import shiboken2 as shiboken
+    except ImportError:
+        try:
+            import shiboken
+        except ImportError:
+            try:
+                from Shiboken import shiboken
+            except ImportError:
+                try:
+                    from PySide import shiboken
+                except Exception:
+                    pass
 
 import maya.cmds
 import maya.utils
@@ -21,7 +39,6 @@ import maya.mel
 import maya.OpenMayaUI as OpenMayaUIv1
 
 from tpDcc import dcc
-from tpDcc.libs.qt.core import qtutils
 
 LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
@@ -139,16 +156,16 @@ def get_maya_window(window_name=None, wrap_instance=True):
         if window_name is not None:
             if '|' in str(window_name):
                 # qt_obj = pm.uitypes.toQtObject(window_id)
-                qt_obj = qtutils.to_qt_object(window_name)
+                qt_obj = to_qt_object(window_name)
                 if qt_obj is not None:
                     return qt_obj
             ptr = maya.OpenMayaUI.MQtUtil.findControl(window_name)
             if ptr is not None:
-                return qtutils.wrapinstance(ptr, QMainWindow)
+                return wrapinstance(ptr, QMainWindow)
         else:
             ptr = maya.OpenMayaUI.MQtUtil.mainWindow()
             if ptr is not None:
-                return qtutils.wrapinstance(ptr, QMainWindow)
+                return wrapinstance(ptr, QMainWindow)
 
     if isinstance(window_name, (QWidget, QMainWindow)):
         return window_name
@@ -483,7 +500,7 @@ def to_qt_object(maya_name, qobj=None):
     if ptr is None:
         ptr = maya.OpenMayaUI.MQtUtil.findMenuItem(maya_name)
     if ptr is not None:
-        return qtutils.wrapinstance(long(ptr), qobj)
+        return wrapinstance(long(ptr), qobj)
     return None
 
 
@@ -492,7 +509,7 @@ def to_maya_object(qt_object):
     Returns a QtObject as Maya object
     """
 
-    return maya.OpenMayaUI.MQtUtil.fullName(qtutils.unwrapinstance(qt_object))
+    return maya.OpenMayaUI.MQtUtil.fullName(unwrapinstance(qt_object))
 
 
 def get_parent_widget(widget):
@@ -502,8 +519,8 @@ def get_parent_widget(widget):
     :return: QWidget
     """
 
-    ptr = maya.OpenMayaUI.MQtUtil.getParent(qtutils.unwrapinstance(widget))
-    return qtutils.wrapinstance(long(ptr))
+    ptr = maya.OpenMayaUI.MQtUtil.getParent(unwrapinstance(widget))
+    return wrapinstance(long(ptr))
 
 
 def get_ui_gvars():
@@ -758,3 +775,59 @@ def open_reference_editor():
     """
 
     maya.mel.eval('tearOffRestorePanel "Reference Editor" referenceEditor true')
+
+
+# ===================================================================================
+# QT RELATED FUNCTIONS
+# Added here from tpDcc.libs.qt.core.qtutils to avoid the import of that module
+# This is because DccServer needs this module and we should avoid to import unnecessary
+# stuff here
+# ===================================================================================
+
+def wrapinstance(ptr, base=None):
+    if ptr is None:
+        return None
+
+    ptr = long(ptr)
+    if 'shiboken' in globals():
+        if base is None:
+            qObj = shiboken.wrapInstance(long(ptr), QObject)
+            meta_obj = qObj.metaObject()
+            cls = meta_obj.className()
+            super_cls = meta_obj.superClass().className()
+            if hasattr(QtGui, cls):
+                base = getattr(QtGui, cls)
+            elif hasattr(QtGui, super_cls):
+                base = getattr(QtGui, super_cls)
+            else:
+                base = QWidget
+        try:
+            return shiboken.wrapInstance(long(ptr), base)
+        except Exception:
+            from PySide.shiboken import wrapInstance
+            return wrapInstance(long(ptr), base)
+    elif 'sip' in globals():
+        base = QObject
+        return shiboken.wrapinstance(long(ptr), base)
+    else:
+        print('Failed to wrap object ...')
+        return None
+
+
+def unwrapinstance(object):
+    """
+    Unwraps objects with PySide
+    """
+
+    return long(shiboken.getCppPointer(object)[0])
+
+
+def to_qt_object(long_ptr, qobj=None):
+    """
+    Returns an instance of the Maya UI element as a QWidget
+    """
+
+    if not qobj:
+        qobj = QWidget
+
+    return wrapinstance(long_ptr, qobj)

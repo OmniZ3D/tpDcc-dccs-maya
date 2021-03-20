@@ -13,7 +13,7 @@ import maya.cmds
 import maya.api.OpenMaya
 
 from tpDcc.dccs.maya import api
-from tpDcc.libs.python import python, mathlib
+from tpDcc.libs.python import python, mathlib, strings
 from tpDcc.dccs.maya.api import curves as api_curves
 from tpDcc.dccs.maya.core import exceptions, transform, component
 from tpDcc.dccs.maya.core import decorators, filtertypes, name as name_utils, shape as shape_utils, node as node_utils
@@ -89,7 +89,7 @@ def get_curve_fn(curve):
     if maya.cmds.objectType(curve) == 'transform':
         curve = maya.cmds.listRelatives(curve, shapes=True, noIntermediate=True)[0]
 
-    curve_sel = maya.api.OpenMaya.getSelectionListByName(curve)
+    curve_sel = maya.api.OpenMaya.MGlobal.getSelectionListByName(curve)
     curve_path = curve_sel.getDagPath(0)
     curve_fn = maya.api.OpenMaya.MFnNurbsCurve(curve_path)
 
@@ -115,6 +115,37 @@ def create_from_point_list(point_list, degree=3, name=''):
         crv = maya.cmds.rebuildCurve(crv, d=degree, kcp=True, kr=0, ch=False, rpo=True)[0]
 
     return crv
+
+
+def create_curve_from_mesh_edge_loop(
+        mesh_edge_list, rebuild=False, rebuild_spans=0, form=2, keep_history=True, name=''):
+    """
+    Createsa a new from the given mesh edge loop
+    :param mesh_edge_list: list(str), list of mesh edges to generate curve from
+    :param rebuild: bool, Whether or not to rebuild curve to degree 3
+    :param rebuild_spans: int, number of spans to rebuild the resulting curve to
+    :param form: str, form of the resulting curve (0=open; 1=periodic; 2=best guess). Default is 2.
+    :param keep_history: bool, Whether or not to maintain construction history
+    :param name: str, name for new curve
+    :return: str
+    """
+
+    if not mesh_edge_list:
+        raise Exception('Invalid mesh edge list provided!')
+    mesh_edge_list = maya.cmds.ls(mesh_edge_list, flatten=True)
+
+    if not name:
+        name = '{}Curve'.format(strings.strip_suffix(mesh_edge_list[0].split('.')[0]))
+
+    curve_degree = 3 if rebuild else 1
+    new_curve = maya.cmds.polyToCurve(form=form, degree=curve_degree, ch=keep_history)[0]
+    if rebuild and rebuild_spans:
+        new_curve = maya.cmds.rebuildCurve(
+            new_curve, rpo=1, rt=0, end=1, kr=0, kcp=1, kep=1, kt=1,
+            s=rebuild_spans, d=3, tol=0.01, ch=keep_history)[0]
+    new_curve = maya.cmds.rename(new_curve, name or 'curveFromEdgeLoop')
+
+    return new_curve
 
 
 def transforms_to_curve(transforms, spans=None, name='from_transforms'):

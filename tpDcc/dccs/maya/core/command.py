@@ -30,7 +30,7 @@ class MayaCommandRunner(command.BaseCommandRunner, object):
         command_to_run = self.find_command(command_id)
         if not command_to_run:
             raise ValueError(
-                'No command found with given id "{}" for "{}"'.format(command_id, self._manager.interfaces))
+                'No command found with given id "{}" for "{}"'.format(command_id, self._manager._interface))
 
         if maya.api.OpenMaya._COMMAND_RUNNER is None:
             maya.api.OpenMaya._COMMAND_RUNNER = self

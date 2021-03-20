@@ -603,6 +603,21 @@ def set_active_frame_range(start_frame, end_frame):
         animationStartTime=start_frame, minTime=start_frame, animationEndTime=end_frame, maxTime=end_frame)
 
 
+def get_selected_frame_range():
+    """
+    Returns the first and last selected frames in the play back s lider
+    :return: tuple(int, int)
+    """
+
+    result = maya.mel.eval('timeControl -q -range $gPlayBackSlider')
+    start, end = result.replace('"', "").split(':')
+    start, end = int(start), int(end)
+    if end - start == 1:
+        end = start
+
+    return start, end
+
+
 def bake_animation(nodes, min_time=None, max_time=None):
     """
     Bakes animation on given nodes.
@@ -662,3 +677,21 @@ def quick_driven_key(source, target, source_values, target_values, infinite=Fals
         fn.set_post_infinity(fn.CONSTANT)
 
     return keyframe
+
+
+def is_auto_keyframe_enabled():
+    """
+    Returns whether or not auto keyframe mode is enabled
+    :return: bool
+    """
+
+    return maya.cmds.autoKeyframe(query=True, state=True)
+
+
+def set_auto_keyframe_enabled(flag):
+    """
+    Enables/Disables auto keyframe mode
+    :param flag: bool
+    """
+
+    return maya.cmds.autoKeyframe(edit=True, state=flag)

@@ -158,18 +158,18 @@ class SkipUndo(object):
 
 class ToggleScrub(object):
     def __init__(self):
-        self.play_abck_slier = maya.mel.eval('$tmp=$gPlayBackSlider')
+        self._playblack_slider = maya.mel.eval('$tmp=$gPlayBackSlider')
 
     def __enter__(self):
-        maya.cmds.timeControl(self.play_abck_slier, beginScrub=True, e=True)
+        maya.cmds.timeControl(self._playblack_slider, beginScrub=True, e=True)
 
     def __exit__(self, *exc_info):
-        maya.mds.timeControl(self.play_abck_slier, endScrub=True, e=True)
+        maya.cmds.timeControl(self._playblack_slider, endScrub=True, e=True)
 
 
-def TryExcept(fn):
+def try_except(fn):
     """
-    tpRigLib exception wrapper with undo functionality. Use @tpTryExcept above the function to wrap it.
+    Exception wrapper with undo functionality. Use @try_except above the function to wrap it.
     @param fn: function to wrap
     @return: wrapped function
     """
@@ -262,6 +262,19 @@ def undo_pm(f):
             pm.undoInfo(closeChunk=True)
         return ret
     return wrapper
+
+
+def disable_undo(fn):
+
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        initial_undo_state = maya.cmds.undoInfo(query=True, state=True)
+        maya.cmds.undoInfo(stateWithoutFlush=False)
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            maya.cmds.undoInfo(stateWithoutFlush=initial_undo_state)
+    return wrapped
 
 
 def operate_on_selected(f):
@@ -373,3 +386,67 @@ def repeat_static_command(class_name, skip_arguments=False):
             return fn_return
         return wrapper
     return repeat_command
+
+
+def disable_auto_key(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        initial_state = maya.cmds.autoKeyframe(query=True, state=True)
+        maya.cmds.autoKeyframe(edit=True, state=False)
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            maya.cmds.autoKeyframe(edit=True, state=initial_state)
+    return wrapped
+
+
+def restore_selection(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        selection = maya.cmds.ls(selection=True) or list()
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            if selection:
+                maya.cmds.select(selection)
+    return wrapped
+
+
+def restore_current_time(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        initial_time = maya.cmds.currentTime(query=True)
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            maya.cmds.currentTime(initial_time, edit=True)
+    return wrapped
+
+
+def show_wait_cursor(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        maya.cmds.waitCursor(state=True)
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            maya.cmds.currentTime(state=False)
+    return wrapped
+
+
+def disable_views(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        model_panels = maya.cmds.getPanel(vis=True)
+        empty_selection_connection = maya.cmds.selectionConnection()
+        for panel in model_panels:
+            maya.cmds.isolateSelect(panel, state=True)
+            maya.cmds.modelEditor(panel, edit=True, mainListConnection=empty_selection_connection)
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            for panel in model_panels:
+                if maya.cmds.getPanel(typeOf=panel) == 'modelPanel':
+                    maya.cmds.isolateSelect(panel, state=False)
+            maya.cmds.deleteUI(empty_selection_connection)
+    return wrapped

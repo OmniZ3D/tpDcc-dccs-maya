@@ -10,6 +10,8 @@ from __future__ import print_function, division, absolute_import
 import logging
 import traceback
 
+from tpDcc.libs.python import python
+
 import maya.cmds
 
 LOGGER = logging.getLogger('tpDcc-dccs-maya')
@@ -125,6 +127,46 @@ def get_reference_file(ref_node, without_copy_number=True):
     ref_file = maya.cmds.referenceQuery(ref_node, filename=True, wcn=without_copy_number)
 
     return ref_file
+
+
+def get_reference_paths(objects, without_copy_number=False):
+    """
+    Returns the reference paths for the given objects
+    :param objects: str or list(str)
+    :param without_copy_number: bool
+    :return: list(str)
+    """
+
+    paths = list()
+
+    objects = python.force_list(objects)
+    for obj in objects:
+        if not is_referenced(obj):
+            continue
+        paths.append(maya.cmds.referenceQuery(obj, filename=True, wcn=without_copy_number))
+
+    return python.remove_dupes(paths)
+
+
+def get_reference_data(objects):
+    """
+    Returns the reference data for the given objects
+    :param objects: str or list(str)
+    :return: list
+    """
+
+    data = list()
+    paths = get_reference_paths(objects)
+
+    for path in paths:
+        data.append({
+            'filename': path,
+            'unresolved': maya.cmds.referenceQuery(path, filename=True, withoutCopyNumber=True),
+            'namespace': maya.cmds.referenceQuery(path, namespace=True),
+            'node': maya.cmds.referenceQuery(path, referenceNode=True),
+        })
+
+    return data
 
 
 def get_reference_proxy_manager(ref_node):

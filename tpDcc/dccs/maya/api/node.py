@@ -14,6 +14,18 @@ from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.api import plugs, exceptions
 
 
+def is_valid_mobject(node):
+    """
+    Returns whether or not given node is a valid MObject
+    :param node: MObject
+    :return: bool
+    """
+
+    handle = maya.api.OpenMaya.MObjectHandle(node)
+
+    return handle.isValid() and handle.isAlive()
+
+
 def as_mobject(name):
     """
     Returns the MObject from the given name
@@ -290,7 +302,7 @@ def iterate_shapes(dag_path, filter_types=None):
             yield shape_dag_path
 
 
-def get_shapes(dag_path, filter_types):
+def get_shapes(dag_path, filter_types=None):
     """
     Returns all the given shape DAG paths directly below the given DAG path as a list
     :param dag_path: MDagPath, path to search shapes of
@@ -350,3 +362,78 @@ def get_child_transforms(path):
     """
 
     return get_child_paths_by_fn(path, maya.api.OpenMaya.MFn.kTransform)
+
+
+def lock_node(mobj, state=True, modifier=True):
+    """
+    Sets the lock state of the given node
+    :param mobj: MObject, the node mobject to set the lock state of
+    :param state: bool, lock state for the node
+    :param modifier: MDagModifier or None
+    :return: MDagModifier
+    """
+
+    if maya.api.OpenMaya.MFnDependencyNode(mobj).isLocked != state:
+        mod = modifier or maya.api.OpenMaya.MDGModifier()
+        mod.setNodeLockState(mobj, state)
+        if modifier is not None:
+            modifier.doIt()
+        return modifier
+
+
+def unlock_connected_attributes(mobj):
+    """
+    Unlocks all connected attributes to the given MObject
+    :param mobj: MObject, MObject representing a DG node
+    """
+
+    for source, target in iter_connections(mobj, source=True, destination=True):
+        if source.isLocked:
+            source.isLocked = False
+
+
+def unlock_and_disconnect_connected_attributes(mobj):
+    """
+    Unlocks and disconnects all attributes to the given MObject
+    :param mobj: MObject, MObject representing a DG node
+    """
+
+    for source, target in iter_connections(mobj, source=False, destination=True):
+        plugs.disconnect_plug(source)
+
+
+def iter_connections(node, source=True, destination=True):
+    """
+    Returns a generator function containing a tuple of MPlugs
+    :param node: MObject, MObject node to serach
+    :param source: bool, If True, all upstream connections are returned
+    :param destination: if True, all downstream connections are returned
+    :return: generator(tuple(MPlug, Mplug)), tuple of MPlug instances, the first element is the connected MPlug of the
+        given node and the other one is the connected MPlug from the other node
+    """
+
+    dep = maya.api.OpenMaya.MFnDependencyNode(node)
+    for plug in iter(dep.getConnections()):
+        if source and plug.isSource:
+            for i in iter(plug.destinations()):
+                yield plug, i
+        if destination and plug.isDestination:
+            yield plug, plug.source()
+
+
+def delete(node):
+    """
+    Deletes given node
+    :param node: MObject
+    :return:
+    """
+
+    if not is_valid_mobject(node):
+        return
+
+    lock_node(node, False)
+    unlock_and_disconnect_connected_attributes(node)
+
+    dag_modifier = maya.api.OpenMaya.MDagModifier()
+    dag_modifier.deleteNode(node)
+    dag_modifier.doIt()

@@ -7,6 +7,8 @@ Module that contains functions and classes related to shapes
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 import maya.cmds
 import maya.OpenMaya
 import maya.api.OpenMaya
@@ -15,6 +17,7 @@ from tpDcc import dcc
 from tpDcc.libs.python import python
 from tpDcc.dccs.maya.core import exceptions, filtertypes, node as node_utils, name as name_utils
 
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 TYPE_DICT = {
     'mesh': 'vtx',
@@ -378,13 +381,13 @@ def find_input_shape(obj, recursive=False, print_exceptions=False):
             input_shape = find_input_shape_1(obj)
         except Exception as e:
             if print_exceptions:
-                maya.logger.exception('Caught exception: {}'.format(str(e)))
+                LOGGER.exception('Caught exception: {}'.format(str(e)))
     if not input_shape:
         try:
             input_shape = find_input_shape_2(obj)
         except Exception as e:
             if print_exceptions:
-                maya.logger.exception('Caught exception: {}'.format(str(e)))
+                LOGGER.exception('Caught exception: {}'.format(str(e)))
 
     # Check if input shape is valid
     if not input_shape:

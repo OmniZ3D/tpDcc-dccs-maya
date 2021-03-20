@@ -13,6 +13,7 @@ import logging
 import maya.cmds
 import maya.api.OpenMaya
 
+from tpDcc import dcc
 from tpDcc.libs.python import name, mathlib, python
 from tpDcc.dccs.maya.core import exceptions, attribute, node, component, name as name_utils
 
@@ -434,12 +435,15 @@ class DuplicateHierarchy(object):
     def _duplicate(self, xform):
         new_name = xform
         if self._replace_old and self._replace_new:
-            for old_name, replace_name in zip(self._replace_old, self._replace_new):
+            replace_old = python.force_list(self._replace_old)
+            replace_new = python.force_list(self._replace_new)
+            for old_name, replace_name in zip(replace_old, replace_new):
                 if old_name in new_name:
                     new_name = xform.replace(old_name, replace_name)
                     break
                 else:
-                    new_name = '{}_{}'.format(xform, replace_name)
+                    if new_name == xform:
+                        new_name = '{}_{}'.format(xform, replace_name)
             new_name = name_utils.get_basename(new_name)
 
         duplicate = maya.cmds.duplicate(xform, po=True)[0]
@@ -641,7 +645,7 @@ def get_position(point):
             LOGGER.exception('Invalid point value supplied! Not enough list/tuple elements!')
             return
         pos = point[0:3]
-    elif type(point) == str or type(point) == unicode:
+    elif python.is_string(point):
         mobj = node.get_mobject(node_name=point)
         if mobj.hasFn(maya.api.OpenMaya.MFn.kTransform):
             try:
@@ -1033,16 +1037,16 @@ def mirror_toggle(transform, flag):
     maya.cmds.setAttr('{}.mirror'.format(transform), flag)
 
 
-def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_missing=False, transforms=None,
-                     left_to_right=True):
+def mirror_transform(
+        prefix=None, suffix=None, string_search=None, create_if_missing=False, transforms=None, left_to_right=True):
     """
     Mirrors the position of all transforms that match the given search strings
     :param prefix:str, prefix to search for
     :param suffix: str, suffix to search for
     :param string_search: str, search for a name containing string search
-    :param create_if_missing:
-    :param transforms:
-    :param left_to_right:
+    :param create_if_missing: bool
+    :param transforms: list(str)
+    :param left_to_right: bool
     :return:
     """
 
@@ -1050,6 +1054,8 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
 
     if transforms is None:
         transforms = list()
+    else:
+        transforms = transforms[:]
 
     scope_joints = list()
     scope_transforms = list()
@@ -1123,10 +1129,11 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
         if not maya.cmds.objExists(other) and create_if_missing:
             node_type = maya.cmds.nodeType(xform)
             if not node_type == 'joint':
-                other_node = maya.cmds.createNode(shape_type)
-                if shape_lib.is_a_shape(other_node):
-                    other_node = maya.cmds.listRelatives(other_node, p=True, f=True)
-                    other = maya.cmds.rename(other_node, other)
+                if shape_type:
+                    other_node = maya.cmds.createNode(shape_type)
+                    if shape_lib.is_a_shape(other_node):
+                        other_node = maya.cmds.listRelatives(other_node, p=True, f=True)
+                        other = maya.cmds.rename(other_node, other)
             elif node_type == 'joint':
                 other = maya.cmds.duplicate(xform, po=True, n=other)[0]
                 if shape_type:
@@ -1209,7 +1216,7 @@ def mirror_transform(prefix=None, suffix=None, string_search=None, create_if_mis
     if create_if_missing:
         for other in other_parents.keys():
             parent = other_parents[other]
-            if maya.cmds.objExists(parent):
+            if maya.cmds.objExists(parent) and maya.cmds.objExists(other):
                 maya.cmds.parent(other, parent)
 
     if create_if_missing:
@@ -1508,7 +1515,6 @@ def create_buffer_group(node_name, buffer_name=None, suffix='buffer', use_duplic
             pass
 
     if use_duplicate:
-        # TODO: Sometimes Maya does not duplicate with proper
         buffer_grp = maya.cmds.duplicate(node_name, po=True)[0]
         attribute.remove_user_defined_attributes(buffer_grp)
         buffer_grp = maya.cmds.rename(buffer_grp, name_utils.find_unique_name(full_name))
@@ -2255,3 +2261,85 @@ def delete_transform_tracker_attributes(transform_node):
     for node_to_delete_attrs in transform_node:
         for tracker_attr in ALL_TRANSFORM_TRACKER_ATTRIBUTE_NAMES:
             attribute.delete_attribute(node_to_delete_attrs, tracker_attr)
+
+
+def axis_world_position(transform_node, axis):
+    """
+    Returns the axis world position of the given transform node
+    :param transform_node: str
+    :param axis: list(int)
+    :return: list(float)
+    """
+
+    transform1 = maya.cmds.createNode('transform', name='transform1')
+    try:
+        transform1 = maya.cmds.parent(transform1, transform_node, r=True)[0]
+        maya.cmds.setAttr('{}.t'.format(transform1), *axis)
+        maya.cmds.setAttr('{}.r'.format(transform1), 0, 0, 0)
+        maya.cmds.setAttr('{}.s'.format(transform1), 1, 1, 1)
+        return maya.cmds.xform(transform1, query=True, ws=True, piv=True)
+    finally:
+        maya.cmds.delete(transform1)
+
+
+def get_mirror_axis(transform_node, mirror_plane):
+    """
+    Returns mirror axis of the given node name
+    :param transform_node: str
+    :param mirror_plane: str, mirror plane ("YZ", "XY", "XZ")
+    :return: str
+    """
+
+    result = [1, 1, 1]
+    transform0 = maya.cmds.createNode('transform', name='transform0')
+    try:
+        transform0 = maya.cmds.parent(transform0, transform_node, r=True)[0]
+        transform0 = maya.cmds.parent(transform0, w=True)[0]
+        maya.cmds.setAttr('{}.t'.format(transform0), 0, 0, 0)
+        t1 = axis_world_position(transform0, [1, 0, 0])
+        t2 = axis_world_position(transform0, [0, 1, 0])
+        t3 = axis_world_position(transform0, [0, 0, 1])
+        t1 = '%.3f' % t1[0], '%.3f' % t1[1], '%.3f' % t1[2]
+        t2 = '%.3f' % t2[0], '%.3f' % t2[1], '%.3f' % t2[2]
+        t3 = '%.3f' % t3[0], '%.3f' % t3[1], '%.3f' % t3[2]
+        if mirror_plane == dcc.MirrorPlane.YZ:
+            x = [t1[0], t2[0], t3[0]]
+            i = mathlib.max_index(x)
+            result[i] = -1
+        if mirror_plane == dcc.MirrorPlane.XZ:
+            y = [t1[1], t2[1], t3[1]]
+            i =  mathlib.max_index(y)
+            result[i] = -1
+        if mirror_plane == dcc.MirrorPlane.XY:
+            z = [t1[2], t2[2], t3[2]]
+            i = mathlib.max_index(z)
+            result[i] = -1
+    finally:
+        maya.cmds.delete(transform0)
+
+    return result
+
+
+def is_axis_mirrored(source_transform, target_transform, axis, mirror_plane):
+    """
+    Returns whether or not given nodes axis are mirrored
+    :param source_transform: str
+    :param target_transform: str
+    :param axis: list(int)
+    :param mirror_plane: str
+    :return: bool
+    """
+
+    old1 = maya.cmds.xform(source_transform, q=True, ws=True, piv=True)
+    old2 = maya.cmds.xform(target_transform, q=True, ws=True, piv=True)
+    new1 = axis_world_position(source_transform, axis)
+    new2 = axis_world_position(target_transform, axis)
+    mp = mirror_plane
+    v1 = mp[0] * (new1[0] - old1[0]), mp[1] * (new1[1] - old1[1]), mp[2] * (new1[2] - old1[2])
+    v2 = new2[0] - old2[0], new2[1] - old2[1], new2[2] - old2[2]
+
+    total_distance = sum(p * q for p, q in zip(v1, v2))
+    if total_distance >= 0.0:
+        return False
+
+    return True

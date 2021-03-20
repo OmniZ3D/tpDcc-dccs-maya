@@ -11,11 +11,16 @@ import os
 import sys
 import stat
 import shutil
+import logging
 
 import maya.cmds
+import maya.mel
+import maya.OpenMaya
 
 from tpDcc.libs.python import python
 from tpDcc.dccs.maya.core import time, gui
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 class SelectionMasks(object):
@@ -165,6 +170,15 @@ def get_current_time_unit():
     """
 
     return maya.cmds.currentUnit(query=True, time=True)
+
+
+def set_current_time_unit(time_unit):
+    """
+    Sets current time unit
+    :param time_unit: STR
+    """
+    
+    return maya.cmds.currentUnit(time=time_unit)
 
 
 def create_mtime(value, unit=None):
@@ -347,7 +361,7 @@ def display_info(info_msg):
 
     info_msg = info_msg.replace('\n', '\ntp:\t\t')
     maya.OpenMaya.MGlobal.displayInfo('tp:\t\t' + info_msg)
-    maya.logger.debug('\n{}'.format(info_msg))
+    LOGGER.debug('\n{}'.format(info_msg))
 
 
 def display_warning(warning_msg):
@@ -358,7 +372,7 @@ def display_warning(warning_msg):
 
     warning_msg = warning_msg.replace('\n', '\ntp:\t\t')
     maya.OpenMaya.MGlobal.displayWarning('tp:\t\t' + warning_msg)
-    maya.logger.warning('\n{}'.format(warning_msg))
+    LOGGER.warning('\n{}'.format(warning_msg))
 
 
 def display_error(error_msg):
@@ -369,7 +383,7 @@ def display_error(error_msg):
 
     error_msg = error_msg.replace('\n', '\ntp:\t\t')
     maya.OpenMaya.MGlobal.displayError('tp:\t\t' + error_msg)
-    maya.logger.error('\n{}'.format(error_msg))
+    LOGGER.error('\n{}'.format(error_msg))
 
 
 def file_has_student_line(filename):
@@ -380,11 +394,11 @@ def file_has_student_line(filename):
     """
 
     if not os.path.exists(filename):
-        maya.logger.error('File "{}" does not exists!'.format(filename))
+        LOGGER.error('File "{}" does not exists!'.format(filename))
         return False
 
     if filename.endswith('.mb'):
-        maya.logger.warning('Student License Check is not supported in binary files!')
+        LOGGER.warning('Student License Check is not supported in binary files!')
         return True
 
     with open(filename, 'r') as f:
@@ -411,15 +425,15 @@ def clean_student_line(filename=None):
         filename = maya.cmds.file(query=True, sn=True)
 
     if not os.path.exists(filename):
-        maya.logger.error('File "{}" does not exists!'.format(filename))
+        LOGGER.error('File "{}" does not exists!'.format(filename))
         return False
 
     if not file_has_student_line(filename=filename):
-        maya.logger.info('File is already cleaned: no student line found!')
+        LOGGER.info('File is already cleaned: no student line found!')
         return False
 
     if not filename.endswith('.ma'):
-        maya.logger.info('Maya Binary files cannot be cleaned!')
+        LOGGER.info('Maya Binary files cannot be cleaned!')
         return False
 
     with open(filename, 'r') as f:
@@ -437,7 +451,7 @@ def clean_student_line(filename=None):
                     continue
             f.write(line)
             if step_count > step:
-                maya.logger.debug('Updating File: {}% ...'.format(100 / (len(lines) / step_count)))
+                LOGGER.debug('Updating File: {}% ...'.format(100 / (len(lines) / step_count)))
                 step += step
 
     if changed:
@@ -447,10 +461,10 @@ def clean_student_line(filename=None):
         try:
             os.remove(no_student_filename)
         except Exception as exc:
-            maya.logger.warning('Error while cleanup no student file process files ... >> {}'.format(exc))
+            LOGGER.warning('Error while cleanup no student file process files ... >> {}'.format(exc))
             return False
 
-        maya.logger.info('Student file cleaned successfully!')
+        LOGGER.info('Student file cleaned successfully!')
 
     return True
 
@@ -476,7 +490,8 @@ def load_plugin(plugin_name, quiet=True):
         try:
             maya.cmds.loadPlugin(plugin_name, quiet=quiet)
         except Exception as exc:
-            maya.logger.error('Impossible to load plugin: {} | {}'.format(plugin_name, exc))
+            if not quiet:
+                LOGGER.error('Impossible to load plugin: {} | {}'.format(plugin_name, exc))
             return False
 
     return True
@@ -522,7 +537,7 @@ def get_project_rule(rule):
     workspace = maya.cmds.workspace(query=True, rootDirectory=True)
     workspace_folder = maya.cmds.workspace(fileRuleEntry=rule)
     if not workspace_folder:
-        maya.logger.warning(
+        LOGGER.warning(
             'File Rule Entry "{}" has no value, please check if the rule name is typed correctly!'.format(rule))
 
     return os.path.join(workspace, workspace_folder)

@@ -1728,7 +1728,7 @@ class LockState(object):
         try:
             maya.cmds.setAttr(self.attribute, lock=False)
         except Exception as exc:
-            maya.LOGGER.debug('Impossible to unlock: {} | {}'.format(self.attribute, exc))
+            LOGGER.debug('Impossible to unlock: {} | {}'.format(self.attribute, exc))
 
     def lock(self):
         """
@@ -1738,7 +1738,7 @@ class LockState(object):
         try:
             maya.cmds.setAttr(self.attribute, lock=True)
         except Exception as exc:
-            maya.LOGGER.debug('Impossible to lock: {} | {}'.format(self.attribute, exc))
+            LOGGER.debug('Impossible to lock: {} | {}'.format(self.attribute, exc))
 
     def restore_initial(self):
         """
@@ -1748,7 +1748,7 @@ class LockState(object):
         try:
             maya.cmds.setAttr(self.attribute, lock=self.lock_state)
         except Exception as exc:
-            maya.LOGGER.debug('Impossible to restore initial lock status for {} | {}'.format(self.attribute, exc))
+            LOGGER.debug('Impossible to restore initial lock status for {} | {}'.format(self.attribute, exc))
 
 
 class LockAttributesState(LockState, object):
@@ -2774,7 +2774,7 @@ def get_indices(attribute):
             index = int(index[-1])
             indices[index] = None
 
-    indices = indices.keys()
+    indices = list(indices.keys())
     indices.sort()
 
     return indices
@@ -3419,7 +3419,7 @@ def connect_message(input_node, target_node, attr, force=False):
 def connect_group_with_message(input_node, target_node, attr):
     """
     Connects given input node to the group_+(target_node.attr) attribute
-    :param input_node: str, node we want to connect thrugh message
+    :param input_node: str, node we want to connect through message
     :param target_node: str, target node
     :param attr: str, base name of the attribute
     """

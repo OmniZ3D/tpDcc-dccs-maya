@@ -132,6 +132,27 @@ def get_all_namespaces(exclude_list=None):
     return namespaces
 
 
+def get_namespaces_from_selection():
+    """
+    Returns all namespaces of current selected objects
+    :return: list(str)
+    """
+
+    found_namespaces = list()
+    try:
+        names = maya.cmds.ls(selection=True)
+        for dag_path in names:
+            short_name = dag_path.split('|')[-1]
+            namespace = ':'.join(short_name.split(':')[-1])
+            if namespace:
+                found_namespaces.append(namespace)
+        found_namespaces = list(set(found_namespaces))
+    except NameError as exc:
+        LOGGER.exception(exc)
+
+    return found_namespaces
+
+
 def get_current_namespace():
     """
     Returns the current set namespace

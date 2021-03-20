@@ -227,9 +227,7 @@ def filter_by_type(
         search_hierarchy = False
 
     obj_type_list = TYPE_FILTERS.get(filter_type, None)
-    if not obj_type_list:
-        LOGGER.warning('Filter Type "{}" is not supported in Maya!'.format(filter_type))
-        return None
+    # LOGGER.debug('Filtering by Type "{}"'.format(filter_type))
 
     if keep_order:
         if selection_only:
@@ -244,7 +242,7 @@ def filter_by_type(
                 filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
                 remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only, keep_order=False)
     else:
-        if obj_type_list == ALL_FILTER_TYPE:
+        if not obj_type_list or obj_type_list == ALL_FILTER_TYPE:
             return filter_all_node_types(
                 selection_only=selection_only, search_hierarchy=search_hierarchy, transforms_only=transforms_only,
                 dag=dag, remove_maya_defaults=remove_maya_defaults)

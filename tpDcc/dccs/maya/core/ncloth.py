@@ -7,9 +7,13 @@ Module that contains functions and classes related with Maya Cloth System (nClot
 
 from __future__ import print_function, division, absolute_import
 
+import logging
+
 import maya.cmds
 
 from tpDcc.dccs.maya.core import attribute as attr_utils
+
+LOGGER = logging.getLogger('tpDcc-dccs-maya')
 
 
 def add_ncloth_to_mesh(mesh, world=False):
@@ -18,7 +22,7 @@ def add_ncloth_to_mesh(mesh, world=False):
     world_flag = 1 if world else 0
     nodes = maya.mel.eval('createNCloth {};'.format(world_flag))
     if not nodes:
-        maya.logger.warning('No NCloth created on given mesh: "{}"'.format(mesh))
+        LOGGER.warning('No NCloth created on given mesh: "{}"'.format(mesh))
         return False
 
     if world:

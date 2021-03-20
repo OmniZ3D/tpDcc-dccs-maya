@@ -129,7 +129,8 @@ class MayaCallback(object):
         def register(cls, fn, owner=None):
             MayaCallback.NodeSelectCallback._callback = staticmethod(fn)
             return maya.cmds.scriptJob(e=[
-                'SelectionChanged', 'import tpDcc; tpDcc.Callbacks.NodeSelectCallback._callback()'])
+                'SelectionChanged',
+                'from tpDcc.dcc import callback; callback.Callback().NodeSelectCallback._callback()'])
 
         @classmethod
         def unregister(cls, token):

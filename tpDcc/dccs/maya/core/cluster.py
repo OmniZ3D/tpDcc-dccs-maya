@@ -309,14 +309,26 @@ class ClusterCurve(ClusterSurface, object):
         LOGGER.warning('Cannot set cluster U, there is only one direction for spans on a curve.')
 
 
-
-def create_cluster(points, name):
+def create_cluster(points, name, relative=False, front_of_chain=True, exclusive=False):
     """
     Creates a cluster on the given points
     :param points: list<str>, names of points to cluster
     :param name: str, name of the cluster
-    :return: list<str, st>, [cluster, handle]
+    :param relative: bool, sets whether or not cluster is created in relative mode. In this mode, only the
+        transformations directly above the cluster are used by the cluster.
+    :param front_of_chain: bool
+    :param exclusive: bool, Whether or not cluster deformation set is put in a deform partition. If True, a vertex/CV
+        only will be able to be deformed by one cluster.
+    :return: list(str, str), [cluster, handle]
     """
 
-    cluster, handle = maya.cmds.cluster(points, n=name_lib.find_unique_name(name))
+    # NOTE: Bug detected in Maya 2019. If we pass exclusive argument, no matter if we pass True of False, exclusivity
+    # will be enabled
+    if exclusive:
+        cluster, handle = maya.cmds.cluster(
+            points, n=name_lib.find_unique_name(name), relative=relative, frontOfChain=front_of_chain, exclusive=True)
+    else:
+        cluster, handle = maya.cmds.cluster(
+
+            points, n=name_lib.find_unique_name(name), relative=relative, frontOfChain=front_of_chain)
     return cluster, handle

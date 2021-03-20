@@ -103,7 +103,8 @@ class AttachJoints(object):
 
             return ['Constraint', 'Matrix']
 
-    def __init__(self, source_joints, target_joints, create_switch, switch_node=None, switch_attribute_name='switch'):
+    def __init__(
+            self, source_joints, target_joints, create_switch=True, switch_node=None, switch_attribute_name='switch'):
         self._source_joints = source_joints
         self._target_joints = target_joints
         self._create_switch = create_switch
@@ -246,9 +247,7 @@ class OrientJointAttributes(object):
         :param joint: str, name of valid joint node
         """
 
-        if type(joint) is not list:
-            joint = [joint]
-
+        joint = python.force_list(joint)
         for jnt in joint:
             if not is_joint(jnt):
                 continue
@@ -1562,7 +1561,7 @@ def create_joints_on_faces(mesh, faces=None, follow=True, name=None):
 
     if faces:
         for face in faces:
-            if type(face) in [str, unicode]:
+            if python.is_string(face):
                 sub_faces = maya.cmds.ls(face, flatten=True)
                 for sub_face in sub_faces:
                     id_value = python_name.get_last_number(sub_face)
@@ -1622,12 +1621,17 @@ def create_joints_on_selected_components_center():
     :return:
     """
 
+    created_joints = list()
+
     selected_components = maya.cmds.ls(sl=True)
     if not selected_components:
-        return
+        return created_joints
+
+    if dcc.node_is_curve(selected_components[0]):
+        return create_joints_on_cvs(curve=selected_components[0], parented=False)
 
     if maya.cmds.objectType(selected_components[0]) != 'mesh':
-        return
+        return created_joints
 
     sel_list = list()
     obj_name = selected_components[0][0:selected_components[0].index('.')]
@@ -1645,7 +1649,7 @@ def create_joints_on_selected_components_center():
                 sel_list.append('{}.{}[{}]'.format(obj_name, component_type, start_component))
                 start_component += 1
     if not sel_list:
-        return
+        return False
 
     component_centers = list()
     component_type = sel_list[0][sel_list[0].index('.') + 1:sel_list[0].index('[')]
@@ -1660,13 +1664,15 @@ def create_joints_on_selected_components_center():
             )
             for loc in component_centers:
                 maya.cmds.select(clear=True)
-                maya.cmds.joint(n='joint#', p=loc, rad=0.25)
+                created_joints.append(maya.cmds.joint(n='joint#', p=loc, rad=0.25))
     else:
         for comp in sel_list:
             maya.cmds.select(clear=True)
-            maya.cmds.joint(n='joint#', p=maya.cmds.pointPosition(comp), rad=0.25)
+            created_joints.append(maya.cmds.joint(n='joint#', p=maya.cmds.pointPosition(comp), rad=0.25))
 
     maya.cmds.select(clear=True)
+
+    return created_joints
 
 
 @decorators.undo
@@ -2081,11 +2087,15 @@ def auto_label_joints(joints=None, input_left='*_l_*', input_right='*_r_*'):
 
     for i, joint in enumerate(left_joints):
         _set_attrs(1, 18, str(joint).replace(str(input_left).strip('*'), ''))
+        if joint not in all_joints:
+            continue
         all_joints.remove(joint)
         progress_value += ((i + 1) * percentage)
 
     for j, joint in enumerate(right_joints):
         _set_attrs(2, 18, str(joint).replace(str(input_right).strip('*'), ''))
+        if joint not in all_joints:
+            continue
         all_joints.remove(joint)
         progress_value += (j * percentage)
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that contains functions and classes related with Maya API nodes
+Module that contains functions and classes related with Maya API curve nodes
 """
 
 from __future__ import print_function, division, absolute_import
@@ -91,41 +91,53 @@ class CurveCV(list):
         return CurveCV([self[i] for i in order])
 
 
-def get_curve_data(curve_shape, space=None):
+def get_curve_data(curve_shape, space=None, color_data=True, parent=None):
     """
     Returns curve dat from the given shape node
     :param curve_shape: str, node that represents nurbs curve shape
     :param space: MSpace, coordinate space to query the point data
+    :param color_data: bool
+    :param parent:
     :return: dict
     """
 
+    if python.is_string(curve_shape):
+        curve_shape = node_api.as_mobject(curve_shape)
+    if parent and python.is_string(parent):
+        parent = node_api.as_mobject(parent)
+
     space = space or maya.api.OpenMaya.MSpace.kObject
     shape = maya.api.OpenMaya.MFnDagNode(curve_shape).getPath()
-    data = node_api.get_node_color_data(shape)
+    data = node_api.get_node_color_data(shape.node()) if color_data else dict()
     curve = maya.api.OpenMaya.MFnNurbsCurve(shape)
+    if parent:
+        parent = maya.api.OpenMaya.MFnDagNode(parent).getPath().partialPathName()
 
     curve_knots = tuple(curve.knots())
-    curve_degree = tuple(curve.degree)
-    curve_form = tuple(curve.form)
-    curve_matrix = tuple(curve.form)
+    curve_degree = int(curve.degree)
+    curve_form = int(curve.form)
+    curve_matrix = tuple(node_api.get_world_matrix(curve.object()))
     curve_cvs = map(tuple, curve.cvPositions(space))
+    curve_cvs = [cv[:-1] for cv in curve_cvs]       # OpenMaya returns 4 elements in the cvs, ignore last one
 
     data.update({
         'knots': curve_knots,
         'cvs': curve_cvs,
         'degree': curve_degree,
         'form': curve_form,
-        'matrix': curve_matrix
+        'matrix': curve_matrix,
+        'shape_parent': parent
     })
 
     return data
 
 
-def serialize_transform_curve(node, space=None):
+def serialize_transform_curve(node, space=None, color_data=True):
     """
     Serializes given transform shapes curve data and returns a dictionary with that data
     :param node: MObject, object that represents the transform above the nurbsCurve shapes we want to serialize
     :param space: MSpace, coordinate space to query the point data
+    :param color_data: bool, Whether to include or not color curve related data
     :return: dict
     """
 
@@ -135,10 +147,10 @@ def serialize_transform_curve(node, space=None):
     data = dict()
     for shape in shapes:
         shape_dag = api.DagNode(shape.node())
-        is_intermerdiate = shape_dag.is_intermediate_object()
-        if not is_intermerdiate:
+        is_intermediate = shape_dag.is_intermediate_object()
+        if not is_intermediate:
             data[maya.api.OpenMaya.MNamespace.stripNamespaceFromName(
-                shape_dag.get_name())] = get_curve_data(shape, space)
+                shape_dag.get_name())] = get_curve_data(shape, space, color_data=color_data)
 
     return data
 
@@ -248,6 +260,8 @@ def create_curve_shape(
 
     curves_to_create = OrderedDict()
     for shape_name, shape_data in curve_data.items():
+        if not isinstance(shape_data, dict):
+            continue
         curves_to_create[shape_name] = list()
         shape_parent = shape_data.get('shape_parent', None)
         if shape_parent:
@@ -258,7 +272,22 @@ def create_curve_shape(
     all_shapes = list()
     created_parents = dict()
 
+    # If parent already has a shape with the same name we delete it
+    # TODO: We should compare the bounding boxes of the parent shape and the new one and scale it to fit new bounding
+    # TODO: box to the old one
+    parent_shapes = list()
+    if parent and parent != maya.api.OpenMaya.MObject.kNullObj:
+        parent_shapes = node_api.get_shapes(maya.api.OpenMaya.MFnDagNode(parent).getPath())
+
     for shape_name, shape_children in curves_to_create.items():
+
+        for parent_shape in parent_shapes:
+            if parent_shape.partialPathName() == shape_name:
+                if not node_api.is_valid_mobject(parent_shape.node()):
+                    continue
+                maya.cmds.delete(parent_shape.fullPathName())
+                break
+
         if shape_name not in created_curves:
             shape_name, parent, new_shapes, new_curve = _create_curve(
                 shape_name, curve_data[shape_name], space, curve_size, translate_offset, scale, order, color,
@@ -336,9 +365,10 @@ def _create_curve(
 
     enabled = shape_data.get('overrideEnabled', False) or color is not None
     if space == maya.api.OpenMaya.MSpace.kWorld and parent != maya.api.OpenMaya.MObject.kNullObj:
-        for i in range(len(cvs.obj)):
-            cvs.obj[i] *= parent_inverse_matrix
-    shape = new_curve.create(cvs.obj, knots, degree, form, False, False, parent)
+        for i in range(len(cvs._obj)):
+            cvs._obj[i] *= parent_inverse_matrix
+    shape = new_curve.create(cvs._obj, knots, degree, form, False, False, parent)
+    node_api.rename_mobject(shape, shape_name)
     new_shapes.append(shape)
     if parent == maya.api.OpenMaya.MObject.kNullObj and shape.apiType() == maya.api.OpenMaya.MFn.kTransform:
         parent = shape
@@ -352,4 +382,3 @@ def _create_curve(
             new_curve.object(), colors, outliner_color=outliner_color, use_outliner_color=use_outliner_color)
 
     return shape_name, parent, new_shapes, new_curve
-

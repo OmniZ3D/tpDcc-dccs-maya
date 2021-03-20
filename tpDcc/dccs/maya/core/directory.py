@@ -34,7 +34,7 @@ def select_folder_dialog(title, start_directory=None):
     :return: str
     """
 
-    res = maya.cmds.fileDialog2(fm=3, dir=start_directory, cap=title)
+    res = maya.cmds.fileDialog2(fileMode=3, startingDirectory=start_directory, caption=title)
     if res:
         res = res[0]
 
@@ -50,7 +50,7 @@ def save_file_dialog(title, start_directory=None, pattern=None):
     :return: str
     """
 
-    res = maya.cmds.fileDialog2(fm=0, dir=start_directory, cap=title, ff=pattern)
+    res = maya.cmds.fileDialog2(fileMode=0, startingDirectory=start_directory, caption=title, ff=pattern)
     if res:
         res = res[0]
 

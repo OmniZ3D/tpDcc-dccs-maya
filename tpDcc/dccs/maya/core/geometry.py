@@ -222,7 +222,7 @@ def component_type(geometry):
 
 def is_mesh_compatible(mesh1, mesh2):
     """
-    Checks whether two meshes to see if they have thet same vertices, edge and face count
+    Checks whether two meshes to see if they have the same vertices, edge and face count
     :param mesh1: str
     :param mesh2: str
     :return: bool
@@ -680,7 +680,7 @@ def nurbs_surface_v_to_transforms(surface, description='', count=4, value=0.5):
     section = float(max_value_v / count)
 
     for i in range(count + 1):
-        pos = maya.cmds.pointPosition('{}.uv[{}][{}]'.format(surface, section_value, mid_value))
+        pos = maya.cmds.pointPosition('{}.uv[{}][{}]'.format(surface, mid_value, section_value))
         joint = maya.cmds.createNode('joint', n='joint_{}_{}'.format(i + 1, description))
         maya.cmds.xform(joint, ws=True, t=pos)
 

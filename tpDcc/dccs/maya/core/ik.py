@@ -63,6 +63,14 @@ class IkHandle(object):
         self._end_joint = joints_list[-1]
         self._joints = joints_list
 
+    def get_curve(self):
+        """
+        Returns Spline Ik handle curve
+        :return: str
+        """
+
+        return self._curve
+
     def set_curve(self, curve):
         """
         Sets teh curve for Spline IK handle to use
@@ -151,7 +159,6 @@ class IkHandle(object):
             self._ik_effector = ik_handle[1]
             self._curve = ik_handle[2]
             self._curve = maya.cmds.rename(self._curve, dcc.find_unique_name('curve_{}'.format(self._name)))
-    # endregion
 
 
 def create_spline_ik_stretch(
@@ -336,7 +343,7 @@ def create_ik_on_joint(joint, name, solver=IkHandle.SOLVER_SC):
     :return: str
     """
 
-    relatives = dcc.list_relatives(joint, type='joint')
+    relatives = dcc.list_relatives(joint, relative_type='joint')
     if not relatives:
         return
     joint_end = relatives[0]

@@ -24,19 +24,19 @@ class RigSwitch(object):
     Creates a switch between different rigs on a buffer joint
     """
 
-    def __init__(self, switch_joint, switch_attribut_name='switch'):
+    def __init__(self, switch_joint, switch_attribute_name='switch'):
         """
         Constructor
         :param switch_joint: str, name of a buffer joint with switch attribute
         """
 
         self._switch_joint = switch_joint
-        self._attribute_name = switch_attribut_name
+        self._attribute_name = switch_attribute_name
         self._groups = dict()
         self._control_name = None
         self._conditions = dict()
 
-        if not maya.cmds.objExists('{}.switch'.format(switch_joint)):
+        if not maya.cmds.objExists('{}.{}'.format(switch_joint, switch_attribute_name)):
             LOGGER.warning('{} is most likely not a buffer joint with switch attribute'.format(switch_joint))
 
         weight_count = self.get_weight_count()
@@ -614,7 +614,7 @@ class StretchyElbowLock(object):
         dcc.connect_attribute(distance_bottom, 'distance', mult_lock, 'input1Y')
         dcc.connect_attribute(distance_bottom, 'distance', mult_lock, 'input2Y')
         top_lock_blend = self._blend_two_attr('{}.output'.format(nudge_double_linear), '{}.outputX'.format(mult_lock))
-        top_lock_blend = self._rneame(top_lock_blend, 'lockTop')
+        top_lock_blend = self._rename(top_lock_blend, 'lockTop')
         dcc.connect_attribute(lock_control, 'lock', top_lock_blend, 'attributesBlender')
         btm_lock_blend = self._blend_two_attr('{}.output'.format(nudge_double_linear), '{}.outputY'.format(mult_lock))
         btm_lock_blend = self._rename(btm_lock_blend, 'lockBtm')
@@ -799,8 +799,8 @@ class SoftIk(object):
         nice_attr = self._add_attribute(self._attribute_contrtol, self._nice_attribute_name, 0)
         anim_utils.quick_driven_key(nice_attr, attr, [0, 1], [0.001, 1], infinite=True)
         dcc.unkeyable_attribute(soft_buffer_node, self._attribute_name)
-        tp.Dc.set_minimum_integer_attribute_value(self._attribute_contrtol, self._nice_attribute_name, 0)
-        tp.Dc.set_maximum_integer_attribute_value(self._attribute_contrtol, self._nice_attribute_name, 2)
+        dcc.set_minimum_integer_attribute_value(self._attribute_contrtol, self._nice_attribute_name, 0)
+        dcc.set_maximum_integer_attribute_value(self._attribute_contrtol, self._nice_attribute_name, 2)
 
     def _build_soft_graph(self):
         chain_distance = jnt_utils.get_joints_chain_length(self._joints)
@@ -1111,7 +1111,7 @@ class TwistRibbon(object):
 
         joints = skin_surface.get_joints_list()
         if self._dual_quaternion:
-            dcc.delete_object(joints[1:-1])
+            dcc.delete_node(joints[1:-1])
             joints = [joints[0], joints[-1]]
         else:
             maya.cmds.setAttr('{}.skinningMethod'.format(skin), 0)

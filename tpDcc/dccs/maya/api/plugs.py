@@ -347,3 +347,35 @@ def connect_plugs(source, target, mod=None, force=True, apply=True):
         mod.doIt()
 
     return mod
+
+
+def disconnect_plug(plug, source=True, destination=True, modifier=None):
+    """
+    Disconnects the plug connections, if "source" is True and the plug is a destination then disconnect the source
+    from this plug. If destination is True and plug is a source the disconnect this plug from the destination.
+    Plugs are also locked (to avoid Maya raises an error).
+    :param plug: maya.api.OpenMaya.MPlug, plug to disconnect
+    :param source: bool, If True, disconnect from the connected source plug if it has one
+    :param destination: bool, If True, disconnect from the connected destination plug if it has one
+    :param modifier: maya.api.OpenMaya.MDGModifier
+    :return: bool, True if succeed with the disconnection
+    :raises Maya API error
+    """
+
+    if plug.isLocked:
+        plug.isLocked = False
+    mod = modifier or maya.api.OpenMaya.MDGModifier()
+    if source and plug.isDestination:
+        source_plug = plug.source()
+        if source_plug.isLocked:
+            source_plug.isLocked = False
+        mod.disconnect(source_plug, plug)
+    if destination and plug.isSource:
+        for connection in plug.destinations():
+            if connection.isLocked:
+                connection.isLocked = False
+            mod.disconnect(plug, connection)
+    if not modifier:
+        mod.doIt()
+
+    return True, mod
