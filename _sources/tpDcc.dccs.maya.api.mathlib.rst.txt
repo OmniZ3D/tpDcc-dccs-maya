@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.api.mathlib module
+==================================
+
+.. automodule:: tpDcc.dccs.maya.api.mathlib
+   :members:
+   :undoc-members:
+   :show-inheritance:

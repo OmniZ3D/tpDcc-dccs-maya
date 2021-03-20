@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.api.node module
+===============================
+
+.. automodule:: tpDcc.dccs.maya.api.node
+   :members:
+   :undoc-members:
+   :show-inheritance:

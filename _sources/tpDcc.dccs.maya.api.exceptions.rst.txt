@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.api.exceptions module
+=====================================
+
+.. automodule:: tpDcc.dccs.maya.api.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:

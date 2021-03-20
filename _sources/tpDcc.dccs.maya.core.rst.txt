@@ -8,20 +8,20 @@ Submodules
    :maxdepth: 4
 
    tpDcc.dccs.maya.core.animation
-   tpDcc.dccs.maya.core.api
    tpDcc.dccs.maya.core.attribute
    tpDcc.dccs.maya.core.blendshape
    tpDcc.dccs.maya.core.callback
    tpDcc.dccs.maya.core.camera
+   tpDcc.dccs.maya.core.cluster
    tpDcc.dccs.maya.core.color
    tpDcc.dccs.maya.core.colormanagement
+   tpDcc.dccs.maya.core.command
    tpDcc.dccs.maya.core.common
    tpDcc.dccs.maya.core.component
    tpDcc.dccs.maya.core.constants
    tpDcc.dccs.maya.core.constraint
    tpDcc.dccs.maya.core.contexts
    tpDcc.dccs.maya.core.curve
-   tpDcc.dccs.maya.core.dcc
    tpDcc.dccs.maya.core.decorators
    tpDcc.dccs.maya.core.deformer
    tpDcc.dccs.maya.core.directory
@@ -38,7 +38,6 @@ Submodules
    tpDcc.dccs.maya.core.joint
    tpDcc.dccs.maya.core.layer
    tpDcc.dccs.maya.core.mash
-   tpDcc.dccs.maya.core.mathutils
    tpDcc.dccs.maya.core.matrix
    tpDcc.dccs.maya.core.mayapymanager
    tpDcc.dccs.maya.core.menu
@@ -58,6 +57,8 @@ Submodules
    tpDcc.dccs.maya.core.rig
    tpDcc.dccs.maya.core.rivet
    tpDcc.dccs.maya.core.scene
+   tpDcc.dccs.maya.core.sceneobject
+   tpDcc.dccs.maya.core.scenewrapper
    tpDcc.dccs.maya.core.sequencer
    tpDcc.dccs.maya.core.shader
    tpDcc.dccs.maya.core.shape

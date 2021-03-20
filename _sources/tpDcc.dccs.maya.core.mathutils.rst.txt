@@ -1,7 +1,0 @@
-tpDcc.dccs.maya.core.mathutils module
-=====================================
-
-.. automodule:: tpDcc.dccs.maya.core.mathutils
-   :members:
-   :undoc-members:
-   :show-inheritance:

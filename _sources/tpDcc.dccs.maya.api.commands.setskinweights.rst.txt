@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.api.commands.setskinweights module
+==================================================
+
+.. automodule:: tpDcc.dccs.maya.api.commands.setskinweights
+   :members:
+   :undoc-members:
+   :show-inheritance:

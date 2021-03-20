@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.ui.progress module
+==================================
+
+.. automodule:: tpDcc.dccs.maya.ui.progress
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.api.mesh module
+===============================
+
+.. automodule:: tpDcc.dccs.maya.api.mesh
+   :members:
+   :undoc-members:
+   :show-inheritance:

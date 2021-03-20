@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.api.plugs module
+================================
+
+.. automodule:: tpDcc.dccs.maya.api.plugs
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.api.curves module
+=================================
+
+.. automodule:: tpDcc.dccs.maya.api.curves
+   :members:
+   :undoc-members:
+   :show-inheritance:

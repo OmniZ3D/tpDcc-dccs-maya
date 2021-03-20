@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.scenewrapper module
+========================================
+
+.. automodule:: tpDcc.dccs.maya.core.scenewrapper
+   :members:
+   :undoc-members:
+   :show-inheritance:

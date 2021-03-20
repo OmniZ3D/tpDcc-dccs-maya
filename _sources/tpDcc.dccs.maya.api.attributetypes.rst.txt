@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.api.attributetypes module
+=========================================
+
+.. automodule:: tpDcc.dccs.maya.api.attributetypes
+   :members:
+   :undoc-members:
+   :show-inheritance:

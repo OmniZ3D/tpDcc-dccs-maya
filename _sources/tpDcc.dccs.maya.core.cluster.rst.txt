@@ -1,0 +1,7 @@
+tpDcc.dccs.maya.core.cluster module
+===================================
+
+.. automodule:: tpDcc.dccs.maya.core.cluster
+   :members:
+   :undoc-members:
+   :show-inheritance:

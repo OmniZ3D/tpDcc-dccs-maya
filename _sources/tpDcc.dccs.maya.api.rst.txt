@@ -1,0 +1,33 @@
+tpDcc.dccs.maya.api package
+===========================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tpDcc.dccs.maya.api.commands
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tpDcc.dccs.maya.api.attributetypes
+   tpDcc.dccs.maya.api.curves
+   tpDcc.dccs.maya.api.exceptions
+   tpDcc.dccs.maya.api.mathlib
+   tpDcc.dccs.maya.api.mesh
+   tpDcc.dccs.maya.api.node
+   tpDcc.dccs.maya.api.plugs
+   tpDcc.dccs.maya.api.skin
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.dccs.maya.api
+   :members:
+   :undoc-members:
+   :show-inheritance:
