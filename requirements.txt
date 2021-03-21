@@ -1,10 +1,9 @@
 # ===================================================================
 # tpDcc-dccs-maya requirements file
 # ===================================================================
--i https://pypi.org/simple
+--index-url https://pypi.anaconda.org/carlkl/simple
+--extra-index-url https://pypi.org/simple
 tpDcc-libs-python
 tpDcc-core
 tpDcc-libs-qt
-
--i https://pypi.anaconda.org/carlkl/simple
 numpy
