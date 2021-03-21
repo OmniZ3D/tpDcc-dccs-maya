@@ -1,6 +1,7 @@
 # ===================================================================
 # tpDcc-dccs-maya requirements file
 # ===================================================================
+-i https://pypi.org/simple
 tpDcc-libs-python
 tpDcc-core
 tpDcc-libs-qt
