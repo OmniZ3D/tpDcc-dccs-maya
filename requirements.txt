@@ -4,3 +4,6 @@
 tpDcc-libs-python
 tpDcc-core
 tpDcc-libs-qt
+
+-i https://pypi.anaconda.org/carlkl/simple
+numpy
