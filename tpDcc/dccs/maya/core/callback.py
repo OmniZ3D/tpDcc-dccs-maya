@@ -138,12 +138,32 @@ class MayaCallback(object):
                 MayaCallback.NodeSelectCallback._callback = None
                 maya.cmds.scriptJob(kill=token, force=True)
 
-    class SceneCreatedCallback(callback.ICallback, object):
+    class ScenePreCreatedCallback(callback.ICallback, object):
         """
         Callback that handles SceneCreation notifications for Maya
         """
 
         _codes = [maya.api.OpenMaya.MSceneMessage.kBeforeNew, maya.api.OpenMaya.MSceneMessage.kBeforeOpen]
+
+        @classmethod
+        def filter(cls, *args):
+            return True, args
+
+        @classmethod
+        def register(cls, fn, owner=None):
+            return [maya.api.OpenMaya.MSceneMessage.addCallback(c, fn) for c in cls._codes]
+
+        @classmethod
+        def unregister(cls, token):
+            for t in token:
+                maya.api.OpenMaya.MSceneMessage.removeCallback(t)
+
+    class ScenePostCreatedCallback(callback.ICallback, object):
+        """
+        Callback that is called after a scene has been created
+        """
+
+        _codes = [maya.api.OpenMaya.MSceneMessage.kAfterNew, maya.api.OpenMaya.MSceneMessage.kAfterOpen]
 
         @classmethod
         def filter(cls, *args):
