@@ -1691,19 +1691,21 @@ def parent_shapes_to_transforms(shapes_list, transforms_list):
         return False
 
     for shape, transform in zip(shapes, transforms):
-        shapes = maya.cmds.listRelatives(shape, children=True, shapes=True, ni=True, fullPath=True)
-        combined_shape = maya.cmds.parent(shapes, transform, shape=True, add=True)[0]
+        shape_xform = node_parent(shape)
+        child_shapes = maya.cmds.listRelatives(shape, children=True, shapes=True, ni=True, fullPath=True) or list()
+        all_shapes = [shape] + child_shapes
+        combined_shape = maya.cmds.parent(all_shapes, transform, shape=True, add=True)[0]
         combined_transform = maya.cmds.listRelatives(combined_shape, parent=True)[0]
-        if len(shapes) == 1:
-            maya.cmds.rename(shapes, '{}Shape'.format(shape))
+        if len(all_shapes) == 1:
+            maya.cmds.rename(all_shapes, '{}Shape'.format(node_short_name(shape)))
         else:
-            for i, shp in enumerate(shapes):
+            for i, shp in enumerate(all_shapes):
                 maya.cmds.rename(shp, '%sShape%02d' % (transform, i))
         # delete old transform
-        maya.cmds.delete(shape)
+        maya.cmds.delete(shape_xform)
         replaced_shapes.append(combined_transform)
 
-    replaced_shapes = list()
+    return replaced_shapes
 
 
 def rename_shapes(node):
