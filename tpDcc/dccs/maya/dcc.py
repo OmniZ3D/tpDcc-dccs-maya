@@ -5050,7 +5050,9 @@ def add_string_attribute(node, attribute_name, default_value='', **kwargs):
 
     maya.cmds.addAttr(node, ln=attribute_name, dt='string', **kwargs)
     maya.cmds.setAttr('{}.{}'.format(node, attribute_name), default_value, type='string')
-    maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock, channelBox=channel_box_display)
+    if not node_is_referenced(node):
+        maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, lock=lock)
+    maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, channelBox=channel_box_display)
     maya.cmds.setAttr('{}.{}'.format(node, attribute_name), edit=True, keyable=keyable)
 
 
