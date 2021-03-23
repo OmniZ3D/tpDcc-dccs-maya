@@ -860,6 +860,10 @@ class MetaNode(object):
             try:
                 if not attr_type:
                     attr_type = attribute_data_type(value)
+                if not attr_type:
+                    LOGGER.warning('Attribute Type "{}" is not valid!'.format(attr_type))
+                    return False
+
                 DataTypeKwargs[attr_type].update(add_kwargs_to_edit)
                 LOGGER.debug('addAttr : {0} : value_type : {1} > data_type keywords: {2}'.format(
                     attr, attr_type, DataTypeKwargs[attr_type]))
@@ -932,7 +936,7 @@ class MetaNode(object):
 
         return metautils.MetaDataListUtils.store_info(self.meta_node, *args, **kwargs)
 
-    def get_attr(self, attr, as_attr=True):
+    def get_attr(self, attr, as_attr=True, default=None):
         """
         Returns attribute if exists
         :param attr: str, attribute name we want to query
@@ -943,6 +947,8 @@ class MetaNode(object):
         try:
             a = self.__getattribute__(attr)
         except Exception:
+            if default is not None:
+                return default
             return None
 
         if as_attr:
