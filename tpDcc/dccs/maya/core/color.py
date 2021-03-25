@@ -7,7 +7,7 @@ Module that contains functions and classes related with colors
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtGui import QColor
+from tpDcc.vendors.Qt.QtGui import QColor
 
 import maya.cmds
 

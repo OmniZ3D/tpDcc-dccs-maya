@@ -9,6 +9,7 @@ from __future__ import print_function, division, absolute_import
 
 import maya.cmds
 
+from tpDcc import dcc
 from tpDcc.dccs.maya.meta import metanode, metautils
 from tpDcc.dccs.maya.core import transform as transform_lib, shape as shape_lib, attribute as attr_utils
 
@@ -78,6 +79,13 @@ class MetaObject(metanode.MetaNode, object):
             return metanode.valid_obj_list_arg(result)
 
         return result
+
+    def select(self):
+        """
+        Selects wrapped meta node in current scene
+        """
+
+        dcc.select_node(self.poser.meta_node)
 
     # =============================================================================================
     # ATTRIBUTES

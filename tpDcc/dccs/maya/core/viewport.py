@@ -12,7 +12,7 @@ import os
 import logging
 import tempfile
 
-from Qt.QtWidgets import QWidget, QVBoxLayout
+from tpDcc.vendors.Qt.QtWidgets import QWidget, QVBoxLayout
 
 import maya.cmds
 

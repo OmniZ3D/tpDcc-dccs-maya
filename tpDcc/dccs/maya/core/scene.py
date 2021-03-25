@@ -13,7 +13,7 @@ import logging
 import traceback
 import contextlib
 
-from Qt.QtWidgets import QMessageBox
+from tpDcc.vendors.Qt.QtWidgets import QMessageBox
 
 import maya.cmds
 import maya.api.OpenMaya

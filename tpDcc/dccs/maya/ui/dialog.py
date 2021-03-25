@@ -11,9 +11,9 @@ import os
 
 import maya.cmds
 
-from Qt.QtCore import Qt
-from Qt.QtWidgets import QColorDialog, QPushButton
-from Qt.QtGui import QColor
+from tpDcc.vendors.Qt.QtCore import Qt
+from tpDcc.vendors.Qt.QtWidgets import QColorDialog, QPushButton
+from tpDcc.vendors.Qt.QtGui import QColor
 
 from tpDcc import dcc
 from tpDcc.libs.python import path as path_utils
