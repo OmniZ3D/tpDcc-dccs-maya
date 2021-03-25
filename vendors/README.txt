@@ -1,0 +1,1 @@
+# numpy-1.9.2-cp27-none-win_amd64.whl: Custom numpy version compiled to work with Maya 2020 and lower versions (Python 2): https://pypi.anaconda.org/carlkl/simple
