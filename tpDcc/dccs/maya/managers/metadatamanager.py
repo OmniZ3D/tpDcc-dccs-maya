@@ -10,8 +10,8 @@ from __future__ import print_function, division, absolute_import
 import logging
 import inspect
 
-from tpDcc.vendors.Qt.QtCore import Qt
-from tpDcc.vendors.Qt.QtWidgets import QTableView
+from Qt.QtCore import Qt
+from Qt.QtWidgets import QTableView
 
 import maya.cmds
 

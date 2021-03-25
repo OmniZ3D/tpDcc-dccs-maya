@@ -11,8 +11,8 @@ import json
 from collections import OrderedDict
 from functools import partial
 
-from tpDcc.vendors.Qt.QtCore import Qt, QSize
-from tpDcc.vendors.Qt.QtWidgets import QWidget, QLabel, QPushButton, QMenu
+from Qt.QtCore import Qt, QSize
+from Qt.QtWidgets import QWidget, QLabel, QPushButton, QMenu
 
 import maya.cmds
 import maya.mel

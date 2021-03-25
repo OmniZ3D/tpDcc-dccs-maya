@@ -11,8 +11,8 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-from tpDcc.vendors.Qt.QtWidgets import QWidget
-from tpDcc.vendors.Qt.QtGui import QPixmap
+from Qt.QtWidgets import QWidget
+from Qt.QtGui import QPixmap
 try:
     from shiboken import wrapInstance
 except ImportError:

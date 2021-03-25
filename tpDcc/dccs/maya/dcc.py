@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from tpDcc.vendors.Qt.QtWidgets import QApplication, QMainWindow
+from Qt.QtWidgets import QApplication, QMainWindow
 
 import maya.cmds
 import maya.mel

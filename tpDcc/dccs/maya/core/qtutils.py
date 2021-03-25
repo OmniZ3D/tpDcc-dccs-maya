@@ -8,8 +8,8 @@ Module that contains utils functions to work with Qt in Maya
 import sys
 import logging
 
-from tpDcc.vendors.Qt.QtCore import Qt
-from tpDcc.vendors.Qt.QtWidgets import QWidget
+from Qt.QtCore import Qt
+from Qt.QtWidgets import QWidget
 
 import maya.cmds
 import maya.OpenMayaUI

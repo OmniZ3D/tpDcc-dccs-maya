@@ -9,7 +9,7 @@ from __future__ import print_function, division, absolute_import
 
 import logging
 
-from tpDcc.vendors.Qt.QtWidgets import QApplication
+from Qt.QtWidgets import QApplication
 
 import maya.cmds
 

@@ -3922,7 +3922,7 @@ def set_color(nodes, color, color_transform=False, short_range=False):
         or long range (values between 0 and 255)
     """
 
-    from tpDcc.vendors.Qt.QtGui import QColor
+    from Qt.QtGui import QColor
 
     nodes = python.force_list(nodes)
 

@@ -13,8 +13,8 @@ import traceback
 import contextlib
 from collections import OrderedDict
 
-from tpDcc.vendors.Qt.QtCore import QObject
-from tpDcc.vendors.Qt.QtWidgets import QApplication, QWidget, QDesktopWidget, QMainWindow, QTextEdit
+from Qt.QtCore import QObject
+from Qt.QtWidgets import QApplication, QWidget, QDesktopWidget, QMainWindow, QTextEdit
 from Qt import QtGui
 try:
     import shiboken2 as shiboken

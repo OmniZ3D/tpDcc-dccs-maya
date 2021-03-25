@@ -7,8 +7,8 @@ Module that contains functionality for Maya windows
 
 from __future__ import print_function, division, absolute_import
 
-from tpDcc.vendors.Qt.QtCore import Qt, QSize
-from tpDcc.vendors.Qt.QtWidgets import QWidget, QMainWindow
+from Qt.QtCore import Qt, QSize
+from Qt.QtWidgets import QWidget, QMainWindow
 
 import maya.cmds
 import maya.OpenMayaUI

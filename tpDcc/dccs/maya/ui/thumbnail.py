@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 import os
 import shutil
 
-from tpDcc.vendors.Qt.QtCore import Signal
+from Qt.QtCore import Signal
 
 from tpDcc.libs.qt.core import qtutils
 from tpDcc.libs.qt.widgets import layouts, buttons, dialog
