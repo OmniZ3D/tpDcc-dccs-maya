@@ -13,7 +13,8 @@ import logging
 import maya.cmds
 import maya.api.OpenMaya
 
-from tpDcc.libs.python import mathlib, python, octree, dijkstra
+from tpDcc.libs.python import python
+from tpDcc.libs.math.core import vec3, octree, dijkstra
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.core import helpers, exceptions, shape, transform as xform_utils, name as name_utils
 from tpDcc.dccs.maya.core import scene, joint as joint_utils, component as cmp_utils, shape as shape_utils
@@ -553,7 +554,7 @@ def transforms_to_nurbs_surface(transforms, name='from_transforms', spans=-1, of
         xform_2 = maya.cmds.group(empty=True)
         xform_utils.MatchTransform(xform, xform_1).translation_rotation()
         xform_utils.MatchTransform(xform, xform_2).translation_rotation()
-        vct = mathlib.get_axis_vector(offset_axis)
+        vct = vec3.get_axis_vector(offset_axis)
         maya.cmds.move(
             vct[0] * offset_amount, vct[1] * offset_amount, vct[2] * offset_amount, xform_1, relative=True, os=True)
         maya.cmds.move(
@@ -597,8 +598,8 @@ def curve_to_nurbs_surface(curve, description='', spans=-1, offset_axis='X', off
     curve_1 = maya.cmds.duplicate(curve)[0]
     curve_2 = maya.cmds.duplicate(curve)[0]
     offset_axis = offset_axis.upper()
-    positive_move = mathlib.get_axis_vector(offset_axis, offset_amount)
-    negative_move = mathlib.get_axis_vector(offset_axis, -offset_amount)
+    positive_move = vec3.get_axis_vector(offset_axis, offset_amount)
+    negative_move = vec3.get_axis_vector(offset_axis, -offset_amount)
     maya.cmds.move(positive_move[0], positive_move[1], positive_move[2], curve_1)
     maya.cmds.move(negative_move[0], negative_move[1], negative_move[2], curve_2)
 

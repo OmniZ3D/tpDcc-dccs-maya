@@ -4,5 +4,6 @@
 tpDcc-libs-python
 tpDcc-core
 tpDcc-libs-qt
+tpDcc-libs-math
 ./vendors/numpy-1.9.2-cp27-none-win_amd64.whl;python_version<'3'
 numpy;python_version >= '3'

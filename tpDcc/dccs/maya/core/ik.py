@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 import maya.cmds
 
 from tpDcc import dcc
-from tpDcc.libs.python import mathlib
+from tpDcc.libs.math.core import scalar
 from tpDcc.dccs.maya.core import attribute as attr_utils, name as name_utils, transform as transform_utils
 
 
@@ -226,7 +226,7 @@ def create_spline_ik_stretch(
             plus = maya.cmds.createNode('plusMinusAverage', n=plus_name)
             maya.cmds.addAttr(plus, ln='scaleOffset', dv=1, k=True)
             maya.cmds.addAttr(plus, ln='bulge', dv=1, k=True)
-            arc_value = mathlib.fade_sine(percent)
+            arc_value = scalar.fade_sine(percent)
             attr_utils.connect_multiply('{}.outputX'.format(multiply_scale_offset), '{}.bulge'.format(plus), arc_value)
             attr_utils.connect_plus('{}.scaleOffset'.format(plus), '{}.input1D[0]'.format(plus))
             attr_utils.connect_plus('{}.bulge'.format(plus), '{}.input1D[1]'.format(plus))

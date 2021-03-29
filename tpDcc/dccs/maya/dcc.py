@@ -22,8 +22,9 @@ import maya.utils
 import maya.api.OpenMaya
 
 from tpDcc.core import dcc, consts
-from tpDcc.libs.python import python, mathlib
+from tpDcc.libs.python import python
 from tpDcc.libs.qt.core import qtutils
+from tpDcc.libs.math.core import matrix
 from tpDcc.dccs.maya.api import mathlib as maya_math
 from tpDcc.dccs.maya.core import helpers, gui, node, name, scene, shape, transform, decorators as maya_decorators
 from tpDcc.dccs.maya.core import attribute, namespace, playblast, constants as maya_constants, joint as joint_utils
@@ -2904,9 +2905,9 @@ def convert_rotation(rotation):
     if get_up_axis_name().lower() == 'y':
         return rotation
 
-    rotation_matrix1 = np.array(mathlib.rotation_matrix_xyz(rotation))
-    rotation_matrix2 = np.array(mathlib.rotation_matrix_xyz([-90, 0, 0]))
-    rotation_matrix3 = mathlib.rotation_matrix_to_xyz_euler(
+    rotation_matrix1 = np.array(matrix.rotation_matrix_xyz(rotation))
+    rotation_matrix2 = np.array(matrix.rotation_matrix_xyz([-90, 0, 0]))
+    rotation_matrix3 = matrix.rotation_matrix_to_xyz_euler(
         rotation_matrix2.dot(rotation_matrix1).dot(np.linalg.inv(rotation_matrix2)))
 
     return list(rotation_matrix3)

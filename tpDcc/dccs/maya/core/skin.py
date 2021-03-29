@@ -28,7 +28,8 @@ except ImportError:
 
 from tpDcc import dcc
 from tpDcc.dccs.maya import api
-from tpDcc.libs.python import python, mathlib, kdtree
+from tpDcc.libs.python import python
+from tpDcc.libs.math.core import vec3, kdtree
 from tpDcc.dccs.maya.api import mathlib as api_mathlib, skin as api_skin
 from tpDcc.dccs.maya.core import decorators, exceptions, deformer, attribute, node as node_utils, mesh as mesh_utils
 from tpDcc.dccs.maya.core import joint as jnt_utils, transform as xform_utils, shape as shape_utils, name as name_utils
@@ -735,10 +736,10 @@ class SkinJointSurface(SkinJointObject, object):
             end_cvs = '{}.cv{}'.format(self._geometry, index2)
             p1 = maya.cmds.xform('{}.cv[0][0]'.format(self._geometry), q=True, ws=True, t=True)
             p2 = maya.cmds.xform('{}.cv{}'.format(self._geometry, index3), q=True, ws=True, t=True)
-            start_position = mathlib.get_mid_point(p1, p2)
+            start_position = vec3.get_mid_point(p1, p2)
             p1 = maya.cmds.xform('{}.cv{}'.format(self._geometry, index4), q=True, ws=True, t=True)
             p2 = maya.cmds.xform('{}.cv{}'.format(self._geometry, index5), q=True, ws=True, t=True)
-            end_position = mathlib.get_mid_point(p1, p2)
+            end_position = vec3.get_mid_point(p1, p2)
 
         start_joint = self._create_joint(start_cvs)
         self._joints.append(start_joint)

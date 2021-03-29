@@ -12,11 +12,10 @@ import logging
 
 import maya.cmds
 
-from tpDcc.managers import configs
 from tpDcc.libs.python import python, strings
 from tpDcc.libs.python import name as naming_utils
 
-LOGGER = logging.getLogger('tpDcc-dccs-maya')
+logger = logging.getLogger('tpDcc-dccs-maya')
 
 
 class EditIndexModes(object):
@@ -152,9 +151,9 @@ def get_short_name(obj):
     if node_names:
         if len(node_names) == 1:
             return node_names[0]
-        LOGGER.warning('Too many objects named "{}"'.format(obj))
+        logger.warning('Too many objects named "{}"'.format(obj))
         for i, o in enumerate(node_names):
-            LOGGER.warning(' ' * 4 + '{0}: "{1}"'.format(i, o))
+            logger.warning(' ' * 4 + '{0}: "{1}"'.format(i, o))
         raise ValueError('Get Node Short Name || More than one object with name {}'.format(obj))
     raise ValueError('Get Node Short Name || No object with name {} exists'.format(obj))
 
@@ -175,9 +174,9 @@ def get_long_name(obj):
     if node_names:
         if len(node_names) == 1:
             return node_names[0]
-        LOGGER.error('Too many objects named "{}"'.format(obj))
+        logger.error('Too many objects named "{}"'.format(obj))
         for i, o in enumerate(node_names):
-            LOGGER.error(' ' * 4 + '{0}: "{1}"'.format(i, o))
+            logger.error(' ' * 4 + '{0}: "{1}"'.format(i, o))
         raise ValueError('Get Node Long Name || More than one object with name {}'.format(obj))
 
     raise ValueError('Get Node Long Name || No object with name {} exists'.format(obj))
@@ -376,7 +375,7 @@ def find_unique_name_by_filter(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return find_unique_name(
@@ -432,18 +431,18 @@ def rename(name, new_name, uuid=None, rename_shape=True, return_long_name=True):
     if obj_short_name == new_short_name:
         return name
     if maya.cmds.lockNode(name, query=True)[0]:
-        LOGGER.warning('Node "{}" is loced and cannot be renamed!'.format(name))
+        logger.warning('Node "{}" is loced and cannot be renamed!'.format(name))
         return name
     if not new_short_name:
-        LOGGER.warning('Names cannot be an empty string')
+        logger.warning('Names cannot be an empty string')
         return name
     if new_short_name[0].isdigit():
-        LOGGER.warning('Names cannot start with numbers')
+        logger.warning('Names cannot start with numbers')
         return name
     if ':' in new_short_name:
         new_pure_name = new_short_name.split(':')[-1]
         if new_pure_name[0].isdigit():
-            LOGGER.warning('Names cannot start with numbers')
+            logger.warning('Names cannot start with numbers')
             return name
 
     renamed_name = maya.cmds.rename(name, new_short_name, ignoreShape=not rename_shape)
@@ -593,7 +592,7 @@ def add_prefix_by_filter(prefix, filter_type, add_underscore=False, rename_shape
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return add_prefix(
@@ -622,7 +621,7 @@ def add_suffix_by_filter(suffix, filter_type, add_underscore=False, rename_shape
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return add_suffix(
@@ -691,7 +690,7 @@ def change_suffix_padding_by_filter(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return change_suffix_padding(
@@ -749,7 +748,7 @@ def edit_item_index(obj_names, index, text='', mode=EditIndexModes.INSERT, separ
 
         if mode == EditIndexModes.REMOVE:
             if len(base_name_list) == 1:
-                LOGGER.warning('Not enough name parts to rename: {}'.format(base_name_list[0]))
+                logger.warning('Not enough name parts to rename: {}'.format(base_name_list[0]))
                 return obj_name
             del base_name_list[index_]
         elif mode == EditIndexModes.REPLACE:
@@ -818,7 +817,7 @@ def edit_item_index_by_filter(index, filter_type, text='', mode=EditIndexModes.I
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return edit_item_index(
@@ -880,7 +879,7 @@ def auto_suffix_object(obj_names, uuid=None, rename_shape=True):
     else:
         auto_suffix = naming_config.get('auto_suffixes', default=dict())
     if not auto_suffix:
-        LOGGER.warning(
+        logger.warning(
             'Impossible to launch auto suffix functionality because no auto suffixes are defined for Maya!')
         return None
 
@@ -914,7 +913,7 @@ def auto_suffix_object_by_type(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return auto_suffix_object(obj_names=filtered_obj_list, rename_shape=rename_shape)
@@ -982,7 +981,7 @@ def remove_numbers_from_object_by_filter(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return remove_numbers_from_object(
@@ -1048,7 +1047,7 @@ def renumber_objects_by_filter(
         filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only, dag=dag,
         remove_maya_defaults=remove_maya_defaults, transforms_only=transforms_only)
     if not filtered_obj_list:
-        LOGGER.warning('No objects filtered with type "{}" found!'.format(filter_type))
+        logger.warning('No objects filtered with type "{}" found!'.format(filter_type))
         return
 
     return renumber_objects(

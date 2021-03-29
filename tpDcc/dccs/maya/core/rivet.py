@@ -11,7 +11,8 @@ import maya.cmds
 
 from tpDcc import dcc
 from tpDcc.dccs.maya import api
-from tpDcc.libs.python import mathlib, python, name as name_utils
+from tpDcc.libs.python import python, name as name_utils
+from tpDcc.libs.math.core import vec3
 from tpDcc.dccs.maya.core import geometry, attribute, transform as transform_utils
 from tpDcc.dccs.maya.core import mesh as mesh_utils, constraint as constraint_utils
 
@@ -151,9 +152,9 @@ class Rivet(object):
         vector1 = maya.cmds.xforem('{}.cv[0][0]'.format(parent_surface), q=True, ws=True, t=True)
         vector2 = maya.cmds.xforem('{}.cv[0][1]'.format(parent_surface), q=True, ws=True, t=True)
         position = maya.cmds.xform(self._rivet, q=True, ws=True, t=True)
-        vector_a = mathlib.Vector(vector1[0], vector1[1], vector1[2])
-        vector_b = mathlib.Vector(vector2[0], vector2[1], vector2[2])
-        vector_pos = mathlib.Vector(position[0], position[1], position[2])
+        vector_a = vec3.Vector3(vector1[0], vector1[1], vector1[2])
+        vector_b = vec3.Vector3(vector2[0], vector2[1], vector2[2])
+        vector_pos = vec3.Vector3(position[0], position[1], position[2])
         vector_1 = vector_a - vector_pos
         vector_2 = vector_b - vector_pos
         vector_1 = vector_1.get_vector()

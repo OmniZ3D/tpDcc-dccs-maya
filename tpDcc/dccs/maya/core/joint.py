@@ -17,7 +17,8 @@ import maya.api.OpenMaya
 from tpDcc import dcc
 from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.api import mathlib
-from tpDcc.libs.python import strings, python, name as python_name, mathlib as math_utils
+from tpDcc.libs.python import strings, python, name as python_name
+from tpDcc.libs.math.core import vec3
 from tpDcc.dccs.maya.core import exceptions, decorators, scene, attribute, transform, node
 from tpDcc.dccs.maya.core import transform as xform_utils, constraint as cns_utils, matrix as matrix_utils
 from tpDcc.dccs.maya.core import name as name_utils, shape as shape_utils, ik as ik_utils
@@ -1914,7 +1915,7 @@ def subdivide_joint(joint1=None, joint2=None, count=1, prefix='joint', name='sub
         maya.cmds.makeIdentity(top_joint, apply=True, r=True)
 
     for i in range(count):
-        position = math_utils.get_inbetween_vector(vector1, vector2, value)
+        position = vec3.get_inbetween_vector(vector1, vector2, value)
         maya.cmds.select(clear=True)
         joint = maya.cmds.joint(p=position, n=name_utils.find_unique_name(name), r=radius)
         maya.cmds.setAttr('{}.radius'.format(joint), radius)

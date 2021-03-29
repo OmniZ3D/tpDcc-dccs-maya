@@ -11,7 +11,7 @@ import logging
 
 import maya.cmds
 
-from tpDcc.libs.python import mathlib
+from tpDcc.libs.math.core import vec3
 from tpDcc.dccs.maya.core import name as name_lib
 from tpDcc.dccs.maya.core import shape as shape_utils
 
@@ -211,11 +211,11 @@ class ClusterSurface(ClusterObject, object):
 
             p1 = maya.cmds.xform('{}.cv[0][0]'.format(self._geo), q=True, ws=True, t=True)
             p2 = maya.cmds.xform('{}.cv{}'.format(self._geo, index3), q=True, ws=True, t=True)
-            start_pos = mathlib.get_mid_point(p1, p2)
+            start_pos = vec3.get_mid_point(p1, p2)
 
             p1 = maya.cmds.xform('{}.cv{}'.format(self._geo, index4), q=True, ws=True, t=True)
             p2 = maya.cmds.xform('{}.cv{}'.format(self._geo, index5), q=True, ws=True, t=True)
-            end_pos = mathlib.get_mid_point(p1, p2)
+            end_pos = vec3.get_mid_point(p1, p2)
 
         cluster, handle = self._create_cluster(start_cvs)
 

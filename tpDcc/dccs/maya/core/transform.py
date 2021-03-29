@@ -14,10 +14,11 @@ import maya.cmds
 import maya.api.OpenMaya
 
 from tpDcc import dcc
-from tpDcc.libs.python import name, mathlib, python
+from tpDcc.libs.python import name, python
+from tpDcc.libs.math.core import scalar, bbox, vec3
 from tpDcc.dccs.maya.core import exceptions, attribute, node, component, name as name_utils
 
-LOGGER = logging.getLogger('tpDcc-dccs-maya')
+logger = logging.getLogger('tpDcc-dccs-maya')
 
 TRANSFORM_SIDES = {
     'end': {
@@ -326,7 +327,7 @@ class MatchTransform(object):
         set_scale_pivot(transform_name=self.target, scale_pivot_vector=scale_pivot_vector, world_space=True)
 
 
-class BoundingBox(mathlib.BoundingBox, object):
+class BoundingBox(bbox.BoundingBox, object):
     """
     Util class to work with bounding box
     """
@@ -352,7 +353,7 @@ class BoundingBox(mathlib.BoundingBox, object):
         shapes = shape_lib.get_shapes(self._node, intermediates=False, full_path=True)
         if shapes:
             x_min, y_min, z_min, x_max, y_max, z_max = maya.cmds.exactWorldBoundingBox(shapes)
-            return mathlib.BoundingBox([x_min, y_min, z_min], [x_max, y_max, z_max])
+            return bbox.BoundingBox([x_min, y_min, z_min], [x_max, y_max, z_max])
 
         return None
 
@@ -642,7 +643,7 @@ def get_position(point):
 
     if type(point) == list or type(point) == tuple:
         if len(point) < 3:
-            LOGGER.exception('Invalid point value supplied! Not enough list/tuple elements!')
+            logger.exception('Invalid point value supplied! Not enough list/tuple elements!')
             return
         pos = point[0:3]
     elif python.is_string(point):
@@ -658,11 +659,11 @@ def get_position(point):
             except Exception:
                 pass
         if not pos:
-            LOGGER.exception(
+            logger.exception(
                 'Invalid point value supplied! Unable to determine type of point "{0}"!'.format(str(point)))
             return
     else:
-        LOGGER.exception('Invalid point value supplied! Invalid argument type!')
+        logger.exception('Invalid point value supplied! Invalid argument type!')
         return
 
     return pos
@@ -976,7 +977,7 @@ def get_distance(source_transform, target_transform):
     else:
         v2 = maya.cmds.xform(target_transform, q=True, rp=True, ws=True)
 
-    return mathlib.get_distance_between_vectors(v1, v2)
+    return vec3.get_distance_between_vectors(v1, v2)
 
 
 def create_group_in_plane(transform1, transform2, transform3):
@@ -1101,7 +1102,7 @@ def mirror_transform(
     scope_transforms += transforms
     scope = list(set(scope_joints + scope_transforms))
     if not scope:
-        LOGGER.warning('No objects to mirror!')
+        logger.warning('No objects to mirror!')
         return
 
     other_parents = dict()
@@ -1158,7 +1159,7 @@ def mirror_transform(
             if maya.cmds.objExists('{}.mirror'.format(other)):
                 mirror = maya.cmds.getAttr('{}.mirror'.format(other))
                 if not mirror:
-                    LOGGER.debug('{} was not mirrored because its mirror attribute is set off!'.format(other))
+                    logger.debug('{} was not mirrored because its mirror attribute is set off!'.format(other))
                     continue
 
             lock_state = attribute.LockTransformState(other)
@@ -1570,7 +1571,7 @@ def get_shape_bounding_box(shape):
     """
 
     x_min, y_min, z_min, x_max, y_max, z_max = maya.cmds.exactWorldBoundingBox(shape)
-    return mathlib.BoundingBox([x_min, y_min, z_min], [x_max, y_max, z_max])
+    return bbox.BoundingBox([x_min, y_min, z_min], [x_max, y_max, z_max])
 
 
 def get_axis_vector(transform, axis_vector):
@@ -1646,14 +1647,14 @@ def get_axis_aimed_at_child(transform):
 
     pos_1 = maya.cmds.xform(transform, q=True, ws=True, t=True)
     pos_2 = maya.cmds.xform(children[0], q=True, ws=True, t=True)
-    pos_2 = mathlib.vector_sub(pos_2, pos_1)
+    pos_2 = vec3.vector_sub(pos_2, pos_1)
 
     for axis in all_axis:
         axis_vector = get_axis_vector(transform, axis_vector=axis)
-        axis_vector = mathlib.vector_sub(axis_vector, pos_1)
-        vector_1 = mathlib.Vector(axis_vector)
-        vector_2 = mathlib.Vector(pos_2)
-        result = mathlib.get_dot_product(vector_1, vector_2)
+        axis_vector = vec3.vector_sub(axis_vector, pos_1)
+        vector_1 = vec3.Vector3(axis_vector)
+        vector_2 = vec3.Vector3(pos_2)
+        result = vec3.get_dot_product(vector_1, vector_2)
         if result > current_result:
             aim_axis = axis
             current_result = result
@@ -1708,7 +1709,7 @@ def get_middle_transform(transform_list):
         return
 
     if (total_division + total_division) == count:
-        mid_point = mathlib.get_mid_point(transform_list[total_division - 1], transform_list[total_division])
+        mid_point = vec3.get_mid_point(transform_list[total_division - 1], transform_list[total_division])
     else:
         mid_point = maya.cmds.xform(transform_list[total_division], q=True, t=True, ws=True)
 
@@ -2304,15 +2305,15 @@ def get_mirror_axis(transform_node, mirror_plane):
         t3 = '%.3f' % t3[0], '%.3f' % t3[1], '%.3f' % t3[2]
         if mirror_plane == dcc.MirrorPlane.YZ:
             x = [t1[0], t2[0], t3[0]]
-            i = mathlib.max_index(x)
+            i = scalar.max_index(x)
             result[i] = -1
         if mirror_plane == dcc.MirrorPlane.XZ:
             y = [t1[1], t2[1], t3[1]]
-            i = mathlib.max_index(y)
+            i = scalar.max_index(y)
             result[i] = -1
         if mirror_plane == dcc.MirrorPlane.XY:
             z = [t1[2], t2[2], t3[2]]
-            i = mathlib.max_index(z)
+            i = scalar.max_index(z)
             result[i] = -1
     finally:
         maya.cmds.delete(transform0)

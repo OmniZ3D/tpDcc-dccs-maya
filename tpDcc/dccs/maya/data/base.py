@@ -14,7 +14,7 @@ import maya.cmds
 
 from tpDcc import dcc
 from tpDcc.core import data, scripts
-from tpDcc.libs.python import path, osplatform, mathlib, version
+from tpDcc.libs.python import path, osplatform, version
 from tpDcc.dccs.maya.core import constants, geometry, scene, helpers
 
 LOGGER = logging.getLogger('tpDcc-dccs-maya')

@@ -13,7 +13,8 @@ import maya.cmds
 import maya.api.OpenMaya
 
 from tpDcc.dccs.maya import api
-from tpDcc.libs.python import python, mathlib, strings
+from tpDcc.libs.python import python, strings
+from tpDcc.libs.math.core import scalar, vec3
 from tpDcc.dccs.maya.api import curves as api_curves
 from tpDcc.dccs.maya.core import exceptions, transform, component
 from tpDcc.dccs.maya.core import decorators, filtertypes, name as name_utils, shape as shape_utils, node as node_utils
@@ -295,7 +296,7 @@ def rebulid_curve_at_distance(curve, min_length, max_length, min_spans=3, max_sp
     """
 
     curve_length = maya.cmds.arcLen(curve, ch=False)
-    spans = mathlib.remap_value(curve_length, min_length, max_length, min_spans, max_spans)
+    spans = scalar.remap_value(curve_length, min_length, max_length, min_spans, max_spans)
 
     return rebuild_curve(curve, spans=spans, degree=3)
 
@@ -484,8 +485,8 @@ def curve_to_nurbs_surface(curve, description, spans=-1, offset_axis='X', offset
     curve1 = maya.cmds.duplicate(curve)[0]
     curve2 = maya.cmds.duplicate(curve)[0]
     offset_axis = offset_axis.upper()
-    pos_move = mathlib.get_axis_vector(offset_axis, offset_amount)
-    neg_move = mathlib.get_axis_vector(offset_axis, offset_amount * -1)
+    pos_move = vec3.get_axis_vector(offset_axis, offset_amount)
+    neg_move = vec3.get_axis_vector(offset_axis, offset_amount * -1)
     maya.cmds.move(pos_move[0], pos_move[1], pos_move[2], curve1)
     maya.cmds.move(neg_move[0], neg_move[1], neg_move[2], curve2)
     curves = [curve1, curve2]
@@ -611,7 +612,7 @@ def move_cvs(curves, position, pivot_at_center=False):
             center_position = transform.get_center(curve_cvs)
         else:
             center_position = maya.cmds.xform(curve, query=True, ws=True, rp=True)
-        offset = mathlib.vector_sub(position, center_position)
+        offset = vec3.vector_sub(position, center_position)
         maya.cmds.move(offset[0], offset[1], offset[2], curve_cvs, ws=True, r=True)
 
 

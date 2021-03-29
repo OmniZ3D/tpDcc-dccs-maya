@@ -17,10 +17,9 @@ import maya.api.OpenMaya
 import maya.api.OpenMayaAnim
 
 from tpDcc.libs.python import python
-# IMPORTANT: use namespace to avoid clash with our mathlib Maya api module
-from tpDcc.libs.python import mathlib as python_mathlib
+from tpDcc.libs.math.core import vec3
 
-LOGGER = logging.getLogger('tpDcc-dccs-maya')
+logger = logging.getLogger('tpDcc-dccs-maya')
 
 
 def is_new_api():
@@ -614,7 +613,7 @@ class SelectionList(ApiObject, object):
         try:
             self._obj.add(name)
         except Exception:
-            LOGGER.warning('Could not add {} into selection list'.format(name))
+            logger.warning('Could not add {} into selection list'.format(name))
             return
 
     def get_depend_node(self, index=0):
@@ -631,7 +630,7 @@ class SelectionList(ApiObject, object):
                 self._obj.getDependNode(0, mobj())
             return mobj()
         except Exception:
-            LOGGER.warning('Could not get MObject at index {}'.format(index))
+            logger.warning('Could not get MObject at index {}'.format(index))
             return
 
     def get_dag_path(self, index=0):
@@ -943,7 +942,7 @@ class TransformFunction(MayaFunction, object):
 
     def get_vector_matrix_product(self, vector):
         # TODO: Not working properly
-        LOGGER.warning('get_vector_matrix_product() does not work properly yet ...!')
+        logger.warning('get_vector_matrix_product() does not work properly yet ...!')
         vct = maya.OpenMaya.MVector()
         vct.x = vector[0]
         vct.y = vector[1]
@@ -1163,7 +1162,7 @@ class MeshFunction(MayaFunction, object):
         self._obj.getClosestNormal(point_base, new_point, space, None, accelerator)
 
         if at_source_position:
-            position = python_mathlib.vector_add(source_vector, new_point)
+            position = vec3.vector_add(source_vector, new_point)
             return position
         else:
             return [new_point.x, new_point.y, new_point.z]
@@ -1317,7 +1316,7 @@ class NurbsSurfaceFunction(MayaFunction, object):
         if not at_source_position:
             return vector
         else:
-            position = python_mathlib.vector_add(source_vector, vector)
+            position = vec3.vector_add(source_vector, vector)
             return position
 
 
