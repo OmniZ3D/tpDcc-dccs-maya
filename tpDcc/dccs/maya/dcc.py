@@ -4953,7 +4953,7 @@ def list_user_attributes(node):
     :return: list<str>
     """
 
-    return maya.cmds.listAttr(node, userDefined=True)
+    return maya.cmds.listAttr(node, userDefined=True) or list()
 
 
 def add_bool_attribute(node, attribute_name, default_value=False, **kwargs):

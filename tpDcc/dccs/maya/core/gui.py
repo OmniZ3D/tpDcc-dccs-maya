@@ -36,7 +36,6 @@ except ImportError:
 import maya.cmds
 import maya.utils
 import maya.mel
-import maya.OpenMayaUI as OpenMayaUIv1
 
 from tpDcc import dcc
 

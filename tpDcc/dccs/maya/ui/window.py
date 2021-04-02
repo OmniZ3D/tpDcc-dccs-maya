@@ -85,9 +85,17 @@ class BootStrapWidget(maya.app.general.mayaMixin.MayaQWidgetDockableMixin, QWidg
     def __init__(self, widget, title, icon=None, uid=None, parent=None):
         super(BootStrapWidget, self).__init__(parent=parent)
 
+        self._preferred_size = self.PREFERRED_SIZE
+
+        # This cannot be an empty string, otherwise Maya will get crazy
+        uid = uid or title or 'BootstrapWidget'
         global BOOTSTRAP_WIDGETS
         BOOTSTRAP_WIDGETS[uid] = self
 
+        # This was causing the dock widge to disappear after creation
+        # Not sure why, maybe because the id had - characters, or because maybe there was a widget with the same
+        # objectName, for now no setting an objectName seems to work fine
+        # self.setObjectName(uid)
         self.setWindowTitle(title)
         if icon:
             self.setWindowIcon(icon)
@@ -150,7 +158,7 @@ def rebuild(object_name):
 
     parent = maya.OpenMayaUI.MQtUtil.getCurrentParent()
     mixin_ptr = maya.OpenMayaUI.MQtUtil.findControl(wid.objectName())
-    maya.OpenMayaUI.MQtUtil.addWidgetToMayaLayout(long(mixin_ptr), long(parent))
+    maya.OpenMayaUI.MQtUtil.addWidgetToMayaLayout(int(mixin_ptr), int(parent))
     return True
 
 
