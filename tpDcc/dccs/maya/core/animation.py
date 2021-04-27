@@ -603,6 +603,24 @@ def set_active_frame_range(start_frame, end_frame):
         animationStartTime=start_frame, minTime=start_frame, animationEndTime=end_frame, maxTime=end_frame)
 
 
+def set_start_frame(start_frame):
+    """
+    Sets current start frame
+    :param start_frame: int
+    """
+
+    return maya.cmds.playbackOptions(animationStartTime=start_frame, minTime=start_frame)
+
+
+def set_end_frame(end_frame):
+    """
+    Sets current end frame
+    :param end_frame: int
+    """
+
+    return maya.cmds.playbackOptions(animationEndTime=end_frame, maxTime=end_frame)
+
+
 def get_selected_frame_range():
     """
     Returns the first and last selected frames in the play back s lider

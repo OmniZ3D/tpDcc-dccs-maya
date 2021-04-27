@@ -10,8 +10,8 @@ from __future__ import print_function, division, absolute_import
 import logging
 
 import maya.cmds
-import maya.OpenMaya
 import maya.api.OpenMaya
+import maya.api.OpenMayaAnim
 
 from tpDcc import dcc
 from tpDcc.libs.python import python
@@ -246,14 +246,10 @@ def get_transform(mobj):
     :return: OpenMaya.MObject
     """
 
-    # TODO: Make this function to work in both OpenMayaV1 and V2
-
-    import maya.OpenMaya as OpenMaya
-
     if not node_utils.is_dag_node(mobj):
         return mobj
 
-    path = OpenMaya.MDagPath.getAPathTo(mobj)
+    path = maya.api.OpenMaya.MDagPath.getAPathTo(mobj)
     new_ptr = path.transform()
     if new_ptr != mobj:
         return new_ptr
@@ -410,11 +406,6 @@ def find_input_shape_1(shape):
     :return:  str
     """
 
-    # TODO: Make this function to work in both OpenMayaV1 and V2
-
-    import maya.OpenMaya as OpenMaya
-    import maya.OpenMayaAnim as OpenMayaAnim
-
     # Get MObject for shape
     shape_obj = node_utils.get_mobject(shape)
 
@@ -430,13 +421,13 @@ def find_input_shape_1(shape):
     deformer_obj = node_utils.get_mobject(deformer_history[0])
 
     # Get deformer function set
-    deformer_fn = OpenMayaAnim.MFnGeometryFilter(deformer_obj)
+    deformer_fn = maya.api.OpenMayaAnim.MFnGeometryFilter(deformer_obj)
 
     # Get input shape deformer
     geom_index = deformer_fn.indexForOutputShape(shape_obj)
     input_shape_obj = deformer_fn.inputShapeAtIndex(geom_index)
 
-    return OpenMaya.MFnDagNode(input_shape_obj).partialPathName()
+    return maya.api.OpenMaya.MFnDagNode(input_shape_obj).partialPathName()
 
 
 def find_input_shape_2(shape):

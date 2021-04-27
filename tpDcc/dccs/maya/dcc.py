@@ -6198,6 +6198,15 @@ def get_start_frame():
     return animation.get_active_frame_range()[0]
 
 
+def set_start_frame(start_frame):
+    """
+    Sets current start frame
+    :param start_frame: int
+    """
+
+    return animation.set_start_frame(start_frame)
+
+
 def get_end_frame():
     """
     Returns current end frame
@@ -6205,6 +6214,15 @@ def get_end_frame():
     """
 
     return animation.get_active_frame_range()[1]
+
+
+def set_end_frame(end_frame):
+    """
+    Sets current end frame
+    :param end_frame: int
+    """
+
+    return animation.set_end_frame(end_frame)
 
 
 def get_current_frame():

@@ -19,7 +19,7 @@ from tpDcc.dccs.maya.api import curves as api_curves
 from tpDcc.dccs.maya.core import exceptions, transform, component
 from tpDcc.dccs.maya.core import decorators, filtertypes, name as name_utils, shape as shape_utils, node as node_utils
 
-LOGGER = logging.getLogger('tpDcc-dccs-maya')
+logger = logging.getLogger('tpDcc-dccs-maya')
 
 
 def check_curve(curve):
@@ -148,6 +148,25 @@ def create_curve_from_mesh_edge_loop(
 
     return new_curve
 
+# TODO: Implement
+# def create_curve_from_objects(transforms=None, extend=False):
+#     """
+#     Creates a curve using given objects as positions
+#     :param transforms: list(str), list of objects to use positions to build the curve from.
+#     :param extend: bool, Whether or not new curve should be extended after the last object.
+#     :return: str, newly created curve
+#     """
+#
+#     transforms = python.force_list(transforms or maya.cmds.ls(sl=True))
+#     if len(transforms) < 2:
+#         logger.warning('Impossible to create curve from objects. At least 2 should be given.')
+#         return None
+#     extend = extend if len(transforms) > 5 else True
+#
+#     positions = [maya.cmds.xform(node, query=True, ws=True, rp=True) for node in transforms]
+#     if extend:
+#         pass
+
 
 def transforms_to_curve(transforms, spans=None, name='from_transforms'):
     """
@@ -160,7 +179,7 @@ def transforms_to_curve(transforms, spans=None, name='from_transforms'):
     """
 
     if not transforms:
-        LOGGER.warning('Impossible to create curve from transforms because no transforms given!')
+        logger.warning('Impossible to create curve from transforms because no transforms given!')
         return None
 
     transform_positions = list()
@@ -552,7 +571,7 @@ def get_curve_shape(curve, shape_index=0):
     if shape_index < shape_count:
         return shapes[0]
     elif shape_index >= shape_count:
-        LOGGER.warning(
+        logger.warning(
             'Curve {} does not have a shape count up to {}. Returning last shape'.format(curve, shape_index))
         return shapes[-1]
 

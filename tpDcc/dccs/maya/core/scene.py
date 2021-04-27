@@ -23,7 +23,7 @@ from tpDcc.abstract import scene
 from tpDcc.libs.python import python, path as path_utils
 from tpDcc.dccs.maya.core import helpers, name as name_utils, node as node_utils
 
-LOGGER = logging.getLogger('tpDcc-dccs-maya')
+logger = logging.getLogger('tpDcc-dccs-maya')
 
 
 class MayaScene(scene.AbstractScene, object):
@@ -272,7 +272,7 @@ def save_as(file_path):
     if not file_path:
         return saved
 
-    LOGGER.debug('Saving "{}"'.format(file_path))
+    logger.debug('Saving "{}"'.format(file_path))
 
     file_type = 'mayaAscii'
     if file_path.endswith('.mb'):
@@ -283,15 +283,15 @@ def save_as(file_path):
         maya.cmds.file(save=True, type=file_type)
         saved = True
     except Exception:
-        LOGGER.error(str(traceback.format_exc()))
+        logger.error(str(traceback.format_exc()))
         saved = False
 
     if saved:
-        LOGGER.debug('Scene saved successfully into: {}'.format(file_path))
+        logger.debug('Scene saved successfully into: {}'.format(file_path))
     else:
         if not maya.cmds.about(batch=True):
             maya.cmds.confirmDialog(message='Warning:\n\nMaya was unable to save!', button='Confirm')
-        LOGGER.warning('Scene not saved: {}'.format(file_path))
+        logger.warning('Scene not saved: {}'.format(file_path))
 
     return saved
 
@@ -618,7 +618,7 @@ def delete_unknown_nodes():
             maya.cmds.delete(n)
             deleted.append(n)
 
-    LOGGER.debug('Deleted uknowns: {}'.format(deleted))
+    logger.debug('Deleted uknowns: {}'.format(deleted))
 
 
 def delete_turtle_nodes():
@@ -640,7 +640,7 @@ def delete_turtle_nodes():
                 turtle_nodes = node.delete_nodes_of_type(turtle_types)
                 break
 
-    LOGGER.debug('Removed Turtle nodes: {}'.format(turtle_nodes))
+    logger.debug('Removed Turtle nodes: {}'.format(turtle_nodes))
 
 
 def delete_unused_plugins():
@@ -667,7 +667,7 @@ def delete_unused_plugins():
                 continue
             unused.append(p)
 
-    LOGGER.debug('Removed unused plugins: {}'.format(unused))
+    logger.debug('Removed unused plugins: {}'.format(unused))
 
 
 def delete_garbage():
@@ -711,7 +711,7 @@ def delete_garbage():
             if not maya.cmds.objExists(n):
                 garbage_nodes.append(n)
 
-    LOGGER.debug('Delete Garbage Nodes: {}'.format(garbage_nodes))
+    logger.debug('Delete Garbage Nodes: {}'.format(garbage_nodes))
 
 
 def clean_scene():

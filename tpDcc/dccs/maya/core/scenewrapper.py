@@ -65,7 +65,11 @@ class MayaSceneWrapper(scenewrapper.AbstractSceneWrapper, object):
         :param new_name: str, new display name
         """
 
-        return maya.cmds.rename(self.path(), ':'.join([self.namespace(), new_name]))
+        namespace = self.namespace()
+        if namespace:
+            return maya.cmds.rename(self.path(), ':'.join([self.namespace(), new_name]))
+        else:
+            return maya.cmds.rename(self.path(), new_name)
 
     def path(self):
         """
@@ -111,9 +115,22 @@ class MayaSceneWrapper(scenewrapper.AbstractSceneWrapper, object):
         :return: int or str
         """
 
-        property_value = self._dcc_native_property('uuid')
-        if property_value is None:
-            return self._native_handle.hashCode()
+        if dcc.get_version() >= 2016:
+            node_name = node_utils.get_name(self._dcc_native_object, fullname=True)
+            return maya.cmds.ls(node_name, uuid=True)[0]
+        else:
+            property_value = self._dcc_native_attribute('uuid', default=None)
+            if property_value is None:
+                return self._native_handle.hashCode()
+
+    def set_unique_id(self, value):
+        """
+        Set the unique id for this wrapper instance
+        The unique ID is generated automatically by Maya and cannot be modified
+        :param value: object
+        """
+
+        return False
 
     def has_attribute(self, attribute_name):
         """
@@ -122,7 +139,8 @@ class MayaSceneWrapper(scenewrapper.AbstractSceneWrapper, object):
         :return: bool, True if the attribute exists in the wrapped native DCC object; False otherwise.
         """
 
-        raise NotImplementedError('Maya Scene Wrapper has_attribute function not implemented!')
+        node_name = node_utils.get_name(self._dcc_native_object, fullname=True)
+        return dcc.attribute_exists(node_name, attribute_name)
 
     def attribute_names(self, keyable=False, short_names=False, unlocked=True):
         """
@@ -133,7 +151,8 @@ class MayaSceneWrapper(scenewrapper.AbstractSceneWrapper, object):
         :return: list
         """
 
-        raise NotImplementedError('Maya Scene Wrapper attribute_names function not implemented!')
+        node_name = node_utils.get_name(self._dcc_native_object, fullname=True)
+        return dcc.list_attributes(node_name, keyable=keyable, unlocked=unlocked, shortNames=short_names)
 
     def _dcc_native_copy(self):
         """
@@ -141,7 +160,8 @@ class MayaSceneWrapper(scenewrapper.AbstractSceneWrapper, object):
         :return: variant
         """
 
-        raise NotImplementedError('Maya Scene Wrapper _dcc_native_copy function not implemented!')
+        node_name = node_utils.get_name(self._dcc_native_object, fullname=True)
+        return dcc.duplicate_node(node_name)
 
     def _dcc_native_attribute(self, attribute_name, default=None):
         """

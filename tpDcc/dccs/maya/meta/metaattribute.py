@@ -103,12 +103,12 @@ class MetaAttribute(object):
                 if not _type:
                     _type = 'string'
                 metautils.MetaAttributeUtils.add(self.obj.meta_node, attr_name, _type)
-            except StandardError as e:
+            except Exception as exc:
                 LOGGER.error(
                     '|Attribute Add| >> Failed" "{0}" failed to add "{1}" | type: {2}'.format(self.obj.meta_node,
                                                                                               attr_name,
                                                                                               self.attr_type))
-                raise StandardError(e)
+                raise Exception(exc)
 
         if enum:
             try:
@@ -430,7 +430,7 @@ class MetaAttribute(object):
                 return default_value[0]
             else:
                 return False
-        except StandardError:
+        except Exception:
             return False
 
     def set_default_value(self, value=None):
@@ -448,12 +448,12 @@ class MetaAttribute(object):
                             try:
                                 maya.cmds.addAttr(child_attr.obj.meta_node + '.' + child_attr.attr, edit=True,
                                                   defaultValue=value)
-                            except StandardError:
+                            except Exception:
                                 LOGGER.debug('"{}" failed to set a default value'.format(child_attr.combined_name))
                     else:
                         try:
                             maya.cmds.addAttr(self.obj.meta_node + '.' + self.attr, edit=True, defaultValue=value)
-                        except StandardError:
+                        except Exception:
                             LOGGER.debug('"{}" failed to set a default value'.format(self.combined_name))
         except Exception as e:
             fmt_args = [self.obj.short_name, self.long_name, value, e]
@@ -474,7 +474,7 @@ class MetaAttribute(object):
                 return min_value[0]
             else:
                 return False
-        except StandardError:
+        except Exception:
             return False
 
     def set_min_value(self, value):
@@ -521,7 +521,7 @@ class MetaAttribute(object):
                 return max_value[0]
             else:
                 return False
-        except StandardError:
+        except Exception:
             return False
 
     def set_max_value(self, value):

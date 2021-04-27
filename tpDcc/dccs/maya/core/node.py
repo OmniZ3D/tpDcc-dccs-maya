@@ -300,7 +300,7 @@ def get_mobject(node_name):
 
     check_node(node_name)
 
-    if isinstance(node_name, str) or isinstance(node_name, unicode):
+    if python.is_string(node_name):
         selection_list = maya.api.OpenMaya.MSelectionList()
         selection_list.add(node_name)
         try:
@@ -311,8 +311,13 @@ def get_mobject(node_name):
 
         return mobj
 
-    elif node_name.__module__.startswith('pymel'):
-        return node_name.__apimfn__().object()
+    else:
+        try:
+            if node_name.__module__.startswith('pymel'):
+                return node_name.__apimfn__().object()
+        except AttributeError:
+            if node_name.__class__.__module__.startswith('pymel'):
+                return node_name.__apimfn__().object()
 
     return node_name
 
@@ -381,7 +386,7 @@ def get_depend_node(node):
 
     check_node(node)
 
-    if type(node) in [str, unicode]:
+    if python.is_string(node):
         selection_list = maya.api.OpenMaya.MSelectionList()
         selection_list.add(node)
         dep_node = selection_list.getDependNode(0)
@@ -400,7 +405,7 @@ def get_plug(node, plug_name):
 
     check_node(node)
 
-    if type(node) in [str, unicode]:
+    if python.is_string(node):
         mobj = get_depend_node(node)
         dep_fn = maya.api.OpenMaya.MFnDependencyNode()
         dep_fn.setObject(mobj)
@@ -429,7 +434,7 @@ def get_shape(node, intermediate=False):
 
     check_node(node)
 
-    if isinstance(node, str) or isinstance(node, unicode):
+    if python.is_string(node):
         if maya.cmds.nodeType(node) == 'transform':
             shapes = maya.cmds.listRelatives(node, shapes=True, path=True)
             if not shapes:
@@ -456,8 +461,7 @@ def get_shape(node, intermediate=False):
         path = maya.api.OpenMaya.MDagPath.getAPathTo(node)
         num_shapes = path.numberOfShapesDirectlyBelow()
         if num_shapes:
-            # TODO: Should this return the last shape, instead of the first?
-            path.extendToShapeDirectlyBelow(0)
+            path.extendToShape(0)
             return path.node()
 
     return node
@@ -566,7 +570,7 @@ def get_node_attr_source(node, attr):
         return None
     elif isinstance(attr_connection, list):
         return attr_connection
-    elif isinstance(attr_connection, unicode):
+    elif python.is_string(attr_connection):
         dest_info = attr_connection.split('.')
         return dest_info
 

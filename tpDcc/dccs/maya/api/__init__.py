@@ -1477,6 +1477,21 @@ def get_active_selection_list():
     return SelectionList(sel_list=selection_list)
 
 
+def get_selection_list_by_name(node_name):
+    """
+    Returns a selection list with given node
+    :param node_name: str
+    :return: SelectionList
+    """
+
+    if is_new_api():
+        selection_list = maya.api.OpenMaya.MGlobal.getSelectionListByName(node_name)
+    else:
+        selection_list = maya.OpenMaya.MGlobal.getSelectionListByName(node_name)
+
+    return SelectionList(sel_list=selection_list)
+
+
 class IterateCurveCV(MayaIterator, object):
     def _set_api_object(self, mobj):
         if is_new_api():

@@ -540,3 +540,30 @@ def get_project_rule(rule):
             'File Rule Entry "{}" has no value, please check if the rule name is typed correctly!'.format(rule))
 
     return os.path.join(workspace, workspace_folder)
+
+
+def create_mel_procedure(python_fn, args=(), return_type=''):
+    """
+    Creates a valid MEL procedure to be called that invokes Python function.
+    Two procedures with a temporary name are created in global MEL and Python spaces, for this reason no parameter
+    passing is supported
+    :param python_fn:
+    :param args:
+    :param return_type:
+    """
+
+    # create procedure name
+    proc_name = 'tpDccProc{}{}'.format(id(python_fn), python_fn.__name__)
+
+    # create link to method in global Python space
+    sys.modules['__main__'].__dict__[proc_name] = python_fn
+
+    # create MEL procedure
+    mel_args = ",".join(map(lambda a: "%s $%s" % (a[0], a[1]), args))
+    python_args = ','.join(map(lambda a: '\'"+$%s+"\'' % a[1], args))
+    return_str = 'return' if return_type != '' else ''
+    mel_code = 'global proc %s %s(%s) { %s python ("%s(%s)");  }' % (
+        return_type, proc_name, mel_args, return_str, proc_name, python_args)
+    maya.mel.eval(mel_code)
+
+    return proc_name
